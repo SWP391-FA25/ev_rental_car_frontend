@@ -1,0 +1,107 @@
+{
+  "navbar": {
+    "home": "Trang chủ",
+    "features": "Tính năng",
+    "pricing": "Bảng giá",
+    "about": "Giới thiệu",
+    "contact": "Liên hệ",
+    "login": "Đăng nhập",
+    "joinUp": "Đăng ký",
+    "profile": "Hồ sơ",
+    "logout": "Đăng xuất",
+    "language": "Ngôn ngữ"
+  },
+  "hero": {
+    "title1": "Đồng Hành Cùng",
+    "title2": "EV Rental",
+    "location": "Địa điểm lấy xe",
+    "destination": "Chọn thành phố",
+    "time": "Thời gian lấy xe",
+    "date": "Ngày lấy xe",
+    "returnDate": "Ngày trả xe",
+    "search": "Tìm xe"
+  },
+  "features":{
+    "title": "Các Xe Đặc Biệt",
+    "description": "Khám phá các phương tiện thuê đặc biệt của chúng tôi cho chuyến đi tiếp theo của bạn.",
+    "available": "Có sẵn",
+    "exploreAllCars": "Khám phá tất cả các xe"
+  },
+  "testimonial": {
+      "title": "Tin Cậy Bởi Các Tổ Chức Lãnh Đạo",
+      "description": "Xem những đánh giá của khách hàng về Ev Rental"
+    },
+  "whyChooseUs": {
+    "title": "Tại Sao Chọn Chúng Tôi?",
+    "description": "Trải nghiệm tương lai của giao thông với dịch vụ cho thuê xe điện cao cấp của chúng tôi. Đây là lý do hàng nghìn khách hàng tin tưởng chúng tôi cho nhu cầu di chuyển của họ.",
+    "reasons": {
+      "trustedSecure": {
+        "title": "Đáng Tin Cậy & An Toàn",
+        "description": "Tất cả xe của chúng tôi đều được bảo hiểm đầy đủ và bảo dưỡng định kỳ để đảm bảo sự an toàn và yên tâm cho bạn."
+      },
+      "availability": {
+        "title": "Có Sẵn 24/7",
+        "description": "Đặt xe bất cứ lúc nào, bất cứ đâu. Nền tảng của chúng tôi có sẵn suốt ngày đêm để phục vụ bạn."
+      },
+      "premiumQuality": {
+        "title": "Chất Lượng Cao Cấp",
+        "description": "Xe được tuyển chọn kỹ lưỡng từ các thương hiệu hàng đầu, đảm bảo bạn có trải nghiệm lái xe tốt nhất."
+      },
+      "flexiblePricing": {
+        "title": "Giá Cả Linh Hoạt",
+        "description": "Mức giá cạnh tranh không có phí ẩn. Chỉ trả tiền cho những gì bạn sử dụng với giá cả minh bạch."
+      },
+      "ecoFriendly": {
+        "title": "Thân Thiện Môi Trường",
+        "description": "100% xe điện giúp bạn giảm lượng khí thải carbon trong khi vẫn tận hưởng sự di chuyển cao cấp."
+      },
+      "expertSupport": {
+        "title": "Hỗ Trợ Chuyên Nghiệp",
+        "description": "Đội ngũ hỗ trợ khách hàng chuyên nghiệp của chúng tôi luôn sẵn sàng hỗ trợ bạn với mọi câu hỏi hoặc thắc mắc."
+      }
+    },
+    "stats": {
+      "happyCustomers": "Khách Hàng Hài Lòng",
+      "premiumVehicles": "Xe Cao Cấp",
+      "citiesCovered": "Thành Phố Phủ Sóng",
+      "customerSupport": "Hỗ Trợ Khách Hàng"
+    }
+  },
+  "footer": {
+    "companyName": "Ev Rental",
+    "companyDescription": "Hệ thống cho thuê thông minh giúp chuyển đổi hoạt động kinh doanh của bạn với những hiểu biết và tự động hóa được hỗ trợ bởi AI.",
+    "sections": {
+      "product": {
+        "title": "Sản Phẩm",
+        "features": "Tính Năng",
+        "pricing": "Bảng Giá",
+        "api": "API",
+        "integrations": "Tích Hợp"
+      },
+      "company": {
+        "title": "Công Ty",
+        "about": "Giới Thiệu",
+        "blog": "Blog",
+        "careers": "Tuyển Dụng",
+        "contact": "Liên Hệ"
+      },
+      "support": {
+        "title": "Hỗ Trợ",
+        "helpCenter": "Trung Tâm Trợ Giúp",
+        "documentation": "Tài Liệu",
+        "status": "Trạng Thái",
+        "community": "Cộng Đồng"
+      }
+    },
+    "copyright": "© 2024 Ev Rental. Tất cả quyền được bảo lưu.",
+    "legal": {
+      "privacyPolicy": "Chính Sách Bảo Mật",
+      "termsOfService": "Điều Khoản Dịch Vụ",
+      "cookiePolicy": "Chính Sách Cookie"
+    }
+  },
+  "common": {
+    "english": "Tiếng Anh",
+    "vietnamese": "Tiếng Việt"
+  }
+}
