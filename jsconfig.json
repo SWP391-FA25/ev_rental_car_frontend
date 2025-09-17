@@ -5,7 +5,14 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@/components/ui/*": ["./src/features/shared/components/ui/*"],
+      "@/components/*": ["./src/features/shared/components/*"],
+      "@/features/*": ["./src/features/*"],
+      "@/app/*": ["./src/app/*"],
+      "@/lib/*": ["./src/features/shared/lib/*"],
+      "@/hooks/*": ["./src/features/shared/hooks/*"],
+      "@/i18n/*": ["./src/features/shared/i18n/*"]
     }
   }
 }

@@ -1,11 +1,34 @@
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
-import AuthProvider from './context/AuthProvider';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import AuthProvider from './app/providers/AuthProvider';
+import { ThemeProvider } from './app/providers/ThemeProvider';
+import { router } from './app/router/router';
+import './features/shared/i18n/index.js';
 import './index.css';
-import { router } from './routes/router';
+import './select-custom.css';
+import './toast.css';
 
 createRoot(document.getElementById('root')).render(
-  <AuthProvider>
-    <RouterProvider router={router} />
-  </AuthProvider>
+  <ThemeProvider defaultTheme='system' storageKey='vite-ui-theme'>
+    <AuthProvider>
+      <RouterProvider router={router} />
+      <ToastContainer
+        position='top-right'
+        autoClose={4000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        style={{
+          top: '80px',
+          zIndex: 40,
+        }}
+      />
+    </AuthProvider>
+  </ThemeProvider>
 );

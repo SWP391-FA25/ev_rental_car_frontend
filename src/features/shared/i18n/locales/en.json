@@ -1,0 +1,107 @@
+{
+    "navbar": {
+      "home": "Home",
+      "features": "Features",
+      "pricing": "Pricing",
+      "about": "About",
+      "contact": "Contact",
+      "login": "Login",
+      "joinUp": "Join Up",
+      "profile": "Profile",
+      "logout": "Logout",
+      "language": "Language"
+    },
+    "hero": {
+      "title1": "Find Your Perfect",
+      "title2": "Rental Car",
+      "location": "Pickup Location",
+      "destination": "Select city",
+      "time": "Pickup Time",
+      "date": "Pickup Date",
+      "returnDate": "Return Date",
+      "search": "Search Cars"
+    },
+    "features": {
+      "title": "Features Vehicles",
+      "description": "Explore our selection of premium vehicles available for your next adventure.",
+      "available": "Available Now",
+      "exploreAllCars": "Explore all cars"
+    },
+    "testimonial": {
+      "title": "Trusted by Industry Leaders",
+      "description": "See what our customers are saying about Ev Rental"
+    },
+    "whyChooseUs": {
+      "title": "Why Choose Us?",
+      "description": "Experience the future of transportation with our premium electric vehicle rental service. Here's why thousands of customers trust us for their mobility needs.",
+      "reasons": {
+        "trustedSecure": {
+          "title": "Trusted & Secure",
+          "description": "All our vehicles are fully insured and regularly maintained to ensure your safety and peace of mind."
+        },
+        "availability": {
+          "title": "24/7 Availability", 
+          "description": "Book anytime, anywhere. Our platform is available round the clock for your convenience."
+        },
+        "premiumQuality": {
+          "title": "Premium Quality",
+          "description": "Hand-picked vehicles from top brands, ensuring you get the best driving experience every time."
+        },
+        "flexiblePricing": {
+          "title": "Flexible Pricing",
+          "description": "Competitive rates with no hidden fees. Pay only for what you use with transparent pricing."
+        },
+        "ecoFriendly": {
+          "title": "Eco-Friendly",
+          "description": "100% electric vehicles helping you reduce your carbon footprint while enjoying premium mobility."
+        },
+        "expertSupport": {
+          "title": "Expert Support",
+          "description": "Our dedicated customer support team is always ready to assist you with any questions or concerns."
+        }
+      },
+      "stats": {
+        "happyCustomers": "Happy Customers",
+        "premiumVehicles": "Premium Vehicles",
+        "citiesCovered": "Cities Covered", 
+        "customerSupport": "Customer Support"
+      }
+    },
+    "footer": {
+      "companyName": "Ev Rental",
+      "companyDescription": "The intelligent rental system that transforms your business operations with AI-powered insights and automation.",
+      "sections": {
+        "product": {
+          "title": "Product",
+          "features": "Features",
+          "pricing": "Pricing",
+          "api": "API",
+          "integrations": "Integrations"
+        },
+        "company": {
+          "title": "Company",
+          "about": "About",
+          "blog": "Blog",
+          "careers": "Careers",
+          "contact": "Contact"
+        },
+        "support": {
+          "title": "Support",
+          "helpCenter": "Help Center",
+          "documentation": "Documentation",
+          "status": "Status",
+          "community": "Community"
+        }
+      },
+      "copyright": "© 2024 Ev Rental. All rights reserved.",
+      "legal": {
+        "privacyPolicy": "Privacy Policy",
+        "termsOfService": "Terms of Service",
+        "cookiePolicy": "Cookie Policy"
+      }
+    },
+    "common": {
+      "english": "English",
+      "vietnamese": "Vietnamese"
+    }
+  }
