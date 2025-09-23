@@ -11,12 +11,12 @@ export const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use(
-  (config) => config,
-  (error) => Promise.reject(error)
+  config => config,
+  error => Promise.reject(error)
 );
 
 apiClient.interceptors.response.use(
-  (response) => {
+  response => {
     const payload = response?.data;
     if (
       payload &&
@@ -33,10 +33,11 @@ apiClient.interceptors.response.use(
       timestamp: new Date().toISOString(),
     };
   },
-  (error) => {
+  error => {
     const status = error?.response?.status || 0;
     const message =
       error?.response?.data?.message || error?.message || 'Request error';
+
     return Promise.reject({
       success: false,
       data: null,

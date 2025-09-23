@@ -34,11 +34,13 @@ export default function Login() {
         const user = res.data.user;
         login(user);
         toast.success('Logged in successfully', {
-          position: 'top-right',
+          position: 'top-center',
           autoClose: 2000,
         });
         if (user?.role === 'ADMIN') {
           navigate('/admin');
+        } else if (user?.role === 'STAFF') {
+          navigate('/staff');
         } else {
           navigate('/user');
         }

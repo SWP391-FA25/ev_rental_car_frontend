@@ -3,9 +3,15 @@ import { ScrollTrigger } from 'gsap/all';
 import { Fuel, MapPin, Settings, Users } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardTitle } from '../ui/card';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '../ui/carousel';
 
 export default function FeaturesSection() {
   const sectionRef = useRef(null);
@@ -142,64 +148,76 @@ export default function FeaturesSection() {
           </p>
         </div>
 
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-          {vehicles.map(vehicle => (
-            <Card
-              key={vehicle.id}
-              className='overflow-hidden hover:shadow-lg transition-all duration-300 group p-0'
-            >
-              {/* Vehicle Image */}
-              <div className='relative h-48 overflow-hidden rounded-t-lg'>
-                <img
-                  src={vehicle.image}
-                  alt={vehicle.name}
-                  className='w-full h-full object-cover'
-                />
-                {vehicle.available && (
-                  <Badge className='absolute top-3 left-3 bg-blue-600 hover:bg-blue-700'>
-                    {t('features.available')}
-                  </Badge>
-                )}
-                <div className='absolute bottom-3 right-3 bg-black/80 text-white px-3 py-1 rounded-lg'>
-                  <span className='text-lg font-bold'>${vehicle.price}</span>
-                  <span className='text-sm'>/{vehicle.period}</span>
-                </div>
-              </div>
+        <Carousel
+          opts={{
+            align: 'start',
+            loop: true,
+            containScroll: 'trimSnaps',
+          }}
+          className='w-full'
+        >
+          <CarouselContent className='-ml-1'>
+            {vehicles.map(vehicle => (
+              <CarouselItem
+                key={vehicle.id}
+                className='pl-1 basis-full sm:basis-1/2 lg:basis-1/3'
+              >
+                <div className='p-1'>
+                  <Card className='overflow-hidden hover:shadow-lg transition-all duration-300 group p-0'>
+                    {/* Vehicle Image */}
+                    <div className='relative h-48 overflow-hidden rounded-t-lg'>
+                      <img
+                        src={vehicle.image}
+                        alt={vehicle.name}
+                        className='w-full h-full object-cover'
+                      />
+                      <div className='absolute bottom-3 right-3 bg-black/80 text-white px-3 py-1 rounded-lg'>
+                        <span className='text-lg font-bold'>
+                          ${vehicle.price}
+                        </span>
+                        <span className='text-sm'>/{vehicle.period}</span>
+                      </div>
+                    </div>
 
-              <CardContent className='p-4'>
-                {/* Vehicle Name and Type */}
-                <div className='mb-3'>
-                  <CardTitle className='text-lg font-bold text-foreground'>
-                    {vehicle.name}
-                  </CardTitle>
-                  <CardDescription className='text-sm text-muted-foreground'>
-                    {vehicle.type} • {vehicle.year}
-                  </CardDescription>
-                </div>
+                    <CardContent className='p-4'>
+                      {/* Vehicle Name and Type */}
+                      <div className='mb-3'>
+                        <CardTitle className='text-lg font-bold text-foreground'>
+                          {vehicle.name}
+                        </CardTitle>
+                        <CardDescription className='text-sm text-muted-foreground'>
+                          {vehicle.type} • {vehicle.year}
+                        </CardDescription>
+                      </div>
 
-                {/* Vehicle Specifications */}
-                <div className='grid grid-cols-2 gap-3 mb-4'>
-                  <div className='flex items-center gap-2 text-sm text-muted-foreground'>
-                    <Users className='w-4 h-4' />
-                    <span>{vehicle.seats} Seats</span>
-                  </div>
-                  <div className='flex items-center gap-2 text-sm text-muted-foreground'>
-                    <Fuel className='w-4 h-4' />
-                    <span>{vehicle.fuelType}</span>
-                  </div>
-                  <div className='flex items-center gap-2 text-sm text-muted-foreground'>
-                    <Settings className='w-4 h-4' />
-                    <span>{vehicle.transmission}</span>
-                  </div>
-                  <div className='flex items-center gap-2 text-sm text-muted-foreground'>
-                    <MapPin className='w-4 h-4' />
-                    <span>{vehicle.location}</span>
-                  </div>
+                      {/* Vehicle Specifications */}
+                      <div className='grid grid-cols-2 gap-3 mb-4'>
+                        <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+                          <Users className='w-4 h-4' />
+                          <span>{vehicle.seats} Seats</span>
+                        </div>
+                        <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+                          <Fuel className='w-4 h-4' />
+                          <span>{vehicle.fuelType}</span>
+                        </div>
+                        <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+                          <Settings className='w-4 h-4' />
+                          <span>{vehicle.transmission}</span>
+                        </div>
+                        <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+                          <MapPin className='w-4 h-4' />
+                          <span>{vehicle.location}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious />
+          <CarouselNext />
+        </Carousel>
 
         {/* Explore All Cars Button */}
         <div className='text-center mt-12'>
