@@ -73,26 +73,56 @@ export default function HeroSection() {
   };
 
   return (
-    <section className='min-h-screen flex items-end justify-start overflow-hidden bg-gradient-to-br from-background via-background/95 to-primary/5'>
-      {/* Content - Centered */}
-      <div className=' z-10 w-full flex flex-col items-center justify-center text-center'>
-        <div className='container mx-auto px-6 sm:px-8 lg:px-12'>
-          {/* Headline */}
-          <h1
-            ref={headlineRef}
-            className='text-3xl sm:text-6xl md:text-7xl lg:text-8xl font-bold text-foreground leading-[0.9] mb-8'
-          >
-            <div className='block overflow-hidden mb-2'>
-              {renderTextWithAnimation(t('hero.title1'))}
-            </div>
-            <div className='block overflow-hidden mb-2'>
-              {renderTextWithAnimation(t('hero.title2'))}
-            </div>
-          </h1>
+    <header
+      id='home'
+      className='min-h-screen relative overflow-hidden'
+      style={{
+        backgroundImage:
+          'url("https://digitalassets.tesla.com/tesla-contents/image/upload/f_auto,q_auto/Homepage-Promo-Model-3-Desktop-US-July.png")',
+        backgroundPosition: 'center center',
+        backgroundSize: 'cover',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
+      {/* Gradient Overlay */}
+      <div className='absolute inset-0 bg-gradient-to-b from-[hsl(var(--background))] via-transparent to-[hsl(var(--background))] z-0' />
+
+      {/* Background Lines */}
+      <div className='absolute top-0 left-1/2 transform -translate-x-1/2 h-full w-full max-w-[1200px] flex justify-between z-0'>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <span
+            key={i}
+            className='w-[2px] h-full bg-[hsl(var(--muted-foreground))] opacity-10'
+          />
+        ))}
+      </div>
+
+      {/* Content */}
+      <div className='relative z-10 h-screen flex flex-col justify-between'>
+        {/* Main Title - Centered */}
+        <div className='flex-1 flex items-start justify-center pt-20'>
+          <div className='max-w-[1200px] mx-auto px-4'>
+            <h1
+              ref={headlineRef}
+              className='max-w-[800px] mx-auto text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white text-center'
+              style={{
+                fontFamily: 'Orbitron, sans-serif',
+                letterSpacing: '2px',
+              }}
+            >
+              <div className='block overflow-hidden mb-2'>
+                {renderTextWithAnimation(t('hero.title1'))}
+              </div>
+              <div className='block overflow-hidden mb-2'>
+                {renderTextWithAnimation(t('hero.title2'))}
+              </div>
+            </h1>
+          </div>
         </div>
-        {/* Search Form */}
-        <div ref={searchFormRef} className='m-12'>
-          <Card className='bg-card/95 backdrop-blur-sm shadow-xl border border-border max-w-4xl mx-auto'>
+
+        {/* Search Form - At Bottom */}
+        <div ref={searchFormRef} className='max-w-4xl mx-auto px-4 pb-4'>
+          <Card className='bg-card/95 backdrop-blur-sm shadow-xl border border-border py-0'>
             <CardContent className='p-4 sm:p-6'>
               <div className='grid grid-cols-1 sm:grid-cols-5 gap-4 items-end'>
                 {/* Pickup Location */}
@@ -154,6 +184,6 @@ export default function HeroSection() {
           </Card>
         </div>
       </div>
-    </section>
+    </header>
   );
 }
