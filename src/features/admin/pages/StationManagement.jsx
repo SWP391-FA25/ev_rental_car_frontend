@@ -31,8 +31,6 @@ const mockStations = [
     status: 'Active',
     capacity: 20,
     availableSpots: 12,
-    chargingPorts: 15,
-    activeChargingPorts: 8,
     staff: ['John Smith', 'Maria Garcia'],
     operatingHours: '24/7',
   },
@@ -43,8 +41,6 @@ const mockStations = [
     status: 'Active',
     capacity: 35,
     availableSpots: 22,
-    chargingPorts: 25,
-    activeChargingPorts: 13,
     staff: ['Sarah Johnson', 'David Kim'],
     operatingHours: '5:00 AM - 11:00 PM',
   },
@@ -55,8 +51,6 @@ const mockStations = [
     status: 'Maintenance',
     capacity: 15,
     availableSpots: 8,
-    chargingPorts: 12,
-    activeChargingPorts: 4,
     staff: ['Mike Chen'],
     operatingHours: '10:00 AM - 10:00 PM',
   },
@@ -182,7 +176,6 @@ export default function StationManagement() {
               <TableHead>Status</TableHead>
               <TableHead>Capacity</TableHead>
               <TableHead>Available</TableHead>
-              <TableHead>Charging Ports</TableHead>
               <TableHead>Staff</TableHead>
               <TableHead>Operating Hours</TableHead>
               <TableHead className='w-[70px]'>Actions</TableHead>
@@ -200,9 +193,6 @@ export default function StationManagement() {
                 </TableCell>
                 <TableCell>{station.capacity}</TableCell>
                 <TableCell>{station.availableSpots}</TableCell>
-                <TableCell>
-                  {station.activeChargingPorts}/{station.chargingPorts}
-                </TableCell>
                 <TableCell>{station.staff.join(', ')}</TableCell>
                 <TableCell>{station.operatingHours}</TableCell>
                 <TableCell>

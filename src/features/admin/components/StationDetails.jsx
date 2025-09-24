@@ -58,12 +58,6 @@ export function StationDetails({ open, onOpenChange, station }) {
             <p className='text-right font-semibold'>Available Spots:</p>
             <p className='col-span-3'>{stationData.availableSpots}</p>
           </div>
-          <div className='grid grid-cols-4 items-center gap-4'>
-            <p className='text-right font-semibold'>Charging Ports:</p>
-            <p className='col-span-3'>
-              {stationData.activeChargingPorts}/{stationData.chargingPorts}
-            </p>
-          </div>
         </div>
         <DialogFooter>
           <Button
