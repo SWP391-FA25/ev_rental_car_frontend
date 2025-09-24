@@ -230,7 +230,7 @@ export default function StationManagement() {
       </div>
 
       {/* Summary Stats */}
-      <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
+      <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>{mockStations.length}</div>
           <div className='text-sm text-muted-foreground'>Total Stations</div>
@@ -246,14 +246,6 @@ export default function StationManagement() {
             {mockStations.reduce((sum, s) => sum + s.availableSpots, 0)}
           </div>
           <div className='text-sm text-muted-foreground'>Available Spots</div>
-        </div>
-        <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>
-            {mockStations.reduce((sum, s) => sum + s.activeChargingPorts, 0)}
-          </div>
-          <div className='text-sm text-muted-foreground'>
-            Active Charging Ports
-          </div>
         </div>
       </div>
 
