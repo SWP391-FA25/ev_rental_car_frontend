@@ -19,6 +19,8 @@ import {
   TableHeader,
   TableRow,
 } from '../../shared/components/ui/table';
+import { StationDetails } from '../components/StationDetails';
+import { StationForm } from '../components/StationForm';
 
 // Mock data for stations
 const mockStations = [
@@ -63,6 +65,9 @@ const mockStations = [
 export default function StationManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [selectedStation, setSelectedStation] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [open, setOpen] = useState(false); // Added state for modal visibility
 
   const filteredStations = mockStations.filter(station => {
     const matchesSearch =
@@ -84,6 +89,33 @@ export default function StationManagement() {
         return 'destructive';
       default:
         return 'outline';
+    }
+  };
+
+  const handleViewDetails = station => {
+    console.log('Viewing station:', station); // Debugging log
+    setSelectedStation(station);
+    setIsEditing(false);
+    setOpen(true); // Ensure modal opens
+  };
+
+  const handleEditStation = station => {
+    setSelectedStation(station);
+    setIsEditing(true);
+  };
+
+  const handleDeactivateStation = async stationId => {
+    try {
+      const response = await fetch(`/api/stations/${stationId}/deactivate`, {
+        method: 'POST',
+      });
+      if (response.ok) {
+        alert('Station deactivated successfully');
+      } else {
+        alert('Failed to deactivate station');
+      }
+    } catch (error) {
+      console.error('Error deactivating station:', error);
     }
   };
 
@@ -181,10 +213,21 @@ export default function StationManagement() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align='end'>
-                      <DropdownMenuItem>View Details</DropdownMenuItem>
-                      <DropdownMenuItem>Edit Station</DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleViewDetails(station)}
+                      >
+                        View Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleEditStation(station)}
+                      >
+                        Edit Station
+                      </DropdownMenuItem>
                       <DropdownMenuItem>Manage Staff</DropdownMenuItem>
-                      <DropdownMenuItem className='text-red-600'>
+                      <DropdownMenuItem
+                        className='text-red-600'
+                        onClick={() => handleDeactivateStation(station.id)}
+                      >
                         Deactivate Station
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -223,6 +266,27 @@ export default function StationManagement() {
           </div>
         </div>
       </div>
+
+      {/* Station Details or Edit Form */}
+      {selectedStation && (
+        <div className='rounded-md border p-4'>
+          {isEditing ? (
+            <StationForm
+              initialData={selectedStation}
+              onSubmit={data => {
+                console.log('Updated station data:', data);
+                setIsEditing(false);
+              }}
+            />
+          ) : (
+            <StationDetails
+              open={open}
+              onOpenChange={setOpen}
+              station={selectedStation}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }

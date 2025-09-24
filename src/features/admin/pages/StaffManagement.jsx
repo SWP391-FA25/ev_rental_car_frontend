@@ -286,19 +286,19 @@ export default function StaffManagement() {
                         >
                           View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem>Reset Password</DropdownMenuItem>
+                        {/* <DropdownMenuItem>Reset Password</DropdownMenuItem> */}
                         <DropdownMenuItem
                           onClick={() => handleSoftDelete(staffItem.id)}
                           className='text-orange-600'
                         >
                           Suspend Staff
                         </DropdownMenuItem>
-                        <DropdownMenuItem
+                        {/* <DropdownMenuItem
                           onClick={() => handleDelete(staffItem.id)}
                           className='text-red-600'
                         >
                           Delete Staff
-                        </DropdownMenuItem>
+                        </DropdownMenuItem> */}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
