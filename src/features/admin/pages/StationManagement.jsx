@@ -19,6 +19,8 @@ import {
   TableHeader,
   TableRow,
 } from '../../shared/components/ui/table';
+import { StationDetails } from '../components/StationDetails';
+import { StationForm } from '../components/StationForm';
 
 // Mock data for stations
 const mockStations = [
@@ -29,8 +31,6 @@ const mockStations = [
     status: 'Active',
     capacity: 20,
     availableSpots: 12,
-    chargingPorts: 15,
-    activeChargingPorts: 8,
     staff: ['John Smith', 'Maria Garcia'],
     operatingHours: '24/7',
   },
@@ -41,8 +41,6 @@ const mockStations = [
     status: 'Active',
     capacity: 35,
     availableSpots: 22,
-    chargingPorts: 25,
-    activeChargingPorts: 13,
     staff: ['Sarah Johnson', 'David Kim'],
     operatingHours: '5:00 AM - 11:00 PM',
   },
@@ -53,8 +51,6 @@ const mockStations = [
     status: 'Maintenance',
     capacity: 15,
     availableSpots: 8,
-    chargingPorts: 12,
-    activeChargingPorts: 4,
     staff: ['Mike Chen'],
     operatingHours: '10:00 AM - 10:00 PM',
   },
@@ -63,6 +59,9 @@ const mockStations = [
 export default function StationManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [selectedStation, setSelectedStation] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [open, setOpen] = useState(false); // Added state for modal visibility
 
   const filteredStations = mockStations.filter(station => {
     const matchesSearch =
@@ -84,6 +83,33 @@ export default function StationManagement() {
         return 'destructive';
       default:
         return 'outline';
+    }
+  };
+
+  const handleViewDetails = station => {
+    console.log('Viewing station:', station); // Debugging log
+    setSelectedStation(station);
+    setIsEditing(false);
+    setOpen(true); // Ensure modal opens
+  };
+
+  const handleEditStation = station => {
+    setSelectedStation(station);
+    setIsEditing(true);
+  };
+
+  const handleDeactivateStation = async stationId => {
+    try {
+      const response = await fetch(`/api/stations/${stationId}/deactivate`, {
+        method: 'POST',
+      });
+      if (response.ok) {
+        alert('Station deactivated successfully');
+      } else {
+        alert('Failed to deactivate station');
+      }
+    } catch (error) {
+      console.error('Error deactivating station:', error);
     }
   };
 
@@ -150,7 +176,6 @@ export default function StationManagement() {
               <TableHead>Status</TableHead>
               <TableHead>Capacity</TableHead>
               <TableHead>Available</TableHead>
-              <TableHead>Charging Ports</TableHead>
               <TableHead>Staff</TableHead>
               <TableHead>Operating Hours</TableHead>
               <TableHead className='w-[70px]'>Actions</TableHead>
@@ -168,9 +193,6 @@ export default function StationManagement() {
                 </TableCell>
                 <TableCell>{station.capacity}</TableCell>
                 <TableCell>{station.availableSpots}</TableCell>
-                <TableCell>
-                  {station.activeChargingPorts}/{station.chargingPorts}
-                </TableCell>
                 <TableCell>{station.staff.join(', ')}</TableCell>
                 <TableCell>{station.operatingHours}</TableCell>
                 <TableCell>
@@ -181,10 +203,21 @@ export default function StationManagement() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align='end'>
-                      <DropdownMenuItem>View Details</DropdownMenuItem>
-                      <DropdownMenuItem>Edit Station</DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleViewDetails(station)}
+                      >
+                        View Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleEditStation(station)}
+                      >
+                        Edit Station
+                      </DropdownMenuItem>
                       <DropdownMenuItem>Manage Staff</DropdownMenuItem>
-                      <DropdownMenuItem className='text-red-600'>
+                      <DropdownMenuItem
+                        className='text-red-600'
+                        onClick={() => handleDeactivateStation(station.id)}
+                      >
                         Deactivate Station
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -197,7 +230,7 @@ export default function StationManagement() {
       </div>
 
       {/* Summary Stats */}
-      <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
+      <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>{mockStations.length}</div>
           <div className='text-sm text-muted-foreground'>Total Stations</div>
@@ -214,15 +247,28 @@ export default function StationManagement() {
           </div>
           <div className='text-sm text-muted-foreground'>Available Spots</div>
         </div>
-        <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>
-            {mockStations.reduce((sum, s) => sum + s.activeChargingPorts, 0)}
-          </div>
-          <div className='text-sm text-muted-foreground'>
-            Active Charging Ports
-          </div>
-        </div>
       </div>
+
+      {/* Station Details or Edit Form */}
+      {selectedStation && (
+        <div className='rounded-md border p-4'>
+          {isEditing ? (
+            <StationForm
+              initialData={selectedStation}
+              onSubmit={data => {
+                console.log('Updated station data:', data);
+                setIsEditing(false);
+              }}
+            />
+          ) : (
+            <StationDetails
+              open={open}
+              onOpenChange={setOpen}
+              station={selectedStation}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }
