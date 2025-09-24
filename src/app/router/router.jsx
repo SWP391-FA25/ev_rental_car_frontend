@@ -7,15 +7,21 @@ import StationManagement from '@/features/admin/pages/StationManagement.jsx';
 import UserManagement from '@/features/admin/pages/UserManagement.jsx';
 import Login from '@/features/auth/components/Login.jsx';
 import SignUp from '@/features/auth/components/SignUp.jsx';
-import UserPage from '@/features/booking/components/UserPage.jsx';
+import BookingsPage from '@/features/booking/components/BookingsPage.jsx';
+import CarDetailPage from '@/features/cars/components/CarDetailPage.jsx';
+import CarsPage from '@/features/cars/components/CarsPage.jsx';
 import Home from '@/features/shared/components/Home.jsx';
 import StaffDashboard from '@/features/staff/layout/StaffDashboard.jsx';
 import { createBrowserRouter } from 'react-router-dom';
+import UserPage from '../../features/booking/components/UserPage';
 import PrivateRoutes from '../utils/PrivateRoutes';
 import RoleBasedRoute from '../utils/RoleBaseRoutes';
 
 export const router = createBrowserRouter([
   { path: '/', element: <Home /> },
+  { path: '/cars', element: <CarsPage /> },
+  { path: '/cars/:id', element: <CarDetailPage /> },
+  { path: '/bookings', element: <BookingsPage /> },
   { path: '/login', element: <Login /> },
   { path: '/signup', element: <SignUp /> },
   {
@@ -46,5 +52,18 @@ export const router = createBrowserRouter([
       </PrivateRoutes>
     ),
   },
-  { path: '/user', element: <UserPage /> },
+  {
+    path: '/user',
+    element: (
+      <PrivateRoutes>
+        <RoleBasedRoute allowedRoles={['RENTER']}>
+          <UserPage />
+        </RoleBasedRoute>
+      </PrivateRoutes>
+    ),
+    children: [
+      { index: true, element: <UserPage /> },
+      { path: 'cars', element: <CarsPage /> },
+    ],
+  },
 ]);

@@ -1,8 +1,8 @@
 {
   "navbar": {
-    "home": "Trang chủ",
-    "features": "Tính năng",
-    "pricing": "Bảng giá",
+    "home": "TRANG CHỦ",
+    "cars": "XE THUÊ",
+    "bookings": "ĐẶT LỊCH",
     "about": "Giới thiệu",
     "contact": "Liên hệ",
     "login": "Đăng nhập",
@@ -12,8 +12,8 @@
     "language": "Ngôn ngữ"
   },
   "hero": {
-    "title1": "Đồng Hành Cùng",
-    "title2": "EV Rental",
+    "title1": "Nền Tảng Thuê Xe",
+    "title2": "Tốt Nhất",
     "location": "Địa điểm lấy xe",
     "destination": "Chọn thành phố",
     "time": "Thời gian lấy xe",
