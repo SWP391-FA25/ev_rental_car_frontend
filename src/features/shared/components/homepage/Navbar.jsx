@@ -122,7 +122,7 @@ export default function Navbar() {
                 e.target.nextSibling.style.display = 'block';
               }}
             />
-            <span className='text-2xl font-bold text-[hsl(var(--primary-foreground))] hidden'>
+            <span className='text-5xl font-bold text-[hsl(var(--primary-foreground))] hidden font-dancing'>
               Ev Rental
             </span>
           </Link>

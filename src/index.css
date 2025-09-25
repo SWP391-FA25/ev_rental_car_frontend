@@ -245,3 +245,12 @@ body {
     @apply bg-transparent;
   }
 }
+
+/* Custom font classes */
+.font-dancing {
+  font-family: 'Dancing Script', cursive;
+}
+
+.font-orbitron {
+  font-family: 'Orbitron', sans-serif;
+}
