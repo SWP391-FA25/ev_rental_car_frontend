@@ -1,10 +1,8 @@
 {
     "navbar": {
-      "home": "Home",
-      "features": "Features",
-      "pricing": "Pricing",
-      "about": "About",
-      "contact": "Contact",
+      "home": "HOME",
+      "cars": "CARS",
+      "bookings": "MY BOOKINGS",
       "login": "Login",
       "joinUp": "Join Up",
       "profile": "Profile",
@@ -12,8 +10,8 @@
       "language": "Language"
     },
     "hero": {
-      "title1": "Find Your Premium",
-      "title2": "Car Rental",
+      "title1": "The Best Platform",
+      "title2": "For Car Rental",
       "location": "Pickup Location",
       "destination": "Select city",
       "time": "Pickup Time",

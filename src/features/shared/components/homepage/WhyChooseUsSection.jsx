@@ -1,3 +1,4 @@
+import gsap from 'gsap';
 import {
   Award,
   Clock,
@@ -6,6 +7,7 @@ import {
   Leaf,
   Shield,
 } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Card,
@@ -17,6 +19,7 @@ import {
 
 export default function WhyChooseUsSection() {
   const { t } = useTranslation();
+  const sectionRef = useRef();
 
   const reasons = [
     {
@@ -63,8 +66,31 @@ export default function WhyChooseUsSection() {
     },
   ];
 
+  useEffect(() => {
+    if (!sectionRef.current) return;
+
+    gsap.fromTo(
+      sectionRef.current,
+      {
+        opacity: 0,
+        y: 100,
+      },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 1,
+        ease: 'power2.out',
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: 'top 80%',
+          toggleActions: 'play none none reverse',
+        },
+      }
+    );
+  }, []);
+
   return (
-    <section className='py-20 bg-muted/30'>
+    <section ref={sectionRef} className='py-20 bg-muted/30'>
       <div className='container mx-auto px-4'>
         <div className='text-center mb-16'>
           <h2 className='text-4xl font-bold text-foreground mb-4'>

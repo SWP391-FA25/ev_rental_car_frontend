@@ -78,7 +78,7 @@ export default function HeroSection() {
       className='min-h-screen relative overflow-hidden'
       style={{
         backgroundImage:
-          'url("https://digitalassets.tesla.com/tesla-contents/image/upload/f_auto,q_auto/Homepage-Promo-Model-3-Desktop-US-July.png")',
+          'url("https://digitalassets.tesla.com/tesla-contents/image/upload/f_auto,q_auto/Homepage-Promo-Cybertruck-Desktop.png")',
         backgroundPosition: 'center center',
         backgroundSize: 'cover',
         backgroundRepeat: 'no-repeat',
@@ -104,7 +104,7 @@ export default function HeroSection() {
           <div className='max-w-[1200px] mx-auto px-4'>
             <h1
               ref={headlineRef}
-              className='max-w-[800px] mx-auto text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white text-center'
+              className='max-w-[800px] mx-auto text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-[hsl(var(--primary-foreground))]  text-center'
               style={{
                 fontFamily: 'Orbitron, sans-serif',
                 letterSpacing: '2px',
@@ -121,7 +121,7 @@ export default function HeroSection() {
         </div>
 
         {/* Search Form - At Bottom */}
-        <div ref={searchFormRef} className='max-w-4xl mx-auto px-4 pb-4'>
+        <div ref={searchFormRef} className='max-w-4xl mx-auto px-4 pb-4 '>
           <Card className='bg-card/95 backdrop-blur-sm shadow-xl border border-border py-0'>
             <CardContent className='p-4 sm:p-6'>
               <div className='grid grid-cols-1 sm:grid-cols-5 gap-4 items-end'>

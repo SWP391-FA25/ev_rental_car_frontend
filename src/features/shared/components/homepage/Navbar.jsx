@@ -109,7 +109,7 @@ export default function Navbar() {
       }`}
     >
       {/* Header with logo and menu button */}
-      <div className='flex items-center justify-between px-4 py-2 '>
+      <div className='flex items-center justify-around px-4 py-2 '>
         {/* Logo */}
         <div className='flex items-center'>
           <Link to='/' className='flex items-center'>
@@ -149,28 +149,21 @@ export default function Navbar() {
                 className='text-[hsl(var(--primary-foreground))] font-medium text-lg tracking-wider hover:text-[hsl(var(--primary-foreground))]/80 transition-colors'
                 onClick={() => setMenuOpen(false)}
               >
-                HOME
+                {t('navbar.home')}
               </Link>
               <Link
-                to='/gallery'
+                to='/cars'
                 className='text-[hsl(var(--primary-foreground))] font-medium text-lg tracking-wider hover:text-[hsl(var(--primary-foreground))]/80 transition-colors'
                 onClick={() => setMenuOpen(false)}
               >
-                GALLERY
+                {t('navbar.cars')}
               </Link>
               <Link
                 to='/about'
                 className='text-[hsl(var(--primary-foreground))] font-medium text-lg tracking-wider hover:text-[hsl(var(--primary-foreground))]/80 transition-colors'
                 onClick={() => setMenuOpen(false)}
               >
-                ABOUT US
-              </Link>
-              <Link
-                to='/contact'
-                className='text-[hsl(var(--primary-foreground))] font-medium text-lg tracking-wider hover:text-[hsl(var(--primary-foreground))]/80 transition-colors'
-                onClick={() => setMenuOpen(false)}
-              >
-                CONTACT US
+                {t('navbar.bookings')}
               </Link>
 
               {/* User section in mobile menu */}
@@ -231,7 +224,7 @@ export default function Navbar() {
         </Sheet>
 
         {/* Desktop Navigation and User Section */}
-        <div className='hidden md:flex items-center gap-4'>
+        <div className='hidden md:flex items-center gap-10'>
           <NavigationMenu className='hidden md:flex'>
             <NavigationMenuList>
               <NavigationMenuItem>
@@ -240,43 +233,34 @@ export default function Navbar() {
                     to='/'
                     className='px-4 py-2 text-[hsl(var(--primary-foreground))] font-medium tracking-wider hover:text-[hsl(var(--primary-foreground))]/80 transition-colors'
                   >
-                    HOME
+                    {t('navbar.home')}
                   </Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
               <NavigationMenuItem>
                 <NavigationMenuLink asChild>
                   <Link
-                    to='/gallery'
+                    to='/cars'
                     className='px-4 py-2 text-[hsl(var(--primary-foreground))] font-medium tracking-wider hover:text-[hsl(var(--primary-foreground))]/80 transition-colors'
                   >
-                    GALLERY
+                    {t('navbar.cars')}
                   </Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
               <NavigationMenuItem>
                 <NavigationMenuLink asChild>
                   <Link
-                    to='/about'
+                    to='/bookings'
                     className='px-4 py-2 text-[hsl(var(--primary-foreground))] font-medium tracking-wider hover:text-[hsl(var(--primary-foreground))]/80 transition-colors'
                   >
-                    ABOUT US
-                  </Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild>
-                  <Link
-                    to='/contact'
-                    className='px-4 py-2 text-[hsl(var(--primary-foreground))] font-medium tracking-wider hover:text-[hsl(var(--primary-foreground))]/80 transition-colors'
-                  >
-                    CONTACT US
+                    {t('navbar.bookings')}
                   </Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
-
+        </div>
+        <div className='hidden md:flex items-center gap-10'>
           <div className='flex items-center gap-2 ml-4'>
             <LanguageToggle />
             <ThemeToggle />

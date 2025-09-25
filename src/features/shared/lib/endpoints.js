@@ -22,5 +22,6 @@ export const endpoints = {
     create: () => '/api/stations',
     update: id => `/api/stations/${id}`,
     delete: id => `/api/stations/${id}`,
+    softDelete: id => `/api/stations/soft-delete/${id}`,
   },
 };

@@ -3,6 +3,7 @@ import { ScrollTrigger } from 'gsap/all';
 import { Fuel, MapPin, Settings, Users } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardTitle } from '../ui/card';
 import {
@@ -16,6 +17,7 @@ import {
 export default function FeaturesSection() {
   const sectionRef = useRef(null);
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const vehicles = [
     {
       id: 1,
@@ -108,6 +110,11 @@ export default function FeaturesSection() {
       available: true,
     },
   ];
+
+  const handleExploreAllCars = () => {
+    navigate('/cars');
+  };
+
   useEffect(() => {
     if (!sectionRef.current) return;
 
@@ -222,6 +229,7 @@ export default function FeaturesSection() {
         {/* Explore All Cars Button */}
         <div className='text-center mt-12'>
           <Button
+            onClick={handleExploreAllCars}
             variant='outline'
             size='lg'
             className='px-8 py-3 text-base font-medium hover:bg-primary hover:text-primary-foreground transition-colors'
