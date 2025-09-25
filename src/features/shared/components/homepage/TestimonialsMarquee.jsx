@@ -77,7 +77,7 @@ export default function TestimonialsMarquee() {
   return (
     <section ref={sectionRef} className='py-16 bg-muted/20 overflow-hidden'>
       <div className='mb-8 text-center'>
-        <h2 className='text-3xl font-bold text-foreground mb-2'>
+        <h2 className='text-3xl font-bold text-foreground mb-2 font-orbitron'>
           {t('testimonial.title')}
         </h2>
         <p className='text-muted-foreground'>{t('testimonial.description')}</p>

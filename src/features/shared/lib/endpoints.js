@@ -24,4 +24,16 @@ export const endpoints = {
     delete: id => `/api/stations/${id}`,
     softDelete: id => `/api/stations/soft-delete/${id}`,
   },
+  vehicles: {
+    getAll: () => '/api/vehicles',
+    getById: id => `/api/vehicles/${id}`,
+    create: () => '/api/vehicles',
+    update: id => `/api/vehicles/${id}`,
+    softDelete: id => `/api/vehicles/soft-delete/${id}`,
+    delete: id => `/api/vehicles/${id}`,
+    uploadImage: vehicleId => `/api/vehicles/${vehicleId}/images`,
+    getImages: vehicleId => `/api/vehicles/${vehicleId}/images`,
+    deleteImage: (vehicleId, imageId) =>
+      `/api/vehicles/${vehicleId}/images/${imageId}`,
+  },
 };

@@ -19,11 +19,29 @@ export function useApi() {
     }
   }, []);
 
-  const get = useCallback((url, config) => request('GET', url, { ...config }), [request]);
-  const post = useCallback((url, data, config) => request('POST', url, { data, ...config }), [request]);
-  const put = useCallback((url, data, config) => request('PUT', url, { data, ...config }), [request]);
-  const patch = useCallback((url, data, config) => request('PATCH', url, { data, ...config }), [request]);
-  const del = useCallback((url, config) => request('DELETE', url, { ...config }), [request]);
+  const get = useCallback(
+    (url, config) => request('GET', url, { ...config }),
+    [request]
+  );
+  const post = useCallback(
+    (url, data, config) => request('POST', url, { data, ...config }),
+    [request]
+  );
+  const put = useCallback(
+    (url, data, config) => request('PUT', url, { data, ...config }),
+    [request]
+  );
+  const patch = useCallback(
+    (url, data, config) => request('PATCH', url, { data, ...config }),
+    [request]
+  );
+  const del = useCallback(
+    (url, config) => request('DELETE', url, { ...config }),
+    [request]
+  );
 
-  return useMemo(() => ({ get, post, put, patch, del, loading, error }), [get, post, put, patch, del, loading, error]);
+  return useMemo(
+    () => ({ get, post, put, patch, del, loading, error }),
+    [get, post, put, patch, del, loading, error]
+  );
 }

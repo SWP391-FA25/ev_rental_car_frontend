@@ -1,5 +1,4 @@
 import AdminDashboard from '@/features/admin/layout/AdminDashboard.jsx';
-import BookingManagement from '@/features/admin/pages/BookingManagement.jsx';
 import Dashboard from '@/features/admin/pages/Dashboard.jsx';
 import Settings from '@/features/admin/pages/Settings.jsx';
 import StaffManagement from '@/features/admin/pages/StaffManagement.jsx';
@@ -13,6 +12,7 @@ import CarsPage from '@/features/cars/components/CarsPage.jsx';
 import Home from '@/features/shared/components/Home.jsx';
 import StaffDashboard from '@/features/staff/layout/StaffDashboard.jsx';
 import { createBrowserRouter } from 'react-router-dom';
+import VehicleManagement from '../../features/admin/pages/VehicleManagement';
 import UserPage from '../../features/booking/components/UserPage';
 import PrivateRoutes from '../utils/PrivateRoutes';
 import RoleBasedRoute from '../utils/RoleBaseRoutes';
@@ -38,7 +38,7 @@ export const router = createBrowserRouter([
       { path: 'users', element: <UserManagement /> },
       { path: 'staff', element: <StaffManagement /> },
       { path: 'stations', element: <StationManagement /> },
-      { path: 'bookings', element: <BookingManagement /> },
+      { path: 'vehicles', element: <VehicleManagement /> },
       { path: 'settings', element: <Settings /> },
     ],
   },

@@ -438,14 +438,7 @@ function StaffUser({ staff }) {
   );
 }
 
-export function StaffSidebar({
-  staff,
-  cars,
-  stations,
-  customers,
-  payments,
-  ...props
-}) {
+export function StaffSidebar({ staff, ...props }) {
   return (
     <Sidebar collapsible='offcanvas' {...props}>
       <SidebarHeader>
@@ -465,13 +458,6 @@ export function StaffSidebar({
       </SidebarHeader>
       <SidebarContent className='[&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-border/80'>
         <StaffNav items={data.navMain} />
-        <StaffQuickStats
-          cars={cars || []}
-          stations={stations || []}
-          customers={customers || []}
-          payments={payments || []}
-        />
-        <StaffSecondaryNav items={data.navSecondary} className='mt-auto' />
       </SidebarContent>
       <SidebarFooter>
         <StaffUser staff={staff || data.staff} />

@@ -44,8 +44,8 @@ const data = {
       icon: Building2Icon,
     },
     {
-      title: 'Booking Management',
-      url: '/admin/bookings',
+      title: 'Vehicals Management',
+      url: '/admin/vehicles',
       icon: FileTextIcon,
     },
     {
