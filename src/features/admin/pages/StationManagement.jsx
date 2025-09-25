@@ -21,6 +21,14 @@ import {
 } from '../../shared/components/ui/table';
 import { StationDetails } from '../components/StationDetails';
 import { StationForm } from '../components/StationForm';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '../../shared/components/ui/dialog';
+import { Label } from '../../shared/components/ui/label';
 import { useApi } from '../../shared/hooks/useApi';
 import { endpoints } from '../../shared/lib/endpoints';
 
@@ -79,6 +87,7 @@ export default function StationManagement() {
   };
 
   const handleEditStation = station => {
+    console.log('Editing station:', station); // Debugging log
     setSelectedStation(station);
     setIsEditing(true);
     setOpen(true);
@@ -139,6 +148,38 @@ export default function StationManagement() {
     } catch (error) {
       console.error('Error deleting station:', error);
     }
+  };
+
+  const handleUpdateStation = async (id, data) => {
+    try {
+      const response = await put(endpoints.stations.update(id), data);
+      if (response.success) {
+        console.log('Station updated successfully:', response.data);
+        fetchStations(); // Refresh the list
+        setOpen(false);
+        return response;
+      } else {
+        console.error('Failed to update station:', response.message);
+        alert(response.message || 'Failed to update station');
+        return response;
+      }
+    } catch (err) {
+      console.error('Error updating station:', err);
+      alert('An error occurred while updating the station');
+      throw err;
+    }
+  };
+
+  const renderStationDetails = station => {
+    return (
+      <StationDetails
+        open={open}
+        onOpenChange={setOpen}
+        station={station}
+        onUpdate={handleUpdateStation}
+        onEdit={() => handleEditStation(station)}
+      />
+    );
   };
 
   return (
@@ -235,11 +276,6 @@ export default function StationManagement() {
                         View Details
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => handleEditStation(station)}
-                      >
-                        Edit Station
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
                         className='text-red-600'
                         onClick={() => handleDeactivateStation(station.id)}
                       >
@@ -279,7 +315,6 @@ export default function StationManagement() {
           <div className='text-sm text-muted-foreground'>Available Spots</div>
         </div>
       </div>
-
       {/* Station Details or Edit Form */}
       {selectedStation && (
         <div className='rounded-md border p-4'>
@@ -292,11 +327,7 @@ export default function StationManagement() {
               loading={loading}
             />
           ) : (
-            <StationDetails
-              open={open}
-              onOpenChange={setOpen}
-              station={selectedStation}
-            />
+            renderStationDetails(selectedStation)
           )}
         </div>
       )}

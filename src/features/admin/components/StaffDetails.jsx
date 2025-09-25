@@ -249,17 +249,6 @@ export function StaffDetails({
                   </div>
                 )}
               </div>
-
-              {/* <div className='space-y-2'>
-                <Label>Soft Deleted</Label>
-                <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
-                  <Badge
-                    variant={staff.softDeleted ? 'destructive' : 'default'}
-                  >
-                    {staff.softDeleted ? 'Yes' : 'No'}
-                  </Badge>
-                </div>
-              </div> */}
             </div>
           </div>
 
