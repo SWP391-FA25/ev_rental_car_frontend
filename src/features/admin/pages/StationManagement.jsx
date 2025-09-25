@@ -150,6 +150,38 @@ export default function StationManagement() {
     }
   };
 
+  const handleUpdateStation = async (id, data) => {
+    try {
+      const response = await put(endpoints.stations.update(id), data);
+      if (response.success) {
+        console.log('Station updated successfully:', response.data);
+        fetchStations(); // Refresh the list
+        setOpen(false);
+        return response;
+      } else {
+        console.error('Failed to update station:', response.message);
+        alert(response.message || 'Failed to update station');
+        return response;
+      }
+    } catch (err) {
+      console.error('Error updating station:', err);
+      alert('An error occurred while updating the station');
+      throw err;
+    }
+  };
+
+  const renderStationDetails = station => {
+    return (
+      <StationDetails
+        open={open}
+        onOpenChange={setOpen}
+        station={station}
+        onUpdate={handleUpdateStation}
+        onEdit={() => handleEditStation(station)}
+      />
+    );
+  };
+
   return (
     <div className='space-y-6'>
       {/* Header */}
@@ -242,11 +274,6 @@ export default function StationManagement() {
                         onClick={() => handleViewDetails(station)}
                       >
                         View Details
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleEditStation(station)}
-                      >
-                        Edit Station
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className='text-red-600'
