@@ -1,5 +1,6 @@
 import { FilterIcon, PlusIcon, SearchIcon } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { MoreVerticalIcon } from 'lucide-react';
 import { Badge } from '../../shared/components/ui/badge';
@@ -21,6 +22,14 @@ import {
 } from '../../shared/components/ui/table';
 import { StationDetails } from '../components/StationDetails';
 import { StationForm } from '../components/StationForm';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '../../shared/components/ui/dialog';
+import { Label } from '../../shared/components/ui/label';
 
 // Mock data for stations
 const mockStations = [
@@ -62,6 +71,7 @@ export default function StationManagement() {
   const [selectedStation, setSelectedStation] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [open, setOpen] = useState(false); // Added state for modal visibility
+  const navigate = useNavigate();
 
   const filteredStations = mockStations.filter(station => {
     const matchesSearch =
@@ -94,8 +104,16 @@ export default function StationManagement() {
   };
 
   const handleEditStation = station => {
+    console.log('Editing station:', station); // Debugging log
     setSelectedStation(station);
     setIsEditing(true);
+    setOpen(true); // Ensure modal opens
+  };
+
+  const handleManageStaff = station => {
+    setSelectedStation(station);
+    setIsEditing(false);
+    setOpen(true);
   };
 
   const handleDeactivateStation = async stationId => {
@@ -112,6 +130,67 @@ export default function StationManagement() {
       console.error('Error deactivating station:', error);
     }
   };
+
+  const renderManageStaff = station => (
+    <div className='space-y-6'>
+      <h1 className='text-3xl font-bold tracking-tight'>
+        Manage Staff for {station.name}
+      </h1>
+      <p className='text-muted-foreground'>
+        View and manage staff for this station.
+      </p>
+      {/* Add staff management functionality here */}
+    </div>
+  );
+
+  const renderStationDetails = station => (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className='w-[95vw] max-w-[800px] max-h-[90vh] overflow-y-auto'>
+        <DialogHeader>
+          <DialogTitle>Station Details</DialogTitle>
+          <DialogDescription>
+            View and manage station information
+          </DialogDescription>
+        </DialogHeader>
+        <div className='space-y-6'>
+          <div className='space-y-4'>
+            <h3 className='text-lg font-semibold'>Basic Information</h3>
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+              <div className='space-y-2'>
+                <Label htmlFor='name'>Name</Label>
+                <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
+                  {station.name}
+                </div>
+              </div>
+              <div className='space-y-2'>
+                <Label htmlFor='address'>Address</Label>
+                <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
+                  {station.address}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className='space-y-4'>
+            <h3 className='text-lg font-semibold'>Operational Details</h3>
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+              <div className='space-y-2'>
+                <Label htmlFor='status'>Status</Label>
+                <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
+                  {station.status}
+                </div>
+              </div>
+              <div className='space-y-2'>
+                <Label htmlFor='capacity'>Capacity</Label>
+                <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
+                  {station.capacity}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 
   return (
     <div className='space-y-6'>
@@ -213,7 +292,11 @@ export default function StationManagement() {
                       >
                         Edit Station
                       </DropdownMenuItem>
-                      <DropdownMenuItem>Manage Staff</DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleManageStaff(station)}
+                      >
+                        Manage Staff
+                      </DropdownMenuItem>
                       <DropdownMenuItem
                         className='text-red-600'
                         onClick={() => handleDeactivateStation(station.id)}
@@ -248,24 +331,22 @@ export default function StationManagement() {
           <div className='text-sm text-muted-foreground'>Available Spots</div>
         </div>
       </div>
-
       {/* Station Details or Edit Form */}
       {selectedStation && (
         <div className='rounded-md border p-4'>
           {isEditing ? (
             <StationForm
+              open={open}
+              onOpenChange={setOpen}
               initialData={selectedStation}
               onSubmit={data => {
                 console.log('Updated station data:', data);
                 setIsEditing(false);
+                setOpen(false);
               }}
             />
           ) : (
-            <StationDetails
-              open={open}
-              onOpenChange={setOpen}
-              station={selectedStation}
-            />
+            renderStationDetails(selectedStation)
           )}
         </div>
       )}
