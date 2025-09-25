@@ -1,5 +1,5 @@
 import { FilterIcon, PlusIcon, SearchIcon } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { MoreVerticalIcon } from 'lucide-react';
 import { Badge } from '../../shared/components/ui/badge';
@@ -21,49 +21,35 @@ import {
 } from '../../shared/components/ui/table';
 import { StationDetails } from '../components/StationDetails';
 import { StationForm } from '../components/StationForm';
-
-// Mock data for stations
-const mockStations = [
-  {
-    id: '1',
-    name: 'Downtown Station',
-    address: '123 Main St, New York, NY 10001',
-    status: 'Active',
-    capacity: 20,
-    availableSpots: 12,
-    staff: ['John Smith', 'Maria Garcia'],
-    operatingHours: '24/7',
-  },
-  {
-    id: '2',
-    name: 'Airport Station',
-    address: '456 Airport Rd, Queens, NY 11430',
-    status: 'Active',
-    capacity: 35,
-    availableSpots: 22,
-    staff: ['Sarah Johnson', 'David Kim'],
-    operatingHours: '5:00 AM - 11:00 PM',
-  },
-  {
-    id: '3',
-    name: 'Mall Station',
-    address: '789 Shopping Center Dr, Brooklyn, NY 11201',
-    status: 'Maintenance',
-    capacity: 15,
-    availableSpots: 8,
-    staff: ['Mike Chen'],
-    operatingHours: '10:00 AM - 10:00 PM',
-  },
-];
+import { useApi } from '../../shared/hooks/useApi';
+import { endpoints } from '../../shared/lib/endpoints';
 
 export default function StationManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [selectedStation, setSelectedStation] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [open, setOpen] = useState(false); // Added state for modal visibility
+  const [open, setOpen] = useState(false);
+  const [stations, setStations] = useState([]);
+  const { get, post, put, del, loading, error } = useApi();
 
-  const filteredStations = mockStations.filter(station => {
+  // Fetch stations from API
+  useEffect(() => {
+    fetchStations();
+  }, []);
+
+  const fetchStations = async () => {
+    try {
+      const response = await get(endpoints.stations.getAll());
+      if (response.success) {
+        setStations(response.data.stations);
+      }
+    } catch (err) {
+      console.error('Error fetching stations:', err);
+    }
+  };
+
+  const filteredStations = stations.filter(station => {
     const matchesSearch =
       station.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       station.address.toLowerCase().includes(searchTerm.toLowerCase());
@@ -75,11 +61,11 @@ export default function StationManagement() {
 
   const getStatusBadgeVariant = status => {
     switch (status) {
-      case 'Active':
+      case 'ACTIVE':
         return 'default';
-      case 'Maintenance':
+      case 'MAINTENANCE':
         return 'secondary';
-      case 'Inactive':
+      case 'INACTIVE':
         return 'destructive';
       default:
         return 'outline';
@@ -87,29 +73,71 @@ export default function StationManagement() {
   };
 
   const handleViewDetails = station => {
-    console.log('Viewing station:', station); // Debugging log
     setSelectedStation(station);
     setIsEditing(false);
-    setOpen(true); // Ensure modal opens
+    setOpen(true);
   };
 
   const handleEditStation = station => {
     setSelectedStation(station);
     setIsEditing(true);
+    setOpen(true);
+  };
+
+  const handleAddStation = () => {
+    setSelectedStation(null);
+    setIsEditing(true);
+    setOpen(true);
+  };
+
+  const handleSaveStation = async data => {
+    try {
+      if (selectedStation && selectedStation.id) {
+        // Update existing station
+        const response = await put(
+          endpoints.stations.update(selectedStation.id),
+          data
+        );
+        if (response.success) {
+          fetchStations(); // Refresh the list
+          setOpen(false);
+        }
+      } else {
+        // Create new station
+        const response = await post(endpoints.stations.create(), data);
+        if (response.success) {
+          fetchStations(); // Refresh the list
+          setOpen(false);
+        }
+      }
+    } catch (err) {
+      console.error('Error saving station:', err);
+    }
   };
 
   const handleDeactivateStation = async stationId => {
     try {
-      const response = await fetch(`/api/stations/${stationId}/deactivate`, {
-        method: 'POST',
-      });
-      if (response.ok) {
-        alert('Station deactivated successfully');
+      const response = await post(endpoints.stations.softDelete(stationId));
+      if (response.success) {
+        fetchStations(); // Refresh the list
       } else {
         alert('Failed to deactivate station');
       }
     } catch (error) {
       console.error('Error deactivating station:', error);
+    }
+  };
+
+  const handleDeleteStation = async stationId => {
+    try {
+      const response = await del(endpoints.stations.delete(stationId));
+      if (response.success) {
+        fetchStations(); // Refresh the list
+      } else {
+        alert('Failed to delete station');
+      }
+    } catch (error) {
+      console.error('Error deleting station:', error);
     }
   };
 
@@ -125,7 +153,7 @@ export default function StationManagement() {
             Manage charging stations and locations
           </p>
         </div>
-        <Button>
+        <Button onClick={handleAddStation}>
           <PlusIcon className='mr-2 h-4 w-4' />
           Add Station
         </Button>
@@ -176,7 +204,6 @@ export default function StationManagement() {
               <TableHead>Status</TableHead>
               <TableHead>Capacity</TableHead>
               <TableHead>Available</TableHead>
-              <TableHead>Staff</TableHead>
               <TableHead>Operating Hours</TableHead>
               <TableHead className='w-[70px]'>Actions</TableHead>
             </TableRow>
@@ -193,7 +220,6 @@ export default function StationManagement() {
                 </TableCell>
                 <TableCell>{station.capacity}</TableCell>
                 <TableCell>{station.availableSpots}</TableCell>
-                <TableCell>{station.staff.join(', ')}</TableCell>
                 <TableCell>{station.operatingHours}</TableCell>
                 <TableCell>
                   <DropdownMenu>
@@ -213,12 +239,17 @@ export default function StationManagement() {
                       >
                         Edit Station
                       </DropdownMenuItem>
-                      <DropdownMenuItem>Manage Staff</DropdownMenuItem>
                       <DropdownMenuItem
                         className='text-red-600'
                         onClick={() => handleDeactivateStation(station.id)}
                       >
                         Deactivate Station
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className='text-red-600'
+                        onClick={() => handleDeleteStation(station.id)}
+                      >
+                        Delete Station
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -232,18 +263,18 @@ export default function StationManagement() {
       {/* Summary Stats */}
       <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
         <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>{mockStations.length}</div>
+          <div className='text-2xl font-bold'>{stations.length}</div>
           <div className='text-sm text-muted-foreground'>Total Stations</div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>
-            {mockStations.filter(s => s.status === 'Active').length}
+            {stations.filter(s => s.status === 'ACTIVE').length}
           </div>
           <div className='text-sm text-muted-foreground'>Active Stations</div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>
-            {mockStations.reduce((sum, s) => sum + s.availableSpots, 0)}
+            {stations.reduce((sum, s) => sum + (s.availableSpots || 0), 0)}
           </div>
           <div className='text-sm text-muted-foreground'>Available Spots</div>
         </div>
@@ -254,11 +285,11 @@ export default function StationManagement() {
         <div className='rounded-md border p-4'>
           {isEditing ? (
             <StationForm
+              open={open}
+              onOpenChange={setOpen}
               initialData={selectedStation}
-              onSubmit={data => {
-                console.log('Updated station data:', data);
-                setIsEditing(false);
-              }}
+              onSubmit={handleSaveStation}
+              loading={loading}
             />
           ) : (
             <StationDetails
