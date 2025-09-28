@@ -438,7 +438,13 @@ function StaffUser({ staff }) {
   );
 }
 
-export function StaffSidebar({ staff, ...props }) {
+export function StaffSidebar({
+  staff,
+  activeTab,
+  setActiveTab,
+  menuItems,
+  ...props
+}) {
   return (
     <Sidebar collapsible='offcanvas' {...props}>
       <SidebarHeader>
@@ -457,7 +463,22 @@ export function StaffSidebar({ staff, ...props }) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent className='[&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-border/80'>
-        <StaffNav items={data.navMain} />
+        <SidebarGroup>
+          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarMenu>
+            {menuItems.map(item => (
+              <SidebarMenuItem key={item.id}>
+                <SidebarMenuButton
+                  onClick={() => setActiveTab(item.id)}
+                  isActive={activeTab === item.id}
+                >
+                  {item.icon}
+                  <span>{item.label}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
         <StaffUser staff={staff || data.staff} />
