@@ -8,6 +8,7 @@ import ChangePassword from '../components/ChangePassword';
 import FavoriteCars from '../components/FavoriteCars';
 import ProfileContent from '../components/ProfileContent';
 import UserSidebar from '../components/UserSidebar';
+import UserDocumentsPage from '../pages/UserDocumentsPage';
 
 export default function UserProfileLayout() {
   const { user } = useAuth();
@@ -35,6 +36,7 @@ export default function UserProfileLayout() {
         <div className='flex-1 bg-muted/30'>
           <div className='p-8'>
             {activeTab === 'profile' && <ProfileContent user={user} />}
+            {activeTab === 'documents' && <UserDocumentsPage />}
             {activeTab === 'favorites' && <FavoriteCars />}
             {activeTab === 'trips' && <BookingsContent />}
             {activeTab === 'longterm' && (

@@ -1,39 +1,60 @@
 import * as React from 'react';
+import { Car, MapPin, Users, CreditCard, FileText, Wrench } from 'lucide-react';
 import {
-  Car,
-  MapPin,
-  Users,
-  CreditCard,
-  Menu,
-  X,
-  Battery,
-  Wrench,
-  CheckCircle,
-  LogOut,
-} from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../app/providers/AuthProvider';
-import { toast } from 'sonner';
-import { Button } from '../../shared/components/ui/button';
+  SidebarInset,
+  SidebarProvider,
+} from '../../shared/components/ui/sidebar';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from '../../shared/components/ui/card';
-import { Badge } from '../../shared/components/ui/badge';
+import { Button } from '../../shared/components/ui/button';
+import { CarManagement } from '../components/car-management';
+import { CustomerManagement } from '../components/customer-management';
+import { PaymentManagement } from '../components/payment-management';
+import { StaffHeader } from '../components/staff-header';
+import { StaffSidebar } from '../components/staff-sidebar';
+import { StationManagement } from '../components/station-management';
+import DocumentVerification from '../components/document-verification';
+// Removed QuickVerification import
 
-// Mock data for demonstration
-const mockStaffData = {
-  id: 'STAFF001',
-  name: 'John Smith',
-  email: 'john.smith@company.com',
-  role: 'Station Manager',
-  station: 'Downtown Station',
-  avatar: '/api/placeholder/32/32',
-  shift: 'Morning (6AM - 2PM)',
-  status: 'Active',
-};
+const mockStaffData = [
+  {
+    id: 'STAFF001',
+    name: 'John Smith',
+    email: 'john.smith@company.com',
+    role: 'Station Manager',
+    station: 'Downtown Station',
+    avatar: '/api/placeholder/32/32',
+    shift: 'Morning (6AM - 2PM)',
+    status: 'Active',
+    permissions: ['car_management', 'customer_service', 'payment_processing'],
+  },
+  {
+    id: 'STAFF002',
+    name: 'Sarah Johnson',
+    email: 'sarah.j@company.com',
+    role: 'Customer Service Rep',
+    station: 'Airport Station',
+    avatar: '/api/placeholder/32/32',
+    shift: 'Evening (2PM - 10PM)',
+    status: 'Active',
+    permissions: ['customer_service', 'payment_processing'],
+  },
+  {
+    id: 'STAFF003',
+    name: 'Mike Chen',
+    email: 'mike.chen@company.com',
+    role: 'Maintenance Tech',
+    station: 'Mall Station',
+    avatar: '/api/placeholder/32/32',
+    shift: 'Night (10PM - 6AM)',
+    status: 'Off Duty',
+    permissions: ['car_management'],
+  },
+];
 
 const mockCarData = [
   {
@@ -43,6 +64,10 @@ const mockCarData = [
     station: 'Downtown Station',
     status: 'Available',
     batteryLevel: 85,
+    mileage: 25430,
+    lastService: '2024-01-15',
+    currentBooking: null,
+    location: { lat: 40.7128, lng: -74.006 },
   },
   {
     id: 'CAR002',
@@ -51,6 +76,17 @@ const mockCarData = [
     station: 'Airport Station',
     status: 'Rented',
     batteryLevel: 62,
+    mileage: 18750,
+    lastService: '2024-01-10',
+    currentBooking: {
+      id: 'BOOK001',
+      customer: 'Alice Johnson',
+      startTime: '2024-01-20T09:00:00Z',
+      endTime: '2024-01-22T18:00:00Z',
+      pickupLocation: 'Airport Station',
+      dropoffLocation: 'Downtown Station',
+    },
+    location: { lat: 40.6892, lng: -74.1745 },
   },
   {
     id: 'CAR003',
@@ -59,93 +95,166 @@ const mockCarData = [
     station: 'Mall Station',
     status: 'Maintenance',
     batteryLevel: 0,
+    mileage: 32100,
+    lastService: '2024-01-18',
+    currentBooking: null,
+    location: { lat: 40.7282, lng: -73.7949 },
   },
 ];
 
-const mockStationData = {
-  id: 'STATION001',
-  name: 'Downtown Station',
-  address: '123 Main St, New York, NY 10001',
-  availableSpots: 12,
-  capacity: 20,
-  chargingPorts: 15,
-  activeChargingPorts: 8,
-};
+const mockStationData = [
+  {
+    id: 'STATION001',
+    name: 'Downtown Station',
+    address: '123 Main St, New York, NY 10001',
+    coordinates: { lat: 40.7128, lng: -74.006 },
+    capacity: 20,
+    availableSpots: 12,
+    chargingPorts: 15,
+    activeChargingPorts: 8,
+    staff: ['John Smith', 'Maria Garcia'],
+    operatingHours: '24/7',
+    status: 'Active',
+    amenities: ['WiFi', 'Restrooms', 'Vending Machines', 'Waiting Area'],
+  },
+  {
+    id: 'STATION002',
+    name: 'Airport Station',
+    address: '456 Airport Rd, Queens, NY 11430',
+    coordinates: { lat: 40.6892, lng: -74.1745 },
+    capacity: 35,
+    availableSpots: 22,
+    chargingPorts: 25,
+    activeChargingPorts: 13,
+    staff: ['Sarah Johnson', 'David Kim'],
+    operatingHours: '5:00 AM - 11:00 PM',
+    status: 'Active',
+    amenities: ['WiFi', 'Restrooms', 'Food Court', 'Shuttle Service'],
+  },
+  {
+    id: 'STATION003',
+    name: 'Mall Station',
+    address: '789 Shopping Center Dr, Brooklyn, NY 11201',
+    coordinates: { lat: 40.7282, lng: -73.7949 },
+    capacity: 15,
+    availableSpots: 8,
+    chargingPorts: 12,
+    activeChargingPorts: 4,
+    staff: ['Mike Chen'],
+    operatingHours: '10:00 AM - 10:00 PM',
+    status: 'Maintenance',
+    amenities: ['WiFi', 'Restrooms', 'Shopping', 'Food Court'],
+  },
+];
 
 const mockCustomerData = [
   {
     id: 'CUST001',
     name: 'Alice Johnson',
-    currentBooking: 'BOOK001',
+    email: 'alice.johnson@email.com',
+    phone: '+1-555-0123',
+    licenseNumber: 'NY123456789',
+    licenseExpiry: '2026-08-15',
+    membershipType: 'Premium',
+    joinDate: '2023-03-15',
+    totalBookings: 28,
     status: 'Active',
+    currentBooking: {
+      id: 'BOOK001',
+      car: 'Tesla Model 3 (EV-123-ABC)',
+      startTime: '2024-01-20T09:00:00Z',
+      endTime: '2024-01-22T18:00:00Z',
+    },
+    verificationStatus: {
+      identity: 'Verified',
+      license: 'Verified',
+      payment: 'Verified',
+    },
   },
   {
     id: 'CUST002',
     name: 'Bob Wilson',
-    currentBooking: null,
+    email: 'bob.wilson@email.com',
+    phone: '+1-555-0456',
+    licenseNumber: 'NY987654321',
+    licenseExpiry: '2025-12-20',
+    membershipType: 'Standard',
+    joinDate: '2023-07-22',
+    totalBookings: 15,
     status: 'Pending Check-in',
+    currentBooking: null,
+    verificationStatus: {
+      identity: 'Verified',
+      license: 'Pending',
+      payment: 'Verified',
+    },
   },
 ];
 
 const mockPaymentData = [
   {
     id: 'PAY001',
+    bookingId: 'BOOK001',
     customer: 'Alice Johnson',
     amount: 245.5,
+    currency: 'USD',
+    method: 'Credit Card',
     status: 'Completed',
+    transactionDate: '2024-01-20T09:15:00Z',
+    dueDate: '2024-01-22T18:00:00Z',
+    description: 'Tesla Model 3 rental - 3 days',
+    breakdown: {
+      baseRate: 180.0,
+      insurance: 45.0,
+      taxes: 20.5,
+    },
   },
   {
     id: 'PAY002',
+    bookingId: 'BOOK002',
     customer: 'Bob Wilson',
     amount: 120.75,
+    currency: 'USD',
+    method: 'Debit Card',
     status: 'Pending',
+    transactionDate: '2024-01-21T14:30:00Z',
+    dueDate: '2024-01-23T12:00:00Z',
+    description: 'Nissan Leaf rental - 2 days',
+    breakdown: {
+      baseRate: 90.0,
+      insurance: 22.5,
+      taxes: 8.25,
+    },
+  },
+  {
+    id: 'PAY003',
+    bookingId: 'BOOK003',
+    customer: 'Carol Davis',
+    amount: 89.99,
+    currency: 'USD',
+    method: 'Digital Wallet',
+    status: 'Failed',
+    transactionDate: '2024-01-19T16:45:00Z',
+    dueDate: '2024-01-21T10:00:00Z',
+    description: 'BMW i3 rental - 1 day',
+    breakdown: {
+      baseRate: 70.0,
+      insurance: 15.0,
+      taxes: 4.99,
+    },
   },
 ];
 
 export default function StaffDashboard() {
-  const { logout: authLogout } = useAuth();
-  const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState('dashboard');
-
-  const handleLogout = async () => {
-    try {
-      // In a real app, you would call your logout API endpoint here
-      // For now, we'll just clear the auth state
-      console.log('Logging out...');
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      authLogout();
-      toast.success('Logged out successfully');
-      navigate('/');
-    }
-  };
-
-  const CarStatusBadge = ({ status }) => {
-    const statusConfig = {
-      Available: { variant: 'default', icon: CheckCircle },
-      Rented: { variant: 'secondary', icon: Car },
-      Maintenance: { variant: 'destructive', icon: Wrench },
-    };
-
-    const config = statusConfig[status] || statusConfig.Available;
-    const Icon = config.icon;
-
-    return (
-      <Badge variant={config.variant} className='gap-1'>
-        <Icon className='h-3 w-3' />
-        {status}
-      </Badge>
-    );
-  };
 
   const renderDashboard = () => (
     <div className='space-y-6'>
       <div>
         <h1 className='text-2xl font-bold'>Staff Dashboard</h1>
         <p className='text-muted-foreground'>
-          Welcome back, {mockStaffData.name}. Your shift: {mockStaffData.shift}
+          Welcome back, {mockStaffData[0].name}. Your shift:{' '}
+          {mockStaffData[0].shift}
         </p>
       </div>
 
@@ -197,18 +306,13 @@ export default function StaffDashboard() {
         <Card>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
             <CardTitle className='text-sm font-medium'>
-              Pending Payments
+              Pending Verifications
             </CardTitle>
-            <CreditCard className='h-4 w-4 text-muted-foreground' />
+            <FileText className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>
-              {
-                mockPaymentData.filter(payment => payment.status === 'Pending')
-                  .length
-              }
-            </div>
-            <p className='text-xs text-muted-foreground'>Require attention</p>
+            <div className='text-2xl font-bold'>12</div>
+            <p className='text-xs text-muted-foreground'>Documents to review</p>
           </CardContent>
         </Card>
       </div>
@@ -226,9 +330,6 @@ export default function StaffDashboard() {
             </Button>
             <Button variant='outline' onClick={() => setActiveTab('payments')}>
               Process Payments
-            </Button>
-            <Button variant='outline' onClick={() => setActiveTab('stations')}>
-              Station Info
             </Button>
           </CardContent>
         </Card>
@@ -253,9 +354,9 @@ export default function StaffDashboard() {
               </div>
               <div className='flex items-center'>
                 <div className='ml-4 space-y-1'>
-                  <p className='text-sm font-medium'>Car returned</p>
+                  <p className='text-sm font-medium'>Document verified</p>
                   <p className='text-sm text-muted-foreground'>
-                    Nissan Leaf returned at Downtown Station
+                    John Doe's driver's license approved
                   </p>
                 </div>
                 <div className='ml-auto text-sm text-muted-foreground'>
@@ -264,9 +365,9 @@ export default function StaffDashboard() {
               </div>
               <div className='flex items-center'>
                 <div className='ml-4 space-y-1'>
-                  <p className='text-sm font-medium'>Maintenance completed</p>
+                  <p className='text-sm font-medium'>Car returned</p>
                   <p className='text-sm text-muted-foreground'>
-                    BMW i3 maintenance finished
+                    Nissan Leaf returned at Downtown Station
                   </p>
                 </div>
                 <div className='ml-auto text-sm text-muted-foreground'>
@@ -280,183 +381,21 @@ export default function StaffDashboard() {
     </div>
   );
 
-  const renderCars = () => (
-    <div className='space-y-6'>
-      <div>
-        <h1 className='text-2xl font-bold'>Car Management</h1>
-        <p className='text-muted-foreground'>
-          Manage vehicle availability and status
-        </p>
-      </div>
+  const renderCars = () => {
+    return <CarManagement />;
+  };
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Vehicle Status</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className='space-y-4'>
-            {mockCarData.map(car => (
-              <div
-                key={car.id}
-                className='flex items-center justify-between p-4 border rounded-lg'
-              >
-                <div className='flex items-center space-x-4'>
-                  <div>
-                    <p className='font-medium'>{car.model}</p>
-                    <p className='text-sm text-muted-foreground'>
-                      {car.licensePlate}
-                    </p>
-                  </div>
-                </div>
-                <div className='flex items-center space-x-4'>
-                  <div className='text-right'>
-                    <p className='text-sm text-muted-foreground'>Battery</p>
-                    <div className='flex items-center'>
-                      <Battery className='h-4 w-4 mr-1' />
-                      <span>{car.batteryLevel}%</span>
-                    </div>
-                  </div>
-                  <CarStatusBadge status={car.status} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+  const renderStations = () => {
+    return <StationManagement />;
+  };
 
-      <div className='flex space-x-3'>
-        <Button>Add New Car</Button>
-        <Button variant='outline'>Update Status</Button>
-        <Button variant='outline'>Process Return</Button>
-      </div>
-    </div>
-  );
+  const renderCustomers = () => {
+    return <CustomerManagement />;
+  };
 
-  const renderStations = () => (
-    <div className='space-y-6'>
-      <div>
-        <h1 className='text-2xl font-bold'>Station Management</h1>
-        <p className='text-muted-foreground'>
-          Manage station information and capacity
-        </p>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{mockStationData.name}</CardTitle>
-        </CardHeader>
-        <CardContent className='space-y-4'>
-          <div>
-            <p className='text-sm text-muted-foreground'>Address</p>
-            <p>{mockStationData.address}</p>
-          </div>
-
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-            <div className='p-4 border rounded-lg'>
-              <p className='text-sm text-muted-foreground'>Parking Spots</p>
-              <p className='text-2xl font-bold'>
-                {mockStationData.availableSpots}/{mockStationData.capacity}
-              </p>
-            </div>
-            <div className='p-4 border rounded-lg'>
-              <p className='text-sm text-muted-foreground'>Charging Ports</p>
-              <p className='text-2xl font-bold'>
-                {mockStationData.activeChargingPorts}/
-                {mockStationData.chargingPorts}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-
-  const renderCustomers = () => (
-    <div className='space-y-6'>
-      <div>
-        <h1 className='text-2xl font-bold'>Customer Service</h1>
-        <p className='text-muted-foreground'>
-          Manage customer interactions and check-ins
-        </p>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Customer Status</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className='space-y-4'>
-            {mockCustomerData.map(customer => (
-              <div
-                key={customer.id}
-                className='flex items-center justify-between p-4 border rounded-lg'
-              >
-                <div>
-                  <p className='font-medium'>{customer.name}</p>
-                  <p className='text-sm text-muted-foreground'>
-                    {customer.currentBooking
-                      ? `Booking: ${customer.currentBooking}`
-                      : 'No active booking'}
-                  </p>
-                </div>
-                <Badge
-                  variant={
-                    customer.status === 'Active' ? 'default' : 'secondary'
-                  }
-                >
-                  {customer.status}
-                </Badge>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-
-  const renderPayments = () => (
-    <div className='space-y-6'>
-      <div>
-        <h1 className='text-2xl font-bold'>Payment Management</h1>
-        <p className='text-muted-foreground'>
-          Process payments and handle billing
-        </p>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className='space-y-4'>
-            {mockPaymentData.map(payment => (
-              <div
-                key={payment.id}
-                className='flex items-center justify-between p-4 border rounded-lg'
-              >
-                <div>
-                  <p className='font-medium'>{payment.customer}</p>
-                  <p className='text-sm text-muted-foreground'>
-                    Payment ID: {payment.id}
-                  </p>
-                </div>
-                <div className='flex items-center space-x-4'>
-                  <p className='font-medium'>${payment.amount}</p>
-                  <Badge
-                    variant={
-                      payment.status === 'Completed' ? 'default' : 'secondary'
-                    }
-                  >
-                    {payment.status}
-                  </Badge>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  const renderPayments = () => {
+    return <PaymentManagement />;
+  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -470,6 +409,9 @@ export default function StaffDashboard() {
         return renderCustomers();
       case 'payments':
         return renderPayments();
+      case 'documents':
+        return <DocumentVerification />;
+      // Removed quick-verify case
       default:
         return renderDashboard();
     }
@@ -489,112 +431,30 @@ export default function StaffDashboard() {
       label: 'Payments',
       icon: <CreditCard className='h-4 w-4' />,
     },
+    {
+      id: 'documents',
+      label: 'Document Verification',
+      icon: <FileText className='h-4 w-4' />,
+    },
+    // Removed quick-verify menu item
   ];
 
   return (
-    <div className='flex h-screen bg-gray-50'>
-      {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
-        <div
-          className='fixed inset-0 z-40 bg-black bg-opacity-50 md:hidden'
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:h-screen ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <div className='flex flex-col h-full'>
-          {/* Sidebar header */}
-          <div className='flex items-center justify-between p-4 border-b'>
-            <div className='flex items-center space-x-2'>
-              <Car className='h-6 w-6 text-blue-600' />
-              <span className='text-lg font-bold'>EV Staff</span>
-            </div>
-            <button className='md:hidden' onClick={() => setSidebarOpen(false)}>
-              <X className='h-5 w-5' />
-            </button>
-          </div>
-
-          {/* Staff info */}
-          <div className='p-4 border-b'>
-            <p className='font-semibold'>{mockStaffData.name}</p>
-            <p className='text-sm text-muted-foreground'>
-              {mockStaffData.role}
-            </p>
-            <p className='text-xs text-muted-foreground'>
-              {mockStaffData.station}
-            </p>
-          </div>
-
-          {/* Navigation */}
-          <nav className='flex-1 p-2 overflow-y-auto'>
-            <ul className='space-y-1'>
-              {menuItems.map(item => (
-                <li key={item.id}>
-                  <button
-                    onClick={() => {
-                      setActiveTab(item.id);
-                      setSidebarOpen(false);
-                    }}
-                    className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left ${
-                      activeTab === item.id
-                        ? 'bg-blue-100 text-blue-600'
-                        : 'hover:bg-gray-100'
-                    }`}
-                  >
-                    {item.icon}
-                    <span>{item.label}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          {/* Logout button */}
-          <div className='p-2 border-t'>
-            <Button
-              variant='ghost'
-              className='w-full justify-start text-red-600 hover:text-red-600 hover:bg-red-50'
-              onClick={handleLogout}
-            >
-              <LogOut className='h-4 w-4 mr-3' />
-              Logout
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className='flex-1 flex flex-col overflow-hidden'>
-        {/* Header */}
-        <header className='bg-white shadow-sm'>
-          <div className='flex items-center justify-between p-4'>
-            <div className='flex items-center'>
-              <button
-                className='md:hidden mr-3'
-                onClick={() => setSidebarOpen(true)}
-              >
-                <Menu className='h-6 w-6' />
-              </button>
-              <h1 className='text-lg font-semibold capitalize'>
-                {activeTab.replace('-', ' ')}
-              </h1>
-            </div>
-            <div className='flex items-center space-x-3'>
-              <Badge variant='secondary'>{mockStaffData.station}</Badge>
-            </div>
-          </div>
-        </header>
-
-        {/* Content */}
-        <main className='flex-1 overflow-y-auto p-4 md:p-6'>
-          {renderContent()}
-        </main>
-      </div>
-    </div>
+    <SidebarProvider>
+      <StaffSidebar
+        staff={mockStaffData[0]}
+        cars={mockCarData}
+        stations={mockStationData}
+        customers={mockCustomerData}
+        payments={mockPaymentData}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        menuItems={menuItems}
+      />
+      <SidebarInset>
+        <StaffHeader />
+        <div className='flex flex-1 flex-col gap-4 p-4'>{renderContent()}</div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
