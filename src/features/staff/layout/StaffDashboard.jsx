@@ -22,6 +22,7 @@ import {
   CardTitle,
 } from '../../shared/components/ui/card';
 import { Badge } from '../../shared/components/ui/badge';
+import { ThemeToggle } from '../../shared/components/homepage/ThemeToggle';
 
 // Mock data for demonstration
 const mockStaffData = {
@@ -298,7 +299,7 @@ export default function StaffDashboard() {
             {mockCarData.map(car => (
               <div
                 key={car.id}
-                className='flex items-center justify-between p-4 border rounded-lg'
+                className='flex items-center justify-between p-4 border rounded-lg bg-card'
               >
                 <div className='flex items-center space-x-4'>
                   <div>
@@ -312,7 +313,7 @@ export default function StaffDashboard() {
                   <div className='text-right'>
                     <p className='text-sm text-muted-foreground'>Battery</p>
                     <div className='flex items-center'>
-                      <Battery className='h-4 w-4 mr-1' />
+                      <Battery className='h-4 w-4 mr-1 text-muted-foreground' />
                       <span>{car.batteryLevel}%</span>
                     </div>
                   </div>
@@ -352,13 +353,13 @@ export default function StaffDashboard() {
           </div>
 
           <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-            <div className='p-4 border rounded-lg'>
+            <div className='p-4 border rounded-lg bg-card'>
               <p className='text-sm text-muted-foreground'>Parking Spots</p>
               <p className='text-2xl font-bold'>
                 {mockStationData.availableSpots}/{mockStationData.capacity}
               </p>
             </div>
-            <div className='p-4 border rounded-lg'>
+            <div className='p-4 border rounded-lg bg-card'>
               <p className='text-sm text-muted-foreground'>Charging Ports</p>
               <p className='text-2xl font-bold'>
                 {mockStationData.activeChargingPorts}/
@@ -389,7 +390,7 @@ export default function StaffDashboard() {
             {mockCustomerData.map(customer => (
               <div
                 key={customer.id}
-                className='flex items-center justify-between p-4 border rounded-lg'
+                className='flex items-center justify-between p-4 border rounded-lg bg-card'
               >
                 <div>
                   <p className='font-medium'>{customer.name}</p>
@@ -432,7 +433,7 @@ export default function StaffDashboard() {
             {mockPaymentData.map(payment => (
               <div
                 key={payment.id}
-                className='flex items-center justify-between p-4 border rounded-lg'
+                className='flex items-center justify-between p-4 border rounded-lg bg-card'
               >
                 <div>
                   <p className='font-medium'>{payment.customer}</p>
@@ -492,7 +493,7 @@ export default function StaffDashboard() {
   ];
 
   return (
-    <div className='flex h-screen bg-gray-50'>
+    <div className='flex h-screen bg-background'>
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
@@ -503,29 +504,33 @@ export default function StaffDashboard() {
 
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:h-screen ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-sidebar shadow-lg transform transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:h-screen ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className='flex flex-col h-full'>
           {/* Sidebar header */}
-          <div className='flex items-center justify-between p-4 border-b'>
+          <div className='flex items-center justify-between p-4 border-b border-sidebar-border'>
             <div className='flex items-center space-x-2'>
-              <Car className='h-6 w-6 text-blue-600' />
-              <span className='text-lg font-bold'>EV Staff</span>
+              <Car className='h-6 w-6 text-sidebar-primary' />
+              <span className='text-lg font-bold text-sidebar-foreground'>
+                EV Staff
+              </span>
             </div>
             <button className='md:hidden' onClick={() => setSidebarOpen(false)}>
-              <X className='h-5 w-5' />
+              <X className='h-5 w-5 text-sidebar-foreground' />
             </button>
           </div>
 
           {/* Staff info */}
-          <div className='p-4 border-b'>
-            <p className='font-semibold'>{mockStaffData.name}</p>
-            <p className='text-sm text-muted-foreground'>
+          <div className='p-4 border-b border-sidebar-border'>
+            <p className='font-semibold text-sidebar-foreground'>
+              {mockStaffData.name}
+            </p>
+            <p className='text-sm text-sidebar-accent-foreground'>
               {mockStaffData.role}
             </p>
-            <p className='text-xs text-muted-foreground'>
+            <p className='text-xs text-sidebar-accent-foreground'>
               {mockStaffData.station}
             </p>
           </div>
@@ -542,8 +547,8 @@ export default function StaffDashboard() {
                     }}
                     className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left ${
                       activeTab === item.id
-                        ? 'bg-blue-100 text-blue-600'
-                        : 'hover:bg-gray-100'
+                        ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                        : 'hover:bg-sidebar-accent/50 text-sidebar-foreground'
                     }`}
                   >
                     {item.icon}
@@ -555,7 +560,7 @@ export default function StaffDashboard() {
           </nav>
 
           {/* Logout button */}
-          <div className='p-2 border-t'>
+          <div className='p-2 border-t border-sidebar-border'>
             <Button
               variant='ghost'
               className='w-full justify-start text-red-600 hover:text-red-600 hover:bg-red-50'
@@ -571,7 +576,7 @@ export default function StaffDashboard() {
       {/* Main content */}
       <div className='flex-1 flex flex-col overflow-hidden'>
         {/* Header */}
-        <header className='bg-white shadow-sm'>
+        <header className='bg-card border-b'>
           <div className='flex items-center justify-between p-4'>
             <div className='flex items-center'>
               <button
@@ -585,6 +590,7 @@ export default function StaffDashboard() {
               </h1>
             </div>
             <div className='flex items-center space-x-3'>
+              <ThemeToggle />
               <Badge variant='secondary'>{mockStaffData.station}</Badge>
             </div>
           </div>
