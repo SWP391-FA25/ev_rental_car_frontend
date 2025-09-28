@@ -75,17 +75,18 @@ export default function HeroSection() {
   return (
     <header
       id='home'
-      className='min-h-screen relative overflow-hidden'
+      className='min-h-screen relative'
       style={{
         backgroundImage:
           'url("https://digitalassets.tesla.com/tesla-contents/image/upload/f_auto,q_auto/Homepage-Promo-Model-3-Desktop-US-July.png")',
         backgroundPosition: 'center center',
         backgroundSize: 'cover',
         backgroundRepeat: 'no-repeat',
+        paddingBottom: '80px', // Add space for search form
       }}
     >
       {/* Gradient Overlay */}
-      <div className='absolute inset-0 bg-gradient-to-b from-[hsl(var(--background))] via-transparent to-[hsl(var(--background))] z-0' />
+      <div className='absolute inset-0 bg-gradient-to-b from-[hsl(var(--background))] via-transparent to-[hsl(var(--background))] z-10' />
 
       {/* Background Lines */}
       <div className='absolute top-0 left-1/2 transform -translate-x-1/2 h-full w-full max-w-[1200px] flex justify-between z-0'>
@@ -98,7 +99,7 @@ export default function HeroSection() {
       </div>
 
       {/* Content */}
-      <div className='relative z-10 h-screen flex flex-col justify-between'>
+      <div className='relative z-20 h-screen flex flex-col justify-between'>
         {/* Main Title - Centered */}
         <div className='flex-1 flex items-start justify-center pt-20'>
           <div className='max-w-[1200px] mx-auto px-4'>
@@ -106,7 +107,7 @@ export default function HeroSection() {
               ref={headlineRef}
               className='max-w-[800px] mx-auto text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-[hsl(var(--primary-foreground))]  text-center'
               style={{
-                fontFamily: 'Orbitron, sans-serif',
+                // fontFamily: 'Orbitron, sans-serif',
                 letterSpacing: '2px',
               }}
             >
@@ -121,8 +122,12 @@ export default function HeroSection() {
         </div>
 
         {/* Search Form - At Bottom */}
-        <div ref={searchFormRef} className='max-w-4xl mx-auto px-4 pb-4 '>
-          <Card className='bg-card/95 backdrop-blur-sm shadow-xl border border-border py-0'>
+        <div
+          ref={searchFormRef}
+          className='absolute inset-x-0 px-4 flex justify-center'
+          style={{ bottom: '-140px', zIndex: '100' }}
+        >
+          <Card className='w-full max-w-4xl bg-card/95 backdrop-blur-sm shadow-xl border border-border py-0'>
             <CardContent className='p-4 sm:p-6'>
               <div className='grid grid-cols-1 sm:grid-cols-5 gap-4 items-end'>
                 {/* Pickup Location */}

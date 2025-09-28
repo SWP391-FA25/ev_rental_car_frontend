@@ -122,7 +122,7 @@ export default function Navbar() {
                 e.target.nextSibling.style.display = 'block';
               }}
             />
-            <span className='text-5xl font-bold text-[hsl(var(--primary-foreground))] hidden font-dancing'>
+            <span className='text-3xl font-bold text-[hsl(var(--primary-foreground))] hidden font-dancing'>
               Ev Rental
             </span>
           </Link>
@@ -159,7 +159,7 @@ export default function Navbar() {
                 {t('navbar.cars')}
               </Link>
               <Link
-                to='/about'
+                to='/user/profile?tab=trips'
                 className='text-[hsl(var(--primary-foreground))] font-medium text-lg tracking-wider hover:text-[hsl(var(--primary-foreground))]/80 transition-colors'
                 onClick={() => setMenuOpen(false)}
               >
@@ -206,7 +206,7 @@ export default function Navbar() {
                         asChild
                         className='text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary-foreground))]/20'
                       >
-                        <Link to='/user'>{t('navbar.profile')}</Link>
+                        <Link to='/user/profile'>{t('navbar.profile')}</Link>
                       </Button>
                       <Button
                         variant='ghost'
@@ -250,7 +250,7 @@ export default function Navbar() {
               <NavigationMenuItem>
                 <NavigationMenuLink asChild>
                   <Link
-                    to='/bookings'
+                    to='/user/profile?tab=trips'
                     className='px-4 py-2 text-[hsl(var(--primary-foreground))] font-medium tracking-wider hover:text-[hsl(var(--primary-foreground))]/80 transition-colors'
                   >
                     {t('navbar.bookings')}
@@ -306,7 +306,7 @@ export default function Navbar() {
                     onMouseLeave={delayedClose}
                   >
                     <Link
-                      to='/user'
+                      to='/user/profile'
                       className='block w-full px-3 py-2 hover:bg-gray-100 hover:text-gray-900'
                     >
                       {t('navbar.profile')}

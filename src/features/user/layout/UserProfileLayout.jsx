@@ -1,0 +1,78 @@
+import { useAuth } from '@/app/providers/AuthProvider';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import Footer from '../../shared/components/homepage/Footer';
+import Navbar from '../../shared/components/homepage/Navbar';
+import BookingsContent from '../components/BookingsContent';
+import ChangePassword from '../components/ChangePassword';
+import FavoriteCars from '../components/FavoriteCars';
+import ProfileContent from '../components/ProfileContent';
+import UserSidebar from '../components/UserSidebar';
+
+export default function UserProfileLayout() {
+  const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState('profile');
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
+
+  return (
+    <div className='min-h-screen bg-background text-foreground'>
+      <Navbar />
+
+      <div className='flex min-h-[calc(100vh-80px)] mt-20'>
+        {/* Sidebar */}
+        <div className='w-80 bg-background border-r border-border flex-shrink-0'>
+          <UserSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+        </div>
+
+        {/* Main Content */}
+        <div className='flex-1 bg-muted/30'>
+          <div className='p-8'>
+            {activeTab === 'profile' && <ProfileContent user={user} />}
+            {activeTab === 'favorites' && <FavoriteCars />}
+            {activeTab === 'trips' && <BookingsContent />}
+            {activeTab === 'longterm' && (
+              <div className='text-center py-12'>
+                <h2 className='text-xl font-semibold text-foreground'>
+                  Đơn hàng Thuê xe dài hạn
+                </h2>
+                <p className='text-muted-foreground mt-2'>
+                  Tính năng đang phát triển
+                </p>
+              </div>
+            )}
+            {activeTab === 'gifts' && (
+              <div className='text-center py-12'>
+                <h2 className='text-xl font-semibold text-foreground'>
+                  Quà tặng
+                </h2>
+                <p className='text-muted-foreground mt-2'>
+                  Tính năng đang phát triển
+                </p>
+              </div>
+            )}
+            {activeTab === 'addresses' && (
+              <div className='text-center py-12'>
+                <h2 className='text-xl font-semibold text-foreground'>
+                  Địa chỉ của tôi
+                </h2>
+                <p className='text-muted-foreground mt-2'>
+                  Tính năng đang phát triển
+                </p>
+              </div>
+            )}
+            {activeTab === 'password' && <ChangePassword />}
+          </div>
+        </div>
+      </div>
+
+      <Footer />
+    </div>
+  );
+}

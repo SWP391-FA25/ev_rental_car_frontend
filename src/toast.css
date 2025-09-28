@@ -1,30 +1,30 @@
 /* Custom Toast Styles for Theme Support - Aggressive Override */
 .Toastify__toast {
-  background: hsl(var(--background)) !important;
-  color: hsl(var(--foreground)) !important;
+  background: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
   border: 1px solid hsl(var(--border)) !important;
   border-radius: 0.5rem !important;
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
 }
 
 .Toastify__toast--success {
-  background: hsl(var(--background)) !important;
-  color: hsl(var(--foreground)) !important;
+  background: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
 }
 
 .Toastify__toast--error {
-  background: hsl(var(--background)) !important;
-  color: hsl(var(--foreground)) !important;
+  background: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
 }
 
 .Toastify__toast--info {
-  background: hsl(var(--background)) !important;
-  color: hsl(var(--foreground)) !important;
+  background: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
 }
 
 .Toastify__toast--warning {
-  background: hsl(var(--background)) !important;
-  color: hsl(var(--foreground)) !important;
+  background: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
 }
 
 .Toastify__progress-bar {
@@ -32,7 +32,7 @@
 }
 
 .Toastify__close-button {
-  color: hsl(var(--foreground)) !important;
+  color: hsl(var(--card-foreground)) !important;
   opacity: 0.7;
 }
 
@@ -42,13 +42,13 @@
 
 /* Force text color with explicit values */
 .Toastify__toast-body {
-  color: hsl(var(--foreground)) !important;
+  color: hsl(var(--card-foreground)) !important;
   font-weight: 500 !important;
 }
 
 /* Override all possible text elements */
 .Toastify__toast-body * {
-  color: hsl(var(--foreground)) !important;
+  color: hsl(var(--card-foreground)) !important;
 }
 
 /* Light theme - force dark text */
@@ -57,7 +57,7 @@
 .light .Toastify__toast--error,
 .light .Toastify__toast--info,
 .light .Toastify__toast--warning {
-  background: hsl(var(--background)) !important;
+  background: #ffffff !important;
   color: #1a1a1a !important;
 }
 
@@ -72,7 +72,7 @@
 .dark .Toastify__toast--error,
 .dark .Toastify__toast--info,
 .dark .Toastify__toast--warning {
-  background: hsl(var(--background)) !important;
+  background: #1a1a1a !important;
   color: #ffffff !important;
 }
 
@@ -88,5 +88,5 @@
 
 /* Specific override for the toast content */
 .Toastify__toast-container {
-  color: hsl(var(--foreground)) !important;
+  color: hsl(var(--card-foreground)) !important;
 }
