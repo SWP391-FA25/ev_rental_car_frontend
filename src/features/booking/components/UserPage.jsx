@@ -10,8 +10,8 @@ export default function UserPage() {
     <div className='min-h-screen bg-background text-foreground'>
       <Navbar />
       <HeroSection />
-      <TestimonialsMarquee />
       <FeaturesSection />
+      <TestimonialsMarquee />
       <PricingSection />
       <Footer />
     </div>

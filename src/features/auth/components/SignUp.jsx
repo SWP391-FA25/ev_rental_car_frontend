@@ -196,11 +196,7 @@ export default function SignUp() {
                 />
                 <Label htmlFor='terms' className='text-sm'>
                   I agree to the{' '}
-                  <Link to='/terms' className='text-primary hover:underline'>
-                    Terms of Service
-                  </Link>{' '}
-                  and{' '}
-                  <Link to='/privacy' className='text-primary hover:underline'>
+                  <Link to='/policy' className='text-primary hover:underline'>
                     Privacy Policy
                   </Link>
                 </Label>

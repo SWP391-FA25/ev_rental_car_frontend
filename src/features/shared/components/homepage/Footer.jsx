@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { Separator } from '../ui/separator';
 
 export default function Footer() {
@@ -108,12 +109,12 @@ export default function Footer() {
             {t('footer.copyright')}
           </p>
           <div className='flex space-x-6 mt-4 md:mt-0'>
-            <a
-              href='#'
+            <Link
+              to='/policy'
               className='text-muted-foreground hover:text-foreground transition-colors text-sm'
             >
-              {t('footer.legal.privacyPolicy')}
-            </a>
+              Chính sách & Quy định
+            </Link>
             <a
               href='#'
               className='text-muted-foreground hover:text-foreground transition-colors text-sm'
