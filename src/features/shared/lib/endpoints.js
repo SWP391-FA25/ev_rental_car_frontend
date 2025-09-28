@@ -13,7 +13,7 @@ export const endpoints = {
     getById: id => `/api/staff/${id}`,
     create: () => '/api/staff',
     update: id => `/api/staff/${id}`,
-    softDelete: id => `/api/staff/${id}/soft-delete`,
+    softDelete: id => `/api/staff/soft-delete/${id}`,
     delete: id => `/api/staff/${id}`,
   },
   stations: {
