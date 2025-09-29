@@ -14,6 +14,9 @@ import {
   RefreshCw,
   ChevronDown,
   ChevronRight,
+  File,
+  IdCard,
+  Car,
 } from 'lucide-react';
 import { Button } from '../../shared/components/ui/button';
 import {
@@ -166,24 +169,28 @@ const DocumentVerification = () => {
   const handleBatchApprove = async userId => {
     try {
       const userDocuments = groupedDocuments[userId].documents;
-      const pendingDocuments = userDocuments.filter(doc => doc.status === 'PENDING');
-      
+      const pendingDocuments = userDocuments.filter(
+        doc => doc.status === 'PENDING'
+      );
+
       // Approve all pending documents for this user
-      const promises = pendingDocuments.map(doc => 
+      const promises = pendingDocuments.map(doc =>
         documentService.verifyDocument(doc.id, { status: 'APPROVED' })
       );
-      
+
       const results = await Promise.allSettled(promises);
-      
+
       // Count successful approvals
-      const successful = results.filter(result => 
-        result.status === 'fulfilled' && result.value?.success
+      const successful = results.filter(
+        result => result.status === 'fulfilled' && result.value?.success
       ).length;
-      
-      toast.success(`Approved ${successful} documents for ${groupedDocuments[userId].user.name}`);
-      
+
+      toast.success(
+        `Approved ${successful} documents for ${groupedDocuments[userId].user.name}`
+      );
+
       // Update the documents in the list
-      setDocuments(prev => 
+      setDocuments(prev =>
         prev.map(doc => {
           if (doc.user.id === userId && doc.status === 'PENDING') {
             return { ...doc, status: 'APPROVED' };
@@ -242,35 +249,42 @@ const DocumentVerification = () => {
 
     try {
       const userDocuments = groupedDocuments[selectedUserForBatch].documents;
-      const pendingDocuments = userDocuments.filter(doc => doc.status === 'PENDING');
-      
+      const pendingDocuments = userDocuments.filter(
+        doc => doc.status === 'PENDING'
+      );
+
       // Reject all pending documents for this user
-      const promises = pendingDocuments.map(doc => 
-        documentService.verifyDocument(doc.id, { 
-          status: 'REJECTED', 
-          rejectionReason: batchRejectionReason 
+      const promises = pendingDocuments.map(doc =>
+        documentService.verifyDocument(doc.id, {
+          status: 'REJECTED',
+          rejectionReason: batchRejectionReason,
         })
       );
-      
+
       const results = await Promise.allSettled(promises);
-      
+
       // Count successful rejections
-      const successful = results.filter(result => 
-        result.status === 'fulfilled' && result.value?.success
+      const successful = results.filter(
+        result => result.status === 'fulfilled' && result.value?.success
       ).length;
-      
-      toast.success(`Rejected ${successful} documents for ${groupedDocuments[selectedUserForBatch].user.name}`);
-      
+
+      toast.success(
+        `Rejected ${successful} documents for ${groupedDocuments[selectedUserForBatch].user.name}`
+      );
+
       // Update the documents in the list
-      setDocuments(prev => 
+      setDocuments(prev =>
         prev.map(doc => {
-          if (doc.user.id === selectedUserForBatch && doc.status === 'PENDING') {
+          if (
+            doc.user.id === selectedUserForBatch &&
+            doc.status === 'PENDING'
+          ) {
             return { ...doc, status: 'REJECTED' };
           }
           return doc;
         })
       );
-      
+
       setIsBatchRejectOpen(false);
       setBatchRejectionReason('');
       setSelectedUserForBatch(null);
@@ -321,30 +335,45 @@ const DocumentVerification = () => {
     }
   };
 
+  const getDocumentIcon = type => {
+    switch (type) {
+      case 'DRIVERS_LICENSE':
+        return <Car className='h-5 w-5 text-blue-500' />;
+      case 'ID_CARD':
+        return <IdCard className='h-5 w-5 text-green-500' />;
+      case 'PASSPORT':
+        return <FileText className='h-5 w-5 text-purple-500' />;
+      default:
+        return <File className='h-5 w-5 text-gray-500' />;
+    }
+  };
+
   const formatDate = dateString => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString();
   };
 
   return (
-    <div className='space-y-6'>
+    <div className='space-y-6 p-6'>
       <div>
-        <h1 className='text-2xl font-bold'>Document Verification</h1>
+        <h1 className='text-3xl font-bold tracking-tight'>
+          Document Verification
+        </h1>
         <p className='text-muted-foreground'>
           Review and verify user documents for account authentication
         </p>
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className='shadow-sm'>
         <CardHeader>
-          <CardTitle className='flex items-center gap-2'>
+          <CardTitle className='flex items-center gap-2 text-xl'>
             <Filter className='h-5 w-5' />
             Filters
           </CardTitle>
         </CardHeader>
-        <CardContent className='flex flex-col md:flex-row gap-4'>
-          <div className='flex-1'>
+        <CardContent className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
+          <div className='lg:col-span-2'>
             <Label htmlFor='search'>Search</Label>
             <div className='relative'>
               <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
@@ -366,7 +395,7 @@ const DocumentVerification = () => {
                 setFilters(prev => ({ ...prev, status: value }))
               }
             >
-              <SelectTrigger className='w-[180px]'>
+              <SelectTrigger>
                 <SelectValue placeholder='Select status' />
               </SelectTrigger>
               <SelectContent>
@@ -386,7 +415,7 @@ const DocumentVerification = () => {
                 setFilters(prev => ({ ...prev, documentType: value }))
               }
             >
-              <SelectTrigger className='w-[180px]'>
+              <SelectTrigger>
                 <SelectValue placeholder='Select type' />
               </SelectTrigger>
               <SelectContent>
@@ -400,10 +429,14 @@ const DocumentVerification = () => {
             </Select>
           </div>
 
-          <div className='flex items-end'>
-            <Button onClick={fetchDocuments} disabled={loading}>
+          <div className='lg:col-span-4 flex justify-end'>
+            <Button
+              onClick={fetchDocuments}
+              disabled={loading}
+              className='w-full md:w-auto'
+            >
               <RefreshCw
-                className={`h-4 w-4 mr-1 ${loading ? 'animate-spin' : ''}`}
+                className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`}
               />
               Refresh
             </Button>
@@ -412,9 +445,9 @@ const DocumentVerification = () => {
       </Card>
 
       {/* Documents List */}
-      <Card>
+      <Card className='shadow-sm'>
         <CardHeader>
-          <CardTitle>Documents to Verify</CardTitle>
+          <CardTitle className='text-xl'>Documents to Verify</CardTitle>
           <CardDescription>
             {Object.keys(groupedDocuments).length} users with documents found
           </CardDescription>
@@ -425,10 +458,10 @@ const DocumentVerification = () => {
               <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary'></div>
             </div>
           ) : Object.keys(groupedDocuments).length === 0 ? (
-            <div className='text-center py-8'>
+            <div className='text-center py-12'>
               <FileText className='mx-auto h-12 w-12 text-muted-foreground' />
-              <h3 className='mt-2 text-sm font-medium'>No documents found</h3>
-              <p className='mt-1 text-sm text-muted-foreground'>
+              <h3 className='mt-4 text-lg font-medium'>No documents found</h3>
+              <p className='mt-2 text-muted-foreground'>
                 Try adjusting your filters or refresh the list.
               </p>
             </div>
@@ -436,21 +469,26 @@ const DocumentVerification = () => {
             <div className='space-y-4'>
               {Object.entries(groupedDocuments).map(([userId, userData]) => {
                 const isExpanded = expandedUsers[userId] || false;
-                const pendingCount = userData.documents.filter(doc => doc.status === 'PENDING').length;
-                
+                const pendingCount = userData.documents.filter(
+                  doc => doc.status === 'PENDING'
+                ).length;
+
                 return (
-                  <div key={userId} className='border rounded-lg bg-card'>
+                  <div
+                    key={userId}
+                    className='border rounded-lg bg-card transition-all hover:shadow-md'
+                  >
                     {/* User Header */}
-                    <div 
-                      className='flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50 transition-colors'
+                    <div
+                      className='flex flex-col sm:flex-row sm:items-center justify-between p-4 cursor-pointer'
                       onClick={() => toggleUserExpand(userId)}
                     >
                       <div className='flex items-center gap-4'>
-                        <div className='bg-muted p-3 rounded-lg'>
-                          <User className='h-6 w-6' />
+                        <div className='bg-primary/10 p-3 rounded-full'>
+                          <User className='h-6 w-6 text-primary' />
                         </div>
                         <div>
-                          <h3 className='font-medium'>
+                          <h3 className='font-semibold text-lg'>
                             {userData.user?.name || 'Unknown User'}
                           </h3>
                           <p className='text-sm text-muted-foreground'>
@@ -458,90 +496,97 @@ const DocumentVerification = () => {
                           </p>
                         </div>
                       </div>
-                      
-                      <div className='flex items-center gap-4'>
-                        <div className='text-sm'>
-                          <span className='font-medium'>{userData.documents.length}</span> documents
+
+                      <div className='flex items-center gap-4 mt-3 sm:mt-0'>
+                        <div className='text-sm bg-secondary px-3 py-1 rounded-full'>
+                          <span className='font-medium'>
+                            {userData.documents.length}
+                          </span>{' '}
+                          documents
                           {pendingCount > 0 && (
-                            <span className='ml-2 text-orange-600'>
+                            <span className='ml-2 text-orange-600 font-medium'>
                               ({pendingCount} pending)
                             </span>
                           )}
                         </div>
-                        <Button 
-                          variant='ghost' 
+                        <Button
+                          variant='ghost'
                           size='sm'
-                          onClick={(e) => {
+                          className='h-8 w-8 p-0'
+                          onClick={e => {
                             e.stopPropagation();
                             toggleUserExpand(userId);
                           }}
                         >
                           {isExpanded ? (
-                            <ChevronDown className='h-4 w-4' />
+                            <ChevronDown className='h-5 w-5' />
                           ) : (
-                            <ChevronRight className='h-4 w-4' />
+                            <ChevronRight className='h-5 w-5' />
                           )}
                         </Button>
                       </div>
                     </div>
-                    
+
                     {/* Batch Actions */}
                     {pendingCount > 0 && (
-                      <div className='px-4 pb-3 flex justify-end gap-2 border-t'>
+                      <div className='px-4 pb-4 flex flex-col sm:flex-row sm:justify-end gap-2 border-t pt-4 bg-muted/50'>
                         <Button
                           size='sm'
-                          onClick={(e) => {
+                          onClick={e => {
                             e.stopPropagation();
                             handleBatchApprove(userId);
                           }}
+                          className='w-full sm:w-auto'
                         >
-                          <CheckCircle className='h-4 w-4 mr-1' />
+                          <CheckCircle className='h-4 w-4 mr-2' />
                           Approve All ({pendingCount})
                         </Button>
                         <Button
                           size='sm'
                           variant='destructive'
-                          onClick={(e) => {
+                          onClick={e => {
                             e.stopPropagation();
                             handleOpenBatchReject(userId);
                           }}
+                          className='w-full sm:w-auto'
                         >
-                          <XCircle className='h-4 w-4 mr-1' />
+                          <XCircle className='h-4 w-4 mr-2' />
                           Reject All ({pendingCount})
                         </Button>
                       </div>
                     )}
-                    
+
                     {/* Documents List */}
                     {isExpanded && (
                       <div className='space-y-3 p-4 pt-0 border-t'>
                         {userData.documents.map(document => (
                           <div
                             key={document.id}
-                            className='flex flex-col md:flex-row items-start md:items-center justify-between p-3 border rounded bg-background gap-3'
+                            className='flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg bg-background transition-colors hover:bg-muted/50 gap-4'
                           >
                             <div className='flex items-start gap-3'>
-                              <div className='bg-muted p-2 rounded'>
-                                <FileText className='h-5 w-5' />
+                              <div className='bg-muted p-2 rounded-lg mt-1'>
+                                {getDocumentIcon(document.documentType)}
                               </div>
                               <div>
-                                <h4 className='font-medium'>
+                                <h4 className='font-medium flex items-center gap-2'>
                                   {getDocumentTypeLabel(document.documentType)}
                                 </h4>
-                                <div className='flex items-center gap-2 mt-1'>
+                                <div className='flex flex-wrap items-center gap-2 mt-1'>
                                   {getStatusBadge(document.status)}
-                                  <span className='text-xs text-muted-foreground'>
-                                    Uploaded: {formatDate(document.uploadedAt)}
+                                  <span className='text-xs text-muted-foreground flex items-center'>
+                                    <Calendar className='h-3 w-3 mr-1' />
+                                    {formatDate(document.uploadedAt)}
                                   </span>
                                 </div>
                               </div>
                             </div>
 
-                            <div className='flex gap-2'>
+                            <div className='flex flex-wrap gap-2'>
                               <Button
                                 size='sm'
                                 variant='outline'
-                                onClick={(e) => {
+                                onClick={e => {
                                   e.stopPropagation();
                                   handlePreview(document);
                                 }}
@@ -553,7 +598,7 @@ const DocumentVerification = () => {
                                 <>
                                   <Button
                                     size='sm'
-                                    onClick={(e) => {
+                                    onClick={e => {
                                       e.stopPropagation();
                                       handleApprove(document.id);
                                     }}
@@ -564,7 +609,7 @@ const DocumentVerification = () => {
                                   <Button
                                     size='sm'
                                     variant='destructive'
-                                    onClick={(e) => {
+                                    onClick={e => {
                                       e.stopPropagation();
                                       handleOpenReject(document);
                                     }}
@@ -591,95 +636,117 @@ const DocumentVerification = () => {
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
         <DialogContent className='max-w-4xl max-h-[90vh] overflow-y-auto'>
           <DialogHeader>
-            <DialogTitle>Document Preview</DialogTitle>
+            <DialogTitle className='text-2xl'>Document Preview</DialogTitle>
           </DialogHeader>
           {selectedDocument && (
-            <div className='space-y-4'>
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                <div>
-                  <h3 className='font-medium flex items-center gap-2'>
-                    <User className='h-4 w-4' />
+            <div className='space-y-6'>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                <div className='space-y-4'>
+                  <h3 className='font-semibold text-lg flex items-center gap-2'>
+                    <User className='h-5 w-5' />
                     User Information
                   </h3>
-                  <div className='mt-2 space-y-2'>
-                    <p>
-                      <strong>Name:</strong>{' '}
-                      {selectedDocument.user?.name || 'N/A'}
-                    </p>
-                    <p>
-                      <strong>Email:</strong>{' '}
-                      {selectedDocument.user?.email || 'N/A'}
-                    </p>
+                  <div className='space-y-3 p-4 bg-muted rounded-lg'>
+                    <div className='flex justify-between'>
+                      <span className='text-muted-foreground'>Name</span>
+                      <span className='font-medium'>
+                        {selectedDocument.user?.name || 'N/A'}
+                      </span>
+                    </div>
+                    <div className='flex justify-between'>
+                      <span className='text-muted-foreground'>Email</span>
+                      <span className='font-medium'>
+                        {selectedDocument.user?.email || 'N/A'}
+                      </span>
+                    </div>
                     {selectedDocument.user?.phone && (
-                      <p>
-                        <strong>Phone:</strong> {selectedDocument.user.phone}
-                      </p>
+                      <div className='flex justify-between'>
+                        <span className='text-muted-foreground'>Phone</span>
+                        <span className='font-medium'>
+                          {selectedDocument.user.phone}
+                        </span>
+                      </div>
                     )}
                   </div>
                 </div>
 
-                <div>
-                  <h3 className='font-medium flex items-center gap-2'>
-                    <FileText className='h-4 w-4' />
+                <div className='space-y-4'>
+                  <h3 className='font-semibold text-lg flex items-center gap-2'>
+                    <FileText className='h-5 w-5' />
                     Document Information
                   </h3>
-                  <div className='mt-2 space-y-2'>
-                    <p>
-                      <strong>Type:</strong>{' '}
-                      {getDocumentTypeLabel(selectedDocument.documentType)}
-                    </p>
-                    <p>
-                      <strong>File Name:</strong>{' '}
-                      {selectedDocument.fileName || 'N/A'}
-                    </p>
-                    <p>
-                      <strong>Status:</strong>{' '}
-                      {getStatusBadge(selectedDocument.status)}
-                    </p>
-                    <p>
-                      <strong>Uploaded:</strong>{' '}
-                      {formatDate(selectedDocument.uploadedAt)}
-                    </p>
+                  <div className='space-y-3 p-4 bg-muted rounded-lg'>
+                    <div className='flex justify-between'>
+                      <span className='text-muted-foreground'>Type</span>
+                      <span className='font-medium flex items-center gap-2'>
+                        {getDocumentIcon(selectedDocument.documentType)}
+                        {getDocumentTypeLabel(selectedDocument.documentType)}
+                      </span>
+                    </div>
+                    <div className='flex justify-between'>
+                      <span className='text-muted-foreground'>File Name</span>
+                      <span className='font-medium'>
+                        {selectedDocument.fileName || 'N/A'}
+                      </span>
+                    </div>
+                    <div className='flex justify-between'>
+                      <span className='text-muted-foreground'>Status</span>
+                      <span className='font-medium'>
+                        {getStatusBadge(selectedDocument.status)}
+                      </span>
+                    </div>
+                    <div className='flex justify-between'>
+                      <span className='text-muted-foreground'>Uploaded</span>
+                      <span className='font-medium'>
+                        {formatDate(selectedDocument.uploadedAt)}
+                      </span>
+                    </div>
                     {selectedDocument.expiryDate && (
-                      <p>
-                        <strong>Expires:</strong>{' '}
-                        {formatDate(selectedDocument.expiryDate)}
-                      </p>
+                      <div className='flex justify-between'>
+                        <span className='text-muted-foreground'>Expires</span>
+                        <span className='font-medium'>
+                          {formatDate(selectedDocument.expiryDate)}
+                        </span>
+                      </div>
                     )}
                     {selectedDocument.documentNumber && (
-                      <p>
-                        <strong>Document #:</strong>{' '}
-                        {selectedDocument.documentNumber}
-                      </p>
+                      <div className='flex justify-between'>
+                        <span className='text-muted-foreground'>
+                          Document #
+                        </span>
+                        <span className='font-medium'>
+                          {selectedDocument.documentNumber}
+                        </span>
+                      </div>
                     )}
                   </div>
                 </div>
               </div>
 
-              <div>
-                <h3 className='font-medium mb-2'>Document Preview</h3>
+              <div className='space-y-3'>
+                <h3 className='font-semibold text-lg'>Document Preview</h3>
                 {selectedDocument.fileUrl ? (
                   selectedDocument.mimeType === 'application/pdf' ? (
                     <iframe
                       src={selectedDocument.fileUrl}
-                      className='w-full h-96 border rounded'
+                      className='w-full h-96 border rounded-lg'
                       title='Document Preview'
                     />
                   ) : (
                     <img
                       src={selectedDocument.fileUrl}
                       alt='Document Preview'
-                      className='max-w-full h-auto border rounded'
+                      className='max-w-full h-auto border rounded-lg mx-auto'
                     />
                   )
                 ) : (
-                  <div className='text-center py-8 text-muted-foreground'>
+                  <div className='text-center py-12 text-muted-foreground border rounded-lg'>
                     Preview not available
                   </div>
                 )}
               </div>
 
-              <div className='flex justify-end gap-2'>
+              <div className='flex justify-end gap-3'>
                 <Button
                   variant='outline'
                   onClick={() => setIsPreviewOpen(false)}
@@ -689,7 +756,7 @@ const DocumentVerification = () => {
                 {selectedDocument.fileUrl && (
                   <a href={selectedDocument.fileUrl} download>
                     <Button>
-                      <Download className='h-4 w-4 mr-1' />
+                      <Download className='h-4 w-4 mr-2' />
                       Download
                     </Button>
                   </a>
@@ -704,23 +771,23 @@ const DocumentVerification = () => {
       <Dialog open={isRejectOpen} onOpenChange={setIsRejectOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reject Document</DialogTitle>
+            <DialogTitle className='text-xl'>Reject Document</DialogTitle>
           </DialogHeader>
           {selectedDocument && (
-            <div className='space-y-4'>
-              <div>
-                <p className='mb-2'>
+            <div className='space-y-6'>
+              <div className='space-y-2'>
+                <p>
                   Are you sure you want to reject{' '}
                   <strong>{selectedDocument.user?.name || 'the user'}</strong>'s
                   {getDocumentTypeLabel(selectedDocument.documentType)}?
                 </p>
-                <p className='text-sm text-muted-foreground mb-4'>
+                <p className='text-sm text-muted-foreground'>
                   Please provide a reason for rejection. The user will be
                   notified and can re-upload their document.
                 </p>
               </div>
 
-              <div>
+              <div className='space-y-2'>
                 <Label htmlFor='rejectionReason'>Rejection Reason</Label>
                 <Textarea
                   id='rejectionReason'
@@ -731,7 +798,7 @@ const DocumentVerification = () => {
                 />
               </div>
 
-              <DialogFooter>
+              <DialogFooter className='gap-2 sm:gap-0'>
                 <Button
                   variant='outline'
                   onClick={() => setIsRejectOpen(false)}
@@ -751,22 +818,32 @@ const DocumentVerification = () => {
       <Dialog open={isBatchRejectOpen} onOpenChange={setIsBatchRejectOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reject All Documents</DialogTitle>
+            <DialogTitle className='text-xl'>Reject All Documents</DialogTitle>
           </DialogHeader>
           {selectedUserForBatch && (
-            <div className='space-y-4'>
-              <div>
-                <p className='mb-2'>
+            <div className='space-y-6'>
+              <div className='space-y-2'>
+                <p>
                   Are you sure you want to reject all pending documents for{' '}
-                  <strong>{groupedDocuments[selectedUserForBatch].user?.name || 'the user'}</strong>?
+                  <strong>
+                    {groupedDocuments[selectedUserForBatch].user?.name ||
+                      'the user'}
+                  </strong>
+                  ?
                 </p>
-                <p className='text-sm text-muted-foreground mb-4'>
-                  This will reject all {groupedDocuments[selectedUserForBatch].documents.filter(doc => doc.status === 'PENDING').length} pending documents. 
-                  Please provide a reason for rejection. The user will be notified and can re-upload their documents.
+                <p className='text-sm text-muted-foreground'>
+                  This will reject all{' '}
+                  {
+                    groupedDocuments[selectedUserForBatch].documents.filter(
+                      doc => doc.status === 'PENDING'
+                    ).length
+                  }{' '}
+                  pending documents. Please provide a reason for rejection. The
+                  user will be notified and can re-upload their documents.
                 </p>
               </div>
 
-              <div>
+              <div className='space-y-2'>
                 <Label htmlFor='batchRejectionReason'>Rejection Reason</Label>
                 <Textarea
                   id='batchRejectionReason'
@@ -777,7 +854,7 @@ const DocumentVerification = () => {
                 />
               </div>
 
-              <DialogFooter>
+              <DialogFooter className='gap-2 sm:gap-0'>
                 <Button
                   variant='outline'
                   onClick={() => setIsBatchRejectOpen(false)}
