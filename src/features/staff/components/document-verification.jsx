@@ -12,6 +12,8 @@ import {
   Search,
   Filter,
   RefreshCw,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
 import { Button } from '../../shared/components/ui/button';
 import {
@@ -44,12 +46,16 @@ import documentService from '../../shared/services/documentService';
 
 const DocumentVerification = () => {
   const [documents, setDocuments] = useState([]);
-  const [filteredDocuments, setFilteredDocuments] = useState([]);
+  const [groupedDocuments, setGroupedDocuments] = useState({});
+  const [expandedUsers, setExpandedUsers] = useState({});
   const [loading, setLoading] = useState(true);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isRejectOpen, setIsRejectOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [batchRejectionReason, setBatchRejectionReason] = useState('');
+  const [isBatchRejectOpen, setIsBatchRejectOpen] = useState(false);
+  const [selectedUserForBatch, setSelectedUserForBatch] = useState(null);
   const [filters, setFilters] = useState({
     status: 'PENDING',
     documentType: 'ALL',
@@ -111,7 +117,27 @@ const DocumentVerification = () => {
       );
     }
 
-    setFilteredDocuments(result);
+    // Group documents by user
+    const grouped = {};
+    result.forEach(doc => {
+      const userId = doc.user.id;
+      if (!grouped[userId]) {
+        grouped[userId] = {
+          user: doc.user,
+          documents: [],
+        };
+      }
+      grouped[userId].documents.push(doc);
+    });
+
+    setGroupedDocuments(grouped);
+  };
+
+  const toggleUserExpand = userId => {
+    setExpandedUsers(prev => ({
+      ...prev,
+      [userId]: !prev[userId],
+    }));
   };
 
   const handleApprove = async documentId => {
@@ -128,18 +154,46 @@ const DocumentVerification = () => {
             doc.id === documentId ? { ...doc, status: 'APPROVED' } : doc
           )
         );
-        // Also update filtered documents
-        setFilteredDocuments(prev =>
-          prev.map(doc =>
-            doc.id === documentId ? { ...doc, status: 'APPROVED' } : doc
-          )
-        );
       } else {
         throw new Error(response?.message || 'Failed to approve document');
       }
     } catch (error) {
       console.error('Error approving document:', error);
       toast.error(error.message || 'Failed to approve document');
+    }
+  };
+
+  const handleBatchApprove = async userId => {
+    try {
+      const userDocuments = groupedDocuments[userId].documents;
+      const pendingDocuments = userDocuments.filter(doc => doc.status === 'PENDING');
+      
+      // Approve all pending documents for this user
+      const promises = pendingDocuments.map(doc => 
+        documentService.verifyDocument(doc.id, { status: 'APPROVED' })
+      );
+      
+      const results = await Promise.allSettled(promises);
+      
+      // Count successful approvals
+      const successful = results.filter(result => 
+        result.status === 'fulfilled' && result.value?.success
+      ).length;
+      
+      toast.success(`Approved ${successful} documents for ${groupedDocuments[userId].user.name}`);
+      
+      // Update the documents in the list
+      setDocuments(prev => 
+        prev.map(doc => {
+          if (doc.user.id === userId && doc.status === 'PENDING') {
+            return { ...doc, status: 'APPROVED' };
+          }
+          return doc;
+        })
+      );
+    } catch (error) {
+      console.error('Error batch approving documents:', error);
+      toast.error('Failed to batch approve documents');
     }
   };
 
@@ -168,14 +222,6 @@ const DocumentVerification = () => {
               : doc
           )
         );
-        // Also update filtered documents
-        setFilteredDocuments(prev =>
-          prev.map(doc =>
-            doc.id === selectedDocument.id
-              ? { ...doc, status: 'REJECTED' }
-              : doc
-          )
-        );
         setIsRejectOpen(false);
         setRejectionReason('');
         setSelectedDocument(null);
@@ -188,6 +234,52 @@ const DocumentVerification = () => {
     }
   };
 
+  const handleBatchReject = async () => {
+    if (!batchRejectionReason.trim()) {
+      toast.error('Please provide a rejection reason');
+      return;
+    }
+
+    try {
+      const userDocuments = groupedDocuments[selectedUserForBatch].documents;
+      const pendingDocuments = userDocuments.filter(doc => doc.status === 'PENDING');
+      
+      // Reject all pending documents for this user
+      const promises = pendingDocuments.map(doc => 
+        documentService.verifyDocument(doc.id, { 
+          status: 'REJECTED', 
+          rejectionReason: batchRejectionReason 
+        })
+      );
+      
+      const results = await Promise.allSettled(promises);
+      
+      // Count successful rejections
+      const successful = results.filter(result => 
+        result.status === 'fulfilled' && result.value?.success
+      ).length;
+      
+      toast.success(`Rejected ${successful} documents for ${groupedDocuments[selectedUserForBatch].user.name}`);
+      
+      // Update the documents in the list
+      setDocuments(prev => 
+        prev.map(doc => {
+          if (doc.user.id === selectedUserForBatch && doc.status === 'PENDING') {
+            return { ...doc, status: 'REJECTED' };
+          }
+          return doc;
+        })
+      );
+      
+      setIsBatchRejectOpen(false);
+      setBatchRejectionReason('');
+      setSelectedUserForBatch(null);
+    } catch (error) {
+      console.error('Error batch rejecting documents:', error);
+      toast.error('Failed to batch reject documents');
+    }
+  };
+
   const handlePreview = document => {
     setSelectedDocument(document);
     setIsPreviewOpen(true);
@@ -196,6 +288,11 @@ const DocumentVerification = () => {
   const handleOpenReject = document => {
     setSelectedDocument(document);
     setIsRejectOpen(true);
+  };
+
+  const handleOpenBatchReject = userId => {
+    setSelectedUserForBatch(userId);
+    setIsBatchRejectOpen(true);
   };
 
   const getStatusBadge = status => {
@@ -319,7 +416,7 @@ const DocumentVerification = () => {
         <CardHeader>
           <CardTitle>Documents to Verify</CardTitle>
           <CardDescription>
-            {filteredDocuments.length} documents found
+            {Object.keys(groupedDocuments).length} users with documents found
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -327,7 +424,7 @@ const DocumentVerification = () => {
             <div className='flex justify-center items-center h-32'>
               <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary'></div>
             </div>
-          ) : filteredDocuments.length === 0 ? (
+          ) : Object.keys(groupedDocuments).length === 0 ? (
             <div className='text-center py-8'>
               <FileText className='mx-auto h-12 w-12 text-muted-foreground' />
               <h3 className='mt-2 text-sm font-medium'>No documents found</h3>
@@ -337,68 +434,154 @@ const DocumentVerification = () => {
             </div>
           ) : (
             <div className='space-y-4'>
-              {filteredDocuments.map(document => (
-                <div
-                  key={document.id}
-                  className='flex flex-col md:flex-row items-start md:items-center justify-between p-4 border rounded-lg bg-card gap-4'
-                >
-                  <div className='flex items-start gap-4'>
-                    <div className='bg-muted p-3 rounded-lg'>
-                      <FileText className='h-6 w-6' />
-                    </div>
-                    <div>
-                      <h3 className='font-medium'>
-                        {document.user?.name || 'Unknown User'}
-                      </h3>
-                      <p className='text-sm text-muted-foreground'>
-                        {document.user?.email || 'No email provided'}
-                      </p>
-                      <div className='flex items-center gap-2 mt-1'>
-                        <span className='text-xs bg-secondary px-2 py-1 rounded'>
-                          {getDocumentTypeLabel(document.documentType)}
-                        </span>
-                        {getStatusBadge(document.status)}
+              {Object.entries(groupedDocuments).map(([userId, userData]) => {
+                const isExpanded = expandedUsers[userId] || false;
+                const pendingCount = userData.documents.filter(doc => doc.status === 'PENDING').length;
+                
+                return (
+                  <div key={userId} className='border rounded-lg bg-card'>
+                    {/* User Header */}
+                    <div 
+                      className='flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50 transition-colors'
+                      onClick={() => toggleUserExpand(userId)}
+                    >
+                      <div className='flex items-center gap-4'>
+                        <div className='bg-muted p-3 rounded-lg'>
+                          <User className='h-6 w-6' />
+                        </div>
+                        <div>
+                          <h3 className='font-medium'>
+                            {userData.user?.name || 'Unknown User'}
+                          </h3>
+                          <p className='text-sm text-muted-foreground'>
+                            {userData.user?.email || 'No email provided'}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className='flex items-center gap-4'>
+                        <div className='text-sm'>
+                          <span className='font-medium'>{userData.documents.length}</span> documents
+                          {pendingCount > 0 && (
+                            <span className='ml-2 text-orange-600'>
+                              ({pendingCount} pending)
+                            </span>
+                          )}
+                        </div>
+                        <Button 
+                          variant='ghost' 
+                          size='sm'
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleUserExpand(userId);
+                          }}
+                        >
+                          {isExpanded ? (
+                            <ChevronDown className='h-4 w-4' />
+                          ) : (
+                            <ChevronRight className='h-4 w-4' />
+                          )}
+                        </Button>
                       </div>
                     </div>
-                  </div>
+                    
+                    {/* Batch Actions */}
+                    {pendingCount > 0 && (
+                      <div className='px-4 pb-3 flex justify-end gap-2 border-t'>
+                        <Button
+                          size='sm'
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleBatchApprove(userId);
+                          }}
+                        >
+                          <CheckCircle className='h-4 w-4 mr-1' />
+                          Approve All ({pendingCount})
+                        </Button>
+                        <Button
+                          size='sm'
+                          variant='destructive'
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenBatchReject(userId);
+                          }}
+                        >
+                          <XCircle className='h-4 w-4 mr-1' />
+                          Reject All ({pendingCount})
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {/* Documents List */}
+                    {isExpanded && (
+                      <div className='space-y-3 p-4 pt-0 border-t'>
+                        {userData.documents.map(document => (
+                          <div
+                            key={document.id}
+                            className='flex flex-col md:flex-row items-start md:items-center justify-between p-3 border rounded bg-background gap-3'
+                          >
+                            <div className='flex items-start gap-3'>
+                              <div className='bg-muted p-2 rounded'>
+                                <FileText className='h-5 w-5' />
+                              </div>
+                              <div>
+                                <h4 className='font-medium'>
+                                  {getDocumentTypeLabel(document.documentType)}
+                                </h4>
+                                <div className='flex items-center gap-2 mt-1'>
+                                  {getStatusBadge(document.status)}
+                                  <span className='text-xs text-muted-foreground'>
+                                    Uploaded: {formatDate(document.uploadedAt)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
 
-                  <div className='flex flex-col md:flex-row items-start md:items-center gap-2'>
-                    <div className='text-sm text-muted-foreground'>
-                      <Calendar className='inline h-4 w-4 mr-1' />
-                      Uploaded: {formatDate(document.uploadedAt)}
-                    </div>
-                    <div className='flex gap-2'>
-                      <Button
-                        size='sm'
-                        variant='outline'
-                        onClick={() => handlePreview(document)}
-                      >
-                        <Eye className='h-4 w-4 mr-1' />
-                        Preview
-                      </Button>
-                      {document.status === 'PENDING' && (
-                        <>
-                          <Button
-                            size='sm'
-                            onClick={() => handleApprove(document.id)}
-                          >
-                            <CheckCircle className='h-4 w-4 mr-1' />
-                            Approve
-                          </Button>
-                          <Button
-                            size='sm'
-                            variant='destructive'
-                            onClick={() => handleOpenReject(document)}
-                          >
-                            <XCircle className='h-4 w-4 mr-1' />
-                            Reject
-                          </Button>
-                        </>
-                      )}
-                    </div>
+                            <div className='flex gap-2'>
+                              <Button
+                                size='sm'
+                                variant='outline'
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handlePreview(document);
+                                }}
+                              >
+                                <Eye className='h-4 w-4 mr-1' />
+                                Preview
+                              </Button>
+                              {document.status === 'PENDING' && (
+                                <>
+                                  <Button
+                                    size='sm'
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleApprove(document.id);
+                                    }}
+                                  >
+                                    <CheckCircle className='h-4 w-4 mr-1' />
+                                    Approve
+                                  </Button>
+                                  <Button
+                                    size='sm'
+                                    variant='destructive'
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenReject(document);
+                                    }}
+                                  >
+                                    <XCircle className='h-4 w-4 mr-1' />
+                                    Reject
+                                  </Button>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
@@ -557,6 +740,52 @@ const DocumentVerification = () => {
                 </Button>
                 <Button variant='destructive' onClick={handleReject}>
                   Reject Document
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Batch Reject Document Dialog */}
+      <Dialog open={isBatchRejectOpen} onOpenChange={setIsBatchRejectOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reject All Documents</DialogTitle>
+          </DialogHeader>
+          {selectedUserForBatch && (
+            <div className='space-y-4'>
+              <div>
+                <p className='mb-2'>
+                  Are you sure you want to reject all pending documents for{' '}
+                  <strong>{groupedDocuments[selectedUserForBatch].user?.name || 'the user'}</strong>?
+                </p>
+                <p className='text-sm text-muted-foreground mb-4'>
+                  This will reject all {groupedDocuments[selectedUserForBatch].documents.filter(doc => doc.status === 'PENDING').length} pending documents. 
+                  Please provide a reason for rejection. The user will be notified and can re-upload their documents.
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor='batchRejectionReason'>Rejection Reason</Label>
+                <Textarea
+                  id='batchRejectionReason'
+                  placeholder='Enter reason for rejection...'
+                  value={batchRejectionReason}
+                  onChange={e => setBatchRejectionReason(e.target.value)}
+                  rows={4}
+                />
+              </div>
+
+              <DialogFooter>
+                <Button
+                  variant='outline'
+                  onClick={() => setIsBatchRejectOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button variant='destructive' onClick={handleBatchReject}>
+                  Reject All Documents
                 </Button>
               </DialogFooter>
             </div>
