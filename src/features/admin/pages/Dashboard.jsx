@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { apiClient } from '../../shared/lib/apiClient';
+import axios from 'axios';
 import { endpoints } from '../../shared/lib/endpoints';
 import { ChartAreaInteractive } from '../components/chart-area-interactive';
 import { DataTable } from '../components/data-table';
@@ -15,9 +15,11 @@ export default function Dashboard() {
       try {
         setLoading(true);
         setError('');
-        const response = await apiClient.get(endpoints.renters.getAll());
-        // Transform API data to match DataTable format nếu cần
-        const renters = response.data?.renters || [];
+        const response = await axios.get(endpoints.renters.getAll(), {
+          withCredentials: true,
+        });
+        // Transform API data to match DataTable format if needed
+        const renters = response.data.data.renters || [];
         const formatted = renters.map(renter => ({
           id: renter.id,
           header: renter.name,
