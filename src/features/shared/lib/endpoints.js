@@ -39,6 +39,7 @@ export const endpoints = {
   documents: {
     upload: () => '/api/documents/upload',
     myDocuments: () => '/api/documents/my-documents',
+    getAll: () => '/api/documents/all',
     delete: id => `/api/documents/${id}`,
     verify: id => `/api/documents/${id}/verify`,
   },

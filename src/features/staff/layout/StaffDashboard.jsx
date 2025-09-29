@@ -1,20 +1,24 @@
 import * as React from 'react';
+import { Car, MapPin, Users, CreditCard, FileText, Wrench } from 'lucide-react';
 import {
   SidebarInset,
   SidebarProvider,
 } from '../../shared/components/ui/sidebar';
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '../../shared/components/ui/tabs';
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '../../shared/components/ui/card';
+import { Button } from '../../shared/components/ui/button';
 import { CarManagement } from '../components/car-management';
 import { CustomerManagement } from '../components/customer-management';
 import { PaymentManagement } from '../components/payment-management';
 import { StaffHeader } from '../components/staff-header';
 import { StaffSidebar } from '../components/staff-sidebar';
 import { StationManagement } from '../components/station-management';
+import DocumentVerification from '../components/document-verification';
+// Removed QuickVerification import
 
 const mockStaffData = [
   {
@@ -242,6 +246,199 @@ const mockPaymentData = [
 ];
 
 export default function StaffDashboard() {
+  const [activeTab, setActiveTab] = React.useState('dashboard');
+
+  const renderDashboard = () => (
+    <div className='space-y-6'>
+      <div>
+        <h1 className='text-2xl font-bold'>Staff Dashboard</h1>
+        <p className='text-muted-foreground'>
+          Welcome back, {mockStaffData[0].name}. Your shift:{' '}
+          {mockStaffData[0].shift}
+        </p>
+      </div>
+
+      {/* Stats Cards */}
+      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
+        <Card>
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>
+              Available Cars
+            </CardTitle>
+            <Car className='h-4 w-4 text-muted-foreground' />
+          </CardHeader>
+          <CardContent>
+            <div className='text-2xl font-bold'>
+              {mockCarData.filter(car => car.status === 'Available').length}
+            </div>
+            <p className='text-xs text-muted-foreground'>Ready for rental</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>
+              Active Rentals
+            </CardTitle>
+            <Car className='h-4 w-4 text-muted-foreground' />
+          </CardHeader>
+          <CardContent>
+            <div className='text-2xl font-bold'>
+              {mockCarData.filter(car => car.status === 'Rented').length}
+            </div>
+            <p className='text-xs text-muted-foreground'>Currently in use</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>Maintenance</CardTitle>
+            <Wrench className='h-4 w-4 text-muted-foreground' />
+          </CardHeader>
+          <CardContent>
+            <div className='text-2xl font-bold'>
+              {mockCarData.filter(car => car.status === 'Maintenance').length}
+            </div>
+            <p className='text-xs text-muted-foreground'>Vehicles in service</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>
+              Pending Verifications
+            </CardTitle>
+            <FileText className='h-4 w-4 text-muted-foreground' />
+          </CardHeader>
+          <CardContent>
+            <div className='text-2xl font-bold'>12</div>
+            <p className='text-xs text-muted-foreground'>Documents to review</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Quick Actions */}
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent className='grid grid-cols-2 gap-3'>
+            <Button onClick={() => setActiveTab('cars')}>Manage Cars</Button>
+            <Button variant='outline' onClick={() => setActiveTab('customers')}>
+              Customer Service
+            </Button>
+            <Button variant='outline' onClick={() => setActiveTab('payments')}>
+              Process Payments
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Recent Activity */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className='space-y-4'>
+              <div className='flex items-center'>
+                <div className='ml-4 space-y-1'>
+                  <p className='text-sm font-medium'>New booking confirmed</p>
+                  <p className='text-sm text-muted-foreground'>
+                    Alice Johnson booked Tesla Model 3
+                  </p>
+                </div>
+                <div className='ml-auto text-sm text-muted-foreground'>
+                  10m ago
+                </div>
+              </div>
+              <div className='flex items-center'>
+                <div className='ml-4 space-y-1'>
+                  <p className='text-sm font-medium'>Document verified</p>
+                  <p className='text-sm text-muted-foreground'>
+                    John Doe's driver's license approved
+                  </p>
+                </div>
+                <div className='ml-auto text-sm text-muted-foreground'>
+                  25m ago
+                </div>
+              </div>
+              <div className='flex items-center'>
+                <div className='ml-4 space-y-1'>
+                  <p className='text-sm font-medium'>Car returned</p>
+                  <p className='text-sm text-muted-foreground'>
+                    Nissan Leaf returned at Downtown Station
+                  </p>
+                </div>
+                <div className='ml-auto text-sm text-muted-foreground'>
+                  1h ago
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+
+  const renderCars = () => {
+    return <CarManagement />;
+  };
+
+  const renderStations = () => {
+    return <StationManagement />;
+  };
+
+  const renderCustomers = () => {
+    return <CustomerManagement />;
+  };
+
+  const renderPayments = () => {
+    return <PaymentManagement />;
+  };
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'dashboard':
+        return renderDashboard();
+      case 'cars':
+        return renderCars();
+      case 'stations':
+        return renderStations();
+      case 'customers':
+        return renderCustomers();
+      case 'payments':
+        return renderPayments();
+      case 'documents':
+        return <DocumentVerification />;
+      // Removed quick-verify case
+      default:
+        return renderDashboard();
+    }
+  };
+
+  const menuItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: <Car className='h-4 w-4' /> },
+    { id: 'cars', label: 'Car Management', icon: <Car className='h-4 w-4' /> },
+    { id: 'stations', label: 'Stations', icon: <MapPin className='h-4 w-4' /> },
+    {
+      id: 'customers',
+      label: 'Customers',
+      icon: <Users className='h-4 w-4' />,
+    },
+    {
+      id: 'payments',
+      label: 'Payments',
+      icon: <CreditCard className='h-4 w-4' />,
+    },
+    {
+      id: 'documents',
+      label: 'Document Verification',
+      icon: <FileText className='h-4 w-4' />,
+    },
+    // Removed quick-verify menu item
+  ];
+
   return (
     <SidebarProvider>
       <StaffSidebar
@@ -250,35 +447,13 @@ export default function StaffDashboard() {
         stations={mockStationData}
         customers={mockCustomerData}
         payments={mockPaymentData}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        menuItems={menuItems}
       />
       <SidebarInset>
         <StaffHeader />
-        <div className='flex flex-1 flex-col gap-4 p-4'>
-          <Tabs defaultValue='cars' className='space-y-4'>
-            <TabsList className='grid w-full grid-cols-4'>
-              <TabsTrigger value='cars'>Car Management</TabsTrigger>
-              <TabsTrigger value='stations'>Station Management</TabsTrigger>
-              <TabsTrigger value='customers'>Customer Service</TabsTrigger>
-              <TabsTrigger value='payments'>Payment Management</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value='cars' className='space-y-4'>
-              <CarManagement />
-            </TabsContent>
-
-            <TabsContent value='stations' className='space-y-4'>
-              <StationManagement />
-            </TabsContent>
-
-            <TabsContent value='customers' className='space-y-4'>
-              <CustomerManagement />
-            </TabsContent>
-
-            <TabsContent value='payments' className='space-y-4'>
-              <PaymentManagement />
-            </TabsContent>
-          </Tabs>
-        </div>
+        <div className='flex flex-1 flex-col gap-4 p-4'>{renderContent()}</div>
       </SidebarInset>
     </SidebarProvider>
   );
