@@ -12,6 +12,11 @@ import {
   Search,
   Filter,
   RefreshCw,
+  ChevronDown,
+  ChevronRight,
+  File,
+  IdCard,
+  Car,
 } from 'lucide-react';
 import { Button } from '../../shared/components/ui/button';
 import {
@@ -46,12 +51,16 @@ import { useTranslation } from 'react-i18next';
 const DocumentVerification = () => {
   const { t } = useTranslation();
   const [documents, setDocuments] = useState([]);
-  const [filteredDocuments, setFilteredDocuments] = useState([]);
+  const [groupedDocuments, setGroupedDocuments] = useState({});
+  const [expandedUsers, setExpandedUsers] = useState({});
   const [loading, setLoading] = useState(true);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isRejectOpen, setIsRejectOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [batchRejectionReason, setBatchRejectionReason] = useState('');
+  const [isBatchRejectOpen, setIsBatchRejectOpen] = useState(false);
+  const [selectedUserForBatch, setSelectedUserForBatch] = useState(null);
   const [filters, setFilters] = useState({
     status: 'PENDING',
     documentType: 'ALL',
@@ -115,7 +124,27 @@ const DocumentVerification = () => {
       );
     }
 
-    setFilteredDocuments(result);
+    // Group documents by user
+    const grouped = {};
+    result.forEach(doc => {
+      const userId = doc.user.id;
+      if (!grouped[userId]) {
+        grouped[userId] = {
+          user: doc.user,
+          documents: [],
+        };
+      }
+      grouped[userId].documents.push(doc);
+    });
+
+    setGroupedDocuments(grouped);
+  };
+
+  const toggleUserExpand = userId => {
+    setExpandedUsers(prev => ({
+      ...prev,
+      [userId]: !prev[userId],
+    }));
   };
 
   const handleApprove = async documentId => {
@@ -128,12 +157,6 @@ const DocumentVerification = () => {
         toast.success(t('staffDocuments.toasts.approveSuccess'));
         // Update the document in the list
         setDocuments(prev =>
-          prev.map(doc =>
-            doc.id === documentId ? { ...doc, status: 'APPROVED' } : doc
-          )
-        );
-        // Also update filtered documents
-        setFilteredDocuments(prev =>
           prev.map(doc =>
             doc.id === documentId ? { ...doc, status: 'APPROVED' } : doc
           )
@@ -174,14 +197,6 @@ const DocumentVerification = () => {
               : doc
           )
         );
-        // Also update filtered documents
-        setFilteredDocuments(prev =>
-          prev.map(doc =>
-            doc.id === selectedDocument.id
-              ? { ...doc, status: 'REJECTED' }
-              : doc
-          )
-        );
         setIsRejectOpen(false);
         setRejectionReason('');
         setSelectedDocument(null);
@@ -204,6 +219,11 @@ const DocumentVerification = () => {
   const handleOpenReject = document => {
     setSelectedDocument(document);
     setIsRejectOpen(true);
+  };
+
+  const handleOpenBatchReject = userId => {
+    setSelectedUserForBatch(userId);
+    setIsBatchRejectOpen(true);
   };
 
   const getStatusBadge = status => {
@@ -242,22 +262,35 @@ const DocumentVerification = () => {
     }
   };
 
+  const getDocumentIcon = type => {
+    switch (type) {
+      case 'DRIVERS_LICENSE':
+        return <Car className='h-5 w-5 text-blue-500' />;
+      case 'ID_CARD':
+        return <IdCard className='h-5 w-5 text-green-500' />;
+      case 'PASSPORT':
+        return <FileText className='h-5 w-5 text-purple-500' />;
+      default:
+        return <File className='h-5 w-5 text-gray-500' />;
+    }
+  };
+
   const formatDate = dateString => {
     if (!dateString) return t('staffDocuments.common.na');
     return new Date(dateString).toLocaleDateString();
   };
 
   return (
-    <div className='space-y-6'>
+    <div className='space-y-6 p-6'>
       <div>
         <h1 className='text-2xl font-bold'>{t('staffDocuments.title')}</h1>
         <p className='text-muted-foreground'>{t('staffDocuments.subtitle')}</p>
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className='shadow-sm'>
         <CardHeader>
-          <CardTitle className='flex items-center gap-2'>
+          <CardTitle className='flex items-center gap-2 text-xl'>
             <Filter className='h-5 w-5' />
             {t('staffDocuments.filters.title')}
           </CardTitle>
@@ -339,10 +372,14 @@ const DocumentVerification = () => {
             </Select>
           </div>
 
-          <div className='flex items-end'>
-            <Button onClick={fetchDocuments} disabled={loading}>
+          <div className='lg:col-span-4 flex justify-end'>
+            <Button
+              onClick={fetchDocuments}
+              disabled={loading}
+              className='w-full md:w-auto'
+            >
               <RefreshCw
-                className={`h-4 w-4 mr-1 ${loading ? 'animate-spin' : ''}`}
+                className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`}
               />
               {t('staffDocuments.actions.refresh')}
             </Button>
@@ -351,7 +388,7 @@ const DocumentVerification = () => {
       </Card>
 
       {/* Documents List */}
-      <Card>
+      <Card className='shadow-sm'>
         <CardHeader>
           <CardTitle>{t('staffDocuments.list.title')}</CardTitle>
           <CardDescription>
@@ -365,8 +402,8 @@ const DocumentVerification = () => {
             <div className='flex justify-center items-center h-32'>
               <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary'></div>
             </div>
-          ) : filteredDocuments.length === 0 ? (
-            <div className='text-center py-8'>
+          ) : Object.keys(groupedDocuments).length === 0 ? (
+            <div className='text-center py-12'>
               <FileText className='mx-auto h-12 w-12 text-muted-foreground' />
               <h3 className='mt-2 text-sm font-medium'>
                 {t('staffDocuments.empty.title')}
@@ -547,7 +584,7 @@ const DocumentVerification = () => {
                 )}
               </div>
 
-              <div className='flex justify-end gap-2'>
+              <div className='flex justify-end gap-3'>
                 <Button
                   variant='outline'
                   onClick={() => setIsPreviewOpen(false)}
@@ -605,7 +642,7 @@ const DocumentVerification = () => {
                 />
               </div>
 
-              <DialogFooter>
+              <DialogFooter className='gap-2 sm:gap-0'>
                 <Button
                   variant='outline'
                   onClick={() => setIsRejectOpen(false)}
