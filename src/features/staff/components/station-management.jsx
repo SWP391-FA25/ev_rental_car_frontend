@@ -67,6 +67,7 @@ import {
   TabsTrigger,
 } from '../../shared/components/ui/tabs';
 import { Textarea } from '../../shared/components/ui/textarea';
+import { useTranslation } from 'react-i18next';
 
 const mockStations = [
   {
@@ -213,11 +214,19 @@ function StationStatusBadge({ status }) {
   };
 
   const { variant, icon: Icon, color } = config[status] || config['Active'];
-
+  const { t } = useTranslation();
   return (
     <Badge variant={variant} className='gap-1'>
       <Icon className={`h-3 w-3 ${color}`} />
-      {status}
+      {/* translate visible label while preserving underlying status */}
+      {(() => {
+        const labelMap = {
+          Active: t('staffStations.status.active'),
+          Maintenance: t('staffStations.status.maintenance'),
+          Offline: t('staffStations.status.offline'),
+        };
+        return labelMap[status] || status;
+      })()}
     </Badge>
   );
 }
@@ -238,11 +247,18 @@ function ChargingPortStatusBadge({ status }) {
   };
 
   const { variant, icon: Icon, color } = config[status] || config['Available'];
-
+  const { t } = useTranslation();
   return (
     <Badge variant={variant} className='gap-1'>
       <Icon className={`h-3 w-3 ${color}`} />
-      {status}
+      {(() => {
+        const labelMap = {
+          Available: t('staffStations.portStatus.available'),
+          'In Use': t('staffStations.portStatus.inUse'),
+          Faulty: t('staffStations.portStatus.faulty'),
+        };
+        return labelMap[status] || status;
+      })()}
     </Badge>
   );
 }
@@ -263,6 +279,7 @@ function AmenityIcon({ amenity }) {
 }
 
 function StationOverview() {
+  const { t } = useTranslation();
   return (
     <div className='space-y-6'>
       <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
@@ -281,10 +298,11 @@ function StationOverview() {
                 <div className='space-y-2'>
                   <div className='flex items-center justify-between text-sm'>
                     <span className='text-muted-foreground'>
-                      Parking Capacity
+                      {t('staffStations.overview.parkingCapacity')}
                     </span>
                     <span>
-                      {station.availableSpots}/{station.capacity} available
+                      {station.availableSpots}/{station.capacity}{' '}
+                      {t('staffStations.common.available')}
                     </span>
                   </div>
                   <Progress
@@ -299,7 +317,7 @@ function StationOverview() {
                       {station.activeChargingPorts}
                     </div>
                     <div className='text-xs text-muted-foreground'>
-                      Active Ports
+                      {t('staffStations.overview.activePorts')}
                     </div>
                   </div>
                   <div className='space-y-1'>
@@ -309,20 +327,24 @@ function StationOverview() {
                         (station.faultyChargingPorts || 0)}
                     </div>
                     <div className='text-xs text-muted-foreground'>
-                      Available
+                      {t('staffStations.common.available')}
                     </div>
                   </div>
                   <div className='space-y-1'>
                     <div className='text-2xl font-bold text-red-600'>
                       {station.faultyChargingPorts || 0}
                     </div>
-                    <div className='text-xs text-muted-foreground'>Faulty</div>
+                    <div className='text-xs text-muted-foreground'>
+                      {t('staffStations.common.faulty')}
+                    </div>
                   </div>
                 </div>
 
                 {/* Amenities */}
                 <div className='space-y-2'>
-                  <div className='text-sm font-medium'>Amenities</div>
+                  <div className='text-sm font-medium'>
+                    {t('staffStations.overview.amenities')}
+                  </div>
                   <div className='flex flex-wrap gap-2'>
                     {station.amenities.map(amenity => (
                       <Badge key={amenity} variant='outline' className='gap-1'>
@@ -335,7 +357,9 @@ function StationOverview() {
 
                 {/* Staff */}
                 <div className='space-y-2'>
-                  <div className='text-sm font-medium'>Staff on Duty</div>
+                  <div className='text-sm font-medium'>
+                    {t('staffStations.overview.staffOnDuty')}
+                  </div>
                   <div className='flex flex-wrap gap-1'>
                     {station.staff.map(staffMember => (
                       <Badge key={staffMember} variant='secondary'>
@@ -347,7 +371,9 @@ function StationOverview() {
 
                 {/* Operating Hours */}
                 <div className='flex items-center justify-between text-sm'>
-                  <span className='text-muted-foreground'>Operating Hours</span>
+                  <span className='text-muted-foreground'>
+                    {t('staffStations.overview.operatingHours')}
+                  </span>
                   <span>{station.operatingHours}</span>
                 </div>
               </div>
@@ -360,6 +386,7 @@ function StationOverview() {
 }
 
 function ChargingStations() {
+  const { t } = useTranslation();
   const [selectedStation, setSelectedStation] = React.useState('all');
 
   const filteredPorts =
@@ -372,10 +399,14 @@ function ChargingStations() {
       <div className='flex items-center gap-4'>
         <Select value={selectedStation} onValueChange={setSelectedStation}>
           <SelectTrigger className='w-[200px]'>
-            <SelectValue placeholder='Select station' />
+            <SelectValue
+              placeholder={t('staffStations.charging.selectStation')}
+            />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value='all'>All Stations</SelectItem>
+            <SelectItem value='all'>
+              {t('staffStations.charging.allStations')}
+            </SelectItem>
             {mockStations.map(station => (
               <SelectItem key={station.id} value={station.id}>
                 {station.name}
@@ -389,14 +420,18 @@ function ChargingStations() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Port #</TableHead>
-              <TableHead>Station</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Power</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Current User</TableHead>
-              <TableHead>Est. Completion</TableHead>
-              <TableHead className='text-right'>Actions</TableHead>
+              <TableHead>{t('staffStations.charging.port')}</TableHead>
+              <TableHead>{t('staffStations.common.station')}</TableHead>
+              <TableHead>{t('staffStations.common.type')}</TableHead>
+              <TableHead>{t('staffStations.charging.power')}</TableHead>
+              <TableHead>{t('staffStations.common.status')}</TableHead>
+              <TableHead>{t('staffStations.charging.currentUser')}</TableHead>
+              <TableHead>
+                {t('staffStations.charging.estimatedCompletion')}
+              </TableHead>
+              <TableHead className='text-right'>
+                {t('staffStations.common.actions')}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -427,19 +462,21 @@ function ChargingStations() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align='end' className='z-50'>
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuLabel>
+                          {t('staffStations.common.actions')}
+                        </DropdownMenuLabel>
                         <DropdownMenuItem>
                           <Zap className='mr-2 h-4 w-4' />
-                          Reset Port
+                          {t('staffStations.charging.resetPort')}
                         </DropdownMenuItem>
                         <DropdownMenuItem>
                           <Wrench className='mr-2 h-4 w-4' />
-                          Report Issue
+                          {t('staffStations.common.reportIssue')}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem>
                           <Edit className='mr-2 h-4 w-4' />
-                          Edit Settings
+                          {t('staffStations.charging.editSettings')}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -455,6 +492,7 @@ function ChargingStations() {
 }
 
 function MaintenanceRequests() {
+  const { t } = useTranslation();
   const [selectedPriority, setSelectedPriority] = React.useState('all');
 
   const filteredRequests =
@@ -470,7 +508,16 @@ function MaintenanceRequests() {
       Medium: 'default',
       Low: 'secondary',
     };
-    return <Badge variant={variants[priority]}>{priority}</Badge>;
+    const labelMap = {
+      High: t('staffStations.maintenance.priority.high'),
+      Medium: t('staffStations.maintenance.priority.medium'),
+      Low: t('staffStations.maintenance.priority.low'),
+    };
+    return (
+      <Badge variant={variants[priority]}>
+        {labelMap[priority] || priority}
+      </Badge>
+    );
   };
 
   const getStatusBadge = status => {
@@ -487,13 +534,23 @@ function MaintenanceRequests() {
       <div className='flex items-center justify-between'>
         <Select value={selectedPriority} onValueChange={setSelectedPriority}>
           <SelectTrigger className='w-[180px]'>
-            <SelectValue placeholder='Filter by priority' />
+            <SelectValue
+              placeholder={t('staffStations.maintenance.filterByPriority')}
+            />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value='all'>All Priorities</SelectItem>
-            <SelectItem value='high'>High Priority</SelectItem>
-            <SelectItem value='medium'>Medium Priority</SelectItem>
-            <SelectItem value='low'>Low Priority</SelectItem>
+            <SelectItem value='all'>
+              {t('staffStations.maintenance.allPriorities')}
+            </SelectItem>
+            <SelectItem value='high'>
+              {t('staffStations.maintenance.highPriority')}
+            </SelectItem>
+            <SelectItem value='medium'>
+              {t('staffStations.maintenance.mediumPriority')}
+            </SelectItem>
+            <SelectItem value='low'>
+              {t('staffStations.maintenance.lowPriority')}
+            </SelectItem>
           </SelectContent>
         </Select>
 
@@ -501,23 +558,26 @@ function MaintenanceRequests() {
           <DialogTrigger asChild>
             <Button>
               <Plus className='mr-2 h-4 w-4' />
-              New Request
+              {t('staffStations.maintenance.newRequest')}
             </Button>
           </DialogTrigger>
           <DialogContent className='sm:max-w-[500px]'>
             <DialogHeader>
-              <DialogTitle>Create Maintenance Request</DialogTitle>
+              <DialogTitle>
+                {t('staffStations.maintenance.dialog.title')}
+              </DialogTitle>
               <DialogDescription>
-                Report a new maintenance issue for station facilities or
-                equipment.
+                {t('staffStations.maintenance.dialog.subtitle')}
               </DialogDescription>
             </DialogHeader>
             <div className='grid gap-4 py-4'>
               <div className='space-y-2'>
-                <Label>Station</Label>
+                <Label>{t('staffStations.common.station')}</Label>
                 <Select>
                   <SelectTrigger>
-                    <SelectValue placeholder='Select station' />
+                    <SelectValue
+                      placeholder={t('staffStations.charging.selectStation')}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {mockStations.map(station => (
@@ -529,40 +589,68 @@ function MaintenanceRequests() {
                 </Select>
               </div>
               <div className='space-y-2'>
-                <Label>Type</Label>
+                <Label>{t('staffStations.maintenance.dialog.type')}</Label>
                 <Select>
                   <SelectTrigger>
-                    <SelectValue placeholder='Select type' />
+                    <SelectValue
+                      placeholder={t(
+                        'staffStations.maintenance.dialog.typePlaceholder'
+                      )}
+                    />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value='charging-port'>Charging Port</SelectItem>
-                    <SelectItem value='facility'>Facility</SelectItem>
-                    <SelectItem value='lighting'>Lighting</SelectItem>
-                    <SelectItem value='security'>Security</SelectItem>
-                    <SelectItem value='cleaning'>Cleaning</SelectItem>
+                    <SelectItem value='charging-port'>
+                      {t('staffStations.maintenance.types.chargingPort')}
+                    </SelectItem>
+                    <SelectItem value='facility'>
+                      {t('staffStations.maintenance.types.facility')}
+                    </SelectItem>
+                    <SelectItem value='lighting'>
+                      {t('staffStations.maintenance.types.lighting')}
+                    </SelectItem>
+                    <SelectItem value='security'>
+                      {t('staffStations.maintenance.types.security')}
+                    </SelectItem>
+                    <SelectItem value='cleaning'>
+                      {t('staffStations.maintenance.types.cleaning')}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className='space-y-2'>
-                <Label>Priority</Label>
+                <Label>{t('staffStations.maintenance.dialog.priority')}</Label>
                 <Select>
                   <SelectTrigger>
-                    <SelectValue placeholder='Select priority' />
+                    <SelectValue
+                      placeholder={t(
+                        'staffStations.maintenance.dialog.priorityPlaceholder'
+                      )}
+                    />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value='high'>High</SelectItem>
-                    <SelectItem value='medium'>Medium</SelectItem>
-                    <SelectItem value='low'>Low</SelectItem>
+                    <SelectItem value='high'>
+                      {t('staffStations.maintenance.priority.high')}
+                    </SelectItem>
+                    <SelectItem value='medium'>
+                      {t('staffStations.maintenance.priority.medium')}
+                    </SelectItem>
+                    <SelectItem value='low'>
+                      {t('staffStations.maintenance.priority.low')}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className='space-y-2'>
-                <Label>Description</Label>
-                <Textarea placeholder='Describe the issue in detail...' />
+                <Label>{t('staffStations.common.description')}</Label>
+                <Textarea
+                  placeholder={t(
+                    'staffStations.maintenance.dialog.descriptionPlaceholder'
+                  )}
+                />
               </div>
             </div>
             <DialogFooter>
-              <Button>Create Request</Button>
+              <Button>{t('staffStations.maintenance.dialog.create')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -572,14 +660,20 @@ function MaintenanceRequests() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Request ID</TableHead>
-              <TableHead>Station</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Priority</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Assigned To</TableHead>
-              <TableHead className='text-right'>Actions</TableHead>
+              <TableHead>
+                {t('staffStations.maintenance.table.requestId')}
+              </TableHead>
+              <TableHead>{t('staffStations.common.station')}</TableHead>
+              <TableHead>{t('staffStations.common.type')}</TableHead>
+              <TableHead>{t('staffStations.common.priority')}</TableHead>
+              <TableHead>{t('staffStations.common.description')}</TableHead>
+              <TableHead>{t('staffStations.common.status')}</TableHead>
+              <TableHead>
+                {t('staffStations.maintenance.table.assignedTo')}
+              </TableHead>
+              <TableHead className='text-right'>
+                {t('staffStations.common.actions')}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -609,16 +703,16 @@ function MaintenanceRequests() {
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem>
                           <Edit className='mr-2 h-4 w-4' />
-                          Edit Request
+                          {t('staffStations.maintenance.editRequest')}
                         </DropdownMenuItem>
                         <DropdownMenuItem>
                           <Users className='mr-2 h-4 w-4' />
-                          Assign Technician
+                          {t('staffStations.maintenance.assignTechnician')}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className='text-red-600'>
                           <Trash2 className='mr-2 h-4 w-4' />
-                          Delete Request
+                          {t('staffStations.maintenance.deleteRequest')}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -634,22 +728,27 @@ function MaintenanceRequests() {
 }
 
 export function StationManagement() {
+  const { t } = useTranslation();
   return (
     <div className='space-y-6'>
       <div>
         <h2 className='text-2xl font-bold tracking-tight'>
-          Station Management
+          {t('staffStations.title')}
         </h2>
-        <p className='text-muted-foreground'>
-          Monitor station operations, charging infrastructure, and maintenance
-        </p>
+        <p className='text-muted-foreground'>{t('staffStations.subtitle')}</p>
       </div>
 
       <Tabs defaultValue='overview' className='space-y-4'>
         <TabsList>
-          <TabsTrigger value='overview'>Station Overview</TabsTrigger>
-          <TabsTrigger value='charging'>Charging Ports</TabsTrigger>
-          <TabsTrigger value='maintenance'>Maintenance</TabsTrigger>
+          <TabsTrigger value='overview'>
+            {t('staffStations.tabs.overview')}
+          </TabsTrigger>
+          <TabsTrigger value='charging'>
+            {t('staffStations.tabs.charging')}
+          </TabsTrigger>
+          <TabsTrigger value='maintenance'>
+            {t('staffStations.tabs.maintenance')}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value='overview' className='space-y-4'>

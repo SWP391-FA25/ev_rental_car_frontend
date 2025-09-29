@@ -21,16 +21,16 @@
     "returnDate": "Ngày trả xe",
     "search": "Tìm xe"
   },
-  "features":{
+  "features": {
     "title": "Các Xe Đặc Biệt",
     "description": "Khám phá các phương tiện thuê đặc biệt của chúng tôi cho chuyến đi tiếp theo của bạn.",
     "available": "Có sẵn",
     "exploreAllCars": "Khám phá tất cả các xe"
   },
   "testimonial": {
-      "title": "Tin Cậy Bởi Các Tổ Chức Lãnh Đạo",
-      "description": "Xem những đánh giá của khách hàng về Ev Rental"
-    },
+    "title": "Tin Cậy Bởi Các Tổ Chức Lãnh Đạo",
+    "description": "Xem những đánh giá của khách hàng về Ev Rental"
+  },
   "whyChooseUs": {
     "title": "Tại Sao Chọn Chúng Tôi?",
     "description": "Trải nghiệm tương lai của giao thông với dịch vụ cho thuê xe điện cao cấp của chúng tôi. Đây là lý do hàng nghìn khách hàng tin tưởng chúng tôi cho nhu cầu di chuyển của họ.",
@@ -100,8 +100,507 @@
       "cookiePolicy": "Chính Sách Cookie"
     }
   },
+  "dashboard": {
+    "title": "Bảng điều khiển nhân viên",
+    "welcome": "Chào mừng trở lại, {{name}}. Ca làm việc của bạn: {{shift}}",
+    "availableCars": "Xe sẵn sàng",
+    "availableCarsSub": "Sẵn sàng cho thuê",
+    "activeRentals": "Xe đang được thuê",
+    "activeRentalsSub": "Đang được sử dụng",
+    "maintenance": "Bảo trì",
+    "maintenanceSub": "Xe đang bảo dưỡng",
+    "pendingVerifications": "Xác minh đang chờ",
+    "pendingVerificationsSub": "Tài liệu cần xem xét",
+    "quickActions": "Thao tác nhanh",
+    "manageCars": "Quản lý xe",
+    "customerService": "Chăm sóc khách hàng",
+    "processPayments": "Xử lý thanh toán",
+    "recentActivity": "Hoạt động gần đây",
+    "newBookingConfirmed": "Đơn thuê mới được xác nhận",
+    "bookingDetails": "{{car}} đã được đặt bởi {{customer}}",
+    "documentVerified": "Tài liệu đã xác minh",
+    "documentDetails": "{{document}} của {{customer}} đã được xác minh",
+    "carReturned": "Xe đã được trả",
+    "carReturnDetails": "{{car}} đã được trả tại {{location}}"
+  },
+  "staffSidebar": {
+    "dashboard": "Bảng điều khiển",
+    "cars": "Quản lý xe",
+    "stations": "Trạm",
+    "customers": "Khách hàng",
+    "payments": "Thanh toán",
+    "documents": "Xác minh tài liệu",
+    "navigation": "Điều hướng",
+    "profile": "Hồ sơ",
+    "schedule": "Lịch làm việc",
+    "settings": "Cài đặt",
+    "logout": "Đăng xuất",
+    "car_management": "Quản lý xe",
+    "station_management": "Quản lý trạm",
+    "customer_service": "Dịch vụ khách hàng",
+    "payment_management": "Quản lý thanh toán",
+    "auth": {
+      "logout_success": "Đăng xuất thành công"
+    },
+    "searchPlaceholder": "Tìm khách hàng, xe, đơn thuê..."
+  },
+  "staffHeader": {
+    "title": "Bảng điều khiển nhân viên",
+    "searchPlaceholder": "Tìm khách hàng, xe, đơn thuê...",
+    "support": "Hỗ trợ",
+    "alerts": "Thông báo"
+  },
   "common": {
     "english": "Tiếng Anh",
-    "vietnamese": "Tiếng Việt"
+    "vietnamese": "Tiếng Việt",
+    "close": "Đóng",
+    "cancel": "Hủy"
+  },
+  "staffDocuments": {
+    "title": "Xác minh tài liệu",
+    "subtitle": "Xem xét và xác minh tài liệu người dùng để xác thực tài khoản",
+    "filters": {
+      "title": "Bộ lọc",
+      "search": "Tìm kiếm",
+      "searchPlaceholder": "Tìm theo tên, email hoặc loại tài liệu...",
+      "status": "Trạng thái",
+      "statusPlaceholder": "Chọn trạng thái",
+      "allStatuses": "Tất cả trạng thái",
+      "type": "Loại tài liệu",
+      "typePlaceholder": "Chọn loại",
+      "allTypes": "Tất cả loại"
+    },
+    "status": {
+      "pending": "Đang chờ",
+      "approved": "Đã duyệt",
+      "rejected": "Từ chối"
+    },
+    "types": {
+      "driversLicense": "Bằng lái xe",
+      "idCard": "CMND/CCCD",
+      "passport": "Hộ chiếu"
+    },
+    "list": {
+      "title": "Tài liệu cần xác minh",
+      "count": "Tìm thấy {{count}} tài liệu"
+    },
+    "empty": {
+      "title": "Không có tài liệu nào",
+      "subtitle": "Hãy thử điều chỉnh bộ lọc hoặc làm mới danh sách."
+    },
+    "actions": {
+      "refresh": "Làm mới",
+      "preview": "Xem trước",
+      "approve": "Duyệt",
+      "reject": "Từ chối",
+      "download": "Tải xuống"
+    },
+    "preview": {
+      "title": "Xem trước tài liệu",
+      "userInfo": "Thông tin người dùng",
+      "docInfo": "Thông tin tài liệu",
+      "preview": "Xem trước tài liệu",
+      "notAvailable": "Không có bản xem trước"
+    },
+    "fields": {
+      "name": "Họ tên",
+      "email": "Email",
+      "phone": "Điện thoại",
+      "type": "Loại",
+      "fileName": "Tên tệp",
+      "status": "Trạng thái",
+      "uploaded": "Đã tải lên",
+      "expires": "Hết hạn",
+      "documentNumber": "Số tài liệu"
+    },
+    "reject": {
+      "title": "Từ chối tài liệu",
+      "confirm": "Bạn có chắc muốn từ chối {{docType}} của {{name}}?",
+      "description": "Vui lòng cung cấp lý do từ chối. Người dùng sẽ được thông báo và có thể tải lại tài liệu.",
+      "reason": "Lý do từ chối",
+      "reasonPlaceholder": "Nhập lý do từ chối...",
+      "submit": "Từ chối tài liệu"
+    },
+    "common": {
+      "na": "Không có",
+      "unknownUser": "Người dùng không xác định",
+      "noEmail": "Không có email",
+      "theUser": "người dùng"
+    },
+    "toasts": {
+      "approveSuccess": "Duyệt tài liệu thành công",
+      "rejectSuccess": "Từ chối tài liệu thành công"
+    },
+    "errors": {
+      "fetchFailed": "Không thể tải tài liệu",
+      "approveFailed": "Không thể duyệt tài liệu",
+      "rejectionReasonRequired": "Vui lòng nhập lý do từ chối",
+      "rejectFailed": "Không thể từ chối tài liệu"
+    }
+  },
+  "staffPayments": {
+    "title": "Quản lý thanh toán",
+    "subtitle": "Xử lý thanh toán, hoàn tiền và giải quyết sự cố hóa đơn",
+    "tabs": {
+      "overview": "Tổng quan",
+      "process": "Xử lý thanh toán",
+      "refunds": "Hoàn tiền & điều chỉnh",
+      "issues": "Sự cố hóa đơn"
+    },
+    "overview": {
+      "totalRevenue": "Tổng doanh thu",
+      "deltaRevenue": "+12% so với tháng trước",
+      "pendingPayments": "Thanh toán đang chờ",
+      "awaitingProcessing": "Đang chờ xử lý",
+      "failedPayments": "Thanh toán thất bại",
+      "requireAttention": "Cần chú ý",
+      "totalRefunds": "Tổng hoàn tiền",
+      "thisMonth": "Tháng này"
+    },
+    "transactions": {
+      "title": "Giao dịch gần đây",
+      "subtitle": "Các giao dịch thanh toán mới nhất và trạng thái"
+    },
+    "table": {
+      "paymentId": "Mã thanh toán",
+      "customer": "Khách hàng",
+      "amount": "Số tiền",
+      "method": "Phương thức",
+      "status": "Trạng thái",
+      "date": "Ngày",
+      "actions": "Thao tác",
+      "failureReason": "Lý do thất bại"
+    },
+    "menu": {
+      "actions": "Thao tác",
+      "viewDetails": "Xem chi tiết",
+      "generateReceipt": "Tạo hóa đơn",
+      "retryPayment": "Thử lại thanh toán",
+      "manualPayment": "Thanh toán thủ công",
+      "cancelPayment": "Hủy thanh toán",
+      "addNote": "Thêm ghi chú",
+      "markResolved": "Đánh dấu đã xử lý",
+      "downloadReceipt": "Tải biên lai"
+    },
+    "process": {
+      "title": "Xử lý thanh toán thủ công",
+      "subtitle": "Xử lý thanh toán thủ công cho giao dịch tiền mặt hoặc điều chỉnh",
+      "bookingCustomer": "Đơn thuê/Khách hàng",
+      "bookingPlaceholder": "Chọn đơn thuê để thanh toán",
+      "notes": "Ghi chú thanh toán"
+    },
+    "pending": {
+      "title": "Thanh toán đang chờ & thất bại",
+      "subtitle": "Các thanh toán cần chú ý hoặc thử lại"
+    },
+    "refunds": {
+      "title": "Xử lý hoàn tiền",
+      "subtitle": "Hoàn tiền cho các thanh toán đã hoàn tất và hủy đơn",
+      "selectPayment": "Chọn thanh toán để hoàn tiền",
+      "paymentPlaceholder": "Chọn thanh toán cần hoàn",
+      "amount": "Số tiền hoàn",
+      "type": "Loại hoàn tiền",
+      "typePlaceholder": "Chọn loại hoàn",
+      "types": {
+        "full": "Hoàn toàn bộ",
+        "partial": "Hoàn một phần",
+        "adjustment": "Điều chỉnh hóa đơn"
+      },
+      "reason": "Lý do hoàn tiền"
+    },
+    "history": {
+      "title": "Lịch sử hoàn tiền",
+      "subtitle": "Các khoản hoàn tiền gần đây và trạng thái xử lý",
+      "refundId": "Mã hoàn tiền",
+      "originalAmount": "Số tiền gốc",
+      "refundAmount": "Số tiền hoàn",
+      "reason": "Lý do",
+      "processedBy": "Người xử lý"
+    },
+    "issues": {
+      "title": "Sự cố hóa đơn",
+      "subtitle": "Theo dõi và xử lý tranh chấp thanh toán và vấn đề hóa đơn",
+      "reportIssue": "Báo cáo sự cố",
+      "dialog": {
+        "title": "Báo cáo sự cố hóa đơn",
+        "subtitle": "Tạo báo cáo sự cố mới để điều tra",
+        "issueType": "Loại sự cố",
+        "issueTypePlaceholder": "Chọn loại sự cố",
+        "priority": "Mức độ ưu tiên",
+        "priorityPlaceholder": "Chọn mức độ ưu tiên",
+        "description": "Mô tả",
+        "descriptionPlaceholder": "Mô tả chi tiết sự cố hóa đơn...",
+        "create": "Tạo sự cố"
+      },
+      "types": {
+        "paymentFailed": "Thanh toán thất bại",
+        "billingDispute": "Tranh chấp hóa đơn",
+        "overcharge": "Tính dư tiền",
+        "duplicateCharge": "Tính tiền trùng",
+        "refundRequest": "Yêu cầu hoàn tiền"
+      },
+      "priority": {
+        "high": "Cao",
+        "medium": "Trung bình",
+        "low": "Thấp"
+      },
+      "table": {
+        "issueId": "Mã sự cố",
+        "type": "Loại",
+        "priority": "Mức ưu tiên",
+        "description": "Mô tả",
+        "assignedTo": "Người phụ trách"
+      }
+    },
+    "common": {
+      "amount": "Số tiền",
+      "method": "Phương thức thanh toán"
+    },
+    "placeholders": {
+      "amount": "Nhập số tiền",
+      "method": "Chọn phương thức thanh toán",
+      "notes": "Thêm ghi chú cho thanh toán...",
+      "refundAmount": "Nhập số tiền hoàn",
+      "refundReason": "Giải thích lý do hoàn tiền..."
+    },
+    "actions": {
+      "processPayment": "Xử lý thanh toán",
+      "processRefund": "Xử lý hoàn tiền"
+    }
+  },
+  "staffStations": {
+    "title": "Quản lý trạm",
+    "subtitle": "Giám sát hoạt động trạm, hạ tầng sạc và bảo trì",
+    "tabs": {
+      "overview": "Tổng quan trạm",
+      "charging": "Cổng sạc",
+      "maintenance": "Bảo trì"
+    },
+    "overview": {
+      "parkingCapacity": "Sức chứa bãi đỗ",
+      "activePorts": "Cổng đang hoạt động",
+      "amenities": "Tiện ích",
+      "staffOnDuty": "Nhân viên trực",
+      "operatingHours": "Giờ hoạt động"
+    },
+    "charging": {
+      "selectStation": "Chọn trạm",
+      "allStations": "Tất cả trạm",
+      "port": "Cổng #",
+      "power": "Công suất",
+      "currentUser": "Người đang sử dụng",
+      "estimatedCompletion": "Thời gian hoàn thành dự kiến",
+      "resetPort": "Khởi động lại cổng",
+      "editSettings": "Chỉnh sửa cài đặt"
+    },
+    "status": {
+      "active": "Đang hoạt động",
+      "maintenance": "Bảo trì",
+      "offline": "Ngoại tuyến"
+    },
+    "portStatus": {
+      "available": "Còn trống",
+      "inUse": "Đang dùng",
+      "faulty": "Lỗi"
+    },
+    "maintenance": {
+      "filterByPriority": "Lọc theo mức ưu tiên",
+      "allPriorities": "Tất cả mức ưu tiên",
+      "highPriority": "Ưu tiên cao",
+      "mediumPriority": "Ưu tiên trung bình",
+      "lowPriority": "Ưu tiên thấp",
+      "newRequest": "Yêu cầu mới",
+      "dialog": {
+        "title": "Tạo yêu cầu bảo trì",
+        "subtitle": "Báo cáo sự cố bảo trì mới cho cơ sở vật chất hoặc thiết bị của trạm.",
+        "type": "Loại",
+        "typePlaceholder": "Chọn loại",
+        "priority": "Mức ưu tiên",
+        "priorityPlaceholder": "Chọn mức ưu tiên",
+        "descriptionPlaceholder": "Mô tả chi tiết sự cố...",
+        "create": "Tạo yêu cầu"
+      },
+      "types": {
+        "chargingPort": "Cổng sạc",
+        "facility": "Cơ sở vật chất",
+        "lighting": "Chiếu sáng",
+        "security": "An ninh",
+        "cleaning": "Vệ sinh"
+      },
+      "priority": {
+        "high": "Cao",
+        "medium": "Trung bình",
+        "low": "Thấp"
+      },
+      "table": {
+        "requestId": "Mã yêu cầu",
+        "assignedTo": "Người phụ trách"
+      },
+      "editRequest": "Chỉnh sửa yêu cầu",
+      "assignTechnician": "Gán kỹ thuật viên",
+      "deleteRequest": "Xóa yêu cầu"
+    },
+    "common": {
+      "available": "còn trống",
+      "faulty": "Lỗi",
+      "station": "Trạm",
+      "type": "Loại",
+      "priority": "Mức ưu tiên",
+      "description": "Mô tả",
+      "status": "Trạng thái",
+      "actions": "Thao tác",
+      "reportIssue": "Báo cáo sự cố"
+    }
+  },
+  "staffCars": {
+    "title": "Quản lý xe",
+    "subtitle": "Quản lý đặt xe, xử lý trả xe và cập nhật trạng thái xe",
+    "tabs": {
+      "bookings": "Xem đơn đặt",
+      "dropoff": "Trả xe",
+      "status": "Cập nhật trạng thái"
+    },
+    "common": {
+      "filterByStatus": "Lọc theo trạng thái",
+      "customer": "Khách hàng",
+      "vehicle": "Xe",
+      "duration": "Thời lượng",
+      "status": "Trạng thái",
+      "amount": "Số tiền",
+      "actions": "Thao tác"
+    },
+    "actions": {
+      "viewDetails": "Xem chi tiết",
+      "contactCustomer": "Liên hệ khách hàng",
+      "modifyBooking": "Chỉnh sửa đặt xe"
+    },
+    "bookings": {
+      "searchPlaceholder": "Tìm kiếm đơn đặt...",
+      "filters": {
+        "all": "Tất cả đơn đặt"
+      },
+      "table": {
+        "bookingId": "Mã đặt xe"
+      }
+    },
+    "bookingStatus": {
+      "active": "Đang hoạt động",
+      "upcoming": "Sắp diễn ra",
+      "completed": "Hoàn tất",
+      "cancelled": "Đã hủy"
+    },
+    "dropoff": {
+      "title": "Trả xe",
+      "subtitle": "Xử lý trả xe và hoàn tất kiểm tra tình trạng",
+      "selectActive": "Chọn đơn đang hoạt động",
+      "bookingPlaceholder": "Chọn đơn cần xử lý",
+      "finalMileage": "Số km cuối",
+      "batteryLevel": "Mức pin (%)",
+      "damageAssessment": "Đánh giá hư hỏng",
+      "inspectionNotes": "Ghi chú kiểm tra",
+      "completeDropoff": "Hoàn tất trả xe"
+    },
+    "batteryRanges": {
+      "90_100": "90-100%",
+      "80_89": "80-89%",
+      "70_79": "70-79%",
+      "60_69": "60-69%",
+      "50_59": "50-59%",
+      "below50": "Dưới 50%"
+    },
+    "update": {
+      "battery": "Pin:",
+      "mileage": "Số km:",
+      "location": "Vị trí:",
+      "updateStatus": "Cập nhật trạng thái",
+      "dialogTitle": "Cập nhật trạng thái xe",
+      "dialogSubtitle": "Cập nhật trạng thái của {{model}} ({{plate}})",
+      "newStatus": "Trạng thái mới",
+      "notes": "Ghi chú"
+    },
+    "placeholders": {
+      "enterMileage": "Nhập số km hiện tại",
+      "selectBattery": "Chọn mức pin",
+      "inspectionNotes": "Ghi chú thêm về tình trạng xe...",
+      "damageAssessment": "Ghi lại hư hỏng hoặc vấn đề phát hiện...",
+      "selectNewStatus": "Chọn trạng thái mới",
+      "statusNotes": "Thêm ghi chú về thay đổi trạng thái..."
+    },
+    "carStatus": {
+      "available": "Sẵn sàng",
+      "rented": "Đang thuê",
+      "maintenance": "Bảo trì",
+      "charging": "Đang sạc",
+      "outOfService": "Ngừng phục vụ"
+    }
+  },
+  "staffCustomers": {
+    "title": "Quản lý khách hàng",
+    "subtitle": "Xử lý check-in, xác minh giấy tờ và hỗ trợ khách hàng",
+    "tabs": {
+      "checkin": "Check-in khách hàng",
+      "verification": "Xác minh bằng lái",
+      "support": "Hỗ trợ khách hàng"
+    },
+    "common": {
+      "customer": "Khách hàng",
+      "customerName": "Tên khách hàng",
+      "license": "Giấy phép",
+      "expiryDate": "Ngày hết hạn",
+      "currentStatus": "Trạng thái hiện tại",
+      "uploaded": "Đã tải lên",
+      "notUploaded": "Chưa tải",
+      "paymentMethod": "Phương thức thanh toán",
+      "status": "Trạng thái",
+      "actions": "Thao tác",
+      "booking": "Đơn",
+      "at": "tại",
+      "filterByStatus": "Lọc theo trạng thái"
+    },
+    "status": {
+      "active": "Hoạt động",
+      "pendingCheckin": "Chờ check-in",
+      "suspended": "Tạm ngưng"
+    },
+    "checkin": {
+      "title": "Check-in khách hàng",
+      "subtitle": "Xử lý khách đến và xác minh thông tin",
+      "searchPlaceholder": "Tìm theo tên, email hoặc điện thoại...",
+      "checkIn": "Check-in",
+      "dialogSubtitle": "Hoàn tất check-in cho {{name}}",
+      "identityVerification": "Xác minh danh tính",
+      "licenseVerification": "Xác minh bằng lái",
+      "notes": "Ghi chú check-in",
+      "confirmTerms": "Khách đã xác nhận điều khoản",
+      "complete": "Hoàn tất check-in",
+      "empty": "Không có khách chờ check-in.",
+      "emptySearch": "Không tìm thấy khách phù hợp."
+    },
+    "license": {
+      "title": "Xác minh bằng lái",
+      "subtitle": "Xác minh bằng lái và cập nhật trạng thái",
+      "selectCustomer": "Chọn khách hàng",
+      "selectPlaceholder": "Chọn khách để xác minh",
+      "licenseNumber": "Số bằng lái",
+      "licenseState": "Bang/Tỉnh cấp",
+      "licenseDocument": "Tài liệu bằng lái",
+      "viewUploaded": "Xem tài liệu đã tải",
+      "notes": "Ghi chú xác minh",
+      "approve": "Duyệt bằng lái",
+      "reject": "Từ chối bằng lái"
+    },
+    "support": {
+      "searchPlaceholder": "Tìm khách hàng...",
+      "filters": { "all": "Tất cả khách hàng" },
+      "membership": "Hội viên",
+      "totalBookings": "Tổng đơn",
+      "verification": "Xác minh",
+      "lastBooking": "Lần đặt gần nhất",
+      "never": "Chưa từng",
+      "viewProfile": "Xem hồ sơ",
+      "contactCustomer": "Liên hệ khách",
+      "editDetails": "Sửa thông tin",
+      "verifyDocuments": "Xác minh tài liệu"
+    }
   }
 }

@@ -55,6 +55,7 @@ import {
 } from '../../shared/components/ui/sidebar';
 import { apiClient } from '../../shared/lib/apiClient';
 import { endpoints } from '../../shared/lib/endpoints';
+import { useTranslation } from 'react-i18next';
 
 const data = {
   staff: {
@@ -195,6 +196,7 @@ const data = {
 };
 
 function StaffNav({ items }) {
+  const { t } = useTranslation();
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Staff Dashboard</SidebarGroupLabel>
@@ -345,6 +347,7 @@ function StaffQuickStats({ cars, stations, customers, payments }) {
 function StaffUser({ staff }) {
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const handleLogout = async () => {
     try {
       await apiClient.post(endpoints.auth.logout());
@@ -415,21 +418,21 @@ function StaffUser({ staff }) {
             <DropdownMenuGroup>
               <DropdownMenuItem>
                 <User2 className='mr-2 h-4 w-4' />
-                Profile
+                {t('staffSidebar.profile')}
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <Calendar className='mr-2 h-4 w-4' />
-                Schedule
+                {t('staffSidebar.schedule')}
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <Settings className='mr-2 h-4 w-4' />
-                Settings
+                {t('staffSidebar.settings')}
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
               <span className='mr-2 h-4 w-4' />
-              Log out
+              {t('staffSidebar.logout')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -445,6 +448,7 @@ export function StaffSidebar({
   menuItems,
   ...props
 }) {
+  const { t } = useTranslation();
   return (
     <Sidebar collapsible='offcanvas' {...props}>
       <SidebarHeader>
@@ -464,7 +468,7 @@ export function StaffSidebar({
       </SidebarHeader>
       <SidebarContent className='[&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-border/80'>
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('staffSidebar.navigation')}</SidebarGroupLabel>
           <SidebarMenu>
             {menuItems.map(item => (
               <SidebarMenuItem key={item.id}>

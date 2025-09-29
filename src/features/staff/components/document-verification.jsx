@@ -41,8 +41,10 @@ import { Badge } from '../../shared/components/ui/badge';
 import { Textarea } from '../../shared/components/ui/textarea';
 import { toast } from 'sonner';
 import documentService from '../../shared/services/documentService';
+import { useTranslation } from 'react-i18next';
 
 const DocumentVerification = () => {
+  const { t } = useTranslation();
   const [documents, setDocuments] = useState([]);
   const [filteredDocuments, setFilteredDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -76,11 +78,13 @@ const DocumentVerification = () => {
       if (response && response.success) {
         setDocuments(response.data.documents || []);
       } else {
-        throw new Error(response?.message || 'Failed to fetch documents');
+        throw new Error(
+          response?.message || t('staffDocuments.errors.fetchFailed')
+        );
       }
     } catch (error) {
       console.error('Error fetching documents:', error);
-      toast.error(error.message || 'Failed to fetch documents');
+      toast.error(error.message || t('staffDocuments.errors.fetchFailed'));
       setDocuments([]);
     } finally {
       setLoading(false);
@@ -121,7 +125,7 @@ const DocumentVerification = () => {
       });
 
       if (response && response.success) {
-        toast.success('Document approved successfully');
+        toast.success(t('staffDocuments.toasts.approveSuccess'));
         // Update the document in the list
         setDocuments(prev =>
           prev.map(doc =>
@@ -135,17 +139,19 @@ const DocumentVerification = () => {
           )
         );
       } else {
-        throw new Error(response?.message || 'Failed to approve document');
+        throw new Error(
+          response?.message || t('staffDocuments.errors.approveFailed')
+        );
       }
     } catch (error) {
       console.error('Error approving document:', error);
-      toast.error(error.message || 'Failed to approve document');
+      toast.error(error.message || t('staffDocuments.errors.approveFailed'));
     }
   };
 
   const handleReject = async () => {
     if (!rejectionReason.trim()) {
-      toast.error('Please provide a rejection reason');
+      toast.error(t('staffDocuments.errors.rejectionReasonRequired'));
       return;
     }
 
@@ -159,7 +165,7 @@ const DocumentVerification = () => {
       );
 
       if (response && response.success) {
-        toast.success('Document rejected successfully');
+        toast.success(t('staffDocuments.toasts.rejectSuccess'));
         // Update the document in the list
         setDocuments(prev =>
           prev.map(doc =>
@@ -180,11 +186,13 @@ const DocumentVerification = () => {
         setRejectionReason('');
         setSelectedDocument(null);
       } else {
-        throw new Error(response?.message || 'Failed to reject document');
+        throw new Error(
+          response?.message || t('staffDocuments.errors.rejectFailed')
+        );
       }
     } catch (error) {
       console.error('Error rejecting document:', error);
-      toast.error(error.message || 'Failed to reject document');
+      toast.error(error.message || t('staffDocuments.errors.rejectFailed'));
     }
   };
 
@@ -201,11 +209,21 @@ const DocumentVerification = () => {
   const getStatusBadge = status => {
     switch (status) {
       case 'PENDING':
-        return <Badge variant='secondary'>Pending</Badge>;
+        return (
+          <Badge variant='secondary'>
+            {t('staffDocuments.status.pending')}
+          </Badge>
+        );
       case 'APPROVED':
-        return <Badge variant='default'>Approved</Badge>;
+        return (
+          <Badge variant='default'>{t('staffDocuments.status.approved')}</Badge>
+        );
       case 'REJECTED':
-        return <Badge variant='destructive'>Rejected</Badge>;
+        return (
+          <Badge variant='destructive'>
+            {t('staffDocuments.status.rejected')}
+          </Badge>
+        );
       default:
         return <Badge variant='outline'>{status}</Badge>;
     }
@@ -214,28 +232,26 @@ const DocumentVerification = () => {
   const getDocumentTypeLabel = type => {
     switch (type) {
       case 'DRIVERS_LICENSE':
-        return "Driver's License";
+        return t('staffDocuments.types.driversLicense');
       case 'ID_CARD':
-        return 'ID Card';
+        return t('staffDocuments.types.idCard');
       case 'PASSPORT':
-        return 'Passport';
+        return t('staffDocuments.types.passport');
       default:
         return type;
     }
   };
 
   const formatDate = dateString => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return t('staffDocuments.common.na');
     return new Date(dateString).toLocaleDateString();
   };
 
   return (
     <div className='space-y-6'>
       <div>
-        <h1 className='text-2xl font-bold'>Document Verification</h1>
-        <p className='text-muted-foreground'>
-          Review and verify user documents for account authentication
-        </p>
+        <h1 className='text-2xl font-bold'>{t('staffDocuments.title')}</h1>
+        <p className='text-muted-foreground'>{t('staffDocuments.subtitle')}</p>
       </div>
 
       {/* Filters */}
@@ -243,17 +259,17 @@ const DocumentVerification = () => {
         <CardHeader>
           <CardTitle className='flex items-center gap-2'>
             <Filter className='h-5 w-5' />
-            Filters
+            {t('staffDocuments.filters.title')}
           </CardTitle>
         </CardHeader>
         <CardContent className='flex flex-col md:flex-row gap-4'>
           <div className='flex-1'>
-            <Label htmlFor='search'>Search</Label>
+            <Label htmlFor='search'>{t('staffDocuments.filters.search')}</Label>
             <div className='relative'>
               <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
               <Input
                 id='search'
-                placeholder='Search by user name, email, or document type...'
+                placeholder={t('staffDocuments.filters.searchPlaceholder')}
                 className='pl-10'
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
@@ -262,7 +278,7 @@ const DocumentVerification = () => {
           </div>
 
           <div>
-            <Label htmlFor='status'>Status</Label>
+            <Label htmlFor='status'>{t('staffDocuments.filters.status')}</Label>
             <Select
               value={filters.status}
               onValueChange={value =>
@@ -270,19 +286,31 @@ const DocumentVerification = () => {
               }
             >
               <SelectTrigger className='w-[180px]'>
-                <SelectValue placeholder='Select status' />
+                <SelectValue
+                  placeholder={t('staffDocuments.filters.statusPlaceholder')}
+                />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value='ALL'>All Statuses</SelectItem>
-                <SelectItem value='PENDING'>Pending</SelectItem>
-                <SelectItem value='APPROVED'>Approved</SelectItem>
-                <SelectItem value='REJECTED'>Rejected</SelectItem>
+                <SelectItem value='ALL'>
+                  {t('staffDocuments.filters.allStatuses')}
+                </SelectItem>
+                <SelectItem value='PENDING'>
+                  {t('staffDocuments.status.pending')}
+                </SelectItem>
+                <SelectItem value='APPROVED'>
+                  {t('staffDocuments.status.approved')}
+                </SelectItem>
+                <SelectItem value='REJECTED'>
+                  {t('staffDocuments.status.rejected')}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div>
-            <Label htmlFor='documentType'>Document Type</Label>
+            <Label htmlFor='documentType'>
+              {t('staffDocuments.filters.type')}
+            </Label>
             <Select
               value={filters.documentType}
               onValueChange={value =>
@@ -290,15 +318,23 @@ const DocumentVerification = () => {
               }
             >
               <SelectTrigger className='w-[180px]'>
-                <SelectValue placeholder='Select type' />
+                <SelectValue
+                  placeholder={t('staffDocuments.filters.typePlaceholder')}
+                />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value='ALL'>All Types</SelectItem>
-                <SelectItem value='DRIVERS_LICENSE'>
-                  Driver's License
+                <SelectItem value='ALL'>
+                  {t('staffDocuments.filters.allTypes')}
                 </SelectItem>
-                <SelectItem value='ID_CARD'>ID Card</SelectItem>
-                <SelectItem value='PASSPORT'>Passport</SelectItem>
+                <SelectItem value='DRIVERS_LICENSE'>
+                  {t('staffDocuments.types.driversLicense')}
+                </SelectItem>
+                <SelectItem value='ID_CARD'>
+                  {t('staffDocuments.types.idCard')}
+                </SelectItem>
+                <SelectItem value='PASSPORT'>
+                  {t('staffDocuments.types.passport')}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -308,7 +344,7 @@ const DocumentVerification = () => {
               <RefreshCw
                 className={`h-4 w-4 mr-1 ${loading ? 'animate-spin' : ''}`}
               />
-              Refresh
+              {t('staffDocuments.actions.refresh')}
             </Button>
           </div>
         </CardContent>
@@ -317,9 +353,11 @@ const DocumentVerification = () => {
       {/* Documents List */}
       <Card>
         <CardHeader>
-          <CardTitle>Documents to Verify</CardTitle>
+          <CardTitle>{t('staffDocuments.list.title')}</CardTitle>
           <CardDescription>
-            {filteredDocuments.length} documents found
+            {t('staffDocuments.list.count', {
+              count: filteredDocuments.length,
+            })}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -330,9 +368,11 @@ const DocumentVerification = () => {
           ) : filteredDocuments.length === 0 ? (
             <div className='text-center py-8'>
               <FileText className='mx-auto h-12 w-12 text-muted-foreground' />
-              <h3 className='mt-2 text-sm font-medium'>No documents found</h3>
+              <h3 className='mt-2 text-sm font-medium'>
+                {t('staffDocuments.empty.title')}
+              </h3>
               <p className='mt-1 text-sm text-muted-foreground'>
-                Try adjusting your filters or refresh the list.
+                {t('staffDocuments.empty.subtitle')}
               </p>
             </div>
           ) : (
@@ -348,10 +388,12 @@ const DocumentVerification = () => {
                     </div>
                     <div>
                       <h3 className='font-medium'>
-                        {document.user?.name || 'Unknown User'}
+                        {document.user?.name ||
+                          t('staffDocuments.common.unknownUser')}
                       </h3>
                       <p className='text-sm text-muted-foreground'>
-                        {document.user?.email || 'No email provided'}
+                        {document.user?.email ||
+                          t('staffDocuments.common.noEmail')}
                       </p>
                       <div className='flex items-center gap-2 mt-1'>
                         <span className='text-xs bg-secondary px-2 py-1 rounded'>
@@ -365,7 +407,8 @@ const DocumentVerification = () => {
                   <div className='flex flex-col md:flex-row items-start md:items-center gap-2'>
                     <div className='text-sm text-muted-foreground'>
                       <Calendar className='inline h-4 w-4 mr-1' />
-                      Uploaded: {formatDate(document.uploadedAt)}
+                      {t('staffDocuments.fields.uploaded')}:{' '}
+                      {formatDate(document.uploadedAt)}
                     </div>
                     <div className='flex gap-2'>
                       <Button
@@ -374,7 +417,7 @@ const DocumentVerification = () => {
                         onClick={() => handlePreview(document)}
                       >
                         <Eye className='h-4 w-4 mr-1' />
-                        Preview
+                        {t('staffDocuments.actions.preview')}
                       </Button>
                       {document.status === 'PENDING' && (
                         <>
@@ -383,7 +426,7 @@ const DocumentVerification = () => {
                             onClick={() => handleApprove(document.id)}
                           >
                             <CheckCircle className='h-4 w-4 mr-1' />
-                            Approve
+                            {t('staffDocuments.actions.approve')}
                           </Button>
                           <Button
                             size='sm'
@@ -391,7 +434,7 @@ const DocumentVerification = () => {
                             onClick={() => handleOpenReject(document)}
                           >
                             <XCircle className='h-4 w-4 mr-1' />
-                            Reject
+                            {t('staffDocuments.actions.reject')}
                           </Button>
                         </>
                       )}
@@ -408,7 +451,7 @@ const DocumentVerification = () => {
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
         <DialogContent className='max-w-4xl max-h-[90vh] overflow-y-auto'>
           <DialogHeader>
-            <DialogTitle>Document Preview</DialogTitle>
+            <DialogTitle>{t('staffDocuments.preview.title')}</DialogTitle>
           </DialogHeader>
           {selectedDocument && (
             <div className='space-y-4'>
@@ -416,20 +459,23 @@ const DocumentVerification = () => {
                 <div>
                   <h3 className='font-medium flex items-center gap-2'>
                     <User className='h-4 w-4' />
-                    User Information
+                    {t('staffDocuments.preview.userInfo')}
                   </h3>
                   <div className='mt-2 space-y-2'>
                     <p>
-                      <strong>Name:</strong>{' '}
-                      {selectedDocument.user?.name || 'N/A'}
+                      <strong>{t('staffDocuments.fields.name')}:</strong>{' '}
+                      {selectedDocument.user?.name ||
+                        t('staffDocuments.common.na')}
                     </p>
                     <p>
-                      <strong>Email:</strong>{' '}
-                      {selectedDocument.user?.email || 'N/A'}
+                      <strong>{t('staffDocuments.fields.email')}:</strong>{' '}
+                      {selectedDocument.user?.email ||
+                        t('staffDocuments.common.na')}
                     </p>
                     {selectedDocument.user?.phone && (
                       <p>
-                        <strong>Phone:</strong> {selectedDocument.user.phone}
+                        <strong>{t('staffDocuments.fields.phone')}:</strong>{' '}
+                        {selectedDocument.user.phone}
                       </p>
                     )}
                   </div>
@@ -438,34 +484,37 @@ const DocumentVerification = () => {
                 <div>
                   <h3 className='font-medium flex items-center gap-2'>
                     <FileText className='h-4 w-4' />
-                    Document Information
+                    {t('staffDocuments.preview.docInfo')}
                   </h3>
                   <div className='mt-2 space-y-2'>
                     <p>
-                      <strong>Type:</strong>{' '}
+                      <strong>{t('staffDocuments.fields.type')}:</strong>{' '}
                       {getDocumentTypeLabel(selectedDocument.documentType)}
                     </p>
                     <p>
-                      <strong>File Name:</strong>{' '}
-                      {selectedDocument.fileName || 'N/A'}
+                      <strong>{t('staffDocuments.fields.fileName')}:</strong>{' '}
+                      {selectedDocument.fileName ||
+                        t('staffDocuments.common.na')}
                     </p>
                     <p>
-                      <strong>Status:</strong>{' '}
+                      <strong>{t('staffDocuments.fields.status')}:</strong>{' '}
                       {getStatusBadge(selectedDocument.status)}
                     </p>
                     <p>
-                      <strong>Uploaded:</strong>{' '}
+                      <strong>{t('staffDocuments.fields.uploaded')}:</strong>{' '}
                       {formatDate(selectedDocument.uploadedAt)}
                     </p>
                     {selectedDocument.expiryDate && (
                       <p>
-                        <strong>Expires:</strong>{' '}
+                        <strong>{t('staffDocuments.fields.expires')}:</strong>{' '}
                         {formatDate(selectedDocument.expiryDate)}
                       </p>
                     )}
                     {selectedDocument.documentNumber && (
                       <p>
-                        <strong>Document #:</strong>{' '}
+                        <strong>
+                          {t('staffDocuments.fields.documentNumber')}:
+                        </strong>{' '}
                         {selectedDocument.documentNumber}
                       </p>
                     )}
@@ -474,24 +523,26 @@ const DocumentVerification = () => {
               </div>
 
               <div>
-                <h3 className='font-medium mb-2'>Document Preview</h3>
+                <h3 className='font-medium mb-2'>
+                  {t('staffDocuments.preview.preview')}
+                </h3>
                 {selectedDocument.fileUrl ? (
                   selectedDocument.mimeType === 'application/pdf' ? (
                     <iframe
                       src={selectedDocument.fileUrl}
                       className='w-full h-96 border rounded'
-                      title='Document Preview'
+                      title={t('staffDocuments.preview.title')}
                     />
                   ) : (
                     <img
                       src={selectedDocument.fileUrl}
-                      alt='Document Preview'
+                      alt={t('staffDocuments.preview.title')}
                       className='max-w-full h-auto border rounded'
                     />
                   )
                 ) : (
                   <div className='text-center py-8 text-muted-foreground'>
-                    Preview not available
+                    {t('staffDocuments.preview.notAvailable')}
                   </div>
                 )}
               </div>
@@ -501,13 +552,13 @@ const DocumentVerification = () => {
                   variant='outline'
                   onClick={() => setIsPreviewOpen(false)}
                 >
-                  Close
+                  {t('common.close', { defaultValue: 'Close' })}
                 </Button>
                 {selectedDocument.fileUrl && (
                   <a href={selectedDocument.fileUrl} download>
                     <Button>
                       <Download className='h-4 w-4 mr-1' />
-                      Download
+                      {t('staffDocuments.actions.download')}
                     </Button>
                   </a>
                 )}
@@ -521,27 +572,33 @@ const DocumentVerification = () => {
       <Dialog open={isRejectOpen} onOpenChange={setIsRejectOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reject Document</DialogTitle>
+            <DialogTitle>{t('staffDocuments.reject.title')}</DialogTitle>
           </DialogHeader>
           {selectedDocument && (
             <div className='space-y-4'>
               <div>
                 <p className='mb-2'>
-                  Are you sure you want to reject{' '}
-                  <strong>{selectedDocument.user?.name || 'the user'}</strong>'s
-                  {getDocumentTypeLabel(selectedDocument.documentType)}?
+                  {t('staffDocuments.reject.confirm', {
+                    name:
+                      selectedDocument.user?.name ||
+                      t('staffDocuments.common.theUser'),
+                    docType: getDocumentTypeLabel(
+                      selectedDocument.documentType
+                    ),
+                  })}
                 </p>
                 <p className='text-sm text-muted-foreground mb-4'>
-                  Please provide a reason for rejection. The user will be
-                  notified and can re-upload their document.
+                  {t('staffDocuments.reject.description')}
                 </p>
               </div>
 
               <div>
-                <Label htmlFor='rejectionReason'>Rejection Reason</Label>
+                <Label htmlFor='rejectionReason'>
+                  {t('staffDocuments.reject.reason')}
+                </Label>
                 <Textarea
                   id='rejectionReason'
-                  placeholder='Enter reason for rejection...'
+                  placeholder={t('staffDocuments.reject.reasonPlaceholder')}
                   value={rejectionReason}
                   onChange={e => setRejectionReason(e.target.value)}
                   rows={4}
@@ -553,10 +610,10 @@ const DocumentVerification = () => {
                   variant='outline'
                   onClick={() => setIsRejectOpen(false)}
                 >
-                  Cancel
+                  {t('common.cancel', { defaultValue: 'Cancel' })}
                 </Button>
                 <Button variant='destructive' onClick={handleReject}>
-                  Reject Document
+                  {t('staffDocuments.reject.submit')}
                 </Button>
               </DialogFooter>
             </div>
