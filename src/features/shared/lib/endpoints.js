@@ -43,4 +43,13 @@ export const endpoints = {
     delete: id => `/api/documents/${id}`,
     verify: id => `/api/documents/${id}/verify`,
   },
+  renters: {
+    getAll: () => '/api/renters',
+    getById: id => `/api/renters/${id}`,
+    create: () => '/api/renters',
+    update: id => `/api/renters/${id}`,
+    softDelete: id => `/api/renters/${id}/soft-delete`,
+    delete: id => `/api/renters/${id}`,
+    updatePassword: id => `/api/renters/${id}/password`,
+  },
 };

@@ -1,5 +1,6 @@
 import { FilterIcon, PlusIcon, SearchIcon } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 
 import { MoreVerticalIcon } from 'lucide-react';
 import { Badge } from '../../shared/components/ui/badge';
@@ -19,89 +20,115 @@ import {
   TableHeader,
   TableRow,
 } from '../../shared/components/ui/table';
-
-// Mock data for users
-const mockUsers = [
-  {
-    id: '1',
-    name: 'John Smith',
-    email: 'john.smith@email.com',
-    phone: '+1-555-0123',
-    status: 'Active',
-    joinDate: '2023-03-15',
-    totalBookings: 28,
-    membershipType: 'Premium',
-  },
-  {
-    id: '2',
-    name: 'Sarah Johnson',
-    email: 'sarah.j@email.com',
-    phone: '+1-555-0456',
-    status: 'Active',
-    joinDate: '2023-07-22',
-    totalBookings: 15,
-    membershipType: 'Standard',
-  },
-  {
-    id: '3',
-    name: 'Mike Chen',
-    email: 'mike.chen@email.com',
-    phone: '+1-555-0789',
-    status: 'Suspended',
-    joinDate: '2023-01-10',
-    totalBookings: 5,
-    membershipType: 'Basic',
-  },
-  {
-    id: '4',
-    name: 'Emma Wilson',
-    email: 'emma.w@email.com',
-    phone: '+1-555-0321',
-    status: 'Active',
-    joinDate: '2023-05-08',
-    totalBookings: 42,
-    membershipType: 'Premium',
-  },
-];
+import { apiClient } from '../../shared/lib/apiClient';
+import { endpoints } from '../../shared/lib/endpoints';
+import UserDetails from '../components/UserDetails';
 
 export default function UserManagement() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
-  const filteredUsers = mockUsers.filter(user => {
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const response = await apiClient.get(endpoints.renters.getAll());
+      if (response?.success && response?.data?.renters) {
+        setUsers(response.data.renters);
+      } else {
+        console.error('Invalid response format:', response);
+        toast.error('Invalid response from server');
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+
+      // More detailed error handling
+      if (
+        error.code === 'ECONNREFUSED' ||
+        error.message?.includes('Network Error')
+      ) {
+        toast.error(
+          'Cannot connect to server. Please check if backend is running.'
+        );
+      } else if (error.status === 401) {
+        toast.error('Authentication required. Please login again.');
+      } else if (error.status === 403) {
+        toast.error('Access denied. You do not have permission to view users.');
+      } else {
+        toast.error(error?.message || 'Failed to fetch users');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredUsers = users.filter(user => {
     const matchesSearch =
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+      user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
       filterStatus === 'all' ||
-      user.status.toLowerCase() === filterStatus.toLowerCase();
+      user.accountStatus?.toLowerCase() === filterStatus.toLowerCase();
     return matchesSearch && matchesStatus;
   });
 
+  const handleViewDetails = userId => {
+    setSelectedUserId(userId);
+    setIsDetailsOpen(true);
+  };
+
+  const handleUserUpdated = updatedUser => {
+    setUsers(prev =>
+      prev.map(user => (user.id === updatedUser.id ? updatedUser : user))
+    );
+  };
+
+  const handleSoftDelete = async userId => {
+    if (!window.confirm('Are you sure you want to suspend this user?')) return;
+
+    try {
+      const response = await apiClient.put(
+        endpoints.renters.softDelete(userId),
+        { status: 'SUSPENDED' }
+      );
+
+      if (response?.success) {
+        toast.success('User suspended successfully');
+        fetchUsers(); // Refresh the list
+      }
+    } catch (error) {
+      console.error('Error suspending user:', error);
+      toast.error(error?.message || 'Failed to suspend user');
+    }
+  };
+
   const getStatusBadgeVariant = status => {
     switch (status) {
-      case 'Active':
+      case 'ACTIVE':
         return 'default';
-      case 'Suspended':
-        return 'destructive';
-      case 'Pending':
+      case 'SUSPENDED':
         return 'secondary';
+      case 'BANNED':
+        return 'destructive';
       default:
         return 'outline';
     }
   };
 
-  const getMembershipBadgeVariant = type => {
-    switch (type) {
-      case 'Premium':
-        return 'default';
-      case 'Standard':
-        return 'secondary';
-      case 'Basic':
-        return 'outline';
-      default:
-        return 'outline';
-    }
+  const formatDate = dateString => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
   };
 
   return (
@@ -148,8 +175,8 @@ export default function UserManagement() {
             <DropdownMenuItem onClick={() => setFilterStatus('suspended')}>
               Suspended
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFilterStatus('pending')}>
-              Pending
+            <DropdownMenuItem onClick={() => setFilterStatus('banned')}>
+              Banned
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -164,80 +191,99 @@ export default function UserManagement() {
               <TableHead>Email</TableHead>
               <TableHead>Phone</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Membership</TableHead>
               <TableHead>Join Date</TableHead>
-              <TableHead>Total Bookings</TableHead>
               <TableHead className='w-[70px]'>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredUsers.map(user => (
-              <TableRow key={user.id}>
-                <TableCell className='font-medium'>{user.name}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>{user.phone}</TableCell>
-                <TableCell>
-                  <Badge variant={getStatusBadgeVariant(user.status)}>
-                    {user.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    variant={getMembershipBadgeVariant(user.membershipType)}
-                  >
-                    {user.membershipType}
-                  </Badge>
-                </TableCell>
-                <TableCell>{user.joinDate}</TableCell>
-                <TableCell>{user.totalBookings}</TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant='ghost' className='h-8 w-8 p-0'>
-                        <MoreVerticalIcon className='h-4 w-4' />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align='end'>
-                      <DropdownMenuItem>View Details</DropdownMenuItem>
-                      <DropdownMenuItem>Edit User</DropdownMenuItem>
-                      <DropdownMenuItem>Reset Password</DropdownMenuItem>
-                      <DropdownMenuItem className='text-red-600'>
-                        Suspend User
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={6} className='text-center py-8'>
+                  Loading users...
                 </TableCell>
               </TableRow>
-            ))}
+            ) : filteredUsers.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={6}
+                  className='text-center py-8 text-muted-foreground'
+                >
+                  No users found
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredUsers.map(user => (
+                <TableRow key={user.id}>
+                  <TableCell className='font-medium'>
+                    {user.name || 'N/A'}
+                  </TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.phone || 'N/A'}</TableCell>
+                  <TableCell>
+                    <Badge variant={getStatusBadgeVariant(user.accountStatus)}>
+                      {user.accountStatus}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{formatDate(user.createdAt)}</TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant='ghost' className='h-8 w-8 p-0'>
+                          <MoreVerticalIcon className='h-4 w-4' />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align='end'>
+                        <DropdownMenuItem
+                          onClick={() => handleViewDetails(user.id)}
+                        >
+                          View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleSoftDelete(user.id)}
+                          className='text-orange-600'
+                        >
+                          Suspend User
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
 
       {/* Summary Stats */}
-      <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
+      <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
         <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>{mockUsers.length}</div>
+          <div className='text-2xl font-bold'>{users.length}</div>
           <div className='text-sm text-muted-foreground'>Total Users</div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>
-            {mockUsers.filter(u => u.status === 'Active').length}
+            {users.filter(u => u.accountStatus === 'ACTIVE').length}
           </div>
           <div className='text-sm text-muted-foreground'>Active Users</div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>
-            {mockUsers.filter(u => u.membershipType === 'Premium').length}
+            {users.filter(u => u.accountStatus === 'SUSPENDED').length}
           </div>
-          <div className='text-sm text-muted-foreground'>Premium Members</div>
-        </div>
-        <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>
-            {mockUsers.reduce((sum, u) => sum + u.totalBookings, 0)}
-          </div>
-          <div className='text-sm text-muted-foreground'>Total Bookings</div>
+          <div className='text-sm text-muted-foreground'>Suspended Users</div>
         </div>
       </div>
+
+      {/* User Details Dialog */}
+      <UserDetails
+        isOpen={isDetailsOpen}
+        onClose={() => {
+          setIsDetailsOpen(false);
+          setSelectedUserId(null);
+        }}
+        userId={selectedUserId}
+        onUserUpdated={handleUserUpdated}
+      />
     </div>
   );
 }
