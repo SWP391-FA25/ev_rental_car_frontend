@@ -1,57 +1,44 @@
+import { useEffect, useState } from 'react';
+import { apiClient } from '../../shared/lib/apiClient';
+import { endpoints } from '../../shared/lib/endpoints';
 import { ChartAreaInteractive } from '../components/chart-area-interactive';
 import { DataTable } from '../components/data-table';
 import { SectionCards } from '../components/section-cards';
 
-// Mock data for user accounts table
-const mockUserData = [
-  {
-    id: 1,
-    header: 'John Smith',
-    type: 'Premium',
-    status: 'Active',
-    target: '15',
-    limit: '20',
-    reviewer: 'john.smith@email.com',
-  },
-  {
-    id: 2,
-    header: 'Sarah Johnson',
-    type: 'Standard',
-    status: 'Active',
-    target: '8',
-    limit: '10',
-    reviewer: 'sarah.j@email.com',
-  },
-  {
-    id: 3,
-    header: 'Mike Chen',
-    type: 'Basic',
-    status: 'Suspended',
-    target: '2',
-    limit: '5',
-    reviewer: 'mike.chen@email.com',
-  },
-  {
-    id: 4,
-    header: 'Emma Wilson',
-    type: 'Premium',
-    status: 'Active',
-    target: '12',
-    limit: '20',
-    reviewer: 'emma.w@email.com',
-  },
-  {
-    id: 5,
-    header: 'David Brown',
-    type: 'Standard',
-    status: 'Pending',
-    target: '0',
-    limit: '10',
-    reviewer: 'david.brown@email.com',
-  },
-];
-
 export default function Dashboard() {
+  const [userData, setUserData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    async function fetchUsers() {
+      try {
+        setLoading(true);
+        setError('');
+        const response = await apiClient.get(endpoints.renters.getAll());
+        // Transform API data to match DataTable format nếu cần
+        const renters = response.data?.renters || [];
+        const formatted = renters.map(renter => ({
+          id: renter.id,
+          header: renter.name,
+          type: renter.membershipType,
+          status: renter.status,
+          target: renter.target || '0',
+          limit: renter.limit || '0',
+          reviewer: renter.email,
+        }));
+        setUserData(formatted);
+        console.log('Fetched renters for dashboard:', formatted);
+      } catch (err) {
+        setError(err.message || 'Failed to fetch users');
+        console.error('Dashboard fetch renters error:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchUsers();
+  }, []);
+
   return (
     <>
       <SectionCards />
@@ -96,7 +83,13 @@ export default function Dashboard() {
           <h3 className='text-lg font-semibold mb-4'>
             User Account Management
           </h3>
-          <DataTable data={mockUserData} />
+          {loading ? (
+            <div className='py-8 text-center'>Loading users...</div>
+          ) : error ? (
+            <div className='py-8 text-center text-red-500'>Error: {error}</div>
+          ) : (
+            <DataTable data={userData} />
+          )}
         </div>
       </div>
     </>
