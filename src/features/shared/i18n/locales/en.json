@@ -1,105 +1,613 @@
 {
-    "navbar": {
-      "home": "HOME",
-      "cars": "CARS",
-      "bookings": "MY BOOKINGS",
-      "login": "Login",
-      "joinUp": "Join Up",
-      "profile": "Profile",
-      "logout": "Logout",
-      "language": "Language"
-    },
-    "hero": {
-      "title1": "EV Rental - With You",
-      "title2": "On Every Journey",
-      "location": "Pickup Location",
-      "destination": "Select city",
-      "time": "Pickup Time",
-      "date": "Pickup Date",
-      "returnDate": "Return Date",
-      "search": "Search Cars"
-    },
-    "features": {
-      "title": "Features Vehicles",
-      "description": "Explore our selection of premium vehicles available for your next adventure.",
-      "available": "Available Now",
-      "exploreAllCars": "Explore all cars"
-    },
-    "testimonial": {
-      "title": "Trusted by Industry Leaders",
-      "description": "See what our customers are saying about Ev Rental"
-    },
-    "whyChooseUs": {
-      "title": "Why Choose Us?",
-      "description": "Experience the future of transportation with our premium electric vehicle rental service. Here's why thousands of customers trust us for their mobility needs.",
-      "reasons": {
-        "trustedSecure": {
-          "title": "Trusted & Secure",
-          "description": "All our vehicles are fully insured and regularly maintained to ensure your safety and peace of mind."
-        },
-        "availability": {
-          "title": "24/7 Availability", 
-          "description": "Book anytime, anywhere. Our platform is available round the clock for your convenience."
-        },
-        "premiumQuality": {
-          "title": "Premium Quality",
-          "description": "Hand-picked vehicles from top brands, ensuring you get the best driving experience every time."
-        },
-        "flexiblePricing": {
-          "title": "Flexible Pricing",
-          "description": "Competitive rates with no hidden fees. Pay only for what you use with transparent pricing."
-        },
-        "ecoFriendly": {
-          "title": "Eco-Friendly",
-          "description": "100% electric vehicles helping you reduce your carbon footprint while enjoying premium mobility."
-        },
-        "expertSupport": {
-          "title": "Expert Support",
-          "description": "Our dedicated customer support team is always ready to assist you with any questions or concerns."
-        }
+  "navbar": {
+    "home": "HOME",
+    "cars": "CARS",
+    "bookings": "MY BOOKINGS",
+    "login": "Login",
+    "joinUp": "Join Up",
+    "profile": "Profile",
+    "logout": "Logout",
+    "language": "Language"
+  },
+  "hero": {
+    "title1": "EV Rental - With You",
+    "title2": "On Every Journey",
+    "location": "Pickup Location",
+    "destination": "Select city",
+    "time": "Pickup Time",
+    "date": "Pickup Date",
+    "returnDate": "Return Date",
+    "search": "Search Cars"
+  },
+  "features": {
+    "title": "Features Vehicles",
+    "description": "Explore our selection of premium vehicles available for your next adventure.",
+    "available": "Available Now",
+    "exploreAllCars": "Explore all cars"
+  },
+  "testimonial": {
+    "title": "Trusted by Industry Leaders",
+    "description": "See what our customers are saying about Ev Rental"
+  },
+  "whyChooseUs": {
+    "title": "Why Choose Us?",
+    "description": "Experience the future of transportation with our premium electric vehicle rental service. Here's why thousands of customers trust us for their mobility needs.",
+    "reasons": {
+      "trustedSecure": {
+        "title": "Trusted & Secure",
+        "description": "All our vehicles are fully insured and regularly maintained to ensure your safety and peace of mind."
       },
-      "stats": {
-        "happyCustomers": "Happy Customers",
-        "premiumVehicles": "Premium Vehicles",
-        "citiesCovered": "Cities Covered", 
-        "customerSupport": "Customer Support"
+      "availability": {
+        "title": "24/7 Availability",
+        "description": "Book anytime, anywhere. Our platform is available round the clock for your convenience."
+      },
+      "premiumQuality": {
+        "title": "Premium Quality",
+        "description": "Hand-picked vehicles from top brands, ensuring you get the best driving experience every time."
+      },
+      "flexiblePricing": {
+        "title": "Flexible Pricing",
+        "description": "Competitive rates with no hidden fees. Pay only for what you use with transparent pricing."
+      },
+      "ecoFriendly": {
+        "title": "Eco-Friendly",
+        "description": "100% electric vehicles helping you reduce your carbon footprint while enjoying premium mobility."
+      },
+      "expertSupport": {
+        "title": "Expert Support",
+        "description": "Our dedicated customer support team is always ready to assist you with any questions or concerns."
       }
     },
-    "footer": {
-      "companyName": "Ev Rental",
-      "companyDescription": "The intelligent rental system that transforms your business operations with AI-powered insights and automation.",
-      "sections": {
-        "product": {
-          "title": "Product",
-          "features": "Features",
-          "pricing": "Pricing",
-          "api": "API",
-          "integrations": "Integrations"
-        },
-        "company": {
-          "title": "Company",
-          "about": "About",
-          "blog": "Blog",
-          "careers": "Careers",
-          "contact": "Contact"
-        },
-        "support": {
-          "title": "Support",
-          "helpCenter": "Help Center",
-          "documentation": "Documentation",
-          "status": "Status",
-          "community": "Community"
-        }
+    "stats": {
+      "happyCustomers": "Happy Customers",
+      "premiumVehicles": "Premium Vehicles",
+      "citiesCovered": "Cities Covered",
+      "customerSupport": "Customer Support"
+    }
+  },
+  "footer": {
+    "companyName": "Ev Rental",
+    "companyDescription": "The intelligent rental system that transforms your business operations with AI-powered insights and automation.",
+    "sections": {
+      "product": {
+        "title": "Product",
+        "features": "Features",
+        "pricing": "Pricing",
+        "api": "API",
+        "integrations": "Integrations"
       },
-      "copyright": "© 2024 Ev Rental. All rights reserved.",
-      "legal": {
-        "privacyPolicy": "Privacy Policy",
-        "termsOfService": "Terms of Service",
-        "cookiePolicy": "Cookie Policy"
+      "company": {
+        "title": "Company",
+        "about": "About",
+        "blog": "Blog",
+        "careers": "Careers",
+        "contact": "Contact"
+      },
+      "support": {
+        "title": "Support",
+        "helpCenter": "Help Center",
+        "documentation": "Documentation",
+        "status": "Status",
+        "community": "Community"
+      }
+    },
+    "copyright": "© 2024 Ev Rental. All rights reserved.",
+    "legal": {
+      "privacyPolicy": "Privacy Policy",
+      "termsOfService": "Terms of Service",
+      "cookiePolicy": "Cookie Policy"
+    }
+  },
+  "dashboard": {
+    "title": "Staff Dashboard",
+    "welcome": "Welcome back, {{name}}. Your shift: {{shift}}",
+    "availableCars": "Available Cars",
+    "availableCarsSub": "Ready for rental",
+    "activeRentals": "Active Rentals",
+    "activeRentalsSub": "Currently in use",
+    "maintenance": "Maintenance",
+    "maintenanceSub": "Vehicles in service",
+    "pendingVerifications": "Pending Verifications",
+    "pendingVerificationsSub": "Documents to review",
+    "quickActions": "Quick Actions",
+    "manageCars": "Manage Cars",
+    "customerService": "Customer Service",
+    "processPayments": "Process Payments",
+    "recentActivity": "Recent Activity",
+    "newBookingConfirmed": "New Booking Confirmed",
+    "bookingDetails": "Booking Details",
+    "documentVerified": "Document Verified",
+    "documentDetails": "Document Details",
+    "carReturned": "Car Returned",
+    "carReturnDetails": "{{car}} returned at {{location}}"
+  },
+  "staffSidebar": {
+    "dashboard": "Dashboard",
+    "cars": "Car Management",
+    "stations": "Stations",
+    "customers": "Customers",
+    "payments": "Payments",
+    "documents": "Document Verification",
+    "navigation": "Navigation",
+    "profile": "Profile",
+    "schedule": "Schedule",
+    "settings": "Settings",
+    "logout": "Log out",
+    "car_management": "Car Management",
+    "station_management": "Station Management",
+    "customer_service": "Customer Service",
+    "payment_management": "Payment Management",
+    "auth": {
+      "logout_success": "Logged out successfully"
+    },
+    "searchPlaceholder": "Search customers, cars, bookings..."
+  },
+  "staffHeader": {
+    "title": "Staff Dashboard",
+    "searchPlaceholder": "Search customers, cars, bookings...",
+    "support": "Support",
+    "alerts": "Alerts"
+  },
+  "common": {
+    "english": "English",
+    "vietnamese": "Vietnamese",
+    "close": "Close",
+    "cancel": "Cancel"
+  },
+  "staffDocuments": {
+    "title": "Document Verification",
+    "subtitle": "Review and verify user documents for account authentication",
+    "filters": {
+      "title": "Filters",
+      "search": "Search",
+      "searchPlaceholder": "Search by user name, email, or document type...",
+      "status": "Status",
+      "statusPlaceholder": "Select status",
+      "allStatuses": "All Statuses",
+      "type": "Document Type",
+      "typePlaceholder": "Select type",
+      "allTypes": "All Types"
+    },
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "types": {
+      "driversLicense": "Driver's License",
+      "idCard": "ID Card",
+      "passport": "Passport"
+    },
+    "list": {
+      "title": "Documents to Verify",
+      "count": "{{count}} documents found"
+    },
+    "empty": {
+      "title": "No documents found",
+      "subtitle": "Try adjusting your filters or refresh the list."
+    },
+    "actions": {
+      "refresh": "Refresh",
+      "preview": "Preview",
+      "approve": "Approve",
+      "reject": "Reject",
+      "download": "Download"
+    },
+    "preview": {
+      "title": "Document Preview",
+      "userInfo": "User Information",
+      "docInfo": "Document Information",
+      "preview": "Document Preview",
+      "notAvailable": "Preview not available"
+    },
+    "fields": {
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "type": "Type",
+      "fileName": "File Name",
+      "status": "Status",
+      "uploaded": "Uploaded",
+      "expires": "Expires",
+      "documentNumber": "Document #"
+    },
+    "reject": {
+      "title": "Reject Document",
+      "confirm": "Are you sure you want to reject {{name}}'s {{docType}}?",
+      "description": "Please provide a reason for rejection. The user will be notified and can re-upload their document.",
+      "reason": "Rejection Reason",
+      "reasonPlaceholder": "Enter reason for rejection...",
+      "submit": "Reject Document"
+    },
+    "common": {
+      "na": "N/A",
+      "unknownUser": "Unknown User",
+      "noEmail": "No email provided",
+      "theUser": "the user"
+    },
+    "toasts": {
+      "approveSuccess": "Document approved successfully",
+      "rejectSuccess": "Document rejected successfully"
+    },
+    "errors": {
+      "fetchFailed": "Failed to fetch documents",
+      "approveFailed": "Failed to approve document",
+      "rejectionReasonRequired": "Please provide a rejection reason",
+      "rejectFailed": "Failed to reject document"
+    }
+  },
+  "staffPayments": {
+    "title": "Payment Management",
+    "subtitle": "Process payments, handle refunds, and resolve billing issues",
+    "tabs": {
+      "overview": "Overview",
+      "process": "Process Payments",
+      "refunds": "Refunds & Adjustments",
+      "issues": "Billing Issues"
+    },
+    "overview": {
+      "totalRevenue": "Total Revenue",
+      "deltaRevenue": "+12% from last month",
+      "pendingPayments": "Pending Payments",
+      "awaitingProcessing": "Awaiting processing",
+      "failedPayments": "Failed Payments",
+      "requireAttention": "Require attention",
+      "totalRefunds": "Total Refunds",
+      "thisMonth": "This month"
+    },
+    "transactions": {
+      "title": "Recent Transactions",
+      "subtitle": "Latest payment transactions and their status"
+    },
+    "table": {
+      "paymentId": "Payment ID",
+      "customer": "Customer",
+      "amount": "Amount",
+      "method": "Method",
+      "status": "Status",
+      "date": "Date",
+      "actions": "Actions",
+      "failureReason": "Failure Reason"
+    },
+    "methods": {
+      "cash": "Cash",
+      "creditCard": "Credit Card",
+      "debitCard": "Debit Card",
+      "bankTransfer": "Bank Transfer",
+      "digitalWallet": "Digital Wallet"
+    },
+    "menu": {
+      "actions": "Actions",
+      "viewDetails": "View Details",
+      "generateReceipt": "Generate Receipt",
+      "retryPayment": "Retry Payment",
+      "manualPayment": "Manual Payment",
+      "cancelPayment": "Cancel Payment",
+      "addNote": "Add Note",
+      "markResolved": "Mark Resolved",
+      "downloadReceipt": "Download Receipt"
+    },
+    "process": {
+      "title": "Process Manual Payment",
+      "subtitle": "Process payments manually for cash transactions or payment corrections",
+      "bookingCustomer": "Booking/Customer",
+      "bookingPlaceholder": "Select booking for payment",
+      "notes": "Payment Notes"
+    },
+    "pending": {
+      "title": "Pending & Failed Payments",
+      "subtitle": "Payments that require attention or retry"
+    },
+    "refunds": {
+      "title": "Process Refund",
+      "subtitle": "Issue refunds for completed payments and booking cancellations",
+      "selectPayment": "Select Payment to Refund",
+      "paymentPlaceholder": "Choose payment for refund",
+      "amount": "Refund Amount",
+      "type": "Refund Type",
+      "typePlaceholder": "Select refund type",
+      "types": {
+        "full": "Full Refund",
+        "partial": "Partial Refund",
+        "adjustment": "Billing Adjustment"
+      },
+      "reason": "Refund Reason"
+    },
+    "history": {
+      "title": "Refund History",
+      "subtitle": "Recent refunds and their processing status",
+      "refundId": "Refund ID",
+      "originalAmount": "Original Amount",
+      "refundAmount": "Refund Amount",
+      "reason": "Reason",
+      "processedBy": "Processed By"
+    },
+    "issues": {
+      "title": "Billing Issues",
+      "subtitle": "Track and resolve payment disputes and billing problems",
+      "reportIssue": "Report Issue",
+      "dialog": {
+        "title": "Report Billing Issue",
+        "subtitle": "Create a new billing issue report for investigation",
+        "issueType": "Issue Type",
+        "issueTypePlaceholder": "Select issue type",
+        "priority": "Priority",
+        "priorityPlaceholder": "Select priority",
+        "description": "Description",
+        "descriptionPlaceholder": "Describe the billing issue in detail...",
+        "create": "Create Issue"
+      },
+      "types": {
+        "paymentFailed": "Payment Failed",
+        "billingDispute": "Billing Dispute",
+        "overcharge": "Overcharge",
+        "duplicateCharge": "Duplicate Charge",
+        "refundRequest": "Refund Request"
+      },
+      "priority": {
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low"
+      },
+      "table": {
+        "issueId": "Issue ID",
+        "type": "Type",
+        "priority": "Priority",
+        "description": "Description",
+        "assignedTo": "Assigned To"
       }
     },
     "common": {
-      "english": "English",
-      "vietnamese": "Vietnamese"
+      "amount": "Amount",
+      "method": "Payment Method"
+    },
+    "placeholders": {
+      "amount": "Enter amount",
+      "method": "Select payment method",
+      "notes": "Add any notes about this payment...",
+      "refundAmount": "Enter refund amount",
+      "refundReason": "Explain the reason for this refund..."
+    },
+    "actions": {
+      "processPayment": "Process Payment",
+      "processRefund": "Process Refund"
+    }
+  },
+  "staffStations": {
+    "title": "Station Management",
+    "subtitle": "Monitor station operations, charging infrastructure, and maintenance",
+    "tabs": {
+      "overview": "Station Overview",
+      "charging": "Charging Ports",
+      "maintenance": "Maintenance"
+    },
+    "overview": {
+      "parkingCapacity": "Parking Capacity",
+      "activePorts": "Active Ports",
+      "amenities": "Amenities",
+      "staffOnDuty": "Staff on Duty",
+      "operatingHours": "Operating Hours"
+    },
+    "charging": {
+      "selectStation": "Select station",
+      "allStations": "All Stations",
+      "port": "Port #",
+      "power": "Power",
+      "currentUser": "Current User",
+      "estimatedCompletion": "Est. Completion",
+      "resetPort": "Reset Port",
+      "editSettings": "Edit Settings"
+    },
+    "status": {
+      "active": "Active",
+      "maintenance": "Maintenance",
+      "offline": "Offline"
+    },
+    "portStatus": {
+      "available": "Available",
+      "inUse": "In Use",
+      "faulty": "Faulty"
+    },
+    "maintenance": {
+      "filterByPriority": "Filter by priority",
+      "allPriorities": "All Priorities",
+      "highPriority": "High Priority",
+      "mediumPriority": "Medium Priority",
+      "lowPriority": "Low Priority",
+      "newRequest": "New Request",
+      "dialog": {
+        "title": "Create Maintenance Request",
+        "subtitle": "Report a new maintenance issue for station facilities or equipment.",
+        "type": "Type",
+        "typePlaceholder": "Select type",
+        "priority": "Priority",
+        "priorityPlaceholder": "Select priority",
+        "descriptionPlaceholder": "Describe the issue in detail...",
+        "create": "Create Request"
+      },
+      "types": {
+        "chargingPort": "Charging Port",
+        "facility": "Facility",
+        "lighting": "Lighting",
+        "security": "Security",
+        "cleaning": "Cleaning"
+      },
+      "priority": {
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low"
+      },
+      "table": {
+        "requestId": "Request ID",
+        "assignedTo": "Assigned To"
+      },
+      "editRequest": "Edit Request",
+      "assignTechnician": "Assign Technician",
+      "deleteRequest": "Delete Request"
+    },
+    "common": {
+      "available": "available",
+      "faulty": "Faulty",
+      "station": "Station",
+      "type": "Type",
+      "priority": "Priority",
+      "description": "Description",
+      "status": "Status",
+      "actions": "Actions",
+      "reportIssue": "Report Issue"
+    }
+  },
+  "staffCars": {
+    "title": "Car Management",
+    "subtitle": "Manage vehicle bookings, process drop-offs, and update car status",
+    "tabs": {
+      "bookings": "View Bookings",
+      "dropoff": "Car Drop-off",
+      "status": "Update Status"
+    },
+    "common": {
+      "filterByStatus": "Filter by status",
+      "customer": "Customer",
+      "vehicle": "Vehicle",
+      "duration": "Duration",
+      "status": "Status",
+      "amount": "Amount",
+      "actions": "Actions"
+    },
+    "actions": {
+      "viewDetails": "View Details",
+      "contactCustomer": "Contact Customer",
+      "modifyBooking": "Modify Booking"
+    },
+    "bookings": {
+      "searchPlaceholder": "Search bookings...",
+      "filters": {
+        "all": "All Bookings"
+      },
+      "table": {
+        "bookingId": "Booking ID"
+      }
+    },
+    "bookingStatus": {
+      "active": "Active",
+      "upcoming": "Upcoming",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "dropoff": {
+      "title": "Vehicle Drop-off",
+      "subtitle": "Process vehicle returns and complete rental inspections",
+      "selectActive": "Select Active Booking",
+      "bookingPlaceholder": "Choose a booking to process",
+      "finalMileage": "Final Mileage",
+      "batteryLevel": "Battery Level (%)",
+      "damageAssessment": "Damage Assessment",
+      "inspectionNotes": "Inspection Notes",
+      "completeDropoff": "Complete Drop-off"
+    },
+    "batteryRanges": {
+      "90_100": "90-100%",
+      "80_89": "80-89%",
+      "70_79": "70-79%",
+      "60_69": "60-69%",
+      "50_59": "50-59%",
+      "below50": "Below 50%"
+    },
+    "update": {
+      "battery": "Battery:",
+      "mileage": "Mileage:",
+      "location": "Location:",
+      "updateStatus": "Update Status",
+      "dialogTitle": "Update Car Status",
+      "dialogSubtitle": "Update the status of {{model}} ({{plate}})",
+      "newStatus": "New Status",
+      "notes": "Notes"
+    },
+    "placeholders": {
+      "enterMileage": "Enter current mileage",
+      "selectBattery": "Select battery level",
+      "inspectionNotes": "Additional notes about vehicle condition...",
+      "damageAssessment": "Document any damages or issues found during inspection...",
+      "selectNewStatus": "Select new status",
+      "statusNotes": "Add notes about the status change..."
+    },
+    "carStatus": {
+      "available": "Available",
+      "rented": "Rented",
+      "maintenance": "Maintenance",
+      "charging": "Charging",
+      "outOfService": "Out of Service"
+    }
+  },
+  "staffCustomers": {
+    "title": "Customer Management",
+    "subtitle": "Handle customer check-ins, verify licenses, and provide support",
+    "tabs": {
+      "checkin": "Customer Check-in",
+      "verification": "License Verification",
+      "support": "Customer Support"
+    },
+    "common": {
+      "customer": "Customer",
+      "customerName": "Customer Name",
+      "license": "License",
+      "expiryDate": "Expiry Date",
+      "currentStatus": "Current Status",
+      "uploaded": "Uploaded",
+      "notUploaded": "Not uploaded",
+      "paymentMethod": "Payment Method",
+      "status": "Status",
+      "actions": "Actions",
+      "booking": "Booking",
+      "at": "at",
+      "filterByStatus": "Filter by status"
+    },
+    "status": {
+      "active": "Active",
+      "pendingCheckin": "Pending Check-in",
+      "suspended": "Suspended"
+    },
+    "checkin": {
+      "title": "Customer Check-in",
+      "subtitle": "Process customer arrivals and verify their information",
+      "searchPlaceholder": "Search by name, email, or phone...",
+      "checkIn": "Check In",
+      "dialogSubtitle": "Complete check-in process for {{name}}",
+      "identityVerification": "Identity Verification",
+      "licenseVerification": "License Verification",
+      "notes": "Check-in Notes",
+      "confirmTerms": "Customer confirmed terms and conditions",
+      "complete": "Complete Check-in",
+      "empty": "No customers pending check-in.",
+      "emptySearch": "No customers found matching your search.",
+      "checkinNotes": "Add notes about the check-in process..."
+    },
+    "license": {
+      "title": "License Verification",
+      "subtitle": "Verify customer driver's licenses and update verification status",
+      "selectCustomer": "Select Customer",
+      "selectPlaceholder": "Choose customer for license verification",
+      "licenseNumber": "License Number",
+      "licenseState": "License State",
+      "licenseDocument": "License Document",
+      "viewUploaded": "View Uploaded License",
+      "notes": "Verification Notes",
+      "approve": "Approve License",
+      "reject": "Reject License",
+      "licenseNotes": "Add notes about the license verification..."
+    },
+    "support": {
+      "searchPlaceholder": "Search customers...",
+      "filters": { "all": "All Customers" },
+      "membership": "Membership",
+      "totalBookings": "Total Bookings",
+      "verification": "Verification",
+      "lastBooking": "Last Booking",
+      "never": "Never",
+      "viewProfile": "View Profile",
+      "contactCustomer": "Contact Customer",
+      "editDetails": "Edit Details",
+      "verifyDocuments": "Verify Documents"
     }
   }
+}

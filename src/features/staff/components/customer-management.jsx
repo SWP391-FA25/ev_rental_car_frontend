@@ -72,6 +72,7 @@ import {
   TabsTrigger,
 } from '../../shared/components/ui/tabs';
 import { Textarea } from '../../shared/components/ui/textarea';
+import { useTranslation } from 'react-i18next';
 
 const mockCustomers = [
   {
@@ -245,6 +246,7 @@ function VerificationStatusBadge({ status }) {
 }
 
 function CustomerCheckIn() {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = React.useState('');
   const [selectedCustomer, setSelectedCustomer] = React.useState(null);
   const [checkInNotes, setCheckInNotes] = React.useState('');
@@ -267,9 +269,9 @@ function CustomerCheckIn() {
     <div className='space-y-6'>
       <Card>
         <CardHeader>
-          <CardTitle>Customer Check-in</CardTitle>
+          <CardTitle>{t('staffCustomers.checkin.title')}</CardTitle>
           <CardDescription>
-            Process customer arrivals and verify their information
+            {t('staffCustomers.checkin.subtitle')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -278,7 +280,7 @@ function CustomerCheckIn() {
               <div className='relative flex-1'>
                 <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
                 <Input
-                  placeholder='Search by name, email, or phone...'
+                  placeholder={t('staffCustomers.checkin.searchPlaceholder')}
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
                   className='pl-8'
@@ -318,10 +320,13 @@ function CustomerCheckIn() {
                           </div>
                           {customer.currentBooking && (
                             <div className='text-sm'>
-                              <span className='font-medium'>Booking:</span>{' '}
+                              <span className='font-medium'>
+                                {t('staffCustomers.common.booking')}:
+                              </span>{' '}
                               {customer.currentBooking.car}
                               <span className='text-muted-foreground ml-2'>
-                                at {customer.currentBooking.pickupLocation}
+                                {t('staffCustomers.common.at')}{' '}
+                                {customer.currentBooking.pickupLocation}
                               </span>
                             </div>
                           )}
@@ -335,20 +340,28 @@ function CustomerCheckIn() {
                               onClick={() => setSelectedCustomer(customer)}
                             >
                               <UserCheck className='mr-2 h-4 w-4' />
-                              Check In
+                              {t('staffCustomers.checkin.checkIn')}
                             </Button>
                           </DialogTrigger>
                           <DialogContent className='sm:max-w-[500px]'>
                             <DialogHeader>
-                              <DialogTitle>Customer Check-in</DialogTitle>
+                              <DialogTitle>
+                                {t('staffCustomers.checkin.title')}
+                              </DialogTitle>
                               <DialogDescription>
-                                Complete check-in process for {customer.name}
+                                {t('staffCustomers.checkin.dialogSubtitle', {
+                                  name: customer.name,
+                                })}
                               </DialogDescription>
                             </DialogHeader>
                             <div className='space-y-4 py-4'>
                               <div className='grid grid-cols-2 gap-4'>
                                 <div className='space-y-2'>
-                                  <Label>Identity Verification</Label>
+                                  <Label>
+                                    {t(
+                                      'staffCustomers.checkin.identityVerification'
+                                    )}
+                                  </Label>
                                   <VerificationStatusBadge
                                     status={
                                       customer.verificationStatus.identity
@@ -356,25 +369,33 @@ function CustomerCheckIn() {
                                   />
                                 </div>
                                 <div className='space-y-2'>
-                                  <Label>License Verification</Label>
+                                  <Label>
+                                    {t(
+                                      'staffCustomers.checkin.licenseVerification'
+                                    )}
+                                  </Label>
                                   <VerificationStatusBadge
                                     status={customer.verificationStatus.license}
                                   />
                                 </div>
                               </div>
                               <div className='space-y-2'>
-                                <Label>Payment Method</Label>
+                                <Label>
+                                  {t('staffCustomers.common.paymentMethod')}
+                                </Label>
                                 <VerificationStatusBadge
                                   status={customer.verificationStatus.payment}
                                 />
                               </div>
                               <div className='space-y-2'>
                                 <Label htmlFor='checkin-notes'>
-                                  Check-in Notes
+                                  {t('staffCustomers.checkin.notes')}
                                 </Label>
                                 <Textarea
                                   id='checkin-notes'
-                                  placeholder='Add any notes about the check-in process...'
+                                  placeholder={t(
+                                    'staffCustomers.checkin.checkinNotes'
+                                  )}
                                   value={checkInNotes}
                                   onChange={e =>
                                     setCheckInNotes(e.target.value)
@@ -384,13 +405,13 @@ function CustomerCheckIn() {
                               <div className='flex items-center space-x-2'>
                                 <Checkbox id='terms' />
                                 <Label htmlFor='terms'>
-                                  Customer confirmed terms and conditions
+                                  {t('staffCustomers.checkin.confirmTerms')}
                                 </Label>
                               </div>
                             </div>
                             <DialogFooter>
                               <Button onClick={() => handleCheckIn(customer)}>
-                                Complete Check-in
+                                {t('staffCustomers.checkin.complete')}
                               </Button>
                             </DialogFooter>
                           </DialogContent>
@@ -403,8 +424,8 @@ function CustomerCheckIn() {
               {pendingCustomers.length === 0 && (
                 <div className='text-center py-8 text-muted-foreground'>
                   {searchTerm
-                    ? 'No customers found matching your search.'
-                    : 'No customers pending check-in.'}
+                    ? t('staffCustomers.checkin.emptySearch')
+                    : t('staffCustomers.checkin.empty')}
                 </div>
               )}
             </div>
@@ -416,6 +437,7 @@ function CustomerCheckIn() {
 }
 
 function LicenseVerification() {
+  const { t } = useTranslation();
   const [selectedCustomer, setSelectedCustomer] = React.useState('');
   const [verificationNotes, setVerificationNotes] = React.useState('');
 
@@ -437,20 +459,22 @@ function LicenseVerification() {
     <div className='space-y-6'>
       <Card>
         <CardHeader>
-          <CardTitle>License Verification</CardTitle>
+          <CardTitle>{t('staffCustomers.license.title')}</CardTitle>
           <CardDescription>
-            Verify customer driver's licenses and update verification status
+            {t('staffCustomers.license.subtitle')}
           </CardDescription>
         </CardHeader>
         <CardContent className='space-y-4'>
           <div className='space-y-2'>
-            <Label>Select Customer</Label>
+            <Label>{t('staffCustomers.license.selectCustomer')}</Label>
             <Select
               value={selectedCustomer}
               onValueChange={setSelectedCustomer}
             >
               <SelectTrigger>
-                <SelectValue placeholder='Choose customer for license verification' />
+                <SelectValue
+                  placeholder={t('staffCustomers.license.selectPlaceholder')}
+                />
               </SelectTrigger>
               <SelectContent>
                 {customersNeedingVerification.map(customer => (
@@ -473,23 +497,27 @@ function LicenseVerification() {
                   <div className='space-y-4'>
                     <div className='grid grid-cols-2 gap-4'>
                       <div className='space-y-2'>
-                        <Label>Customer Name</Label>
+                        <Label>{t('staffCustomers.common.customerName')}</Label>
                         <div className='font-medium'>{customer.name}</div>
                       </div>
                       <div className='space-y-2'>
-                        <Label>License Number</Label>
+                        <Label>
+                          {t('staffCustomers.license.licenseNumber')}
+                        </Label>
                         <div className='font-medium'>
                           {customer.licenseNumber}
                         </div>
                       </div>
                       <div className='space-y-2'>
-                        <Label>License State</Label>
+                        <Label>
+                          {t('staffCustomers.license.licenseState')}
+                        </Label>
                         <div className='font-medium'>
                           {customer.licenseState}
                         </div>
                       </div>
                       <div className='space-y-2'>
-                        <Label>Expiry Date</Label>
+                        <Label>{t('staffCustomers.common.expiryDate')}</Label>
                         <div className='font-medium'>
                           {new Date(
                             customer.licenseExpiry
@@ -499,40 +527,42 @@ function LicenseVerification() {
                     </div>
 
                     <div className='space-y-2'>
-                      <Label>Current Status</Label>
+                      <Label>{t('staffCustomers.common.currentStatus')}</Label>
                       <VerificationStatusBadge
                         status={customer.verificationStatus.license}
                       />
                     </div>
 
                     <div className='space-y-2'>
-                      <Label>License Document</Label>
+                      <Label>
+                        {t('staffCustomers.license.licenseDocument')}
+                      </Label>
                       <div className='border-2 border-dashed border-gray-300 rounded-lg p-8 text-center'>
                         <Camera className='mx-auto h-12 w-12 text-gray-400' />
                         <div className='mt-2'>
                           <Button variant='outline'>
                             <FileText className='mr-2 h-4 w-4' />
-                            View Uploaded License
+                            {t('staffCustomers.license.viewUploaded')}
                           </Button>
                         </div>
                         <p className='text-sm text-muted-foreground mt-2'>
-                          Uploaded:{' '}
+                          {t('staffCustomers.common.uploaded')}:
                           {customer.documents.license.uploadDate
                             ? new Date(
                                 customer.documents.license.uploadDate
                               ).toLocaleDateString()
-                            : 'Not uploaded'}
+                            : t('staffCustomers.common.notUploaded')}
                         </p>
                       </div>
                     </div>
 
                     <div className='space-y-2'>
                       <Label htmlFor='verification-notes'>
-                        Verification Notes
+                        {t('staffCustomers.license.notes')}
                       </Label>
                       <Textarea
                         id='verification-notes'
-                        placeholder='Add notes about the license verification...'
+                        placeholder={t('staffCustomers.license.licenseNotes')}
                         value={verificationNotes}
                         onChange={e => setVerificationNotes(e.target.value)}
                       />
@@ -544,7 +574,7 @@ function LicenseVerification() {
                         className='flex-1'
                       >
                         <CheckCircle className='mr-2 h-4 w-4' />
-                        Approve License
+                        {t('staffCustomers.license.approve')}
                       </Button>
                       <Button
                         variant='destructive'
@@ -552,7 +582,7 @@ function LicenseVerification() {
                         className='flex-1'
                       >
                         <AlertTriangle className='mr-2 h-4 w-4' />
-                        Reject License
+                        {t('staffCustomers.license.reject')}
                       </Button>
                     </div>
                   </div>
@@ -567,6 +597,7 @@ function LicenseVerification() {
 }
 
 function CustomerSupport() {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState('all');
 
@@ -591,7 +622,7 @@ function CustomerSupport() {
           <div className='relative'>
             <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
             <Input
-              placeholder='Search customers...'
+              placeholder={t('staffCustomers.support.searchPlaceholder')}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               className='pl-8'
@@ -600,13 +631,23 @@ function CustomerSupport() {
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className='w-[180px]'>
-            <SelectValue placeholder='Filter by status' />
+            <SelectValue
+              placeholder={t('staffCustomers.common.filterByStatus')}
+            />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value='all'>All Customers</SelectItem>
-            <SelectItem value='active'>Active</SelectItem>
-            <SelectItem value='pending-check-in'>Pending Check-in</SelectItem>
-            <SelectItem value='suspended'>Suspended</SelectItem>
+            <SelectItem value='all'>
+              {t('staffCustomers.support.filters.all')}
+            </SelectItem>
+            <SelectItem value='active'>
+              {t('staffCustomers.status.active')}
+            </SelectItem>
+            <SelectItem value='pending-check-in'>
+              {t('staffCustomers.status.pendingCheckin')}
+            </SelectItem>
+            <SelectItem value='suspended'>
+              {t('staffCustomers.status.suspended')}
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -615,13 +656,15 @@ function CustomerSupport() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Customer</TableHead>
-              <TableHead>Membership</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Total Bookings</TableHead>
-              <TableHead>Verification</TableHead>
-              <TableHead>Last Booking</TableHead>
-              <TableHead className='text-right'>Actions</TableHead>
+              <TableHead>{t('staffCustomers.common.customer')}</TableHead>
+              <TableHead>{t('staffCustomers.support.membership')}</TableHead>
+              <TableHead>{t('staffCustomers.common.status')}</TableHead>
+              <TableHead>{t('staffCustomers.support.totalBookings')}</TableHead>
+              <TableHead>{t('staffCustomers.support.verification')}</TableHead>
+              <TableHead>{t('staffCustomers.support.lastBooking')}</TableHead>
+              <TableHead className='text-right'>
+                {t('staffCustomers.common.actions')}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -670,7 +713,9 @@ function CustomerSupport() {
                       />
                     </div>
                     <div className='flex items-center gap-2'>
-                      <span className='text-xs'>License:</span>
+                      <span className='text-xs'>
+                        {t('staffCustomers.common.license')}:
+                      </span>
                       <VerificationStatusBadge
                         status={customer.verificationStatus.license}
                       />
@@ -680,7 +725,7 @@ function CustomerSupport() {
                 <TableCell>
                   {customer.lastBooking
                     ? new Date(customer.lastBooking).toLocaleDateString()
-                    : 'Never'}
+                    : t('staffCustomers.support.never')}
                 </TableCell>
                 <TableCell className='text-right'>
                   <DropdownMenu>
@@ -690,23 +735,25 @@ function CustomerSupport() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align='end' className='z-50'>
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuLabel>
+                        {t('staffCustomers.common.actions')}
+                      </DropdownMenuLabel>
                       <DropdownMenuItem>
                         <Eye className='mr-2 h-4 w-4' />
-                        View Profile
+                        {t('staffCustomers.support.viewProfile')}
                       </DropdownMenuItem>
                       <DropdownMenuItem>
                         <Phone className='mr-2 h-4 w-4' />
-                        Contact Customer
+                        {t('staffCustomers.support.contactCustomer')}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem>
                         <Edit className='mr-2 h-4 w-4' />
-                        Edit Details
+                        {t('staffCustomers.support.editDetails')}
                       </DropdownMenuItem>
                       <DropdownMenuItem>
                         <Shield className='mr-2 h-4 w-4' />
-                        Verify Documents
+                        {t('staffCustomers.support.verifyDocuments')}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -721,22 +768,27 @@ function CustomerSupport() {
 }
 
 export function CustomerManagement() {
+  const { t } = useTranslation();
   return (
     <div className='space-y-6'>
       <div>
         <h2 className='text-2xl font-bold tracking-tight'>
-          Customer Management
+          {t('staffCustomers.title')}
         </h2>
-        <p className='text-muted-foreground'>
-          Handle customer check-ins, verify licenses, and provide support
-        </p>
+        <p className='text-muted-foreground'>{t('staffCustomers.subtitle')}</p>
       </div>
 
       <Tabs defaultValue='checkin' className='space-y-4'>
         <TabsList>
-          <TabsTrigger value='checkin'>Customer Check-in</TabsTrigger>
-          <TabsTrigger value='verification'>License Verification</TabsTrigger>
-          <TabsTrigger value='support'>Customer Support</TabsTrigger>
+          <TabsTrigger value='checkin'>
+            {t('staffCustomers.tabs.checkin')}
+          </TabsTrigger>
+          <TabsTrigger value='verification'>
+            {t('staffCustomers.tabs.verification')}
+          </TabsTrigger>
+          <TabsTrigger value='support'>
+            {t('staffCustomers.tabs.support')}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value='checkin' className='space-y-4'>

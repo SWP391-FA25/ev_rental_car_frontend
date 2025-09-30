@@ -61,6 +61,7 @@ import {
   TabsTrigger,
 } from '../../shared/components/ui/tabs';
 import { Textarea } from '../../shared/components/ui/textarea';
+import { useTranslation } from 'react-i18next';
 
 const mockBookings = [
   {
@@ -174,6 +175,7 @@ const mockCars = [
 ];
 
 function BookingStatusBadge({ status }) {
+  const { t } = useTranslation();
   const variants = {
     Active: 'default',
     Upcoming: 'secondary',
@@ -181,10 +183,22 @@ function BookingStatusBadge({ status }) {
     Cancelled: 'destructive',
   };
 
-  return <Badge variant={variants[status] || 'secondary'}>{status}</Badge>;
+  const labelMap = {
+    Active: t('staffCars.bookingStatus.active'),
+    Upcoming: t('staffCars.bookingStatus.upcoming'),
+    Completed: t('staffCars.bookingStatus.completed'),
+    Cancelled: t('staffCars.bookingStatus.cancelled'),
+  };
+
+  return (
+    <Badge variant={variants[status] || 'secondary'}>
+      {labelMap[status] || status}
+    </Badge>
+  );
 }
 
 function CarStatusBadge({ status }) {
+  const { t } = useTranslation();
   const config = {
     Available: {
       variant: 'default',
@@ -205,12 +219,18 @@ function CarStatusBadge({ status }) {
   return (
     <Badge variant={variant} className='gap-1'>
       <Icon className={`h-3 w-3 ${color}`} />
-      {status}
+      {{
+        Available: t('staffCars.carStatus.available'),
+        Rented: t('staffCars.carStatus.rented'),
+        Maintenance: t('staffCars.carStatus.maintenance'),
+        Charging: t('staffCars.carStatus.charging'),
+      }[status] || status}
     </Badge>
   );
 }
 
 function ViewBookings() {
+  const { t } = useTranslation();
   const [statusFilter, setStatusFilter] = React.useState('all');
   const [searchTerm, setSearchTerm] = React.useState('');
 
@@ -233,7 +253,7 @@ function ViewBookings() {
       <div className='flex flex-col sm:flex-row gap-4'>
         <div className='flex-1'>
           <Input
-            placeholder='Search bookings...'
+            placeholder={t('staffCars.bookings.searchPlaceholder')}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             className='max-w-sm'
@@ -241,13 +261,21 @@ function ViewBookings() {
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className='w-[180px]'>
-            <SelectValue placeholder='Filter by status' />
+            <SelectValue placeholder={t('staffCars.common.filterByStatus')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value='all'>All Bookings</SelectItem>
-            <SelectItem value='active'>Active</SelectItem>
-            <SelectItem value='upcoming'>Upcoming</SelectItem>
-            <SelectItem value='completed'>Completed</SelectItem>
+            <SelectItem value='all'>
+              {t('staffCars.bookings.filters.all')}
+            </SelectItem>
+            <SelectItem value='active'>
+              {t('staffCars.bookingStatus.active')}
+            </SelectItem>
+            <SelectItem value='upcoming'>
+              {t('staffCars.bookingStatus.upcoming')}
+            </SelectItem>
+            <SelectItem value='completed'>
+              {t('staffCars.bookingStatus.completed')}
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -256,13 +284,15 @@ function ViewBookings() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Booking ID</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead>Vehicle</TableHead>
-              <TableHead>Duration</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead className='text-right'>Actions</TableHead>
+              <TableHead>{t('staffCars.bookings.table.bookingId')}</TableHead>
+              <TableHead>{t('staffCars.common.customer')}</TableHead>
+              <TableHead>{t('staffCars.common.vehicle')}</TableHead>
+              <TableHead>{t('staffCars.common.duration')}</TableHead>
+              <TableHead>{t('staffCars.common.status')}</TableHead>
+              <TableHead>{t('staffCars.common.amount')}</TableHead>
+              <TableHead className='text-right'>
+                {t('staffCars.common.actions')}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -308,19 +338,21 @@ function ViewBookings() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align='end' className='z-50'>
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuLabel>
+                        {t('staffCars.common.actions')}
+                      </DropdownMenuLabel>
                       <DropdownMenuItem>
                         <Eye className='mr-2 h-4 w-4' />
-                        View Details
+                        {t('staffCars.actions.viewDetails')}
                       </DropdownMenuItem>
                       <DropdownMenuItem>
                         <User className='mr-2 h-4 w-4' />
-                        Contact Customer
+                        {t('staffCars.actions.contactCustomer')}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem>
                         <Edit className='mr-2 h-4 w-4' />
-                        Modify Booking
+                        {t('staffCars.actions.modifyBooking')}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -349,26 +381,28 @@ function CarDropoff() {
     // Handle dropoff logic
     console.log('Processing dropoff for booking:', selectedBooking);
   };
-
+  const { t } = useTranslation();
   return (
     <div className='space-y-6'>
       <Card>
         <CardHeader>
-          <CardTitle>Vehicle Drop-off</CardTitle>
-          <CardDescription>
-            Process vehicle returns and complete rental inspections
-          </CardDescription>
+          <CardTitle>{t('staffCars.dropoff.title')}</CardTitle>
+          <CardDescription>{t('staffCars.dropoff.subtitle')}</CardDescription>
         </CardHeader>
         <CardContent className='space-y-4'>
           <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
             <div className='space-y-2'>
-              <Label htmlFor='booking-select'>Select Active Booking</Label>
+              <Label htmlFor='booking-select'>
+                {t('staffCars.dropoff.selectActive')}
+              </Label>
               <Select
                 value={selectedBooking}
                 onValueChange={setSelectedBooking}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder='Choose a booking to process' />
+                  <SelectValue
+                    placeholder={t('staffCars.dropoff.bookingPlaceholder')}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {activeBookings.map(booking => (
@@ -381,11 +415,13 @@ function CarDropoff() {
               </Select>
             </div>
             <div className='space-y-2'>
-              <Label htmlFor='mileage'>Final Mileage</Label>
+              <Label htmlFor='mileage'>
+                {t('staffCars.dropoff.finalMileage')}
+              </Label>
               <Input
                 id='mileage'
                 type='number'
-                placeholder='Enter current mileage'
+                placeholder={t('staffCars.placeholders.enterMileage')}
                 value={mileage}
                 onChange={e => setMileage(e.target.value)}
               />
@@ -393,27 +429,45 @@ function CarDropoff() {
           </div>
 
           <div className='space-y-2'>
-            <Label htmlFor='fuel-level'>Battery Level (%)</Label>
+            <Label htmlFor='fuel-level'>
+              {t('staffCars.dropoff.batteryLevel')}
+            </Label>
             <Select value={fuelLevel} onValueChange={setFuelLevel}>
               <SelectTrigger>
-                <SelectValue placeholder='Select battery level' />
+                <SelectValue
+                  placeholder={t('staffCars.placeholders.selectBattery')}
+                />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value='90-100'>90-100%</SelectItem>
-                <SelectItem value='80-89'>80-89%</SelectItem>
-                <SelectItem value='70-79'>70-79%</SelectItem>
-                <SelectItem value='60-69'>60-69%</SelectItem>
-                <SelectItem value='50-59'>50-59%</SelectItem>
-                <SelectItem value='below-50'>Below 50%</SelectItem>
+                <SelectItem value='90-100'>
+                  {t('staffCars.batteryRanges.90_100')}
+                </SelectItem>
+                <SelectItem value='80-89'>
+                  {t('staffCars.batteryRanges.80_89')}
+                </SelectItem>
+                <SelectItem value='70-79'>
+                  {t('staffCars.batteryRanges.70_79')}
+                </SelectItem>
+                <SelectItem value='60-69'>
+                  {t('staffCars.batteryRanges.60_69')}
+                </SelectItem>
+                <SelectItem value='50-59'>
+                  {t('staffCars.batteryRanges.50_59')}
+                </SelectItem>
+                <SelectItem value='below-50'>
+                  {t('staffCars.batteryRanges.below50')}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className='space-y-2'>
-            <Label htmlFor='damages'>Damage Assessment</Label>
+            <Label htmlFor='damages'>
+              {t('staffCars.dropoff.damageAssessment')}
+            </Label>
             <Textarea
               id='damages'
-              placeholder='Document any damages or issues found during inspection...'
+              placeholder={t('staffCars.placeholders.damageAssessment')}
               value={damages}
               onChange={e => setDamages(e.target.value)}
               rows={3}
@@ -421,10 +475,12 @@ function CarDropoff() {
           </div>
 
           <div className='space-y-2'>
-            <Label htmlFor='inspection-notes'>Inspection Notes</Label>
+            <Label htmlFor='inspection-notes'>
+              {t('staffCars.dropoff.inspectionNotes')}
+            </Label>
             <Textarea
               id='inspection-notes'
-              placeholder='Additional notes about vehicle condition...'
+              placeholder={t('staffCars.placeholders.inspectionNotes')}
               value={inspectionNotes}
               onChange={e => setInspectionNotes(e.target.value)}
               rows={3}
@@ -437,7 +493,7 @@ function CarDropoff() {
             disabled={!selectedBooking}
           >
             <CheckCircle className='mr-2 h-4 w-4' />
-            Complete Drop-off
+            {t('staffCars.dropoff.completeDropoff')}
           </Button>
         </CardContent>
       </Card>
@@ -446,6 +502,7 @@ function CarDropoff() {
 }
 
 function UpdateCarStatus() {
+  const { t } = useTranslation();
   const [selectedCar, setSelectedCar] = React.useState('');
   const [newStatus, setNewStatus] = React.useState('');
   const [notes, setNotes] = React.useState('');
@@ -472,18 +529,24 @@ function UpdateCarStatus() {
             <CardContent>
               <div className='space-y-2 text-sm'>
                 <div className='flex items-center justify-between'>
-                  <span className='text-muted-foreground'>Battery:</span>
+                  <span className='text-muted-foreground'>
+                    {t('staffCars.update.battery')}
+                  </span>
                   <span className='flex items-center gap-1'>
                     <Battery className='h-3 w-3' />
                     {car.batteryLevel}%
                   </span>
                 </div>
                 <div className='flex items-center justify-between'>
-                  <span className='text-muted-foreground'>Mileage:</span>
+                  <span className='text-muted-foreground'>
+                    {t('staffCars.update.mileage')}
+                  </span>
                   <span>{car.mileage.toLocaleString()} mi</span>
                 </div>
                 <div className='flex items-center justify-between'>
-                  <span className='text-muted-foreground'>Location:</span>
+                  <span className='text-muted-foreground'>
+                    {t('staffCars.update.location')}
+                  </span>
                   <span className='text-right'>{car.location}</span>
                 </div>
               </div>
@@ -491,40 +554,57 @@ function UpdateCarStatus() {
                 <DialogTrigger asChild>
                   <Button variant='outline' size='sm' className='w-full mt-3'>
                     <Edit className='mr-2 h-4 w-4' />
-                    Update Status
+                    {t('staffCars.update.updateStatus')}
                   </Button>
                 </DialogTrigger>
                 <DialogContent className='sm:max-w-[425px]'>
                   <DialogHeader>
-                    <DialogTitle>Update Car Status</DialogTitle>
+                    <DialogTitle>
+                      {t('staffCars.update.dialogTitle')}
+                    </DialogTitle>
                     <DialogDescription>
-                      Update the status of {car.model} ({car.licensePlate})
+                      {t('staffCars.update.dialogSubtitle', {
+                        model: car.model,
+                        plate: car.licensePlate,
+                      })}
                     </DialogDescription>
                   </DialogHeader>
                   <div className='grid gap-4 py-4'>
                     <div className='space-y-2'>
-                      <Label htmlFor='status'>New Status</Label>
+                      <Label htmlFor='status'>
+                        {t('staffCars.update.newStatus')}
+                      </Label>
                       <Select value={newStatus} onValueChange={setNewStatus}>
                         <SelectTrigger>
-                          <SelectValue placeholder='Select new status' />
+                          <SelectValue
+                            placeholder={t(
+                              'staffCars.placeholders.selectNewStatus'
+                            )}
+                          />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value='Available'>Available</SelectItem>
-                          <SelectItem value='Maintenance'>
-                            Maintenance
+                          <SelectItem value='Available'>
+                            {t('staffCars.carStatus.available')}
                           </SelectItem>
-                          <SelectItem value='Charging'>Charging</SelectItem>
+                          <SelectItem value='Maintenance'>
+                            {t('staffCars.carStatus.maintenance')}
+                          </SelectItem>
+                          <SelectItem value='Charging'>
+                            {t('staffCars.carStatus.charging')}
+                          </SelectItem>
                           <SelectItem value='Out of Service'>
-                            Out of Service
+                            {t('staffCars.carStatus.outOfService')}
                           </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div className='space-y-2'>
-                      <Label htmlFor='notes'>Notes</Label>
+                      <Label htmlFor='notes'>
+                        {t('staffCars.update.notes')}
+                      </Label>
                       <Textarea
                         id='notes'
-                        placeholder='Add notes about the status change...'
+                        placeholder={t('staffCars.placeholders.statusNotes')}
                         value={notes}
                         onChange={e => setNotes(e.target.value)}
                       />
@@ -533,7 +613,7 @@ function UpdateCarStatus() {
                   <DialogFooter>
                     <Button onClick={handleStatusUpdate} disabled={!newStatus}>
                       <RefreshCw className='mr-2 h-4 w-4' />
-                      Update Status
+                      {t('staffCars.update.updateStatus')}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -547,20 +627,25 @@ function UpdateCarStatus() {
 }
 
 export function CarManagement() {
+  const { t } = useTranslation();
   return (
     <div className='space-y-6'>
       <div>
-        <h2 className='text-2xl font-bold tracking-tight'>Car Management</h2>
-        <p className='text-muted-foreground'>
-          Manage vehicle bookings, process drop-offs, and update car status
-        </p>
+        <h2 className='text-2xl font-bold tracking-tight'>
+          {t('staffCars.title')}
+        </h2>
+        <p className='text-muted-foreground'>{t('staffCars.subtitle')}</p>
       </div>
 
       <Tabs defaultValue='bookings' className='space-y-4'>
         <TabsList>
-          <TabsTrigger value='bookings'>View Bookings</TabsTrigger>
-          <TabsTrigger value='dropoff'>Car Drop-off</TabsTrigger>
-          <TabsTrigger value='status'>Update Status</TabsTrigger>
+          <TabsTrigger value='bookings'>
+            {t('staffCars.tabs.bookings')}
+          </TabsTrigger>
+          <TabsTrigger value='dropoff'>
+            {t('staffCars.tabs.dropoff')}
+          </TabsTrigger>
+          <TabsTrigger value='status'>{t('staffCars.tabs.status')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value='bookings' className='space-y-4'>

@@ -1,23 +1,25 @@
+import { Car, CreditCard, FileText, MapPin, Users, Wrench } from 'lucide-react';
 import * as React from 'react';
-import { Car, MapPin, Users, CreditCard, FileText, Wrench } from 'lucide-react';
-import {
-  SidebarInset,
-  SidebarProvider,
-} from '../../shared/components/ui/sidebar';
+import { useTranslation } from 'react-i18next';
+import { Button } from '../../shared/components/ui/button';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from '../../shared/components/ui/card';
-import { Button } from '../../shared/components/ui/button';
+import {
+  SidebarInset,
+  SidebarProvider,
+} from '../../shared/components/ui/sidebar';
 import { CarManagement } from '../components/car-management';
 import { CustomerManagement } from '../components/customer-management';
+import DocumentVerification from '../components/document-verification';
 import { PaymentManagement } from '../components/payment-management';
 import { StaffHeader } from '../components/staff-header';
 import { StaffSidebar } from '../components/staff-sidebar';
 import { StationManagement } from '../components/station-management';
-import DocumentVerification from '../components/document-verification';
+
 // Removed QuickVerification import
 
 const mockStaffData = [
@@ -247,14 +249,16 @@ const mockPaymentData = [
 
 export default function StaffDashboard() {
   const [activeTab, setActiveTab] = React.useState('dashboard');
-
+  const { t } = useTranslation();
   const renderDashboard = () => (
     <div className='space-y-6'>
       <div>
-        <h1 className='text-2xl font-bold'>Staff Dashboard</h1>
+        <h1 className='text-2xl font-bold'>{t('dashboard.title')}</h1>
         <p className='text-muted-foreground'>
-          Welcome back, {mockStaffData[0].name}. Your shift:{' '}
-          {mockStaffData[0].shift}
+          {t('dashboard.welcome', {
+            name: mockStaffData[0].name,
+            shift: mockStaffData[0].shift,
+          })}
         </p>
       </div>
 
@@ -263,7 +267,7 @@ export default function StaffDashboard() {
         <Card>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
             <CardTitle className='text-sm font-medium'>
-              Available Cars
+              {t('dashboard.availableCars')}
             </CardTitle>
             <Car className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
@@ -271,14 +275,16 @@ export default function StaffDashboard() {
             <div className='text-2xl font-bold'>
               {mockCarData.filter(car => car.status === 'Available').length}
             </div>
-            <p className='text-xs text-muted-foreground'>Ready for rental</p>
+            <p className='text-xs text-muted-foreground'>
+              {t('dashboard.availableCarsSub')}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
             <CardTitle className='text-sm font-medium'>
-              Active Rentals
+              {t('dashboard.activeRentals')}
             </CardTitle>
             <Car className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
@@ -286,33 +292,41 @@ export default function StaffDashboard() {
             <div className='text-2xl font-bold'>
               {mockCarData.filter(car => car.status === 'Rented').length}
             </div>
-            <p className='text-xs text-muted-foreground'>Currently in use</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Maintenance</CardTitle>
-            <Wrench className='h-4 w-4 text-muted-foreground' />
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold'>
-              {mockCarData.filter(car => car.status === 'Maintenance').length}
-            </div>
-            <p className='text-xs text-muted-foreground'>Vehicles in service</p>
+            <p className='text-xs text-muted-foreground'>
+              {t('dashboard.activeRentalsSub')}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
             <CardTitle className='text-sm font-medium'>
-              Pending Verifications
+              {t('dashboard.maintenance')}
+            </CardTitle>
+            <Wrench className='h-4 w-4 text-muted-foreground' />
+          </CardHeader>
+          <CardContent>
+            <div className='text-2xl font-bold'>
+              {mockCarData.filter(car => car.status === 'Maintenance').length}
+            </div>
+            <p className='text-xs text-muted-foreground'>
+              {t('dashboard.maintenanceSub')}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>
+              {t('dashboard.pendingVerifications')}
             </CardTitle>
             <FileText className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
             <div className='text-2xl font-bold'>12</div>
-            <p className='text-xs text-muted-foreground'>Documents to review</p>
+            <p className='text-xs text-muted-foreground'>
+              {t('dashboard.pendingVerificationsSub')}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -321,15 +335,17 @@ export default function StaffDashboard() {
       <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
         <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle>{t('dashboard.quickActions')}</CardTitle>
           </CardHeader>
           <CardContent className='grid grid-cols-2 gap-3'>
-            <Button onClick={() => setActiveTab('cars')}>Manage Cars</Button>
+            <Button onClick={() => setActiveTab('cars')}>
+              {t('dashboard.manageCars')}
+            </Button>
             <Button variant='outline' onClick={() => setActiveTab('customers')}>
-              Customer Service
+              {t('dashboard.customerService')}
             </Button>
             <Button variant='outline' onClick={() => setActiveTab('payments')}>
-              Process Payments
+              {t('dashboard.processPayments')}
             </Button>
           </CardContent>
         </Card>
@@ -337,15 +353,20 @@ export default function StaffDashboard() {
         {/* Recent Activity */}
         <Card>
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
+            <CardTitle>{t('dashboard.recentActivity')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className='space-y-4'>
               <div className='flex items-center'>
                 <div className='ml-4 space-y-1'>
-                  <p className='text-sm font-medium'>New booking confirmed</p>
+                  <p className='text-sm font-medium'>
+                    {t('dashboard.newBookingConfirmed')}
+                  </p>
                   <p className='text-sm text-muted-foreground'>
-                    Alice Johnson booked Tesla Model 3
+                    {t('dashboard.bookingDetails', {
+                      customer: 'Alice Johnson',
+                      car: 'Tesla Model 3',
+                    })}
                   </p>
                 </div>
                 <div className='ml-auto text-sm text-muted-foreground'>
@@ -354,9 +375,14 @@ export default function StaffDashboard() {
               </div>
               <div className='flex items-center'>
                 <div className='ml-4 space-y-1'>
-                  <p className='text-sm font-medium'>Document verified</p>
+                  <p className='text-sm font-medium'>
+                    {t('dashboard.documentVerified')}
+                  </p>
                   <p className='text-sm text-muted-foreground'>
-                    John Doe's driver's license approved
+                    {t('dashboard.documentDetails', {
+                      customer: 'John Doe',
+                      document: "driver's license",
+                    })}
                   </p>
                 </div>
                 <div className='ml-auto text-sm text-muted-foreground'>
@@ -365,9 +391,14 @@ export default function StaffDashboard() {
               </div>
               <div className='flex items-center'>
                 <div className='ml-4 space-y-1'>
-                  <p className='text-sm font-medium'>Car returned</p>
+                  <p className='text-sm font-medium'>
+                    {t('dashboard.carReturned')}
+                  </p>
                   <p className='text-sm text-muted-foreground'>
-                    Nissan Leaf returned at Downtown Station
+                    {t('dashboard.carReturnDetails', {
+                      car: 'Nissan Leaf',
+                      location: 'Downtown Station',
+                    })}
                   </p>
                 </div>
                 <div className='ml-auto text-sm text-muted-foreground'>
@@ -449,10 +480,17 @@ export default function StaffDashboard() {
         payments={mockPaymentData}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        menuItems={menuItems}
+        menuItems={menuItems.map(item => ({
+          ...item,
+          label: t(`staffSidebar.${item.id}`),
+        }))}
       />
       <SidebarInset>
-        <StaffHeader />
+        {/* Header có thêm Language Toggle */}
+        <div className='flex justify-between items-center px-4 py-2 border-b'>
+          <StaffHeader />
+        </div>
+
         <div className='flex flex-1 flex-col gap-4 p-4'>{renderContent()}</div>
       </SidebarInset>
     </SidebarProvider>

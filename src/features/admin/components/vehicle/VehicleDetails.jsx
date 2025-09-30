@@ -2,25 +2,25 @@ import { ImageIcon, TrashIcon, UploadIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import { Badge } from '../../shared/components/ui/badge';
-import { Button } from '../../shared/components/ui/button';
+import { Button } from '../../../shared/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '../../shared/components/ui/dialog';
-import { Input } from '../../shared/components/ui/input';
-import { Label } from '../../shared/components/ui/label';
+} from '../../../shared/components/ui/dialog';
+import { Input } from '../../../shared/components/ui/input';
+import { Label } from '../../../shared/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../shared/components/ui/select';
-import { apiClient } from '../../shared/lib/apiClient';
+} from '../../../shared/components/ui/select';
+import { apiClient } from '../../../shared/lib/apiClient';
+import { Badge } from './../../../shared/components/ui/badge';
 
 // Vehicle status options
 const VEHICLE_STATUS = [
@@ -535,7 +535,7 @@ export function VehicleDetails({
           <div className='space-y-4'>
             <div className='flex items-center justify-between'>
               <h3 className='text-lg font-semibold'>Vehicle Images</h3>
-              {!isEditing && (
+              {isEditing && (
                 <div className='flex items-center gap-2'>
                   <input
                     type='file'
@@ -569,7 +569,7 @@ export function VehicleDetails({
                       alt={image.fileName}
                       className='w-full h-32 object-cover rounded-lg border'
                     />
-                    {!isEditing && (
+                    {isEditing && (
                       <div className='absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center'>
                         <Button
                           size='sm'

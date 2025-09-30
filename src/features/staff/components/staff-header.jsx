@@ -1,4 +1,6 @@
-import { Bell, MessageSquare, Search } from 'lucide-react';
+import { Bell, Search } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import LanguageToggle from '../../shared/components/homepage/LanguageToggle';
 import { ThemeToggle } from '../../shared/components/homepage/ThemeToggle';
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
@@ -7,12 +9,13 @@ import { Separator } from '../../shared/components/ui/separator';
 import { SidebarTrigger } from '../../shared/components/ui/sidebar';
 
 export function StaffHeader() {
+  const { t } = useTranslation();
   return (
-    <header className='flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12'>
+    <header className='flex h-16 shrink-0 justify-between items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12'>
       <div className='flex items-center gap-2 px-4'>
         <SidebarTrigger className='-ml-1' />
         <Separator orientation='vertical' className='mr-2 h-4' />
-        <h1 className='text-lg font-semibold'>Staff Dashboard</h1>
+        <h1 className='text-lg font-semibold'>{t('staffHeader.title')}</h1>
       </div>
 
       <div className='ml-auto flex items-center gap-2 px-4'>
@@ -21,29 +24,28 @@ export function StaffHeader() {
           <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
           <Input
             type='search'
-            placeholder='Search customers, cars, bookings...'
+            placeholder={t('staffHeader.searchPlaceholder')}
             className='w-[300px] pl-8'
           />
         </div>
 
         {/* ThemeToggle */}
         <ThemeToggle />
-
         {/* Quick Actions */}
-        <Button variant='ghost' size='sm' className='gap-2'>
+        {/* <Button variant='ghost' size='sm' className='gap-2'>
           <MessageSquare className='h-4 w-4' />
-          <span className='hidden sm:inline'>Support</span>
+          <span className='hidden sm:inline'>{t('staffHeader.support')}</span>
           <Badge
             variant='destructive'
             className='h-5 w-5 rounded-full p-0 text-xs'
           >
             3
           </Badge>
-        </Button>
+        </Button> */}
 
         <Button variant='ghost' size='sm' className='gap-2'>
           <Bell className='h-4 w-4' />
-          <span className='hidden sm:inline'>Alerts</span>
+          <span className='hidden sm:inline'>{t('staffHeader.alerts')}</span>
           <Badge
             variant='destructive'
             className='h-5 w-5 rounded-full p-0 text-xs'
@@ -51,6 +53,8 @@ export function StaffHeader() {
             5
           </Badge>
         </Button>
+        {/* Language Toggle */}
+        <LanguageToggle />
       </div>
     </header>
   );

@@ -1,9 +1,28 @@
-import { FilterIcon, PlusIcon, SearchIcon } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import {
+  CarIcon,
+  EyeIcon,
+  FilterIcon,
+  PlusIcon,
+  SearchIcon,
+  TrashIcon,
+  UsersIcon,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 import { MoreVerticalIcon } from 'lucide-react';
+import { LocationDisplay } from '../../shared/components/LocationDisplay';
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
+import { ConfirmDialog } from '../../shared/components/ui/confirm-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '../../shared/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,51 +38,150 @@ import {
   TableHeader,
   TableRow,
 } from '../../shared/components/ui/table';
-import { StationDetails } from '../components/StationDetails';
-import { StationForm } from '../components/StationForm';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '../../shared/components/ui/dialog';
-import { Label } from '../../shared/components/ui/label';
-import { useApi } from '../../shared/hooks/useApi';
+import { apiClient } from '../../shared/lib/apiClient';
 import { endpoints } from '../../shared/lib/endpoints';
+import { SimpleAssignmentForm } from '../components/assignment/SimpleAssignmentForm';
+import { StationDetails } from '../components/station/StationDetails';
+import { StationForm } from '../components/station/StationForm';
+
+// Station status options
+const STATION_STATUS = [
+  { value: 'ACTIVE', label: 'Active' },
+  { value: 'INACTIVE', label: 'Inactive' },
+  { value: 'MAINTENANCE', label: 'Maintenance' },
+];
 
 export default function StationManagement() {
+  const [stations, setStations] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedStation, setSelectedStation] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [stations, setStations] = useState([]);
-  const { get, post, put, del, loading, error } = useApi();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [stationToDelete, setStationToDelete] = useState(null);
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [stationToAssign, setStationToAssign] = useState(null);
 
-  // Fetch stations from API
+  // Load stations
   useEffect(() => {
-    fetchStations();
+    loadStations();
   }, []);
 
-  const fetchStations = async () => {
+  const loadStations = async () => {
     try {
-      const response = await get(endpoints.stations.getAll());
+      setLoading(true);
+      const response = await apiClient.get(endpoints.stations.getAll());
       if (response.success) {
-        setStations(response.data.stations);
+        setStations(response.data.stations || []);
       }
-    } catch (err) {
-      console.error('Error fetching stations:', err);
+    } catch (error) {
+      toast.error('Failed to load stations: ' + error.message);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleCreateStation = async stationData => {
+    try {
+      const response = await apiClient.post(
+        endpoints.stations.create(),
+        stationData
+      );
+      if (response.success) {
+        toast.success('Station created successfully');
+        setIsCreateDialogOpen(false);
+        loadStations();
+        return response.data.station;
+      }
+    } catch (error) {
+      toast.error('Failed to create station: ' + error.message);
+      throw error;
+    }
+  };
+
+  const handleUpdateStation = async (stationId, updateData) => {
+    try {
+      const response = await apiClient.put(
+        endpoints.stations.update(stationId),
+        updateData
+      );
+      if (response.success) {
+        toast.success('Station updated successfully');
+
+        // Update the selected station with new data
+        if (selectedStation && selectedStation.id === stationId) {
+          setSelectedStation(response.data.station);
+        }
+
+        // Update the station in the stations list
+        setStations(prev =>
+          prev.map(station =>
+            station.id === stationId ? response.data.station : station
+          )
+        );
+
+        loadStations();
+        return response.data.station;
+      }
+    } catch (error) {
+      toast.error('Failed to update station: ' + error.message);
+      throw error;
+    }
+  };
+
+  const handleDeleteStation = async stationId => {
+    try {
+      const response = await apiClient.delete(
+        endpoints.stations.delete(stationId)
+      );
+      if (response.success) {
+        toast.success('Station deactivated successfully');
+        setStations(prev => prev.filter(station => station.id !== stationId));
+        loadStations();
+      }
+    } catch (error) {
+      toast.error('Failed to deactivate station: ' + error.message);
+    }
+  };
+
+  const openViewDialog = async station => {
+    try {
+      // Fetch detailed station data including staff
+      const response = await apiClient.get(
+        endpoints.stations.getById(station.id)
+      );
+      if (response.success) {
+        setSelectedStation(response.data.station);
+        setIsViewDialogOpen(true);
+      } else {
+        toast.error('Failed to load station details');
+      }
+    } catch (error) {
+      toast.error('Failed to load station details: ' + error.message);
+      console.error('Error loading station details:', error);
+    }
+  };
+
+  const openAssignDialog = station => {
+    setStationToAssign(station);
+    setAssignDialogOpen(true);
+  };
+
+  const handleAssignmentSuccess = () => {
+    setAssignDialogOpen(false);
+    setStationToAssign(null);
+    loadStations(); // Refresh stations to show updated staff count
   };
 
   const filteredStations = stations.filter(station => {
     const matchesSearch =
-      station.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      station.address.toLowerCase().includes(searchTerm.toLowerCase());
+      station.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      station.address?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
       filterStatus === 'all' ||
-      station.status.toLowerCase() === filterStatus.toLowerCase();
+      station.status?.toLowerCase() === filterStatus.toLowerCase();
     return matchesSearch && matchesStatus;
   });
 
@@ -71,116 +189,27 @@ export default function StationManagement() {
     switch (status) {
       case 'ACTIVE':
         return 'default';
-      case 'MAINTENANCE':
-        return 'secondary';
       case 'INACTIVE':
-        return 'destructive';
+        return 'secondary';
+      case 'MAINTENANCE':
+        return 'outline';
       default:
         return 'outline';
     }
   };
 
-  const handleViewDetails = station => {
-    setSelectedStation(station);
-    setIsEditing(false);
-    setOpen(true);
+  const getStatusLabel = status => {
+    const statusObj = STATION_STATUS.find(s => s.value === status);
+    return statusObj ? statusObj.label : status;
   };
 
-  const handleEditStation = station => {
-    console.log('Editing station:', station); // Debugging log
-    setSelectedStation(station);
-    setIsEditing(true);
-    setOpen(true);
-  };
-
-  const handleAddStation = () => {
-    setSelectedStation(null);
-    setIsEditing(true);
-    setOpen(true);
-  };
-
-  const handleSaveStation = async data => {
-    try {
-      if (selectedStation && selectedStation.id) {
-        // Update existing station
-        const response = await put(
-          endpoints.stations.update(selectedStation.id),
-          data
-        );
-        if (response.success) {
-          fetchStations(); // Refresh the list
-          setOpen(false);
-        }
-      } else {
-        // Create new station
-        const response = await post(endpoints.stations.create(), data);
-        if (response.success) {
-          fetchStations(); // Refresh the list
-          setOpen(false);
-        }
-      }
-    } catch (err) {
-      console.error('Error saving station:', err);
-    }
-  };
-
-  const handleDeactivateStation = async stationId => {
-    try {
-      const response = await post(endpoints.stations.softDelete(stationId));
-      if (response.success) {
-        fetchStations(); // Refresh the list
-      } else {
-        alert('Failed to deactivate station');
-      }
-    } catch (error) {
-      console.error('Error deactivating station:', error);
-    }
-  };
-
-  const handleDeleteStation = async stationId => {
-    try {
-      const response = await del(endpoints.stations.delete(stationId));
-      if (response.success) {
-        fetchStations(); // Refresh the list
-      } else {
-        alert('Failed to delete station');
-      }
-    } catch (error) {
-      console.error('Error deleting station:', error);
-    }
-  };
-
-  const handleUpdateStation = async (id, data) => {
-    try {
-      const response = await put(endpoints.stations.update(id), data);
-      if (response.success) {
-        console.log('Station updated successfully:', response.data);
-        fetchStations(); // Refresh the list
-        setOpen(false);
-        return response;
-      } else {
-        console.error('Failed to update station:', response.message);
-        alert(response.message || 'Failed to update station');
-        return response;
-      }
-    } catch (err) {
-      console.error('Error updating station:', err);
-      alert('An error occurred while updating the station');
-      throw err;
-    }
-  };
-
-  const renderStationDetails = station => {
+  if (loading) {
     return (
-      <StationDetails
-        open={open}
-        onOpenChange={setOpen}
-        station={station}
-        onUpdate={handleUpdateStation}
-        onEdit={() => handleEditStation(station)}
-      />
+      <div className='flex items-center justify-center h-64'>
+        <div className='text-lg'>Loading stations...</div>
+      </div>
     );
-  };
+  }
 
   return (
     <div className='space-y-6'>
@@ -191,13 +220,29 @@ export default function StationManagement() {
             Station Management
           </h1>
           <p className='text-muted-foreground'>
-            Manage charging stations and locations
+            Manage charging stations and their information
           </p>
         </div>
-        <Button onClick={handleAddStation}>
-          <PlusIcon className='mr-2 h-4 w-4' />
-          Add Station
-        </Button>
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <PlusIcon className='mr-2 h-4 w-4' />
+              Add Station
+            </Button>
+          </DialogTrigger>
+          <DialogContent className='max-w-2xl max-h-[90vh] overflow-y-auto'>
+            <DialogHeader>
+              <DialogTitle>Add New Station</DialogTitle>
+              <DialogDescription>
+                Create a new charging station
+              </DialogDescription>
+            </DialogHeader>
+            <StationForm
+              onSubmit={handleCreateStation}
+              onCancel={() => setIsCreateDialogOpen(false)}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Filters */}
@@ -215,22 +260,22 @@ export default function StationManagement() {
           <DropdownMenuTrigger asChild>
             <Button variant='outline'>
               <FilterIcon className='mr-2 h-4 w-4' />
-              Status: {filterStatus === 'all' ? 'All' : filterStatus}
+              Status:{' '}
+              {filterStatus === 'all' ? 'All' : getStatusLabel(filterStatus)}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuItem onClick={() => setFilterStatus('all')}>
               All
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFilterStatus('active')}>
-              Active
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFilterStatus('maintenance')}>
-              Maintenance
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFilterStatus('inactive')}>
-              Inactive
-            </DropdownMenuItem>
+            {STATION_STATUS.map(status => (
+              <DropdownMenuItem
+                key={status.value}
+                onClick={() => setFilterStatus(status.value.toLowerCase())}
+              >
+                {status.label}
+              </DropdownMenuItem>
+            ))}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -241,27 +286,55 @@ export default function StationManagement() {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
+              <TableHead>Location</TableHead>
               <TableHead>Address</TableHead>
-              <TableHead>Status</TableHead>
               <TableHead>Capacity</TableHead>
-              <TableHead>Available</TableHead>
-              <TableHead>Operating Hours</TableHead>
+              <TableHead>Vehicles</TableHead>
+              <TableHead>Staff</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead className='w-[70px]'>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredStations.map(station => (
               <TableRow key={station.id}>
-                <TableCell className='font-medium'>{station.name}</TableCell>
-                <TableCell>{station.address}</TableCell>
+                <TableCell>
+                  <div>
+                    <div className='font-medium'>{station.name}</div>
+                    <div className='text-sm text-muted-foreground'>
+                      {station.contact || 'No contact'}
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <LocationDisplay
+                    location={station.location}
+                    stationName={station.name}
+                  />
+                </TableCell>
+                <TableCell className='max-w-xs truncate'>
+                  {station.address}
+                </TableCell>
+                <TableCell>
+                  <Badge variant='outline'>{station.capacity} slots</Badge>
+                </TableCell>
+                <TableCell>
+                  <div className='flex items-center'>
+                    <CarIcon className='mr-2 h-4 w-4 text-muted-foreground' />
+                    {station.vehicles?.length || 0}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className='flex items-center'>
+                    <UsersIcon className='mr-2 h-4 w-4 text-muted-foreground' />
+                    {station.stationStaff?.length || 0}
+                  </div>
+                </TableCell>
                 <TableCell>
                   <Badge variant={getStatusBadgeVariant(station.status)}>
-                    {station.status}
+                    {getStatusLabel(station.status)}
                   </Badge>
                 </TableCell>
-                <TableCell>{station.capacity}</TableCell>
-                <TableCell>{station.availableSpots}</TableCell>
-                <TableCell>{station.operatingHours}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -270,22 +343,25 @@ export default function StationManagement() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align='end'>
-                      <DropdownMenuItem
-                        onClick={() => handleViewDetails(station)}
-                      >
+                      <DropdownMenuItem onClick={() => openViewDialog(station)}>
+                        <EyeIcon className='mr-2 h-4 w-4' />
                         View Details
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        className='text-red-600'
-                        onClick={() => handleDeactivateStation(station.id)}
+                        onClick={() => openAssignDialog(station)}
                       >
-                        Deactivate Station
+                        <UsersIcon className='mr-2 h-4 w-4' />
+                        Assign Staff
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className='text-red-600'
-                        onClick={() => handleDeleteStation(station.id)}
+                        onClick={() => {
+                          setStationToDelete(station.id);
+                          setDeleteDialogOpen(true);
+                        }}
                       >
-                        Delete Station
+                        <TrashIcon className='mr-2 h-4 w-4' />
+                        Delete
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -297,7 +373,7 @@ export default function StationManagement() {
       </div>
 
       {/* Summary Stats */}
-      <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+      <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>{stations.length}</div>
           <div className='text-sm text-muted-foreground'>Total Stations</div>
@@ -306,31 +382,66 @@ export default function StationManagement() {
           <div className='text-2xl font-bold'>
             {stations.filter(s => s.status === 'ACTIVE').length}
           </div>
-          <div className='text-sm text-muted-foreground'>Active Stations</div>
+          <div className='text-sm text-muted-foreground'>Active</div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>
-            {stations.reduce((sum, s) => sum + (s.availableSpots || 0), 0)}
+            {stations.filter(s => s.status === 'MAINTENANCE').length}
           </div>
-          <div className='text-sm text-muted-foreground'>Available Spots</div>
+          <div className='text-sm text-muted-foreground'>Maintenance</div>
+        </div>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold'>
+            {stations.reduce(
+              (total, station) => total + (station.capacity || 0),
+              0
+            )}
+          </div>
+          <div className='text-sm text-muted-foreground'>Total Capacity</div>
         </div>
       </div>
-      {/* Station Details or Edit Form */}
-      {selectedStation && (
-        <div className='rounded-md border p-4'>
-          {isEditing ? (
-            <StationForm
-              open={open}
-              onOpenChange={setOpen}
-              initialData={selectedStation}
-              onSubmit={handleSaveStation}
-              loading={loading}
-            />
-          ) : (
-            renderStationDetails(selectedStation)
-          )}
-        </div>
-      )}
+
+      {/* Station Details Dialog */}
+      <StationDetails
+        open={isViewDialogOpen}
+        onOpenChange={setIsViewDialogOpen}
+        station={selectedStation}
+        onUpdate={handleUpdateStation}
+      />
+
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title='Deactivate Station'
+        description='Are you sure you want to delete this station? This will make it unavailable for new bookings.'
+        onConfirm={() => {
+          if (stationToDelete) {
+            handleDeleteStation(stationToDelete);
+            setStationToDelete(null);
+          }
+        }}
+        confirmText='Delete'
+        cancelText='Cancel'
+        confirmVariant='destructive'
+      />
+
+      {/* Assign Staff Dialog */}
+      <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
+        <DialogContent className='max-w-md'>
+          <DialogHeader>
+            <DialogTitle>Assign Staff to Station</DialogTitle>
+            <DialogDescription>
+              Assign a staff member to {stationToAssign?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <SimpleAssignmentForm
+            stationId={stationToAssign?.id}
+            onSuccess={handleAssignmentSuccess}
+            onCancel={() => setAssignDialogOpen(false)}
+            loading={loading}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

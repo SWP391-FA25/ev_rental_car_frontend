@@ -127,7 +127,7 @@ export default function HeroSection() {
           className='absolute inset-x-0 px-4 flex justify-center'
           style={{ bottom: '-140px', zIndex: '100' }}
         >
-          <Card className='w-full max-w-4xl bg-card/95 backdrop-blur-sm shadow-xl border border-border py-0'>
+          <Card className='w-full max-w-6xl bg-card/95 backdrop-blur-sm shadow-xl border border-border py-0'>
             <CardContent className='p-4 sm:p-6'>
               <div className='grid grid-cols-1 sm:grid-cols-5 gap-4 items-end'>
                 {/* Pickup Location */}

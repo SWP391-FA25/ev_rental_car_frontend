@@ -2,18 +2,18 @@ import { useAuth } from '@/app/providers/AuthProvider';
 import {
   Briefcase,
   CheckSquare,
+  FileText,
   Gift,
   Heart,
   Lock,
   LogOut,
   MapPin,
   User,
-  FileText,
 } from 'lucide-react';
 
 const menuItems = [
   { id: 'profile', label: 'Tài khoản của tôi', icon: User },
-  { id: 'documents', label: 'Tài liệu của tôi', icon: FileText },
+  { id: 'documents', label: 'Giấy tờ cá nhân', icon: FileText },
   { id: 'favorites', label: 'Xe yêu thích', icon: Heart },
   { id: 'trips', label: 'Chuyến của tôi', icon: Briefcase },
   { id: 'longterm', label: 'Đơn hàng Thuê xe dài hạn', icon: CheckSquare },
