@@ -1,10 +1,17 @@
-import { FilterIcon, LoaderIcon, PlusIcon, SearchIcon } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import {
+  FilterIcon,
+  LoaderIcon,
+  MapPinIcon,
+  PlusIcon,
+  SearchIcon,
+} from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { MoreVerticalIcon } from 'lucide-react';
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
+import { ConfirmDialog } from '../../shared/components/ui/confirm-dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,8 +27,10 @@ import {
   TableHeader,
   TableRow,
 } from '../../shared/components/ui/table';
-import { StaffDetails } from '../components/StaffDetails';
-import { StaffForm } from '../components/StaffForm';
+import { apiClient } from '../../shared/lib/apiClient';
+import { endpoints } from '../../shared/lib/endpoints';
+import { StaffDetails } from '../components/staff/StaffDetails';
+import { StaffForm } from '../components/staff/StaffForm';
 import { useStaff } from '../hooks/useStaff';
 
 export default function StaffManagement() {
@@ -31,6 +40,13 @@ export default function StaffManagement() {
   const [showStaffForm, setShowStaffForm] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [showStaffDetails, setShowStaffDetails] = useState(false);
+  const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [staffToSuspend, setStaffToSuspend] = useState(null);
+  const [staffToDelete, setStaffToDelete] = useState(null);
+  const [staffToUnassign, setStaffToUnassign] = useState(null);
+  const [unassignDialogOpen, setUnassignDialogOpen] = useState(false);
+  const [assignments, setAssignments] = useState([]);
 
   const {
     staff,
@@ -41,6 +57,33 @@ export default function StaffManagement() {
     softDeleteStaff,
     deleteStaff,
   } = useStaff();
+
+  // Load assignments
+  const loadAssignments = useCallback(async () => {
+    try {
+      const response = await apiClient.get(endpoints.assignments.getAll());
+      if (response.success) {
+        setAssignments(response.data.assignments || []);
+      }
+    } catch (error) {
+      console.error('Error loading assignments:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAssignments();
+
+    // Listen for assignment changes from other components
+    const handleAssignmentChange = () => {
+      loadAssignments();
+    };
+
+    window.addEventListener('assignmentChanged', handleAssignmentChange);
+
+    return () => {
+      window.removeEventListener('assignmentChanged', handleAssignmentChange);
+    };
+  }, [loadAssignments]);
 
   const filteredStaff = staff.filter(staffItem => {
     const matchesSearch =
@@ -54,6 +97,11 @@ export default function StaffManagement() {
       staffItem.role.toLowerCase().includes(filterRole.toLowerCase());
     return matchesSearch && matchesStatus && matchesRole;
   });
+
+  // Helper function to get station assignment for a staff member
+  const getStaffAssignment = staffId => {
+    return assignments.find(assignment => assignment.userId === staffId);
+  };
 
   const getStatusBadgeVariant = status => {
     switch (status) {
@@ -73,36 +121,40 @@ export default function StaffManagement() {
     return 'outline';
   };
 
-  const handleSoftDelete = async id => {
+  const handleSuspendStaff = async id => {
     try {
-      const updated = await softDeleteStaff(id); // gọi API suspend staff
+      await softDeleteStaff(id);
       toast.success('Staff account suspended successfully');
-
-      // Cập nhật luôn local state để hiển thị ngay
-      setSelectedStaff(prev =>
-        prev && prev.id === id ? { ...prev, accountStatus: 'SUSPENDED' } : prev
-      );
     } catch (err) {
       toast.error('Failed to suspend staff account');
       console.error('Error suspending staff:', err);
     }
   };
 
+  const handleDeleteStaff = async id => {
+    try {
+      await deleteStaff(id);
+      toast.success('Staff account deleted successfully');
+    } catch (err) {
+      toast.error('Failed to delete staff account');
+      console.error('Error deleting staff:', err);
+    }
+  };
 
-
-  const handleDelete = async id => {
-    if (
-      window.confirm(
-        'Are you sure you want to permanently delete this staff account?'
-      )
-    ) {
-      try {
-        await deleteStaff(id);
-        toast.success('Staff account deleted successfully');
-      } catch (err) {
-        toast.error('Failed to delete staff account');
-        console.error('Error deleting staff:', err);
+  const handleUnassignStaff = async assignmentId => {
+    try {
+      const response = await apiClient.delete(
+        endpoints.assignments.delete(assignmentId)
+      );
+      if (response.success) {
+        toast.success('Staff unassigned successfully');
+        loadAssignments(); // Refresh assignments
+        // Dispatch event to notify other components
+        window.dispatchEvent(new CustomEvent('assignmentChanged'));
       }
+    } catch (err) {
+      toast.error('Failed to unassign staff');
+      console.error('Error unassigning staff:', err);
     }
   };
 
@@ -145,7 +197,6 @@ export default function StaffManagement() {
       throw err;
     }
   };
-
 
   return (
     <div className='space-y-6'>
@@ -190,7 +241,9 @@ export default function StaffManagement() {
             <DropdownMenuItem onClick={() => setFilterStatus('active')}>
               Active
             </DropdownMenuItem>
-
+            <DropdownMenuItem onClick={() => setFilterStatus('banned')}>
+              Banned
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setFilterStatus('suspended')}>
               Suspended
             </DropdownMenuItem>
@@ -223,6 +276,7 @@ export default function StaffManagement() {
               <TableHead>Email</TableHead>
               <TableHead>Phone</TableHead>
               <TableHead>Role</TableHead>
+              <TableHead>Station Assignment</TableHead>
               <TableHead>Address</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Join Date</TableHead>
@@ -232,7 +286,7 @@ export default function StaffManagement() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={8} className='text-center py-8'>
+                <TableCell colSpan={9} className='text-center py-8'>
                   <div className='flex items-center justify-center gap-2'>
                     <LoaderIcon className='h-4 w-4 animate-spin' />
                     Loading staff...
@@ -242,7 +296,7 @@ export default function StaffManagement() {
             ) : error ? (
               <TableRow>
                 <TableCell
-                  colSpan={8}
+                  colSpan={9}
                   className='text-center py-8 text-red-500'
                 >
                   Error: {error}
@@ -251,7 +305,7 @@ export default function StaffManagement() {
             ) : filteredStaff.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={8}
+                  colSpan={9}
                   className='text-center py-8 text-muted-foreground'
                 >
                   No staff found
@@ -269,6 +323,23 @@ export default function StaffManagement() {
                     <Badge variant={getRoleBadgeVariant(staffItem.role)}>
                       {staffItem.role}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {(() => {
+                      const assignment = getStaffAssignment(staffItem.id);
+                      return assignment ? (
+                        <div className='flex items-center gap-2'>
+                          <MapPinIcon className='h-4 w-4 text-gray-500' />
+                          <span className='text-sm'>
+                            {assignment.station?.name || 'Unknown Station'}
+                          </span>
+                        </div>
+                      ) : (
+                        <Badge variant='outline' className='text-gray-500'>
+                          Unassigned
+                        </Badge>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell>{staffItem.address || 'N/A'}</TableCell>
                   <TableCell>
@@ -292,15 +363,34 @@ export default function StaffManagement() {
                         >
                           View Details
                         </DropdownMenuItem>
-
+                        {getStaffAssignment(staffItem.id) && (
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setStaffToUnassign(
+                                getStaffAssignment(staffItem.id).id
+                              );
+                              setUnassignDialogOpen(true);
+                            }}
+                            className='text-blue-600'
+                          >
+                            Unassign from Station
+                          </DropdownMenuItem>
+                        )}
+                        {/* <DropdownMenuItem>Reset Password</DropdownMenuItem> */}
                         <DropdownMenuItem
-                          onClick={() => handleSoftDelete(staffItem.id)}
+                          onClick={() => {
+                            setStaffToSuspend(staffItem.id);
+                            setSuspendDialogOpen(true);
+                          }}
                           className='text-orange-600'
                         >
                           Suspend Staff
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => handleDelete(staffItem.id)}
+                          onClick={() => {
+                            setStaffToDelete(staffItem.id);
+                            setDeleteDialogOpen(true);
+                          }}
                           className='text-red-600'
                         >
                           Delete Staff
@@ -356,6 +446,57 @@ export default function StaffManagement() {
         staff={selectedStaff}
         onUpdate={handleUpdateStaff}
         loading={loading}
+      />
+
+      {/* Suspend Staff Confirmation Dialog */}
+      <ConfirmDialog
+        open={suspendDialogOpen}
+        onOpenChange={setSuspendDialogOpen}
+        title='Suspend Staff'
+        description='Are you sure you want to suspend this staff member? They will not be able to access the system until reactivated.'
+        onConfirm={() => {
+          if (staffToSuspend) {
+            handleSuspendStaff(staffToSuspend);
+            setStaffToSuspend(null);
+          }
+        }}
+        confirmText='Suspend'
+        cancelText='Cancel'
+        confirmVariant='destructive'
+      />
+
+      {/* Delete Staff Confirmation Dialog */}
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title='Delete Staff'
+        description='Are you sure you want to permanently delete this staff account? This action cannot be undone and will remove all staff data.'
+        onConfirm={() => {
+          if (staffToDelete) {
+            handleDeleteStaff(staffToDelete);
+            setStaffToDelete(null);
+          }
+        }}
+        confirmText='Delete'
+        cancelText='Cancel'
+        confirmVariant='destructive'
+      />
+
+      {/* Unassign Staff Confirmation Dialog */}
+      <ConfirmDialog
+        open={unassignDialogOpen}
+        onOpenChange={setUnassignDialogOpen}
+        title='Unassign Staff'
+        description='Are you sure you want to unassign this staff member from their current station? They will become available for assignment to other stations.'
+        onConfirm={() => {
+          if (staffToUnassign) {
+            handleUnassignStaff(staffToUnassign);
+            setStaffToUnassign(null);
+          }
+        }}
+        confirmText='Unassign'
+        cancelText='Cancel'
+        confirmVariant='default'
       />
     </div>
   );

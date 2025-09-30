@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { Button } from '../../shared/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -9,17 +8,18 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../../shared/components/ui/dialog';
-import { Input } from '../../shared/components/ui/input';
-import { Label } from '../../shared/components/ui/label';
+} from '../../../shared/components/ui/dialog';
+import { Input } from '../../../shared/components/ui/input';
+import { Label } from '../../../shared/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../shared/components/ui/select';
-import { Textarea } from '../../shared/components/ui/textarea';
+} from '../../../shared/components/ui/select';
+import { Textarea } from '../../../shared/components/ui/textarea';
+import { Button } from './../../../shared/components/ui/button';
 
 export function StaffForm({ open, onOpenChange, onSubmit, loading = false }) {
   const [formData, setFormData] = useState({
@@ -61,6 +61,7 @@ export function StaffForm({ open, onOpenChange, onSubmit, loading = false }) {
       onOpenChange(false);
     } catch (error) {
       // Error handling is done in parent component
+      console.log(error);
     }
   };
 
