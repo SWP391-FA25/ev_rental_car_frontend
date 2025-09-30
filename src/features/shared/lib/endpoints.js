@@ -23,6 +23,9 @@ export const endpoints = {
     update: id => `/api/stations/${id}`,
     delete: id => `/api/stations/${id}`,
     softDelete: id => `/api/stations/soft-delete/${id}`,
+    getUnavailable: () => '/api/stations/unavailable',
+    getVehicles: stationId => `/api/stations/${stationId}/vehicles`,
+    getStaff: stationId => `/api/stations/${stationId}/staff`,
   },
   vehicles: {
     getAll: () => '/api/vehicles',
@@ -60,5 +63,14 @@ export const endpoints = {
     create: () => '/api/promotions',
     update: id => `/api/promotions/${id}`,
     delete: id => `/api/promotions/${id}`,
+  },
+  assignments: {
+    getAll: () => '/api/assignments',
+    getById: id => `/api/assignments/${id}`,
+    getByStaffId: staffId => `/api/assignments/staff/${staffId}`,
+    create: () => '/api/assignments',
+    update: id => `/api/assignments/${id}`,
+    delete: id => `/api/assignments/${id}`,
+    getUnassignedStaff: () => '/api/assignments/unassigned-staff',
   },
 };

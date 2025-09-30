@@ -1,25 +1,24 @@
+import { Car, CreditCard, FileText, MapPin, Users, Wrench } from 'lucide-react';
 import * as React from 'react';
-import { Car, MapPin, Users, CreditCard, FileText, Wrench } from 'lucide-react';
-import {
-  SidebarInset,
-  SidebarProvider,
-} from '../../shared/components/ui/sidebar';
+import { useTranslation } from 'react-i18next';
+import { Button } from '../../shared/components/ui/button';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from '../../shared/components/ui/card';
-import { Button } from '../../shared/components/ui/button';
+import {
+  SidebarInset,
+  SidebarProvider,
+} from '../../shared/components/ui/sidebar';
 import { CarManagement } from '../components/car-management';
 import { CustomerManagement } from '../components/customer-management';
+import DocumentVerification from '../components/document-verification';
 import { PaymentManagement } from '../components/payment-management';
 import { StaffHeader } from '../components/staff-header';
 import { StaffSidebar } from '../components/staff-sidebar';
 import { StationManagement } from '../components/station-management';
-import DocumentVerification from '../components/document-verification';
-import { useTranslation } from 'react-i18next';
-import LanguageToggle from '../../shared/components/homepage/LanguageToggle';
 
 // Removed QuickVerification import
 
@@ -490,7 +489,6 @@ export default function StaffDashboard() {
         {/* Header có thêm Language Toggle */}
         <div className='flex justify-between items-center px-4 py-2 border-b'>
           <StaffHeader />
-          <LanguageToggle />
         </div>
 
         <div className='flex flex-1 flex-col gap-4 p-4'>{renderContent()}</div>

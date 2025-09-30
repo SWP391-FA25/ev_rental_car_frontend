@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { MoreVerticalIcon } from 'lucide-react';
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
+import { ConfirmDialog } from '../../shared/components/ui/confirm-dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +31,8 @@ export default function PromotionManagement() {
   const [showPromotionForm, setShowPromotionForm] = useState(false);
   const [selectedPromotion, setSelectedPromotion] = useState(null);
   const [showPromotionDetails, setShowPromotionDetails] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [promotionToDelete, setPromotionToDelete] = useState(null);
 
   const {
     promotions,
@@ -141,17 +144,8 @@ export default function PromotionManagement() {
       return;
     }
 
-    if (
-      window.confirm(
-        `Are you sure you want to delete the promotion "${promotion.code}"?`
-      )
-    ) {
-      try {
-        await handleDeletePromotion(promotion.id);
-      } catch (err) {
-        console.error('Error deleting promotion:', err);
-      }
-    }
+    setPromotionToDelete(promotion);
+    setDeleteDialogOpen(true);
   };
 
   const getStats = () => {
@@ -365,6 +359,23 @@ export default function PromotionManagement() {
         onUpdate={handleUpdatePromotion}
         onDelete={handleDeletePromotion}
         loading={loading}
+      />
+
+      {/* Delete Promotion Confirmation Dialog */}
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title='Delete Promotion'
+        description={`Are you sure you want to delete the promotion "${promotionToDelete?.code}"? This action cannot be undone.`}
+        onConfirm={() => {
+          if (promotionToDelete) {
+            handleDeletePromotion(promotionToDelete.id);
+            setPromotionToDelete(null);
+          }
+        }}
+        confirmText='Delete'
+        cancelText='Cancel'
+        confirmVariant='destructive'
       />
     </div>
   );

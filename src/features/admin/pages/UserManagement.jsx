@@ -1,10 +1,10 @@
 import { FilterIcon, PlusIcon, SearchIcon } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
+import { useState } from 'react';
 
 import { MoreVerticalIcon } from 'lucide-react';
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
+import { ConfirmDialog } from '../../shared/components/ui/confirm-dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,55 +20,25 @@ import {
   TableHeader,
   TableRow,
 } from '../../shared/components/ui/table';
-import { apiClient } from '../../shared/lib/apiClient';
-import { endpoints } from '../../shared/lib/endpoints';
-import UserDetails from '../components/UserDetails';
+import UserDetails from '../components/renter/UserDetails';
+import { UserForm } from '../components/renter/UserForm';
+import { useUsers } from '../hooks/useUsers';
 
 export default function UserManagement() {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
+  const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToSuspend, setUserToSuspend] = useState(null);
+  const [userToDelete, setUserToDelete] = useState(null);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  // Use custom hook for user management
+  const { users, loading, createUser, suspendUser, deleteUser } = useUsers();
 
-  const fetchUsers = async () => {
-    setLoading(true);
-    try {
-      const response = await apiClient.get(endpoints.renters.getAll());
-      if (response?.success && response?.data?.renters) {
-        setUsers(response.data.renters);
-      } else {
-        console.error('Invalid response format:', response);
-        toast.error('Invalid response from server');
-      }
-    } catch (error) {
-      console.error('Error fetching users:', error);
-
-      // More detailed error handling
-      if (
-        error.code === 'ECONNREFUSED' ||
-        error.message?.includes('Network Error')
-      ) {
-        toast.error(
-          'Cannot connect to server. Please check if backend is running.'
-        );
-      } else if (error.status === 401) {
-        toast.error('Authentication required. Please login again.');
-      } else if (error.status === 403) {
-        toast.error('Access denied. You do not have permission to view users.');
-      } else {
-        toast.error(error?.message || 'Failed to fetch users');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Filter users locally
   const filteredUsers = users.filter(user => {
     const matchesSearch =
       user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -84,28 +54,31 @@ export default function UserManagement() {
     setIsDetailsOpen(true);
   };
 
-  const handleUserUpdated = updatedUser => {
-    setUsers(prev =>
-      prev.map(user => (user.id === updatedUser.id ? updatedUser : user))
-    );
+  const handleUserUpdated = () => {
+    // The hook already handles updating the user list
+    // This is just for any additional UI updates if needed
   };
 
-  const handleSoftDelete = async userId => {
-    if (!window.confirm('Are you sure you want to suspend this user?')) return;
+  const handleUserCreated = () => {
+    // The hook already handles adding the new user to the list
+    // This is just for any additional UI updates if needed
+  };
 
+  const handleSuspendUser = async userId => {
     try {
-      const response = await apiClient.put(
-        endpoints.renters.softDelete(userId),
-        { status: 'SUSPENDED' }
-      );
-
-      if (response?.success) {
-        toast.success('User suspended successfully');
-        fetchUsers(); // Refresh the list
-      }
+      await suspendUser(userId);
     } catch (error) {
+      // Error handling is done in the hook
       console.error('Error suspending user:', error);
-      toast.error(error?.message || 'Failed to suspend user');
+    }
+  };
+
+  const handleDeleteUser = async userId => {
+    try {
+      await deleteUser(userId);
+    } catch (error) {
+      // Error handling is done in the hook
+      console.error('Error deleting user:', error);
     }
   };
 
@@ -141,7 +114,7 @@ export default function UserManagement() {
             Manage user accounts and permissions
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setIsCreateFormOpen(true)}>
           <PlusIcon className='mr-2 h-4 w-4' />
           Add User
         </Button>
@@ -239,10 +212,22 @@ export default function UserManagement() {
                           View Details
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => handleSoftDelete(user.id)}
+                          onClick={() => {
+                            setUserToSuspend(user.id);
+                            setSuspendDialogOpen(true);
+                          }}
                           className='text-orange-600'
                         >
                           Suspend User
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setUserToDelete(user.id);
+                            setDeleteDialogOpen(true);
+                          }}
+                          className='text-red-600'
+                        >
+                          Delete User
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -283,6 +268,48 @@ export default function UserManagement() {
         }}
         userId={selectedUserId}
         onUserUpdated={handleUserUpdated}
+      />
+
+      {/* User Create Form Dialog */}
+      <UserForm
+        open={isCreateFormOpen}
+        onOpenChange={setIsCreateFormOpen}
+        onUserCreated={handleUserCreated}
+        createUser={createUser}
+      />
+
+      {/* Suspend User Confirmation Dialog */}
+      <ConfirmDialog
+        open={suspendDialogOpen}
+        onOpenChange={setSuspendDialogOpen}
+        title='Suspend User'
+        description='Are you sure you want to suspend this user? They will not be able to access the system until reactivated.'
+        onConfirm={() => {
+          if (userToSuspend) {
+            handleSuspendUser(userToSuspend);
+            setUserToSuspend(null);
+          }
+        }}
+        confirmText='Suspend'
+        cancelText='Cancel'
+        confirmVariant='destructive'
+      />
+
+      {/* Delete User Confirmation Dialog */}
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title='Delete User'
+        description='Are you sure you want to permanently delete this user? This action cannot be undone and will remove all user data.'
+        onConfirm={() => {
+          if (userToDelete) {
+            handleDeleteUser(userToDelete);
+            setUserToDelete(null);
+          }
+        }}
+        confirmText='Delete'
+        cancelText='Cancel'
+        confirmVariant='destructive'
       />
     </div>
   );
