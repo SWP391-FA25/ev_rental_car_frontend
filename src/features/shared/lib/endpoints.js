@@ -9,12 +9,12 @@ export const endpoints = {
     me: () => '/api/auth/me',
   },
   staff: {
-    getAll: () => '/api/staff',
-    getById: id => `/api/staff/${id}`,
-    create: () => '/api/staff',
-    update: id => `/api/staff/${id}`,
-    softDelete: id => `/api/staff/soft-delete/${id}`,
-    delete: id => `/api/staff/${id}`,
+    getAll: () => '/api/staffs',
+    getById: id => `/api/staffs/${id}`,
+    create: () => '/api/staffs',
+    update: id => `/api/staffs/${id}`,
+    softDelete: id => `/api/staffs/soft-delete/${id}`,
+    delete: id => `/api/staffs/${id}`,
   },
   stations: {
     getAll: () => '/api/stations',

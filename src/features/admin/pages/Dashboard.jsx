@@ -63,6 +63,18 @@ export default function Dashboard() {
     }
     fetchUsers();
   }, []);
+  const getStatusBadgeVariant = status => {
+    switch (status) {
+      case 'ACTIVE':
+        return 'default';
+      case 'SUSPENDED':
+        return 'secondary';
+      case 'BANNED':
+        return 'destructive';
+      default:
+        return 'outline';
+    }
+  };
 
   return (
     <>
@@ -177,7 +189,7 @@ export default function Dashboard() {
           ) : error ? (
             <div className='py-8 text-center text-red-500'>Error: {error}</div>
           ) : (
-            <div className="rounded-md border">
+            <div className="rounded-md border min-h-[400px]">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -218,7 +230,7 @@ export default function Dashboard() {
                           <Badge variant="outline">{renter.role}</Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="secondary" className="bg-yellow-200 text-yellow-800">
+                          <Badge variant={getStatusBadgeVariant(renter.status)}>
                             {renter.status}
                           </Badge>
                         </TableCell>

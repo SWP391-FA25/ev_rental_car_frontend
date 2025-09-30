@@ -75,10 +75,10 @@ export default function StaffManagement() {
 
   const handleSoftDelete = async id => {
     try {
-      const updated = await softDeleteStaff(id); // gọi API suspend staff
+      const updated = await softDeleteStaff(id);
       toast.success('Staff account suspended successfully');
 
-      // Cập nhật luôn local state để hiển thị ngay
+
       setSelectedStaff(prev =>
         prev && prev.id === id ? { ...prev, accountStatus: 'SUSPENDED' } : prev
       );
@@ -194,6 +194,9 @@ export default function StaffManagement() {
             <DropdownMenuItem onClick={() => setFilterStatus('suspended')}>
               Suspended
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilterStatus('admin')}>
+              Admin
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         <DropdownMenu>
@@ -210,12 +213,15 @@ export default function StaffManagement() {
             <DropdownMenuItem onClick={() => setFilterRole('staff')}>
               Staff
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilterRole('admin')}>
+              Admin
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
       {/* Staff Table */}
-      <div className='rounded-md border'>
+      <div className='rounded-md border min-h-[400px]'>
         <Table>
           <TableHeader>
             <TableRow>
