@@ -1,5 +1,5 @@
 import { FilterIcon, LoaderIcon, PlusIcon, SearchIcon } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
 import { MoreVerticalIcon } from 'lucide-react';
@@ -75,13 +75,20 @@ export default function StaffManagement() {
 
   const handleSoftDelete = async id => {
     try {
-      await softDeleteStaff(id);
+      const updated = await softDeleteStaff(id); // gọi API suspend staff
       toast.success('Staff account suspended successfully');
+
+      // Cập nhật luôn local state để hiển thị ngay
+      setSelectedStaff(prev =>
+        prev && prev.id === id ? { ...prev, accountStatus: 'SUSPENDED' } : prev
+      );
     } catch (err) {
       toast.error('Failed to suspend staff account');
       console.error('Error suspending staff:', err);
     }
   };
+
+
 
   const handleDelete = async id => {
     if (
@@ -139,6 +146,7 @@ export default function StaffManagement() {
     }
   };
 
+
   return (
     <div className='space-y-6'>
       {/* Header */}
@@ -182,9 +190,7 @@ export default function StaffManagement() {
             <DropdownMenuItem onClick={() => setFilterStatus('active')}>
               Active
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFilterStatus('banned')}>
-              Banned
-            </DropdownMenuItem>
+
             <DropdownMenuItem onClick={() => setFilterStatus('suspended')}>
               Suspended
             </DropdownMenuItem>
@@ -286,19 +292,19 @@ export default function StaffManagement() {
                         >
                           View Details
                         </DropdownMenuItem>
-                        {/* <DropdownMenuItem>Reset Password</DropdownMenuItem> */}
+
                         <DropdownMenuItem
                           onClick={() => handleSoftDelete(staffItem.id)}
                           className='text-orange-600'
                         >
                           Suspend Staff
                         </DropdownMenuItem>
-                        {/* <DropdownMenuItem
+                        <DropdownMenuItem
                           onClick={() => handleDelete(staffItem.id)}
                           className='text-red-600'
                         >
                           Delete Staff
-                        </DropdownMenuItem> */}
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

@@ -13,7 +13,7 @@ export const endpoints = {
     getById: id => `/api/staff/${id}`,
     create: () => '/api/staff',
     update: id => `/api/staff/${id}`,
-    softDelete: id => `/api/staff/${id}/soft-delete`,
+    softDelete: id => `/api/staff/soft-delete/${id}`,
     delete: id => `/api/staff/${id}`,
   },
   stations: {
@@ -46,10 +46,7 @@ export const endpoints = {
   renters: {
     getAll: () => '/api/renters',
     getById: id => `/api/renters/${id}`,
-    create: () => '/api/renters',
     update: id => `/api/renters/${id}`,
-    softDelete: id => `/api/renters/${id}/soft-delete`,
-    delete: id => `/api/renters/${id}`,
-    updatePassword: id => `/api/renters/${id}/password`,
+    delete: id => `/api/renters/${id}`
   },
 };
