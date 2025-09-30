@@ -155,7 +155,6 @@ export default function Dashboard() {
                             >
                               View Profile
                             </DropdownMenuItem>
-                            <DropdownMenuItem>Edit Account</DropdownMenuItem>
                             <DropdownMenuItem>Reset Password</DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem className="text-red-600">
