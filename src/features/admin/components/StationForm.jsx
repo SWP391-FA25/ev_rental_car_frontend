@@ -29,13 +29,13 @@ export function StationForm({
 
   useEffect(() => {
     setFormData({
-      name: initialData.name || '',
-      address: initialData.address || '',
-      status: initialData.status || 'ACTIVE',
-      capacity: initialData.capacity || 0,
-      availableSpots: initialData.availableSpots || 0,
-      chargingPorts: initialData.chargingPorts || 0,
-      operatingHours: initialData.operatingHours || '',
+      name: initialData?.name || '',
+      address: initialData?.address || '',
+      status: initialData?.status || 'ACTIVE',
+      capacity: initialData?.capacity || 0,
+      availableSpots: initialData?.availableSpots || 0,
+      chargingPorts: initialData?.chargingPorts || 0,
+      operatingHours: initialData?.operatingHours || '',
     });
   }, [initialData]);
 
@@ -48,6 +48,25 @@ export function StationForm({
 
   const handleSubmit = async e => {
     e.preventDefault();
+
+    // Validate required fields
+    if (
+      !formData.name ||
+      !formData.address ||
+      !formData.capacity ||
+      !formData.availableSpots ||
+      !formData.chargingPorts
+    ) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    // Validate capacity and available spots
+    if (parseInt(formData.availableSpots) > parseInt(formData.capacity)) {
+      alert('Available spots cannot be greater than capacity');
+      return;
+    }
+
     try {
       await onSubmit(formData);
       setFormData({
@@ -70,10 +89,10 @@ export function StationForm({
       <DialogContent className='sm:max-w-[425px]'>
         <DialogHeader>
           <DialogTitle>
-            {initialData.id ? 'Edit Station' : 'Add New Station'}
+            {initialData?.id ? 'Edit Station' : 'Add New Station'}
           </DialogTitle>
           <DialogDescription>
-            {initialData.id
+            {initialData?.id
               ? 'Update station information. All fields marked with * are required.'
               : 'Create a new station. All fields marked with * are required.'}
           </DialogDescription>
@@ -192,7 +211,7 @@ export function StationForm({
             <Button type='submit' disabled={loading}>
               {loading
                 ? 'Saving...'
-                : initialData.id
+                : initialData?.id
                 ? 'Save Changes'
                 : 'Create Station'}
             </Button>

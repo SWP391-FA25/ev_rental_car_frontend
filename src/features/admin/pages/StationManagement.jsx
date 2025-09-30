@@ -331,6 +331,17 @@ export default function StationManagement() {
           )}
         </div>
       )}
+
+      {/* Create New Station Dialog */}
+      {!selectedStation && (
+        <StationForm
+          open={open}
+          onOpenChange={setOpen}
+          initialData={null}
+          onSubmit={handleSaveStation}
+          loading={loading}
+        />
+      )}
     </div>
   );
 }
