@@ -173,13 +173,12 @@ const columns = [
       <div className='w-32'>
         <Badge
           variant='outline'
-          className={`px-1.5 ${
-            row.original.type === 'Premium'
-              ? 'text-purple-600 border-purple-200 bg-purple-50'
-              : row.original.type === 'Standard'
+          className={`px-1.5 ${row.original.type === 'Premium'
+            ? 'text-purple-600 border-purple-200 bg-purple-50'
+            : row.original.type === 'Standard'
               ? 'text-blue-600 border-blue-200 bg-blue-50'
               : 'text-gray-600 border-gray-200 bg-gray-50'
-          }`}
+            }`}
         >
           {row.original.type}
         </Badge>
@@ -192,13 +191,12 @@ const columns = [
     cell: ({ row }) => (
       <Badge
         variant='outline'
-        className={`flex gap-1 px-1.5 [&_svg]:size-3 ${
-          row.original.status === 'Active'
-            ? 'text-green-600 border-green-200 bg-green-50'
-            : row.original.status === 'Suspended'
+        className={`flex gap-1 px-1.5 [&_svg]:size-3 ${row.original.status === 'Active'
+          ? 'text-green-600 border-green-200 bg-green-50'
+          : row.original.status === 'Suspended'
             ? 'text-red-600 border-red-200 bg-red-50'
             : 'text-yellow-600 border-yellow-200 bg-yellow-50'
-        }`}
+          }`}
       >
         {row.original.status === 'Active' ? (
           <CheckCircle2Icon className='text-green-500 dark:text-green-400' />
@@ -212,53 +210,21 @@ const columns = [
     ),
   },
   {
-    accessorKey: 'target',
-    header: () => <div className='w-full text-right'>Bookings</div>,
+    accessorKey: 'address',
+    header: () => <div className='w-full text-right'>Address</div>,
     cell: ({ row }) => (
-      <form
-        onSubmit={e => {
-          e.preventDefault();
-          toast.promise(new Promise(resolve => setTimeout(resolve, 1000)), {
-            loading: `Updating ${row.original.header}`,
-            success: 'Updated',
-            error: 'Error',
-          });
-        }}
-      >
-        <Label htmlFor={`${row.original.id}-bookings`} className='sr-only'>
-          Bookings
-        </Label>
-        <Input
-          className='h-8 w-16 border-transparent bg-transparent text-right shadow-none hover:bg-input/30 focus-visible:border focus-visible:bg-background'
-          defaultValue={row.original.target}
-          id={`${row.original.id}-bookings`}
-        />
-      </form>
+      <div className='h-8 w-32 flex items-center justify-end text-right px-2'>
+        {row.original.address || ''}
+      </div>
     ),
   },
   {
-    accessorKey: 'limit',
-    header: () => <div className='w-full text-right'>Limit</div>,
+    accessorKey: 'phone',
+    header: () => <div className='w-full text-right'>Phone</div>,
     cell: ({ row }) => (
-      <form
-        onSubmit={e => {
-          e.preventDefault();
-          toast.promise(new Promise(resolve => setTimeout(resolve, 1000)), {
-            loading: `Updating ${row.original.header}`,
-            success: 'Updated',
-            error: 'Error',
-          });
-        }}
-      >
-        <Label htmlFor={`${row.original.id}-limit`} className='sr-only'>
-          Booking Limit
-        </Label>
-        <Input
-          className='h-8 w-16 border-transparent bg-transparent text-right shadow-none hover:bg-input/30 focus-visible:border focus-visible:bg-background'
-          defaultValue={row.original.limit}
-          id={`${row.original.id}-limit`}
-        />
-      </form>
+      <div className='h-8 w-32 flex items-center justify-end text-right px-2'>
+        {row.original.phone || ''}
+      </div>
     ),
   },
   {
@@ -456,7 +422,7 @@ export function DataTable({ data: initialData }) {
                         column.toggleVisibility(!!value)
                       }
                     >
-                      {column.id}
+                      {column.id === 'type' ? 'Account Type' : column.id}
                     </DropdownMenuCheckboxItem>
                   );
                 })}
@@ -490,9 +456,9 @@ export function DataTable({ data: initialData }) {
                           {header.isPlaceholder
                             ? null
                             : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
                         </TableHead>
                       );
                     })}
