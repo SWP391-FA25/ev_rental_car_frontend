@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { Input } from "../../shared/components/ui/input";
+import { MoreHorizontal, SearchIcon, FilterIcon } from "lucide-react";
 import { apiClient } from '../../shared/lib/apiClient';
 import { endpoints } from '../../shared/lib/endpoints';
 import { ChartAreaInteractive } from '../components/chart-area-interactive';
@@ -20,11 +22,13 @@ import {
   DropdownMenuTrigger,
 } from "../../shared/components/ui/dropdown-menu";
 import { Button } from "../../shared/components/ui/button";
-import { MoreHorizontal } from "lucide-react";
 import UserDetails from "../components/UserDetails";
 
 export default function Dashboard() {
   const [userData, setUserData] = useState([]);
+  const [search, setSearch] = useState("");
+  const [filterRole, setFilterRole] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -106,6 +110,68 @@ export default function Dashboard() {
             User Account Management
           </h3>
 
+          {/* Search & Filter */}
+          <div className="flex items-center gap-4 mb-4">
+            {/* Search */}
+            <div className="relative flex-1 max-w-sm">
+              <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search users..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            {/* Filter by Role */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <FilterIcon className="mr-2 h-4 w-4" />
+                  Role: {filterRole || "All"}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => setFilterRole("")}>
+                  All
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilterRole("admin")}>
+                  Admin
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilterRole("staff")}>
+                  Staff
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilterRole("user")}>
+                  User
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Filter by Status */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <FilterIcon className="mr-2 h-4 w-4" />
+                  Status: {filterStatus || "All"}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => setFilterStatus("")}>
+                  All
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilterStatus("active")}>
+                  Active
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilterStatus("inactive")}>
+                  Inactive
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilterStatus("suspended")}>
+                  Suspended
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
           {loading ? (
             <div className='py-8 text-center'>Loading users...</div>
           ) : error ? (
@@ -125,46 +191,66 @@ export default function Dashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {userData.map((renter, i) => (
-                    <TableRow key={renter.id || i}>
-                      <TableCell className="font-medium">{renter.name}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{renter.role}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className="bg-yellow-200 text-yellow-800">
-                          {renter.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{renter.address}</TableCell>
-                      <TableCell>{renter.phone}</TableCell>
-                      <TableCell>{renter.email}</TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setSelectedUserId(renter.id);
-                                setIsDetailsOpen(true);
-                              }}
-                            >
-                              View Profile
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>Reset Password</DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-red-600">
-                              Delete Account
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {userData
+                    .filter(renter => {
+                      // search
+                      const keyword = search.toLowerCase();
+                      if (
+                        keyword &&
+                        !(
+                          renter.name.toLowerCase().includes(keyword) ||
+                          renter.email.toLowerCase().includes(keyword) ||
+                          renter.phone.toLowerCase().includes(keyword)
+                        )
+                      ) {
+                        return false;
+                      }
+                      // role filter
+                      if (filterRole && renter.role !== filterRole) return false;
+                      // status filter
+                      if (filterStatus && renter.status.toLowerCase() !== filterStatus) return false;
+                      return true;
+                    })
+                    .map((renter, i) => (
+                      <TableRow key={renter.id || i}>
+                        <TableCell className="font-medium">{renter.name}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{renter.role}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="bg-yellow-200 text-yellow-800">
+                            {renter.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{renter.address}</TableCell>
+                        <TableCell>{renter.phone}</TableCell>
+                        <TableCell>{renter.email}</TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setSelectedUserId(renter.id);
+                                  setIsDetailsOpen(true);
+                                }}
+                              >
+                                View Profile
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>Reset Password</DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem className="text-red-600">
+                                Delete Account
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                 </TableBody>
               </Table>
             </div>
