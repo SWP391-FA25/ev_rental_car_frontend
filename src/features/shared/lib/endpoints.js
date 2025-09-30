@@ -9,7 +9,7 @@ export const endpoints = {
     me: () => '/api/auth/me',
   },
   staff: {
-    getAll: () => '/api/staff',
+    getAll: () => '/api/staffs',
     getById: id => `/api/staff/${id}`,
     create: () => '/api/staff',
     update: id => `/api/staff/${id}`,
