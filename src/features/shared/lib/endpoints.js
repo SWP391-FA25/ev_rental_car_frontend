@@ -8,13 +8,13 @@ export const endpoints = {
     logout: () => '/api/auth/logout',
     me: () => '/api/auth/me',
   },
-  staff: {
-    getAll: () => '/api/staff',
-    getById: id => `/api/staff/${id}`,
-    create: () => '/api/staff',
-    update: id => `/api/staff/${id}`,
-    softDelete: id => `/api/staff/${id}/soft-delete`,
-    delete: id => `/api/staff/${id}`,
+  staffs: {
+    getAll: () => '/api/staffs',
+    getById: id => `/api/staffs/${id}`,
+    create: () => '/api/staffs',
+    update: id => `/api/staffs/${id}`,
+    softDelete: id => `/api/staffs/${id}/soft-delete`,
+    delete: id => `/api/staffs/${id}`,
   },
   stations: {
     getAll: () => '/api/stations',
@@ -51,5 +51,14 @@ export const endpoints = {
     softDelete: id => `/api/renters/${id}/soft-delete`,
     delete: id => `/api/renters/${id}`,
     updatePassword: id => `/api/renters/${id}/password`,
+  },
+  promotions: {
+    getAll: () => '/api/promotions',
+    getById: id => `/api/promotions/${id}`,
+    getByCode: code => `/api/promotions/code/${code}`,
+    getActive: () => '/api/promotions/active',
+    create: () => '/api/promotions',
+    update: id => `/api/promotions/${id}`,
+    delete: id => `/api/promotions/${id}`,
   },
 };

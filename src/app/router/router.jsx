@@ -1,5 +1,6 @@
 import AdminDashboard from '@/features/admin/layout/AdminDashboard.jsx';
 import Dashboard from '@/features/admin/pages/Dashboard.jsx';
+import PromotionManagement from '@/features/admin/pages/PromotionManagement.jsx';
 import Settings from '@/features/admin/pages/Settings.jsx';
 import StaffManagement from '@/features/admin/pages/StaffManagement.jsx';
 import StationManagement from '@/features/admin/pages/StationManagement.jsx';
@@ -40,6 +41,7 @@ export const router = createBrowserRouter([
       { path: 'staff', element: <StaffManagement /> },
       { path: 'stations', element: <StationManagement /> },
       { path: 'vehicles', element: <VehicleManagement /> },
+      { path: 'promotions', element: <PromotionManagement /> },
       { path: 'settings', element: <Settings /> },
     ],
   },

@@ -1,11 +1,4 @@
-import {
-  AlertTriangle,
-  Briefcase,
-  Edit,
-  HelpCircle,
-  Star,
-  Upload,
-} from 'lucide-react';
+import { Briefcase, Edit, Star } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Avatar,
@@ -15,7 +8,6 @@ import {
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
 import { Input } from '../../shared/components/ui/input';
-import { Label } from '../../shared/components/ui/label';
 import { apiClient } from '../../shared/lib/apiClient';
 import { endpoints } from '../../shared/lib/endpoints';
 
@@ -400,37 +392,21 @@ export default function ProfileContent({ user }) {
         </div>
       </div>
 
-      {/* License Verification Section */}
-      <div className='mt-8'>
-        {/* License Header */}
+      {/* <div className='mt-8'>
         <div className='flex items-center justify-between mb-6'>
           <div className='flex items-center gap-3'>
             <h2 className='text-xl font-bold text-foreground'>
               Giấy phép lái xe
             </h2>
-            {/* <Badge variant='destructive' className='flex items-center gap-1'>
+            <Badge variant='destructive' className='flex items-center gap-1'>
               <XCircle className='h-3 w-3' />
               Chưa xác thực
-            </Badge> */}
+            </Badge>
           </div>
         </div>
 
-        {/* Notice Banner */}
-        <div className='bg-red-50 border border-red-200 rounded-lg p-4 mb-6'>
-          <div className='flex items-start gap-3'>
-            <AlertTriangle className='h-5 w-5 text-red-600 mt-0.5 flex-shrink-0' />
-            <p className='text-red-800 text-sm'>
-              <strong>Lưu ý:</strong> để tránh phát sinh vấn đề trong quá trình
-              thuê xe, người đặt xe trên EV Rental (đã xác thực GPLX) ĐỒNG THỜI
-              phải là người nhận xe.
-            </p>
-          </div>
-        </div>
-
-        {/* License Content */}
         <div className='bg-card rounded-lg border border-border p-6 shadow-sm'>
           <div className='flex gap-8'>
-            {/* Upload Section */}
             <div className='flex-1'>
               <h3 className='text-lg font-semibold text-card-foreground mb-4'>
                 Hình ảnh
@@ -490,14 +466,12 @@ export default function ProfileContent({ user }) {
               </div>
             </div>
 
-            {/* Form Section */}
             <div className='flex-1'>
               <h3 className='text-lg font-semibold text-card-foreground mb-4'>
                 Thông tin chung
               </h3>
 
               <div className='space-y-4'>
-                {/* License Number (optional for backend) */}
                 <div className='space-y-2'>
                   <Label
                     htmlFor='license-number'
@@ -517,7 +491,6 @@ export default function ProfileContent({ user }) {
                   />
                 </div>
 
-                {/* Action Buttons */}
                 <div className='flex gap-3 pt-4'>
                   <Button onClick={handleSaveLicense} className='flex-1'>
                     Lưu thông tin
@@ -539,17 +512,16 @@ export default function ProfileContent({ user }) {
           </div>
         </div>
 
-        {/* Help Link */}
         <div className='mt-6'>
           <Button variant='link' className='text-primary p-0 h-auto text-sm'>
             <HelpCircle className='h-4 w-4 mr-1' />
             Vì sao tôi phải xác thực GPLX?
           </Button>
         </div>
-      </div>
+      </div> */}
 
       {/* ID Card (CCCD) Upload Section */}
-      <div className='mt-8'>
+      {/* <div className='mt-8'>
         <div className='flex items-center justify-between mb-6'>
           <div className='flex items-center gap-3'>
             <h2 className='text-xl font-bold text-foreground'>
@@ -669,7 +641,7 @@ export default function ProfileContent({ user }) {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }

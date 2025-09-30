@@ -4,6 +4,7 @@ import {
   Building2Icon,
   FileTextIcon,
   LayoutDashboardIcon,
+  PercentIcon,
   SettingsIcon,
   UsersIcon,
 } from 'lucide-react';
@@ -47,6 +48,11 @@ const data = {
       title: 'Vehicals Management',
       url: '/admin/vehicles',
       icon: FileTextIcon,
+    },
+    {
+      title: 'Promotion Management',
+      url: '/admin/promotions',
+      icon: PercentIcon,
     },
     {
       title: 'Settings',

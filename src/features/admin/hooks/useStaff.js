@@ -11,7 +11,7 @@ export function useStaff() {
     try {
       setLoading(true);
       setError(null);
-      const response = await apiClient.get(endpoints.staff.getAll());
+      const response = await apiClient.get(endpoints.staffs.getAll());
       setStaff(response.data.staff || []);
     } catch (err) {
       setError(err.message || 'Failed to fetch staff');
@@ -26,7 +26,7 @@ export function useStaff() {
       setLoading(true);
       setError(null);
       const response = await apiClient.post(
-        endpoints.staff.create(),
+        endpoints.staffs.create(),
         staffData
       );
       setStaff(prev => [response.data.staff, ...prev]);
@@ -44,7 +44,7 @@ export function useStaff() {
       setLoading(true);
       setError(null);
       const response = await apiClient.put(
-        endpoints.staff.update(id),
+        endpoints.staffs.update(id),
         staffData
       );
       setStaff(prev => prev.map(s => (s.id === id ? response.data.staff : s)));
@@ -61,7 +61,7 @@ export function useStaff() {
     try {
       setLoading(true);
       setError(null);
-      await apiClient.patch(endpoints.staff.softDelete(id));
+      await apiClient.patch(endpoints.staffs.softDelete(id));
       setStaff(prev =>
         prev.map(s =>
           s.id === id
@@ -81,7 +81,7 @@ export function useStaff() {
     try {
       setLoading(true);
       setError(null);
-      await apiClient.delete(endpoints.staff.delete(id));
+      await apiClient.delete(endpoints.staffs.delete(id));
       setStaff(prev => prev.filter(s => s.id !== id));
     } catch (err) {
       setError(err.message || 'Failed to delete staff');

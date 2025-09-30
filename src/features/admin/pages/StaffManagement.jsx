@@ -20,8 +20,8 @@ import {
   TableHeader,
   TableRow,
 } from '../../shared/components/ui/table';
-import { StaffDetails } from '../components/StaffDetails';
-import { StaffForm } from '../components/StaffForm';
+import { StaffDetails } from '../components/staff/StaffDetails';
+import { StaffForm } from '../components/staff/StaffForm';
 import { useStaff } from '../hooks/useStaff';
 
 export default function StaffManagement() {
@@ -293,12 +293,12 @@ export default function StaffManagement() {
                         >
                           Suspend Staff
                         </DropdownMenuItem>
-                        {/* <DropdownMenuItem
+                        <DropdownMenuItem
                           onClick={() => handleDelete(staffItem.id)}
                           className='text-red-600'
                         >
                           Delete Staff
-                        </DropdownMenuItem> */}
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
