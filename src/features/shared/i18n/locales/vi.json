@@ -352,6 +352,13 @@
         "assignedTo": "Người phụ trách"
       }
     },
+    "methods": {
+      "cash": "Tiền mặt",
+      "creditCard": "Thẻ tín dụng",
+      "debitCard": "Thẻ ghi nợ",
+      "bankTransfer": "Chuyển khoản ngân hàng",
+      "digitalWallet": "Ví điện tử"
+    },
     "common": {
       "amount": "Số tiền",
       "method": "Phương thức thanh toán"
@@ -574,7 +581,8 @@
       "confirmTerms": "Khách đã xác nhận điều khoản",
       "complete": "Hoàn tất check-in",
       "empty": "Không có khách chờ check-in.",
-      "emptySearch": "Không tìm thấy khách phù hợp."
+      "emptySearch": "Không tìm thấy khách phù hợp.",
+      "checkinNotes": "Thêm ghi chú về quá trình check-in..."
     },
     "license": {
       "title": "Xác minh bằng lái",
@@ -587,7 +595,8 @@
       "viewUploaded": "Xem tài liệu đã tải",
       "notes": "Ghi chú xác minh",
       "approve": "Duyệt bằng lái",
-      "reject": "Từ chối bằng lái"
+      "reject": "Từ chối bằng lái",
+      "licenseNotes": "Thêm ghi chú về quá trình xác minh bằng lái..."
     },
     "support": {
       "searchPlaceholder": "Tìm khách hàng...",

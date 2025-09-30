@@ -394,7 +394,7 @@ function CustomerCheckIn() {
                                 <Textarea
                                   id='checkin-notes'
                                   placeholder={t(
-                                    'staffCustomers.placeholders.checkinNotes'
+                                    'staffCustomers.checkin.checkinNotes'
                                   )}
                                   value={checkInNotes}
                                   onChange={e =>
@@ -562,9 +562,7 @@ function LicenseVerification() {
                       </Label>
                       <Textarea
                         id='verification-notes'
-                        placeholder={t(
-                          'staffCustomers.placeholders.licenseNotes'
-                        )}
+                        placeholder={t('staffCustomers.license.licenseNotes')}
                         value={verificationNotes}
                         onChange={e => setVerificationNotes(e.target.value)}
                       />

@@ -66,6 +66,7 @@ const DocumentVerification = () => {
     documentType: 'ALL',
   });
   const [searchTerm, setSearchTerm] = useState('');
+  const [filteredDocuments, setFilteredDocuments] = useState([]);
 
   useEffect(() => {
     fetchDocuments();
@@ -136,7 +137,7 @@ const DocumentVerification = () => {
       }
       grouped[userId].documents.push(doc);
     });
-
+    setFilteredDocuments(result);
     setGroupedDocuments(grouped);
   };
 

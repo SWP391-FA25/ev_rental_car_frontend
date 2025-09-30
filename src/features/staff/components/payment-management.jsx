@@ -539,20 +539,23 @@ function ProcessPayments() {
         <CardHeader>
           <CardTitle>Pending & Failed Payments</CardTitle>
           <CardDescription>
-            Payments that require attention or retry
+            {t('staffPayments.process.subtitle')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Payment ID</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Failure Reason</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className='text-right'>Actions</TableHead>
+                <TableHead>{t('staffPayments.table.paymentId')}</TableHead>
+                <TableHead>{t('staffPayments.table.customer')}</TableHead>
+                <TableHead>{t('staffPayments.table.amount')}</TableHead>
+                <TableHead>{t('staffPayments.table.status')}</TableHead>
+                <TableHead>{t('staffPayments.table.failureReason')}</TableHead>
+                <TableHead>{t('staffPayments.table.date')}</TableHead>
+                <TableHead className='text-right'>
+                  {' '}
+                  {t('staffPayments.table.actions')}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -576,19 +579,21 @@ function ProcessPayments() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align='end' className='z-50'>
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuLabel>
+                          {t('staffPayments.menu.actions')}
+                        </DropdownMenuLabel>
                         <DropdownMenuItem>
                           <RefreshCw className='mr-2 h-4 w-4' />
-                          Retry Payment
+                          {t('staffPayments.menu.retryPayment')}
                         </DropdownMenuItem>
                         <DropdownMenuItem>
                           <CreditCard className='mr-2 h-4 w-4' />
-                          Manual Payment
+                          {t('staffPayments.menu.manualPayment')}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem>
                           <Ban className='mr-2 h-4 w-4' />
-                          Cancel Payment
+                          {t('staffPayments.menu.cancelPayment')}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -826,7 +831,7 @@ function BillingIssues() {
           <DialogTrigger asChild>
             <Button>
               <Plus className='mr-2 h-4 w-4' />
-              Report Issue
+              {t('staffPayments.issues.reportIssue')}
             </Button>
           </DialogTrigger>
           <DialogContent className='sm:max-w-[500px]'>

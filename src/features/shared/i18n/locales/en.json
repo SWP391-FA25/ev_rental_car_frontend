@@ -269,6 +269,13 @@
       "actions": "Actions",
       "failureReason": "Failure Reason"
     },
+    "methods": {
+      "cash": "Cash",
+      "creditCard": "Credit Card",
+      "debitCard": "Debit Card",
+      "bankTransfer": "Bank Transfer",
+      "digitalWallet": "Digital Wallet"
+    },
     "menu": {
       "actions": "Actions",
       "viewDetails": "View Details",
@@ -572,7 +579,8 @@
       "confirmTerms": "Customer confirmed terms and conditions",
       "complete": "Complete Check-in",
       "empty": "No customers pending check-in.",
-      "emptySearch": "No customers found matching your search."
+      "emptySearch": "No customers found matching your search.",
+      "checkinNotes": "Add notes about the check-in process..."
     },
     "license": {
       "title": "License Verification",
@@ -585,7 +593,8 @@
       "viewUploaded": "View Uploaded License",
       "notes": "Verification Notes",
       "approve": "Approve License",
-      "reject": "Reject License"
+      "reject": "Reject License",
+      "licenseNotes": "Add notes about the license verification..."
     },
     "support": {
       "searchPlaceholder": "Search customers...",
