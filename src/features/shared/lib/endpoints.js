@@ -8,13 +8,13 @@ export const endpoints = {
     logout: () => '/api/auth/logout',
     me: () => '/api/auth/me',
   },
-  staff: {
+  staffs: {
     getAll: () => '/api/staffs',
-    getById: id => `/api/staff/${id}`,
-    create: () => '/api/staff',
-    update: id => `/api/staff/${id}`,
-    softDelete: id => `/api/staff/${id}/soft-delete`,
-    delete: id => `/api/staff/${id}`,
+    getById: id => `/api/staffs/${id}`,
+    create: () => '/api/staffs',
+    update: id => `/api/staffs/${id}`,
+    softDelete: id => `/api/staffs/${id}/soft-delete`,
+    delete: id => `/api/staffs/${id}`,
   },
   stations: {
     getAll: () => '/api/stations',
@@ -23,6 +23,9 @@ export const endpoints = {
     update: id => `/api/stations/${id}`,
     delete: id => `/api/stations/${id}`,
     softDelete: id => `/api/stations/soft-delete/${id}`,
+    getUnavailable: () => '/api/stations/unavailable',
+    getVehicles: stationId => `/api/stations/${stationId}/vehicles`,
+    getStaff: stationId => `/api/stations/${stationId}/staff`,
   },
   vehicles: {
     getAll: () => '/api/vehicles',
@@ -46,10 +49,25 @@ export const endpoints = {
   renters: {
     getAll: () => '/api/renters',
     getById: id => `/api/renters/${id}`,
-    create: () => '/api/renters',
     update: id => `/api/renters/${id}`,
-    softDelete: id => `/api/renters/${id}/soft-delete`,
-    delete: id => `/api/renters/${id}`,
-    updatePassword: id => `/api/renters/${id}/password`,
+    delete: id => `/api/renters/${id}`
+  },
+  promotions: {
+    getAll: () => '/api/promotions',
+    getById: id => `/api/promotions/${id}`,
+    getByCode: code => `/api/promotions/code/${code}`,
+    getActive: () => '/api/promotions/active',
+    create: () => '/api/promotions',
+    update: id => `/api/promotions/${id}`,
+    delete: id => `/api/promotions/${id}`,
+  },
+  assignments: {
+    getAll: () => '/api/assignments',
+    getById: id => `/api/assignments/${id}`,
+    getByStaffId: staffId => `/api/assignments/staff/${staffId}`,
+    create: () => '/api/assignments',
+    update: id => `/api/assignments/${id}`,
+    delete: id => `/api/assignments/${id}`,
+    getUnassignedStaff: () => '/api/assignments/unassigned-staff',
   },
 };

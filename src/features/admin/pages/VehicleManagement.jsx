@@ -46,7 +46,7 @@ import {
   TableRow,
 } from '../../shared/components/ui/table';
 import { apiClient } from '../../shared/lib/apiClient';
-import { VehicleDetails } from '../components/VehicleDetails';
+import { VehicleDetails } from '../components/vehicle/VehicleDetails';
 
 // Vehicle status options
 const VEHICLE_STATUS = [

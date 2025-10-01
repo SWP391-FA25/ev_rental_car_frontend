@@ -1,22 +1,25 @@
-import React, { useState, useEffect } from 'react';
 import {
-  Upload,
-  FileText,
-  Calendar,
-  CheckCircle,
-  XCircle,
-  Eye,
-  Trash2,
   AlertCircle,
+  AlertTriangle,
+  CheckCircle,
+  Eye,
+  FileText,
+  Trash2,
+  Upload,
+  XCircle,
 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '../../shared/components/ui/button';
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from '../../shared/components/ui/card';
+import { Input } from '../../shared/components/ui/input';
+import { Label } from '../../shared/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -24,9 +27,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../shared/components/ui/select';
-import { Input } from '../../shared/components/ui/input';
-import { Label } from '../../shared/components/ui/label';
-import { toast } from 'sonner';
 import documentService from '../../shared/services/documentService';
 
 const DocumentUpload = () => {
@@ -243,6 +243,18 @@ const DocumentUpload = () => {
         </p>
       </div>
 
+      {/* Notice Banner */}
+      <div className='bg-red-50 border border-red-200 rounded-lg p-4 mb-6'>
+        <div className='flex items-start gap-3'>
+          <AlertTriangle className='h-5 w-5 text-red-600 mt-0.5 flex-shrink-0' />
+          <p className='text-red-800 text-sm'>
+            <strong>Lưu ý:</strong> để tránh phát sinh vấn đề trong quá trình
+            thuê xe, người đặt xe trên EV Rental (đã xác thực GPLX) ĐỒNG THỜI
+            phải là người nhận xe.
+          </p>
+        </div>
+      </div>
+
       {/* Upload Form */}
       <Card>
         <CardHeader>
@@ -254,12 +266,15 @@ const DocumentUpload = () => {
             Please upload clear images or PDFs of your identification documents
           </CardDescription>
         </CardHeader>
+
         <CardContent>
           <form onSubmit={handleUpload} className='space-y-6'>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
               <div className='space-y-4'>
                 <div>
-                  <Label htmlFor='documentType'>Document Type *</Label>
+                  <Label className='mb-2' htmlFor='documentType'>
+                    Document Type *
+                  </Label>
                   <Select
                     value={uploadData.documentType}
                     onValueChange={value =>
@@ -287,7 +302,9 @@ const DocumentUpload = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor='documentNumber'>Document Number</Label>
+                  <Label className='mb-2' htmlFor='documentNumber'>
+                    Document Number
+                  </Label>
                   <Input
                     id='documentNumber'
                     placeholder='Enter document number'
@@ -299,7 +316,9 @@ const DocumentUpload = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor='expiryDate'>Expiry Date</Label>
+                  <Label className='mb-2' htmlFor='expiryDate'>
+                    Expiry Date
+                  </Label>
                   <Input
                     id='expiryDate'
                     type='date'
@@ -311,7 +330,13 @@ const DocumentUpload = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor='document'>Document File *</Label>
+                  <Label
+                    className='mb-2
+                  '
+                    htmlFor='document'
+                  >
+                    Document File *
+                  </Label>
                   <Input
                     id='document'
                     type='file'
@@ -329,7 +354,12 @@ const DocumentUpload = () => {
               </div>
 
               <div>
-                <Label>Preview</Label>
+                <Label
+                  className='mb-2
+                '
+                >
+                  Preview
+                </Label>
                 <div className='border-2 border-dashed border-muted rounded-lg p-4 h-64 flex items-center justify-center'>
                   {previewUrl ? (
                     <img
