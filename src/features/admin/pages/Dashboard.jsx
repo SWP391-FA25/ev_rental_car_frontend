@@ -50,28 +50,43 @@ export default function Dashboard() {
           <div className='rounded-lg border bg-card p-6'>
             <h3 className='text-lg font-semibold mb-4'>Recent User Activity</h3>
             <div className='space-y-3'>
+              {/* Newest user registration (createdAt mới nhất) */}
               <div className='flex items-center gap-3'>
                 <div className='h-2 w-2 rounded-full bg-green-500'></div>
                 <span className='text-sm text-muted-foreground'>
-                  New user registration: Sarah Johnson
+                  {userData && userData.length > 0 && userData.some(u => u.createdAt)
+                    ? (() => {
+                      const newest = [...userData]
+                        .filter(u => u.createdAt)
+                        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                      return newest.length > 0
+                        ? `New user registration: ${newest[0].header}`
+                        : 'New user registration: ...';
+                    })()
+                    : 'New user registration: ...'}
                 </span>
               </div>
+              {/* Most recently updated account */}
               <div className='flex items-center gap-3'>
                 <div className='h-2 w-2 rounded-full bg-blue-500'></div>
                 <span className='text-sm text-muted-foreground'>
-                  Account upgraded: John Smith → Premium
+                  {userData && userData.length > 0 && userData.some(u => u.updatedAt)
+                    ? (() => {
+                      const updated = [...userData]
+                        .filter(u => u.updatedAt)
+                        .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+                      return updated.length > 0
+                        ? `Account updated: ${updated[0].header}`
+                        : 'Account updated: ...';
+                    })()
+                    : 'Account updated: ...'}
                 </span>
               </div>
+              {/* Account suspended (giữ nguyên) */}
               <div className='flex items-center gap-3'>
                 <div className='h-2 w-2 rounded-full bg-orange-500'></div>
                 <span className='text-sm text-muted-foreground'>
                   Account suspended: Mike Chen
-                </span>
-              </div>
-              <div className='flex items-center gap-3'>
-                <div className='h-2 w-2 rounded-full bg-purple-500'></div>
-                <span className='text-sm text-muted-foreground'>
-                  Password reset requested: Emma Wilson
                 </span>
               </div>
             </div>
