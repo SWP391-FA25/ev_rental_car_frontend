@@ -50,7 +50,8 @@ export const endpoints = {
     getAll: () => '/api/renters',
     getById: id => `/api/renters/${id}`,
     update: id => `/api/renters/${id}`,
-    delete: id => `/api/renters/${id}`
+    delete: id => `/api/renters/${id}`,
+    create: () => '/api/renters',
   },
   promotions: {
     getAll: () => '/api/promotions',
