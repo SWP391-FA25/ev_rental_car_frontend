@@ -1,4 +1,5 @@
 import { ArrowLeft } from 'lucide-react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Button } from '../../shared/components/ui/button';
@@ -13,62 +14,9 @@ import { Input } from '../../shared/components/ui/input';
 import { Label } from '../../shared/components/ui/label';
 import { apiClient } from '../../shared/lib/apiClient';
 import { endpoints } from '../../shared/lib/endpoints';
-import { useErrorHandler } from '../../shared/hooks/useErrorHandler';
-import {
-  CommonSchemas,
-  useFormValidation,
-  ValidationRules,
-  ValidationSchema,
-} from '../../shared/services/validationService';
-
-// Custom signup validation schema
-const signupSchema = new ValidationSchema({
-  firstName: [
-    ValidationRules.name.required,
-    ValidationRules.name.minLength(2),
-    ValidationRules.name.maxLength(50),
-  ],
-  lastName: [
-    ValidationRules.name.required,
-    ValidationRules.name.minLength(2),
-    ValidationRules.name.maxLength(50),
-  ],
-  email: [ValidationRules.email.required, ValidationRules.email.format],
-  password: [
-    ValidationRules.password.required,
-    ValidationRules.password.minLength(8),
-    ValidationRules.password.strength,
-  ],
-  confirmPassword: [
-    ValidationRules.password.required,
-    (value, allData) => {
-      if (value !== allData.password) {
-        return 'Passwords do not match';
-      }
-      return null;
-    },
-  ],
-  phone: [ValidationRules.phone.format], // Optional field
-});
 
 export default function SignUp() {
-  const navigate = useNavigate();
-
-  // Use error handler
-  const { handleFormSubmit, isLoading } = useErrorHandler({
-    showToast: true,
-    redirectOnAuth: false,
-  });
-
-  // Use form validation
-  const {
-    data: formData,
-    errors,
-    setValue,
-    setTouched,
-    validateAll,
-    reset,
-  } = useFormValidation(signupSchema, {
+  const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
@@ -77,62 +25,49 @@ export default function SignUp() {
     company: '',
     phone: '',
   });
-
-  // Handle input changes
-  const handleChange = e => {
-    const { name, value } = e.target;
-    setValue(name, value);
-  };
-
-  // Handle input blur for validation
-  const handleBlur = e => {
-    const { name } = e.target;
-    setTouched(name);
-  };
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   const handleSubmit = async e => {
     e.preventDefault();
 
-    // Validate form first
-    if (!validateAll()) {
+    if (formData.password !== formData.confirmPassword) {
+      toast.error('Passwords do not match', {
+        position: 'top-right',
+        autoClose: 2000,
+      });
       return;
     }
-
     try {
-      await handleFormSubmit(async () => {
-        const payload = {
-          email: formData.email,
-          password: formData.password,
-          name: `${formData.firstName} ${formData.lastName}`.trim(),
-          phone: formData.phone || undefined,
-          // optional fields you might add to UI later
-          license: undefined,
-          address: formData.company || undefined,
-        };
-
-        const res = await apiClient.post(endpoints.auth.register(), payload);
-
-        if (!res?.success) {
-          throw new Error(res?.message || 'Signup failed');
+      const payload = {
+        email: formData.email,
+        password: formData.password,
+        name: `${formData.firstName} ${formData.lastName}`.trim(),
+        phone: formData.phone || undefined,
+        // optional fields you might add to UI later
+        license: undefined,
+        address: formData.company || undefined,
+      };
+      const res = await apiClient.post(endpoints.auth.register(), payload);
+      if (!res?.success) throw new Error(res?.message || 'Signup failed');
+      toast.success(
+        `Account created successfully! Welcome, ${formData.firstName}!`,
+        {
+          position: 'top-right',
+          autoClose: 4000,
         }
-
-        toast.success(
-          `Account created successfully! Welcome, ${formData.firstName}!`,
-          {
-            position: 'top-right',
-            autoClose: 4000,
-          }
-        );
-
-        reset(); // Clear form on success
-        navigate('/login');
-
-        return res;
-      });
-    } catch (error) {
-      // Error is already handled by handleFormSubmit
-      console.log('Signup failed:', error.message);
+      );
+      navigate('/login');
+    } catch (err) {
+      setError(err?.message || 'Signup failed');
     }
+  };
+
+  const handleChange = e => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
   };
 
   return (
@@ -171,13 +106,8 @@ export default function SignUp() {
                     placeholder='John'
                     value={formData.firstName}
                     onChange={handleChange}
-                    onBlur={handleBlur}
-                    className={errors.firstName ? 'border-red-500' : ''}
                     required
                   />
-                  {errors.firstName && (
-                    <p className='text-sm text-red-500'>{errors.firstName}</p>
-                  )}
                 </div>
                 <div className='space-y-2'>
                   <Label htmlFor='lastName'>Last Name</Label>
@@ -188,13 +118,8 @@ export default function SignUp() {
                     placeholder='Doe'
                     value={formData.lastName}
                     onChange={handleChange}
-                    onBlur={handleBlur}
-                    className={errors.lastName ? 'border-red-500' : ''}
                     required
                   />
-                  {errors.lastName && (
-                    <p className='text-sm text-red-500'>{errors.lastName}</p>
-                  )}
                 </div>
               </div>
 
@@ -207,13 +132,8 @@ export default function SignUp() {
                   placeholder='john@company.com'
                   value={formData.email}
                   onChange={handleChange}
-                  onBlur={handleBlur}
-                  className={errors.email ? 'border-red-500' : ''}
                   required
                 />
-                {errors.email && (
-                  <p className='text-sm text-red-500'>{errors.email}</p>
-                )}
               </div>
 
               <div className='space-y-2'>
@@ -238,12 +158,7 @@ export default function SignUp() {
                   placeholder='+1 (555) 123-4567'
                   value={formData.phone}
                   onChange={handleChange}
-                  onBlur={handleBlur}
-                  className={errors.phone ? 'border-red-500' : ''}
                 />
-                {errors.phone && (
-                  <p className='text-sm text-red-500'>{errors.phone}</p>
-                )}
               </div>
 
               <div className='space-y-2'>
@@ -255,13 +170,8 @@ export default function SignUp() {
                   placeholder='Create a strong password'
                   value={formData.password}
                   onChange={handleChange}
-                  onBlur={handleBlur}
-                  className={errors.password ? 'border-red-500' : ''}
                   required
                 />
-                {errors.password && (
-                  <p className='text-sm text-red-500'>{errors.password}</p>
-                )}
               </div>
 
               <div className='space-y-2'>
@@ -273,15 +183,8 @@ export default function SignUp() {
                   placeholder='Confirm your password'
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  onBlur={handleBlur}
-                  className={errors.confirmPassword ? 'border-red-500' : ''}
                   required
                 />
-                {errors.confirmPassword && (
-                  <p className='text-sm text-red-500'>
-                    {errors.confirmPassword}
-                  </p>
-                )}
               </div>
 
               <div className='flex items-center space-x-2'>
@@ -299,8 +202,8 @@ export default function SignUp() {
                 </Label>
               </div>
 
-              <Button type='submit' className='w-full' disabled={isLoading}>
-                {isLoading ? 'Creating Account...' : 'Create Account'}
+              <Button type='submit' className='w-full'>
+                Create Account
               </Button>
             </form>
 
@@ -315,6 +218,11 @@ export default function SignUp() {
                 </Link>
               </p>
             </div>
+            {error && (
+              <div className='mt-2 text-center text-red-500 text-sm'>
+                {error}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

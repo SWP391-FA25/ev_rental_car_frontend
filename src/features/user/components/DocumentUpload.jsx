@@ -27,12 +27,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../shared/components/ui/select';
-import { useApi } from '../../shared/hooks/useApi';
-import { endpoints } from '../../shared/lib/endpoints';
+import documentService from '../../shared/services/documentService';
 
 const DocumentUpload = () => {
-  const { get, post, del, loading } = useApi();
   const [documents, setDocuments] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [uploadData, setUploadData] = useState({
@@ -48,13 +47,13 @@ const DocumentUpload = () => {
 
   const fetchUserDocuments = async () => {
     try {
-      const response = await get(endpoints.documents.myDocuments());
+      const response = await documentService.getUserDocuments();
       if (response.success) {
         setDocuments(response.data);
       }
     } catch (error) {
-      // Error already handled by useApi
-      console.error('Failed to fetch documents:', error.message);
+      console.error('Error fetching documents:', error);
+      toast.error('Failed to fetch documents');
     }
   };
 
@@ -130,6 +129,8 @@ const DocumentUpload = () => {
     }
 
     try {
+      setLoading(true);
+
       const formData = new FormData();
       formData.append('document', selectedFile);
       formData.append('documentType', uploadData.documentType);
@@ -142,9 +143,7 @@ const DocumentUpload = () => {
         formData.append('expiryDate', uploadData.expiryDate);
       }
 
-      const response = await post(endpoints.documents.upload(), formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const response = await documentService.uploadDocument(formData);
 
       if (response.success) {
         toast.success('Document uploaded successfully');
@@ -156,28 +155,33 @@ const DocumentUpload = () => {
           documentNumber: '',
           expiryDate: '',
         });
-        setErrors({});
         // Refresh documents list
         fetchUserDocuments();
+      } else {
+        throw new Error(response.message);
       }
     } catch (error) {
-      // Error already handled by useApi
-      console.error('Upload error:', error.message);
+      console.error('Upload error:', error);
+      toast.error(error.message || 'Failed to upload document');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDelete = async documentId => {
     try {
-      const response = await del(endpoints.documents.delete(documentId));
+      const response = await documentService.deleteDocument(documentId);
 
       if (response.success) {
         toast.success('Document deleted successfully');
         // Refresh documents list
         fetchUserDocuments();
+      } else {
+        throw new Error(response.message);
       }
     } catch (error) {
-      // Error already handled by useApi
-      console.error('Delete error:', error.message);
+      console.error('Delete error:', error);
+      toast.error(error.message || 'Failed to delete document');
     }
   };
 

@@ -3,12 +3,8 @@ import { Input } from '@/features/shared/components/ui/input';
 import { Label } from '@/features/shared/components/ui/label';
 import { Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'react-toastify';
-import { useApi } from '../../shared/hooks/useApi';
-import { endpoints } from '../../shared/lib/endpoints';
 
 export default function ChangePassword() {
-  const { post, loading } = useApi();
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -21,17 +17,13 @@ export default function ChangePassword() {
     confirm: false,
   });
 
-  const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
       [field]: value,
     }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: null }));
-    }
   };
 
   const togglePasswordVisibility = field => {
@@ -41,54 +33,43 @@ export default function ChangePassword() {
     }));
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!formData.currentPassword) {
-      newErrors.currentPassword = 'Current password is required';
-    }
-
-    if (!formData.newPassword) {
-      newErrors.newPassword = 'New password is required';
-    } else if (formData.newPassword.length < 8) {
-      newErrors.newPassword = 'Password must be at least 8 characters';
-    }
-
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
-    } else if (formData.newPassword !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handleSubmit = async e => {
     e.preventDefault();
+    setIsLoading(true);
 
-    if (!validateForm()) {
+    // Validation
+    if (formData.newPassword !== formData.confirmPassword) {
+      alert('Mật khẩu mới và xác nhận mật khẩu không khớp');
+      setIsLoading(false);
+      return;
+    }
+
+    if (formData.newPassword.length < 6) {
+      alert('Mật khẩu mới phải có ít nhất 6 ký tự');
+      setIsLoading(false);
       return;
     }
 
     try {
-      const response = await post(endpoints.auth.changePassword(), {
+      // TODO: Implement API call to change password
+      console.log('Changing password:', {
         currentPassword: formData.currentPassword,
         newPassword: formData.newPassword,
       });
 
-      if (response?.success) {
-        toast.success('Password changed successfully!');
-        setFormData({
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: '',
-        });
-        setErrors({});
-      }
-    } catch (error) {
-      // Error already handled by useApi
-      console.error('Failed to change password:', error.message);
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      alert('Đổi mật khẩu thành công!');
+      setFormData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+    } catch {
+      alert('Có lỗi xảy ra khi đổi mật khẩu');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -128,14 +109,9 @@ export default function ChangePassword() {
                   handleInputChange('currentPassword', e.target.value)
                 }
                 placeholder='Nhập mật khẩu hiện tại'
-                className={`pr-10 ${errors.currentPassword ? 'border-red-500' : ''}`}
+                className='pr-10'
                 required
               />
-              {errors.currentPassword && (
-                <p className='text-sm text-red-500 mt-1'>
-                  {errors.currentPassword}
-                </p>
-              )}
               <button
                 type='button'
                 onClick={() => togglePasswordVisibility('current')}
@@ -165,14 +141,9 @@ export default function ChangePassword() {
                 value={formData.newPassword}
                 onChange={e => handleInputChange('newPassword', e.target.value)}
                 placeholder='Nhập mật khẩu mới'
-                className={`pr-10 ${errors.newPassword ? 'border-red-500' : ''}`}
+                className='pr-10'
                 required
               />
-              {errors.newPassword && (
-                <p className='text-sm text-red-500 mt-1'>
-                  {errors.newPassword}
-                </p>
-              )}
               <button
                 type='button'
                 onClick={() => togglePasswordVisibility('new')}
@@ -204,14 +175,9 @@ export default function ChangePassword() {
                   handleInputChange('confirmPassword', e.target.value)
                 }
                 placeholder='Nhập lại mật khẩu mới'
-                className={`pr-10 ${errors.confirmPassword ? 'border-red-500' : ''}`}
+                className='pr-10'
                 required
               />
-              {errors.confirmPassword && (
-                <p className='text-sm text-red-500 mt-1'>
-                  {errors.confirmPassword}
-                </p>
-              )}
               <button
                 type='button'
                 onClick={() => togglePasswordVisibility('confirm')}
@@ -228,8 +194,8 @@ export default function ChangePassword() {
 
           {/* Submit Button */}
           <div className='flex justify-end pt-4'>
-            <Button type='submit' disabled={loading} className='px-8'>
-              {loading ? 'Đang xử lý...' : 'Xác nhận'}
+            <Button type='submit' disabled={isLoading} className='px-8'>
+              {isLoading ? 'Đang xử lý...' : 'Xác nhận'}
             </Button>
           </div>
         </form>

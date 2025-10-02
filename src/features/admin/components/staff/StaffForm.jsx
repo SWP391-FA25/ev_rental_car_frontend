@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+
 import {
   Dialog,
   DialogContent,
@@ -28,11 +30,26 @@ export function StaffForm({ open, onOpenChange, onSubmit, loading = false }) {
     address: '',
     accountStatus: 'ACTIVE',
   });
-  const [errors, setErrors] = useState({});
 
-  useEffect(() => {
-    if (!open) {
-      // Reset form when dialog closes
+  const handleSubmit = async e => {
+    e.preventDefault();
+
+    // Basic validation
+    if (!formData.name.trim()) {
+      toast.error('Name is required');
+      return;
+    }
+    if (!formData.email.trim()) {
+      toast.error('Email is required');
+      return;
+    }
+    if (!formData.password.trim()) {
+      toast.error('Password is required');
+      return;
+    }
+
+    try {
+      await onSubmit(formData);
       setFormData({
         name: '',
         email: '',
@@ -41,50 +58,10 @@ export function StaffForm({ open, onOpenChange, onSubmit, loading = false }) {
         address: '',
         accountStatus: 'ACTIVE',
       });
-      setErrors({});
-    }
-  }, [open]);
-
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Invalid email format';
-    }
-
-    if (!formData.password.trim()) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
-    }
-
-    if (formData.phone && !/^0\d{9}$/.test(formData.phone)) {
-      newErrors.phone = 'Phone must be 10 digits starting with 0';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async e => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
-    try {
-      await onSubmit(formData);
       onOpenChange(false);
     } catch (error) {
-      // Error already handled by parent component
-      console.error('Error submitting staff form:', error.message);
+      // Error handling is done in parent component
+      console.log(error);
     }
   };
 
@@ -93,10 +70,6 @@ export function StaffForm({ open, onOpenChange, onSubmit, loading = false }) {
       ...prev,
       [field]: value,
     }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: null }));
-    }
   };
 
   return (
@@ -118,14 +91,9 @@ export function StaffForm({ open, onOpenChange, onSubmit, loading = false }) {
                 id='name'
                 value={formData.name}
                 onChange={e => handleInputChange('name', e.target.value)}
-                className={`col-span-3 ${errors.name ? 'border-red-500' : ''}`}
+                className='col-span-3'
                 placeholder='Enter full name'
               />
-              {errors.name && (
-                <p className='col-start-2 col-span-3 text-sm text-red-500'>
-                  {errors.name}
-                </p>
-              )}
             </div>
             <div className='grid grid-cols-4 items-center gap-4'>
               <Label htmlFor='email' className='text-right'>
@@ -136,14 +104,9 @@ export function StaffForm({ open, onOpenChange, onSubmit, loading = false }) {
                 type='email'
                 value={formData.email}
                 onChange={e => handleInputChange('email', e.target.value)}
-                className={`col-span-3 ${errors.email ? 'border-red-500' : ''}`}
+                className='col-span-3'
                 placeholder='Enter email address'
               />
-              {errors.email && (
-                <p className='col-start-2 col-span-3 text-sm text-red-500'>
-                  {errors.email}
-                </p>
-              )}
             </div>
             <div className='grid grid-cols-4 items-center gap-4'>
               <Label htmlFor='password' className='text-right'>
@@ -154,14 +117,9 @@ export function StaffForm({ open, onOpenChange, onSubmit, loading = false }) {
                 type='password'
                 value={formData.password}
                 onChange={e => handleInputChange('password', e.target.value)}
-                className={`col-span-3 ${errors.password ? 'border-red-500' : ''}`}
+                className='col-span-3'
                 placeholder='Enter password'
               />
-              {errors.password && (
-                <p className='col-start-2 col-span-3 text-sm text-red-500'>
-                  {errors.password}
-                </p>
-              )}
             </div>
             <div className='grid grid-cols-4 items-center gap-4'>
               <Label htmlFor='phone' className='text-right'>
@@ -171,14 +129,9 @@ export function StaffForm({ open, onOpenChange, onSubmit, loading = false }) {
                 id='phone'
                 value={formData.phone}
                 onChange={e => handleInputChange('phone', e.target.value)}
-                className={`col-span-3 ${errors.phone ? 'border-red-500' : ''}`}
+                className='col-span-3'
                 placeholder='Enter phone number (0xxxxxxxxx)'
               />
-              {errors.phone && (
-                <p className='col-start-2 col-span-3 text-sm text-red-500'>
-                  {errors.phone}
-                </p>
-              )}
             </div>
             <div className='grid grid-cols-4 items-center gap-4'>
               <Label htmlFor='address' className='text-right'>

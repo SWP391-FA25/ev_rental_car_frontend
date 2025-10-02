@@ -7,7 +7,6 @@ export const endpoints = {
     login: () => '/api/auth/login',
     logout: () => '/api/auth/logout',
     me: () => '/api/auth/me',
-    changePassword: () => '/api/auth/change-password',
   },
   staffs: {
     getAll: () => '/api/staffs',
@@ -53,7 +52,6 @@ export const endpoints = {
     update: id => `/api/renters/${id}`,
     delete: id => `/api/renters/${id}`,
     create: () => '/api/renters',
-    softDelete: id => `/api/renters/${id}/soft-delete`,
   },
   promotions: {
     getAll: () => '/api/promotions',

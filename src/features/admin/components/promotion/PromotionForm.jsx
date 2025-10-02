@@ -117,8 +117,7 @@ export function PromotionForm({
       await onSubmit(submitData);
       onOpenChange(false);
     } catch (error) {
-      // Error already handled by parent component
-      console.error('Error submitting promotion:', error.message);
+      console.error('Error submitting promotion:', error);
     }
   };
 

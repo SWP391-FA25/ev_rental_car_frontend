@@ -1,98 +1,122 @@
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { apiClient } from '../../shared/lib/apiClient';
 import { endpoints } from '../../shared/lib/endpoints';
-import { useApi } from '../../shared/hooks/useApi';
 
 export function usePromotion() {
   const [promotions, setPromotions] = useState([]);
-  const { get, post, put, del, loading } = useApi();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const fetchPromotions = async () => {
     try {
-      const response = await get(endpoints.promotions.getAll());
+      setLoading(true);
+      setError(null);
+      const response = await apiClient.get(endpoints.promotions.getAll());
       setPromotions(response.data.promotions || []);
     } catch (err) {
-      // Error already handled by useApi
-      console.error('Failed to fetch promotions:', err.message);
+      setError(err.message || 'Failed to fetch promotions');
+      console.error('Error fetching promotions:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchActivePromotions = async () => {
     try {
-      const response = await get(endpoints.promotions.getActive());
+      setLoading(true);
+      setError(null);
+      const response = await apiClient.get(endpoints.promotions.getActive());
       return response.data.promotions || [];
     } catch (err) {
-      console.error('Failed to fetch active promotions:', err.message);
-      return [];
+      setError(err.message || 'Failed to fetch active promotions');
+      console.error('Error fetching active promotions:', err);
+      throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
   const getPromotionById = async id => {
     try {
-      const response = await get(endpoints.promotions.getById(id));
+      setLoading(true);
+      setError(null);
+      const response = await apiClient.get(endpoints.promotions.getById(id));
       return response.data.promotion;
     } catch (err) {
-      console.error('Failed to fetch promotion:', err.message);
+      setError(err.message || 'Failed to fetch promotion');
+      console.error('Error fetching promotion:', err);
       throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
   const getPromotionByCode = async code => {
     try {
-      const response = await get(endpoints.promotions.getByCode(code));
+      setLoading(true);
+      setError(null);
+      const response = await apiClient.get(
+        endpoints.promotions.getByCode(code)
+      );
       return response.data.promotion;
     } catch (err) {
-      console.error('Failed to fetch promotion by code:', err.message);
-      return null;
+      setError(err.message || 'Failed to fetch promotion by code');
+      console.error('Error fetching promotion by code:', err);
+      throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
   const createPromotion = async promotionData => {
     try {
-      const response = await post(
+      setLoading(true);
+      setError(null);
+      const response = await apiClient.post(
         endpoints.promotions.create(),
         promotionData
       );
-      
-      if (response.success) {
-        toast.success('Promotion created successfully');
-        setPromotions(prev => [response.data.promotion, ...prev]);
-        return response.data.promotion;
-      }
+      setPromotions(prev => [response.data.promotion, ...prev]);
+      return response.data.promotion;
     } catch (err) {
-      // Error already handled by useApi
+      setError(err.message || 'Failed to create promotion');
       throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
   const updatePromotion = async (id, promotionData) => {
     try {
-      const response = await put(
+      setLoading(true);
+      setError(null);
+      const response = await apiClient.put(
         endpoints.promotions.update(id),
         promotionData
       );
-      
-      if (response.success) {
-        toast.success('Promotion updated successfully');
-        setPromotions(prev =>
-          prev.map(p => (p.id === id ? response.data.promotion : p))
-        );
-        return response.data.promotion;
-      }
+      setPromotions(prev =>
+        prev.map(p => (p.id === id ? response.data.promotion : p))
+      );
+      return response.data.promotion;
     } catch (err) {
-      // Error already handled by useApi
+      setError(err.message || 'Failed to update promotion');
       throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
   const deletePromotion = async id => {
     try {
-      await del(endpoints.promotions.delete(id));
+      setLoading(true);
+      setError(null);
+      await apiClient.delete(endpoints.promotions.delete(id));
       setPromotions(prev => prev.filter(p => p.id !== id));
-      toast.success('Promotion deleted successfully');
     } catch (err) {
-      // Error already handled by useApi
+      setError(err.message || 'Failed to delete promotion');
       throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -103,6 +127,7 @@ export function usePromotion() {
   return {
     promotions,
     loading,
+    error,
     fetchPromotions,
     fetchActivePromotions,
     getPromotionById,

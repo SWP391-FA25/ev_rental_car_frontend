@@ -7,7 +7,6 @@ import React, {
 } from 'react';
 import { apiClient } from '../../features/shared/lib/apiClient';
 import { endpoints } from '../../features/shared/lib/endpoints';
-import { handleApiError } from '../../features/shared/lib/handleApiError';
 
 const authContext = createContext();
 
@@ -30,12 +29,7 @@ export default function AuthProvider({ children }) {
         const s = getStorage();
         s.setItem('user', JSON.stringify(res.data.user));
       }
-    } catch (error) {
-      // Handle error silently for auth verification
-      handleApiError(error, {
-        showToast: false, // Don't show toast for auth verification failures
-        logError: false, // Don't log auth verification failures
-      });
+    } catch {
       // not logged in or server error; keep user as null
       setUser(null);
     } finally {
