@@ -91,7 +91,8 @@ export function StationForm({ station, onSubmit, onCancel, loading = false }) {
 
       await onSubmit(submitData);
     } catch (error) {
-      console.error('Form submission error:', error);
+      // Error already handled by parent component
+      console.error('Form submission error:', error.message);
     }
   };
 

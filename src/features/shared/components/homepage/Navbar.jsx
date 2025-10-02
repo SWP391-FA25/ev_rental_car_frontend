@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { apiClient } from '../../lib/apiClient';
 import { endpoints } from '../../lib/endpoints';
+import { useApi } from '../../hooks/useApi';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Button } from '../ui/button';
 import {
@@ -22,6 +22,7 @@ export default function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { post } = useApi({ showToast: false }); // Silent API calls for logout
   const [menuOpen, setMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
@@ -43,9 +44,10 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
-      await apiClient.post(endpoints.auth.logout());
-    } catch {
-      // ignore error; proceed to clear local state
+      await post(endpoints.auth.logout());
+    } catch (error) {
+      // Silently handle error; proceed to clear local state
+      console.error('Logout API call failed:', error.message);
     } finally {
       logout();
       toast.success('Logged out successfully', {

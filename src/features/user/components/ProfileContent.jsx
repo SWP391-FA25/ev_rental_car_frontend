@@ -1,5 +1,6 @@
 import { Briefcase, Edit, Star } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'react-toastify';
 import {
   Avatar,
   AvatarFallback,
@@ -8,10 +9,11 @@ import {
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
 import { Input } from '../../shared/components/ui/input';
-import { apiClient } from '../../shared/lib/apiClient';
+import { useApi } from '../../shared/hooks/useApi';
 import { endpoints } from '../../shared/lib/endpoints';
 
 export default function ProfileContent({ user }) {
+  const { get, post, del, loading } = useApi();
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isEditingLicense, setIsEditingLicense] = useState(false);
   const [profileData, setProfileData] = useState({
@@ -30,22 +32,18 @@ export default function ProfileContent({ user }) {
   const [licenseFile, setLicenseFile] = useState(null);
   const [cccdImage, setCccdImage] = useState(null);
   const [cccdFile, setCccdFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const [documents, setDocuments] = useState([]);
-  const [loadingDocs, setLoadingDocs] = useState(false);
 
   const fetchDocuments = async () => {
     try {
-      setLoadingDocs(true);
-      const res = await apiClient.get(endpoints.documents.myDocuments());
+      const res = await get(endpoints.documents.myDocuments());
       if (res?.success && Array.isArray(res.data)) {
         setDocuments(res.data);
       }
     } catch (err) {
-      // ignore for now
-    } finally {
-      setLoadingDocs(false);
+      // Error already handled by useApi
+      console.error('Failed to fetch documents:', err.message);
     }
   };
 
@@ -53,11 +51,13 @@ export default function ProfileContent({ user }) {
     try {
       // If there is an uploaded doc on server, delete it
       if (licenseDoc?.id) {
-        await apiClient.delete(endpoints.documents.delete(licenseDoc.id));
+        await del(endpoints.documents.delete(licenseDoc.id));
+        toast.success('License deleted successfully');
         await fetchDocuments();
       }
     } catch (err) {
-      // ignore
+      // Error already handled by useApi
+      console.error('Failed to delete license:', err.message);
     } finally {
       // Clear local preview/state regardless
       setUploadedImage(null);
@@ -68,11 +68,13 @@ export default function ProfileContent({ user }) {
   const handleDeleteCccd = async () => {
     try {
       if (idCardDoc?.id) {
-        await apiClient.delete(endpoints.documents.delete(idCardDoc.id));
+        await del(endpoints.documents.delete(idCardDoc.id));
+        toast.success('ID card deleted successfully');
         await fetchDocuments();
       }
     } catch (err) {
-      // ignore
+      // Error already handled by useApi
+      console.error('Failed to delete ID card:', err.message);
     } finally {
       setCccdImage(null);
       setCccdFile(null);
@@ -148,9 +150,11 @@ export default function ProfileContent({ user }) {
       documentNumber,
       expiryDate,
     });
-    if (!file) return { success: false, message: 'No file selected' };
+    if (!file) {
+      setUploadError('No file selected');
+      return { success: false, message: 'No file selected' };
+    }
     try {
-      setUploading(true);
       setUploadError('');
       const form = new FormData();
       form.append('document', file);
@@ -168,17 +172,21 @@ export default function ProfileContent({ user }) {
         console.log(key, value);
       }
 
-      const res = await apiClient.post(endpoints.documents.upload(), form, {
+      const res = await post(endpoints.documents.upload(), form, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       console.log('API response:', res);
+      
+      if (res?.success) {
+        toast.success('Document uploaded successfully');
+      }
+      
       return res;
     } catch (err) {
+      // Error already handled by useApi
       console.error('Upload error:', err);
       setUploadError(err?.message || 'Upload failed');
       return { success: false, message: err?.message };
-    } finally {
-      setUploading(false);
     }
   };
 

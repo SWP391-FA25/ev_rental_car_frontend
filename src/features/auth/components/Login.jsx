@@ -1,6 +1,5 @@
 import { useAuth } from '@/app/providers/AuthProvider';
 import { ArrowLeft } from 'lucide-react';
-import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Button } from '../../shared/components/ui/button';
@@ -15,48 +14,75 @@ import { Input } from '../../shared/components/ui/input';
 import { Label } from '../../shared/components/ui/label';
 import { apiClient } from '../../shared/lib/apiClient';
 import { endpoints } from '../../shared/lib/endpoints';
+import { useErrorHandler } from '../../shared/hooks/useErrorHandler';
+import {
+  CommonSchemas,
+  useFormValidation,
+} from '../../shared/services/validationService';
 
 export default function Login() {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
-  const [error, setError] = useState(null);
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  // Use error handler
+  const { handleFormSubmit, isLoading } = useErrorHandler({
+    showToast: true,
+    redirectOnAuth: false, // Don't redirect on auth errors for login page
+  });
+
+  // Use form validation
+  const {
+    data: formData,
+    errors,
+    setValue,
+    setTouched,
+    validateAll,
+    reset,
+  } = useFormValidation(CommonSchemas.login, {
+    email: '',
+    password: '',
+  });
+
   const handleSubmit = async e => {
     e.preventDefault();
-    setError(null);
-    try {
-      const res = await apiClient.post(endpoints.auth.login(), formData);
-      if (res?.success && res?.data?.user) {
-        const user = res.data.user;
-        login(user);
-        toast.success('Logged in successfully', {
-          position: 'top-center',
-          autoClose: 2000,
-        });
-        if (user?.role === 'ADMIN') {
-          navigate('/admin');
-        } else if (user?.role === 'STAFF') {
-          navigate('/staff');
-        } else {
-          navigate('/user');
-        }
-      } else {
-        setError(res?.message || 'Login failed');
-      }
-    } catch (err) {
-      setError(err?.message || 'An error occurred. Please try again.');
-    }
-  };
 
-  const handleChange = e => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    // Validate form first
+    if (!validateAll()) {
+      return;
+    }
+
+    try {
+      await handleFormSubmit(async () => {
+        const res = await apiClient.post(endpoints.auth.login(), formData);
+
+        if (res?.success && res?.data?.user) {
+          const user = res.data.user;
+          login(user);
+          toast.success('Logged in successfully', {
+            position: 'top-center',
+            autoClose: 2000,
+          });
+
+          // Navigate based on user role
+          if (user?.role === 'ADMIN') {
+            navigate('/admin');
+          } else if (user?.role === 'STAFF') {
+            navigate('/staff');
+          } else {
+            navigate('/user');
+          }
+
+          reset(); // Clear form on success
+        } else {
+          throw new Error(res?.message || 'Login failed');
+        }
+
+        return res;
+      });
+    } catch (error) {
+      // Error is already handled by handleFormSubmit
+      console.log('Login failed:', error.message);
+    }
   };
 
   return (
@@ -81,37 +107,38 @@ export default function Login() {
             <CardTitle className='text-2xl font-bold'>Welcome Back</CardTitle>
             <CardDescription>Sign in to your Ev Rental account</CardDescription>
           </CardHeader>
-          {error && (
-            <CardDescription className='text-red-500 text-center'>
-              {error}
-            </CardDescription>
-          )}
           <CardContent>
             <form onSubmit={handleSubmit} className='space-y-4'>
               <div className='space-y-2'>
                 <Label htmlFor='email'>Email</Label>
                 <Input
                   id='email'
-                  name='email'
                   type='email'
                   placeholder='Enter your email'
                   value={formData.email}
-                  onChange={handleChange}
-                  required
+                  onChange={e => setValue('email', e.target.value)}
+                  onBlur={() => setTouched('email')}
+                  className={errors.email ? 'border-destructive' : ''}
                 />
+                {errors.email && (
+                  <p className='text-sm text-destructive'>{errors.email}</p>
+                )}
               </div>
 
               <div className='space-y-2'>
                 <Label htmlFor='password'>Password</Label>
                 <Input
                   id='password'
-                  name='password'
                   type='password'
                   placeholder='Enter your password'
                   value={formData.password}
-                  onChange={handleChange}
-                  required
+                  onChange={e => setValue('password', e.target.value)}
+                  onBlur={() => setTouched('password')}
+                  className={errors.password ? 'border-destructive' : ''}
                 />
+                {errors.password && (
+                  <p className='text-sm text-destructive'>{errors.password}</p>
+                )}
               </div>
 
               <div className='flex items-center justify-between'>
@@ -133,8 +160,8 @@ export default function Login() {
                 </Link>
               </div>
 
-              <Button type='submit' className='w-full'>
-                Sign In
+              <Button type='submit' className='w-full' disabled={isLoading}>
+                {isLoading ? 'Signing In...' : 'Sign In'}
               </Button>
             </form>
 

@@ -1,6 +1,17 @@
 import { apiClient } from '../lib/apiClient';
 import { endpoints } from '../lib/endpoints';
 
+/**
+ * Document Service
+ * 
+ * NOTE: This service is being migrated to use useApi hook pattern.
+ * For new components, prefer using useApi hook directly instead of this service.
+ * This service is kept for backward compatibility with existing components.
+ * 
+ * Migration Guide:
+ * Instead of: await documentService.uploadDocument(formData)
+ * Use: const { post } = useApi(); await post(endpoints.documents.upload(), formData)
+ */
 class DocumentService {
   /**
    * Upload a document
