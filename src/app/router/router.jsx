@@ -7,6 +7,7 @@ import StationManagement from '@/features/admin/pages/StationManagement.jsx';
 import UserManagement from '@/features/admin/pages/UserManagement.jsx';
 import Login from '@/features/auth/components/Login.jsx';
 import SignUp from '@/features/auth/components/SignUp.jsx';
+import VerifyEmail from '@/features/auth/components/VerifyEmail.jsx';
 import CarDetailPage from '@/features/cars/components/CarDetailPage.jsx';
 import CarsPage from '@/features/cars/components/CarsPage.jsx';
 import Home from '@/features/shared/components/Home.jsx';
@@ -26,6 +27,7 @@ export const router = createBrowserRouter([
   { path: '/policy', element: <PolicyPage /> },
   { path: '/login', element: <Login /> },
   { path: '/signup', element: <SignUp /> },
+  { path: '/verify-email', element: <VerifyEmail /> },
   {
     path: '/admin',
     element: (
