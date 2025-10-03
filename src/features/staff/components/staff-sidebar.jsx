@@ -146,6 +146,11 @@ const data = {
           url: '#',
           description: 'Document and manage incidents',
         },
+        {
+          title: 'Notifications',
+          url: '/notifications',
+          description: 'View and manage notifications',
+        },
       ],
     },
     {

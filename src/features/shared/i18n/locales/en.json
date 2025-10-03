@@ -150,6 +150,68 @@
     "support": "Support",
     "alerts": "Alerts"
   },
+  "staff": {
+    "notifications": {
+      "title": "Notification Preferences",
+      "description": "Customize how you receive notifications",
+      "channels": "Notification Channels",
+      "categories": "Notification Categories",
+      "email": "Email Notifications",
+      "emailDesc": "Receive notifications via email",
+      "sms": "SMS Notifications",
+      "smsDesc": "Receive urgent notifications via SMS",
+      "inApp": "In-App Notifications",
+      "inAppDesc": "Show notifications within the application",
+      "booking": "Booking Notifications",
+      "bookingDesc": "Notify for new bookings and changes",
+      "maintenance": "Maintenance Alerts",
+      "maintenanceDesc": "Notify for vehicle/station maintenance issues",
+      "payment": "Payment Notifications",
+      "paymentDesc": "Notify for payment confirmations and issues",
+      "document": "Document Verification",
+      "documentDesc": "Notify when documents need verification",
+      "save": "Save Preferences",
+      "preferencesSaved": "Notification preferences saved successfully"
+    }
+  },
+  "admin": {
+    "notifications": {
+      "title": "Notification Management",
+      "description": "Manage and monitor all system notifications",
+      "broadcast": "Broadcast Notification",
+      "broadcastTitle": "Broadcast System Notification",
+      "broadcastDescription": "Send a notification to all users in the system",
+      "create": "Create Notification",
+      "createTitle": "Create New Notification",
+      "createDescription": "Send a notification to a specific user",
+      "notificationsList": "Notifications List",
+      "search": "Search notifications...",
+      "filterType": "Filter by type",
+      "filterPriority": "Filter by priority",
+      "user": "User",
+      "titleField": "Title",
+      "messageField": "Message",
+      "type": "Type",
+      "priority": "Priority",
+      "date": "Date",
+      "actions": "Actions",
+      "selectUser": "Select a user",
+      "send": "Send Notification",
+      "previous": "Previous",
+      "next": "Next",
+      "pageInfo": "Page {{current}} of {{total}}",
+      "noNotifications": "No notifications found",
+      "noFilteredNotifications": "No notifications match your search or filters",
+      "noNotificationsDefault": "There are no notifications in the system yet",
+      "fetchError": "Failed to fetch notifications",
+      "createSuccess": "Notification created successfully",
+      "createError": "Failed to create notification",
+      "broadcastSuccess": "Notification broadcast successfully",
+      "broadcastError": "Failed to broadcast notification",
+      "deleteSuccess": "Notification deleted successfully",
+      "deleteError": "Failed to delete notification"
+    }
+  },
   "common": {
     "english": "English",
     "vietnamese": "Vietnamese",
@@ -367,321 +429,319 @@
       "staff": "Staff Members",
       "admins": "Admins"
     },
-    "messages": {
-      "loading": "Loading staff...",
-      "errorGeneric": "Error",
-      "noStaff": "No staff found.",
-      "suspended": "Staff suspended successfully.",
-      "errorSuspend": "Failed to suspend staff.",
-      "deleted": "Staff deleted successfully.",
-      "errorDelete": "Failed to delete staff.",
-      "unassigned": "Staff unassigned successfully.",
-      "errorUnassign": "Failed to unassign staff.",
-      "staffCreated": "Staff created successfully.",
-      "errorCreate": "Failed to create staff.",
-      "staffUpdated": "Staff updated successfully.",
-      "errorUpdate": "Failed to update staff."
+    "process": {
+      "title": "Process Manual Payment",
+      "subtitle": "Process payments manually for cash transactions or payment corrections",
+      "bookingCustomer": "Booking/Customer",
+      "bookingPlaceholder": "Select booking for payment",
+      "notes": "Payment Notes"
     },
-    "dialogs": {
-      "suspend": {
-        "title": "Suspend Staff",
-        "description": "Are you sure you want to suspend this staff?",
-        "confirm": "Suspend",
-        "cancel": "Cancel"
+    "pending": {
+      "title": "Pending & Failed Payments",
+      "subtitle": "Payments that require attention or retry"
+    },
+    "refunds": {
+      "title": "Process Refund",
+      "subtitle": "Issue refunds for completed payments and booking cancellations",
+      "selectPayment": "Select Payment to Refund",
+      "paymentPlaceholder": "Choose payment for refund",
+      "amount": "Refund Amount",
+      "type": "Refund Type",
+      "typePlaceholder": "Select refund type",
+      "types": {
+        "full": "Full Refund",
+        "partial": "Partial Refund",
+        "adjustment": "Billing Adjustment"
       },
-      "delete": {
-        "title": "Delete Staff",
-        "description": "Are you sure you want to delete this staff permanently?",
-        "confirm": "Delete",
-        "cancel": "Cancel"
+      "reason": "Refund Reason"
+    },
+    "history": {
+      "title": "Refund History",
+      "subtitle": "Recent refunds and their processing status",
+      "refundId": "Refund ID",
+      "originalAmount": "Original Amount",
+      "refundAmount": "Refund Amount",
+      "reason": "Reason",
+      "processedBy": "Processed By"
+    },
+    "issues": {
+      "title": "Billing Issues",
+      "subtitle": "Track and resolve payment disputes and billing problems",
+      "reportIssue": "Report Issue",
+      "dialog": {
+        "title": "Report Billing Issue",
+        "subtitle": "Create a new billing issue report for investigation",
+        "issueType": "Issue Type",
+        "issueTypePlaceholder": "Select issue type",
+        "priority": "Priority",
+        "priorityPlaceholder": "Select priority",
+        "description": "Description",
+        "descriptionPlaceholder": "Describe the billing issue in detail...",
+        "create": "Create Issue"
       },
-      "unassign": {
-        "title": "Unassign Staff",
-        "description": "Are you sure you want to unassign this staff from the station?",
-        "confirm": "Unassign",
-        "cancel": "Cancel"
-      }
-    }
-  },
-  "staffDetails": {
-    "title": "Staff Details",
-    "description": "View and manage staff account information",
-    "basicInfo": "Basic Information",
-    "name": "Name",
-    "email": "Email",
-    "phone": "Phone",
-    "role": "Role",
-    "address": "Address",
-    "accountStatus": "Account Status",
-    "status": "Status",
-    "timeline": "Account Timeline",
-    "createdAt": "Created At",
-    "updatedAt": "Last Updated",
-    "buttons": {
-      "close": "Close",
-      "edit": "Edit Staff",
-      "cancel": "Cancel",
-      "save": "Save Changes",
-      "saving": "Saving..."
-    },
-    "statusOptions": {
-      "active": "Active",
-      "suspended": "Suspended",
-      "banned": "Banned",
-      "staff": "Staff",
-      "admin": "Admin"
-    }
-  },
-  "staffForm": {
-    "title": "Add New Staff",
-    "description": "Create a new staff account. All fields marked with * are required.",
-    "fields": {
-      "name": "Name *",
-      "email": "Email *",
-      "password": "Password *",
-      "phone": "Phone",
-      "address": "Address",
-      "status": "Status"
-    },
-    "placeholders": {
-      "name": "Enter full name",
-      "email": "Enter email address",
-      "password": "Enter password",
-      "phone": "Enter phone number (0xxxxxxxxx)",
-      "address": "Enter address",
-      "status": "Select status"
-    },
-    "buttons": {
-      "cancel": "Cancel",
-      "create": "Create Staff",
-      "creating": "Creating..."
-    },
-    "statusOptions": {
-      "active": "Active",
-      "suspended": "Suspended",
-      "banned": "Banned"
-    },
-    "validation": {
-      "nameRequired": "Name is required",
-      "emailRequired": "Email is required",
-      "passwordRequired": "Password is required"
-    }
-  },
-  "station": {
-    "management": {
-      "title": "Station Management",
-      "subtitle": "Manage charging stations and their information",
-      "add": "Add Station",
-      "addNew": "Add New Station",
-      "addDescription": "Create a new charging station",
-      "noContact": "No contact",
-      "slots": "Slots",
-      "filters": {
-        "search": "Search stations...",
-        "status": "Status",
-        "all": "All"
+      "types": {
+        "paymentFailed": "Payment Failed",
+        "billingDispute": "Billing Dispute",
+        "overcharge": "Overcharge",
+        "duplicateCharge": "Duplicate Charge",
+        "refundRequest": "Refund Request"
+      },
+      "priority": {
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low"
       },
       "table": {
-        "name": "Name",
-        "location": "Location",
-        "address": "Address",
-        "capacity": "Capacity",
-        "vehicles": "Vehicles",
-        "staff": "Staff",
-        "status": "Status",
-        "actions": "Actions"
-      },
-      "actions": {
-        "view": "View Details",
-        "assign": "Assign Staff",
-        "delete": "Delete"
-      },
-      "confirmDelete": {
-        "title": "Deactivate Station",
-        "description": "Are you sure you want to delete this station? This will make it unavailable for new bookings.",
-        "confirm": "Delete",
-        "cancel": "Cancel"
-      },
-      "summary": {
-        "totalStations": "Total Stations",
-        "active": "Active",
-        "maintenance": "Maintenance",
-        "capacity": "Total Capacity"
-      },
-      "assignDialog": {
-        "title": "Assign Staff to Station",
-        "description": "Assign a staff member to {{stationName}}"
-      },
-      "messages": {
-        "loading": "Loading stations...",
-        "loadFailed": "Failed to load stations",
-        "createSuccess": "Station created successfully",
-        "createFailed": "Failed to create station",
-        "updateSuccess": "Station updated successfully",
-        "updateFailed": "Failed to update station",
-        "deleteSuccess": "Station deactivated successfully",
-        "deleteFailed": "Failed to deactivate station"
+        "issueId": "Issue ID",
+        "type": "Type",
+        "priority": "Priority",
+        "description": "Description",
+        "assignedTo": "Assigned To"
       }
     },
-    "form": {
-      "name": "Station Name",
-      "location": "Location",
-      "address": "Full Address",
-      "status": {
-        "label": "Status",
-        "active": "Active",
-        "inactive": "Inactive",
-        "maintenance": "Maintenance"
-      },
-      "capacity": "Capacity",
-      "contact": "Contact Information",
-      "cancel": "Cancel",
-      "create": "Create Station",
-      "update": "Update Station",
-      "saving": "Saving...",
-      "placeholders": {
-        "name": "e.g., Central Station",
-        "status": "Select status",
-        "capacity": "e.g., 10",
-        "contact": "e.g., +84 123 456 789 or email@example.com",
-        "address": "Enter the complete address of the station"
-      },
-      "errors": {
-        "nameRequired": "Station name is required",
-        "locationRequired": "Location is required",
-        "addressRequired": "Address is required",
-        "capacityInvalid": "Capacity must be a positive number",
-        "statusRequired": "Status is required"
-      }
+    "common": {
+      "amount": "Amount",
+      "method": "Payment Method"
     },
-    "details": {
-      "title": "Station Details",
-      "edit": "Edit Station",
-      "info": "Information",
-      "vehicles": "Vehicles",
-      "staff": "Assigned Staff",
-      "emptyVehicles": "No vehicles assigned to this station",
-      "emptyStaff": "No staff assigned to this station",
-      "close": "Close"
+    "placeholders": {
+      "amount": "Enter amount",
+      "method": "Select payment method",
+      "notes": "Add any notes about this payment...",
+      "refundAmount": "Enter refund amount",
+      "refundReason": "Explain the reason for this refund..."
+    },
+    "actions": {
+      "processPayment": "Process Payment",
+      "processRefund": "Process Refund"
     }
   },
-  "vehicle": {
-    "title": "Vehicle Management",
-    "subtitle": "Manage fleet vehicles and their information",
-    "actions": {
-      "add": "Add Vehicle",
-      "create": "Create Vehicle",
-      "update": "Update Vehicle",
-      "cancel": "Cancel",
-      "delete": "Delete",
-      "viewDetails": "View Details"
+  "staffStations": {
+    "title": "Station Management",
+    "subtitle": "Monitor station operations, charging infrastructure, and maintenance",
+    "tabs": {
+      "overview": "Station Overview",
+      "charging": "Charging Ports",
+      "maintenance": "Maintenance"
     },
-    "dialogs": {
-      "create": {
-        "title": "Add New Vehicle",
-        "description": "Create a new vehicle in the fleet"
-      },
-      "edit": {
-        "title": "Edit Vehicle",
-        "description": "Update vehicle information"
-      },
-      "delete": {
-        "title": "Delete Vehicle",
-        "description": "Are you sure you want to permanently delete this vehicle? This action cannot be undone and will delete all associated images."
-      }
+    "overview": {
+      "parkingCapacity": "Parking Capacity",
+      "activePorts": "Active Ports",
+      "amenities": "Amenities",
+      "staffOnDuty": "Staff on Duty",
+      "operatingHours": "Operating Hours"
     },
-    "fields": {
-      "station": "Station",
-      "stationPlaceholder": "Select station",
-      "type": "Type",
-      "typePlaceholder": "Select type",
-      "brand": "Brand",
-      "brandPlaceholder": "e.g., Tesla",
-      "model": "Model",
-      "modelPlaceholder": "e.g., Model 3",
-      "year": "Year",
-      "yearPlaceholder": "2024",
-      "color": "Color",
-      "colorPlaceholder": "e.g., White",
-      "seats": "Seats",
-      "seatsPlaceholder": "5",
-      "licensePlate": "License Plate",
-      "licensePlatePlaceholder": "ABC-123",
-      "batteryLevel": "Battery Level (%)",
-      "batteryLevelPlaceholder": "85",
-      "fuelType": "Fuel Type",
-      "fuelTypePlaceholder": "Select fuel type",
-      "status": "Status",
-      "statusPlaceholder": "Select status"
-    },
-    "table": {
-      "image": "Image",
-      "brandModel": "Brand/Model",
-      "type": "Type",
-      "licensePlate": "License Plate",
-      "station": "Station",
-      "year": "Year",
-      "fuelType": "Fuel Type",
-      "battery": "Battery",
-      "status": "Status",
-      "actions": "Actions",
-      "na": "N/A"
+    "charging": {
+      "selectStation": "Select station",
+      "allStations": "All Stations",
+      "port": "Port #",
+      "power": "Power",
+      "currentUser": "Current User",
+      "estimatedCompletion": "Est. Completion",
+      "resetPort": "Reset Port",
+      "editSettings": "Edit Settings"
     },
     "status": {
-      "all": "All",
+      "active": "Active",
+      "maintenance": "Maintenance",
+      "offline": "Offline"
+    },
+    "portStatus": {
+      "available": "Available",
+      "inUse": "In Use",
+      "faulty": "Faulty"
+    },
+    "maintenance": {
+      "filterByPriority": "Filter by priority",
+      "allPriorities": "All Priorities",
+      "highPriority": "High Priority",
+      "mediumPriority": "Medium Priority",
+      "lowPriority": "Low Priority",
+      "newRequest": "New Request",
+      "dialog": {
+        "title": "Create Maintenance Request",
+        "subtitle": "Report a new maintenance issue for station facilities or equipment.",
+        "type": "Type",
+        "typePlaceholder": "Select type",
+        "priority": "Priority",
+        "priorityPlaceholder": "Select priority",
+        "descriptionPlaceholder": "Describe the issue in detail...",
+        "create": "Create Request"
+      },
+      "types": {
+        "chargingPort": "Charging Port",
+        "facility": "Facility",
+        "lighting": "Lighting",
+        "security": "Security",
+        "cleaning": "Cleaning"
+      },
+      "priority": {
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low"
+      },
+      "table": {
+        "requestId": "Request ID",
+        "assignedTo": "Assigned To"
+      },
+      "editRequest": "Edit Request",
+      "assignTechnician": "Assign Technician",
+      "deleteRequest": "Delete Request"
+    },
+    "common": {
+      "available": "available",
+      "faulty": "Faulty",
+      "station": "Station",
+      "type": "Type",
+      "priority": "Priority",
+      "description": "Description",
+      "status": "Status",
+      "actions": "Actions",
+      "reportIssue": "Report Issue"
+    }
+  },
+  "staffCars": {
+    "title": "Car Management",
+    "subtitle": "Manage vehicle bookings, process drop-offs, and update car status",
+    "tabs": {
+      "bookings": "View Bookings",
+      "dropoff": "Car Drop-off",
+      "status": "Update Status"
+    },
+    "common": {
+      "filterByStatus": "Filter by status",
+      "customer": "Customer",
+      "vehicle": "Vehicle",
+      "duration": "Duration",
+      "status": "Status",
+      "amount": "Amount",
+      "actions": "Actions"
+    },
+    "actions": {
+      "viewDetails": "View Details",
+      "contactCustomer": "Contact Customer",
+      "modifyBooking": "Modify Booking"
+    },
+    "bookings": {
+      "searchPlaceholder": "Search bookings...",
+      "filters": {
+        "all": "All Bookings"
+      },
+      "table": {
+        "bookingId": "Booking ID"
+      }
+    },
+    "bookingStatus": {
+      "active": "Active",
+      "upcoming": "Upcoming",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "dropoff": {
+      "title": "Vehicle Drop-off",
+      "subtitle": "Process vehicle returns and complete rental inspections",
+      "selectActive": "Select Active Booking",
+      "bookingPlaceholder": "Choose a booking to process",
+      "finalMileage": "Final Mileage",
+      "batteryLevel": "Battery Level (%)",
+      "damageAssessment": "Damage Assessment",
+      "inspectionNotes": "Inspection Notes",
+      "completeDropoff": "Complete Drop-off"
+    },
+    "batteryRanges": {
+      "90_100": "90-100%",
+      "80_89": "80-89%",
+      "70_79": "70-79%",
+      "60_69": "60-69%",
+      "50_59": "50-59%",
+      "below50": "Below 50%"
+    },
+    "update": {
+      "battery": "Battery:",
+      "mileage": "Mileage:",
+      "location": "Location:",
+      "updateStatus": "Update Status",
+      "dialogTitle": "Update Car Status",
+      "dialogSubtitle": "Update the status of {{model}} ({{plate}})",
+      "newStatus": "New Status",
+      "notes": "Notes"
+    },
+    "placeholders": {
+      "enterMileage": "Enter current mileage",
+      "selectBattery": "Select battery level",
+      "inspectionNotes": "Additional notes about vehicle condition...",
+      "damageAssessment": "Document any damages or issues found during inspection...",
+      "selectNewStatus": "Select new status",
+      "statusNotes": "Add notes about the status change..."
+    },
+    "carStatus": {
       "available": "Available",
       "rented": "Rented",
       "maintenance": "Maintenance",
+      "charging": "Charging",
       "outOfService": "Out of Service"
-    },
-    "fuel": {
-      "electric": "Electric",
-      "hybrid": "Hybrid"
-    },
-    "types": {
-      "sedan": "Sedan",
-      "suv": "SUV",
-      "hatchback": "Hatchback",
-      "coupe": "Coupe"
-    },
-    "stats": {
-      "total": "Total Vehicles",
-      "available": "Available",
-      "rented": "Rented",
-      "electric": "Electric Vehicles"
-    },
-    "messages": {
-      "loading": "Loading vehicles...",
-      "createSuccess": "Vehicle created successfully",
-      "createFailed": "Failed to create vehicle",
-      "updateSuccess": "Vehicle updated successfully",
-      "updateFailed": "Failed to update vehicle",
-      "deleteSuccess": "Vehicle permanently deleted",
-      "deleteFailed": "Failed to delete vehicle",
-      "loadFailed": "Failed to load vehicles"
-    },
-    "filters": {
-      "searchPlaceholder": "Search vehicles...",
-      "status": "Status"
     }
   },
-  "promotion": {
-    "title": "Promotion Management",
-    "subtitle": "Manage promotional codes and discounts",
-    "add": "Add Promotion",
-    "searchPlaceholder": "Search promotions...",
-    "status": {
+  "notifications": {
+    "title": "Notifications",
+    "description": "You have {{count}} notifications",
+    "markAllAsRead": "Mark all as read",
+    "deleteAll": "Delete all",
+    "search": "Search notifications...",
+    "markAsRead": "Mark as read",
+    "delete": "Delete",
+    "viewAll": "View all notifications",
+    "noNotifications": "No notifications",
+    "selectAll": "Select all",
+    "selected": "{{count}} selected",
+    "expires": "Expires",
+    "filters": {
       "all": "All",
-      "active": "Active",
-      "upcoming": "Upcoming",
-      "expired": "Expired"
+      "read": "Read",
+      "unread": "Unread"
     },
-    "table": {
-      "code": "Code",
-      "description": "Description",
-      "discount": "Discount",
-      "validFrom": "Valid From",
-      "validUntil": "Valid Until",
+    "sort": {
+      "newest": "Newest first",
+      "oldest": "Oldest first",
+      "priority": "By priority"
+    },
+    "types": {
+      "info": "Info",
+      "success": "Success",
+      "warning": "Warning",
+      "error": "Error"
+    },
+    "priority": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High"
+    },
+    "pagination": {
+      "showing": "Showing {{start}} to {{end}} of {{total}} notifications",
+      "page": "Page {{current}} of {{total}}"
+    },
+    "empty": {
+      "title": "No notifications yet",
+      "default": "You don't have any notifications at the moment.",
+      "filtered": "No notifications match your search or filters."
+    }
+  },
+  "staffCustomers": {
+    "title": "Customer Management",
+    "subtitle": "Handle customer check-ins, verify licenses, and provide support",
+    "tabs": {
+      "checkin": "Customer Check-in",
+      "verification": "License Verification",
+      "support": "Customer Support"
+    },
+    "common": {
+      "customer": "Customer",
+      "customerName": "Customer Name",
+      "license": "License",
+      "expiryDate": "Expiry Date",
+      "currentStatus": "Current Status",
+      "uploaded": "Uploaded",
+      "notUploaded": "Not uploaded",
+      "paymentMethod": "Payment Method",
       "status": "Status",
       "uses": "Uses",
       "actions": "Actions",
