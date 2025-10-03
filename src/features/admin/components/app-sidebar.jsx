@@ -72,6 +72,31 @@ const data = {
 
 export function AppSidebar(props) {
   const { user } = useAuth();
+  const { t } = useTranslation();
+
+  // Translate nav items using the correct keys from the locale file
+  const translatedNav = data.navMain.map(item => {
+    // Map the item title to the correct translation key
+    const translationKeyMap = {
+      Dashboard: 'dashboard',
+      'User Management': 'userManagement',
+      'Staff Management': 'staffManagement',
+      'Station Management': 'stationManagement',
+      'Vehicals Management': 'vehiclesManagement',
+      'Promotion Management': 'promotionManagement',
+      'Notification Management': 'notificationManagement', // This key doesn't exist in the locale file
+      Settings: 'settings',
+    };
+
+    const key = translationKeyMap[item.title];
+    // Use the translation if the key exists, otherwise use the original title
+    const translatedTitle = key ? t(`sidebar.${key}`, item.title) : item.title;
+    return {
+      ...item,
+      title: translatedTitle,
+    };
+  });
+
   return (
     <Sidebar collapsible='offcanvas' {...props}>
       <SidebarHeader>

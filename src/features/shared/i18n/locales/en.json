@@ -291,6 +291,7 @@
     "stationManagement": "Station Management",
     "vehiclesManagement": "Vehicle Management",
     "promotionManagement": "Promotion Management",
+    "notificationManagement": "Notification Management",
     "settings": "Settings"
   },
   "userManagement": {
