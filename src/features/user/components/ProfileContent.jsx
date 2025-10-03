@@ -1,5 +1,6 @@
 import { Briefcase, Edit, Star } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Avatar,
   AvatarFallback,
@@ -12,6 +13,7 @@ import { apiClient } from '../../shared/lib/apiClient';
 import { endpoints } from '../../shared/lib/endpoints';
 
 export default function ProfileContent({ user }) {
+  const navigate = useNavigate();
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isEditingLicense, setIsEditingLicense] = useState(false);
   const [profileData, setProfileData] = useState({
@@ -362,12 +364,30 @@ export default function ProfileContent({ user }) {
                     {profileData.email}
                   </span>
                   <div className='flex items-center gap-2'>
-                    <Badge
-                      variant='outline'
-                      className='text-green-600 border-green-200 bg-green-50'
-                    >
-                      Đã xác thực
-                    </Badge>
+                    {user?.verifyStatus === 'VERIFIED' ? (
+                      <Badge
+                        variant='outline'
+                        className='text-green-600 border-green-200 bg-green-50'
+                      >
+                        Đã xác thực
+                      </Badge>
+                    ) : (
+                      <>
+                        <Badge
+                          variant='outline'
+                          className='text-red-600 border-red-200 bg-red-50'
+                        >
+                          Chưa xác thực
+                        </Badge>
+                        <Button
+                          variant='outline'
+                          size='sm'
+                          onClick={() => navigate('/verify-email')}
+                        >
+                          Verify Email
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
