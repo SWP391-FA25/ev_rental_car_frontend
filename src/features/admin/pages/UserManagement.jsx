@@ -1,7 +1,8 @@
 import { FilterIcon, PlusIcon, SearchIcon } from 'lucide-react';
 import { useState } from 'react';
-
 import { MoreVerticalIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
 import { ConfirmDialog } from '../../shared/components/ui/confirm-dialog';
@@ -25,6 +26,7 @@ import { UserForm } from '../components/renter/UserForm';
 import { useUsers } from '../hooks/useUsers';
 
 export default function UserManagement() {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [selectedUserId, setSelectedUserId] = useState(null);
@@ -35,10 +37,8 @@ export default function UserManagement() {
   const [userToSuspend, setUserToSuspend] = useState(null);
   const [userToDelete, setUserToDelete] = useState(null);
 
-  // Use custom hook for user management
   const { users, loading, createUser, suspendUser, deleteUser } = useUsers();
 
-  // Filter users locally
   const filteredUsers = users.filter(user => {
     const matchesSearch =
       user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -52,34 +52,6 @@ export default function UserManagement() {
   const handleViewDetails = userId => {
     setSelectedUserId(userId);
     setIsDetailsOpen(true);
-  };
-
-  const handleUserUpdated = () => {
-    // The hook already handles updating the user list
-    // This is just for any additional UI updates if needed
-  };
-
-  const handleUserCreated = () => {
-    // The hook already handles adding the new user to the list
-    // This is just for any additional UI updates if needed
-  };
-
-  const handleSuspendUser = async userId => {
-    try {
-      await suspendUser(userId);
-    } catch (error) {
-      // Error handling is done in the hook
-      console.error('Error suspending user:', error);
-    }
-  };
-
-  const handleDeleteUser = async userId => {
-    try {
-      await deleteUser(userId);
-    } catch (error) {
-      // Error handling is done in the hook
-      console.error('Error deleting user:', error);
-    }
   };
 
   const getStatusBadgeVariant = status => {
@@ -97,56 +69,57 @@ export default function UserManagement() {
 
   const formatDate = dateString => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
+    return new Date(dateString).toLocaleDateString();
   };
 
   return (
-    <div className='space-y-6'>
+    <div className="space-y-6">
       {/* Header */}
-      <div className='flex items-center justify-between'>
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className='text-3xl font-bold tracking-tight'>User Management</h1>
-          <p className='text-muted-foreground'>
-            Manage user accounts and permissions
+          <h1 className="text-3xl font-bold tracking-tight">
+            {t('userManagement.title')}
+          </h1>
+          <p className="text-muted-foreground">
+            {t('userManagement.description')}
           </p>
         </div>
         <Button onClick={() => setIsCreateFormOpen(true)}>
-          <PlusIcon className='mr-2 h-4 w-4' />
-          Add User
+          <PlusIcon className="mr-2 h-4 w-4" />
+          {t('userManagement.buttons.addUser')}
         </Button>
       </div>
 
       {/* Filters */}
-      <div className='flex items-center space-x-4'>
-        <div className='relative flex-1 max-w-sm'>
-          <SearchIcon className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+      <div className="flex items-center space-x-4">
+        <div className="relative flex-1 max-w-sm">
+          <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder='Search users...'
+            placeholder={t('userManagement.searchPlaceholder')}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className='pl-10'
+            className="pl-10"
           />
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant='outline'>
-              <FilterIcon className='mr-2 h-4 w-4' />
-              Status: {filterStatus === 'all' ? 'All' : filterStatus}
+            <Button variant="outline">
+              <FilterIcon className="mr-2 h-4 w-4" />
+              {t('userManagement.statusLabel')}:{' '}
+              {filterStatus === 'all'
+                ? t('userManagement.statusAll')
+                : filterStatus}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuItem onClick={() => setFilterStatus('all')}>
-              All
+              {t('userManagement.statusAll')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setFilterStatus('active')}>
-              Active
+              {t('userManagement.badges.active')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setFilterStatus('suspended')}>
-              Suspended
+              {t('userManagement.badges.suspended')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setFilterStatus('banned')}>
               Banned
@@ -156,42 +129,40 @@ export default function UserManagement() {
       </div>
 
       {/* Users Table */}
-      <div className='rounded-md border'>
+      <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Join Date</TableHead>
-              <TableHead className='w-[70px]'>Actions</TableHead>
+              <TableHead>{t('userManagement.table.name')}</TableHead>
+              <TableHead>{t('userManagement.table.email')}</TableHead>
+              <TableHead>{t('userManagement.table.phone')}</TableHead>
+              <TableHead>{t('userManagement.table.status')}</TableHead>
+              <TableHead>{t('userManagement.table.joinDate')}</TableHead>
+              <TableHead>{t('userManagement.table.actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className='text-center py-8'>
-                  Loading users...
+                <TableCell colSpan={6} className="text-center py-8">
+                  {t('common.loading')}
                 </TableCell>
               </TableRow>
             ) : filteredUsers.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={6}
-                  className='text-center py-8 text-muted-foreground'
+                  className="text-center py-8 text-muted-foreground"
                 >
-                  No users found
+                  {t('common.noData')}
                 </TableCell>
               </TableRow>
             ) : (
               filteredUsers.map(user => (
                 <TableRow key={user.id}>
-                  <TableCell className='font-medium'>
-                    {user.name || 'N/A'}
-                  </TableCell>
+                  <TableCell className="font-medium">{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.phone || 'N/A'}</TableCell>
+                  <TableCell>{user.phone}</TableCell>
                   <TableCell>
                     <Badge variant={getStatusBadgeVariant(user.accountStatus)}>
                       {user.accountStatus}
@@ -201,33 +172,33 @@ export default function UserManagement() {
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant='ghost' className='h-8 w-8 p-0'>
-                          <MoreVerticalIcon className='h-4 w-4' />
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <MoreVerticalIcon className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align='end'>
+                      <DropdownMenuContent align="end">
                         <DropdownMenuItem
                           onClick={() => handleViewDetails(user.id)}
                         >
-                          View Details
+                          {t('userManagement.action.viewDetails')}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => {
                             setUserToSuspend(user.id);
                             setSuspendDialogOpen(true);
                           }}
-                          className='text-orange-600'
+                          className="text-orange-600"
                         >
-                          Suspend User
+                          {t('userManagement.action.suspend')}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => {
                             setUserToDelete(user.id);
                             setDeleteDialogOpen(true);
                           }}
-                          className='text-red-600'
+                          className="text-red-600"
                         >
-                          Delete User
+                          {t('userManagement.action.delete')}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -239,77 +210,77 @@ export default function UserManagement() {
         </Table>
       </div>
 
-      {/* Summary Stats */}
-      <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-        <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>{users.length}</div>
-          <div className='text-sm text-muted-foreground'>Total Users</div>
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="rounded-lg border p-4">
+          <div className="text-2xl font-bold">{users.length}</div>
+          <div className="text-sm text-muted-foreground">
+            {t('userManagement.stats.totalUsers')}
+          </div>
         </div>
-        <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>
+        <div className="rounded-lg border p-4">
+          <div className="text-2xl font-bold">
             {users.filter(u => u.accountStatus === 'ACTIVE').length}
           </div>
-          <div className='text-sm text-muted-foreground'>Active Users</div>
+          <div className="text-sm text-muted-foreground">
+            {t('userManagement.stats.activeUsers')}
+          </div>
         </div>
-        <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>
+        <div className="rounded-lg border p-4">
+          <div className="text-2xl font-bold">
             {users.filter(u => u.accountStatus === 'SUSPENDED').length}
           </div>
-          <div className='text-sm text-muted-foreground'>Suspended Users</div>
+          <div className="text-sm text-muted-foreground">
+            {t('userManagement.stats.suspendedUsers')}
+          </div>
         </div>
       </div>
 
-      {/* User Details Dialog */}
+      {/* Details */}
       <UserDetails
         isOpen={isDetailsOpen}
-        onClose={() => {
-          setIsDetailsOpen(false);
-          setSelectedUserId(null);
-        }}
+        onClose={() => setIsDetailsOpen(false)}
         userId={selectedUserId}
-        onUserUpdated={handleUserUpdated}
       />
 
-      {/* User Create Form Dialog */}
+      {/* Form */}
       <UserForm
         open={isCreateFormOpen}
         onOpenChange={setIsCreateFormOpen}
-        onUserCreated={handleUserCreated}
         createUser={createUser}
       />
 
-      {/* Suspend User Confirmation Dialog */}
+      {/* Confirm */}
       <ConfirmDialog
         open={suspendDialogOpen}
         onOpenChange={setSuspendDialogOpen}
-        title='Suspend User'
-        description='Are you sure you want to suspend this user? They will not be able to access the system until reactivated.'
+        title={t('common.suspend')}
+        description={t('userManagement.confirmSuspend')}
         onConfirm={() => {
           if (userToSuspend) {
-            handleSuspendUser(userToSuspend);
+            suspendUser(userToSuspend);
             setUserToSuspend(null);
           }
         }}
-        confirmText='Suspend'
-        cancelText='Cancel'
-        confirmVariant='destructive'
+        confirmText={t('common.suspend')}
+        cancelText={t('common.cancel')}
+        confirmVariant="destructive"
       />
 
-      {/* Delete User Confirmation Dialog */}
       <ConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        title='Delete User'
-        description='Are you sure you want to permanently delete this user? This action cannot be undone and will remove all user data.'
+        title={t('common.delete')}
+        description={t('userManagement.confirmDelete')}
         onConfirm={() => {
           if (userToDelete) {
-            handleDeleteUser(userToDelete);
+            deleteUser(userToDelete);
             setUserToDelete(null);
           }
         }}
-        confirmText='Delete'
-        cancelText='Cancel'
-        confirmVariant='destructive'
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
+        confirmVariant="destructive"
       />
     </div>
   );

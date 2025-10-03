@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 import { endpoints } from '../../shared/lib/endpoints';
 import { ChartAreaInteractive } from '../components/chart-area-interactive';
 import { DataTable } from '../components/data-table';
 import { SectionCards } from '../components/section-cards';
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const [userData, setUserData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -32,7 +34,7 @@ export default function Dashboard() {
         setUserData(formatted);
         console.log('Fetched renters for dashboard:', formatted);
       } catch (err) {
-        setError(err.message || 'Failed to fetch users');
+        setError(err.message || t('admin.dashboard.errors.fetchUsers'));
         console.error('Dashboard fetch renters error:', err);
       } finally {
         setLoading(false);
@@ -48,9 +50,9 @@ export default function Dashboard() {
         <ChartAreaInteractive />
         <div className='flex flex-col gap-4'>
           <div className='rounded-lg border bg-card p-6'>
-            <h3 className='text-lg font-semibold mb-4'>Recent User Activity</h3>
+            <h3 className='text-lg font-semibold mb-4'>{t('admin.dashboard.recentUserActivity.title')}</h3>
             <div className='space-y-3'>
-              {/* Newest user registration (createdAt mới nhất) */}
+              {/* Newest user registration */}
               <div className='flex items-center gap-3'>
                 <div className='h-2 w-2 rounded-full bg-green-500'></div>
                 <span className='text-sm text-muted-foreground'>
@@ -60,10 +62,10 @@ export default function Dashboard() {
                         .filter(u => u.createdAt)
                         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
                       return newest.length > 0
-                        ? `New user registration: ${newest[0].header}`
-                        : 'New user registration: ...';
+                        ? t('admin.dashboard.recentUserActivity.newUser', { name: newest[0].header })
+                        : t('admin.dashboard.recentUserActivity.newUserLoading');
                     })()
-                    : 'New user registration: ...'}
+                    : t('admin.dashboard.recentUserActivity.newUserLoading')}
                 </span>
               </div>
               {/* Most recently updated account */}
@@ -76,17 +78,17 @@ export default function Dashboard() {
                         .filter(u => u.updatedAt)
                         .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
                       return updated.length > 0
-                        ? `Account updated: ${updated[0].header}`
-                        : 'Account updated: ...';
+                        ? t('admin.dashboard.recentUserActivity.accountUpdated', { name: updated[0].header })
+                        : t('admin.dashboard.recentUserActivity.accountUpdatedLoading');
                     })()
-                    : 'Account updated: ...'}
+                    : t('admin.dashboard.recentUserActivity.accountUpdatedLoading')}
                 </span>
               </div>
-              {/* Account suspended (giữ nguyên) */}
+              {/* Account suspended */}
               <div className='flex items-center gap-3'>
                 <div className='h-2 w-2 rounded-full bg-orange-500'></div>
                 <span className='text-sm text-muted-foreground'>
-                  Account suspended: Mike Chen
+                  {t('admin.dashboard.recentUserActivity.accountSuspended', { name: 'Mike Chen' })}
                 </span>
               </div>
             </div>
@@ -98,12 +100,12 @@ export default function Dashboard() {
       <div className='rounded-lg border bg-card mx-4 lg:mx-6'>
         <div className='p-6'>
           <h3 className='text-lg font-semibold mb-4'>
-            User Account Management
+            {t('admin.dashboard.userAccountManagement.title')}
           </h3>
           {loading ? (
-            <div className='py-8 text-center'>Loading users...</div>
+            <div className='py-8 text-center'>{t('admin.dashboard.loading')}</div>
           ) : error ? (
-            <div className='py-8 text-center text-red-500'>Error: {error}</div>
+            <div className='py-8 text-center text-red-500'>{t('admin.dashboard.error', { message: error })}</div>
           ) : (
             <DataTable data={userData} />
           )}

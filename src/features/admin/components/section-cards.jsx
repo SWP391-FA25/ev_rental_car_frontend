@@ -1,6 +1,7 @@
 import { TrendingDownIcon, TrendingUpIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 import { endpoints } from '../../shared/lib/endpoints';
 
 import { Badge } from '../../shared/components/ui/badge';
@@ -28,6 +29,7 @@ const formatCount = (value) => {
 
 
 export function SectionCards() {
+  const { t } = useTranslation();
   const [renterCount, setRenterCount] = useState(null);
   const [activeCount, setActiveCount] = useState(null);
   const [updateCount, setUpdateCount] = useState(null); // sẽ bỏ
@@ -216,7 +218,7 @@ export function SectionCards() {
       {/* Total Users */}
       <Card className='@container/card'>
         <CardHeader className='relative'>
-          <CardDescription>Total Users</CardDescription>
+          <CardDescription>{t('admin.dashboard.cards.totalUsers.title')}</CardDescription>
           <CardTitle className='@[250px]/card:text-3xl text-2xl font-semibold tabular-nums'>
             {formatCount(renterCount)}
           </CardTitle>
@@ -230,11 +232,10 @@ export function SectionCards() {
         </CardHeader>
         <CardFooter className='flex-col items-start gap-1 text-sm'>
           <div className='line-clamp-1 flex gap-2 font-medium'>
-            Growing user base <TrendingUpIcon className='size-4' />
-
+            {t('admin.dashboard.cards.totalUsers.subtitle')} <TrendingUpIcon className='size-4' />
           </div>
           <div className='text-muted-foreground'>
-            New users this month: {newThisMonth === null ? '...' : `+${newThisMonth}`}
+            {newThisMonth === null ? '...' : t('admin.dashboard.cards.totalUsers.newUsers', { count: `+${newThisMonth}` })}
           </div>
         </CardFooter>
       </Card>
@@ -242,7 +243,7 @@ export function SectionCards() {
       {/* Active Users */}
       <Card className='@container/card'>
         <CardHeader className='relative'>
-          <CardDescription>Active Users</CardDescription>
+          <CardDescription>{t('admin.dashboard.cards.activeUsers.title')}</CardDescription>
           <CardTitle className='@[250px]/card:text-3xl text-2xl font-semibold tabular-nums'>
             {formatCount(activeCount)}
           </CardTitle>
@@ -257,11 +258,11 @@ export function SectionCards() {
         </CardHeader>
         <CardFooter className='flex-col items-start gap-1 text-sm'>
           <div className='line-clamp-1 flex gap-2 font-medium'>
-            High engagement rate <TrendingUpIcon className='size-4' />
+            {t('admin.dashboard.cards.activeUsers.subtitle')} <TrendingUpIcon className='size-4' />
           </div>
           <div className='text-muted-foreground'>
             {renterCount && activeCount !== null
-              ? `${((activeCount / renterCount) * 100).toFixed(1)}% of users are active`
+              ? t('admin.dashboard.cards.activeUsers.percentage', { percent: ((activeCount / renterCount) * 100).toFixed(1) })
               : '...'}
           </div>
         </CardFooter>
@@ -270,7 +271,7 @@ export function SectionCards() {
       {/* Total Staff */}
       <Card className='@container/card'>
         <CardHeader className='relative'>
-          <CardDescription>Total Staff</CardDescription>
+          <CardDescription>{t('admin.dashboard.cards.totalStaff.title')}</CardDescription>
           <CardTitle className='@[250px]/card:text-3xl text-2xl font-semibold tabular-nums'>
             {formatCount(staffCount)}
           </CardTitle>
@@ -283,10 +284,10 @@ export function SectionCards() {
         </CardHeader>
         <CardFooter className='flex-col items-start gap-1 text-sm'>
           <div className='line-clamp-1 flex gap-2 font-medium'>
-            Growing staff base <TrendingUpIcon className='size-4' />
+            {t('admin.dashboard.cards.totalStaff.subtitle')} <TrendingUpIcon className='size-4' />
           </div>
           <div className='text-muted-foreground'>
-            New staff this month: {newStaffThisMonth === null ? '...' : `+${newStaffThisMonth}`}
+            {newStaffThisMonth === null ? '...' : t('admin.dashboard.cards.totalStaff.newStaff', { count: `+${newStaffThisMonth}` })}
           </div>
         </CardFooter>
       </Card>
@@ -294,11 +295,10 @@ export function SectionCards() {
       {/* Active Staff */}
       <Card className='@container/card'>
         <CardHeader className='relative'>
-          <CardDescription>Active Staff</CardDescription>
+          <CardDescription>{t('admin.dashboard.cards.activeStaff.title')}</CardDescription>
           <CardTitle className='@[250px]/card:text-3xl text-2xl font-semibold tabular-nums'>
-            {formatCount(activeStaffCount)} {/* Đã fix: dùng formatCount để hiển thị 0 hoặc giá trị */}
+            {formatCount(activeStaffCount)}
           </CardTitle>
-          {/* Đã thêm logic hiển thị phần trăm Active Staff */}
           <div className='absolute right-4 top-4'>
             <Badge variant='outline' className='flex gap-1 rounded-lg text-xs'>
               <TrendingUpIcon className='size-3' />
@@ -308,12 +308,11 @@ export function SectionCards() {
         </CardHeader>
         <CardFooter className='flex-col items-start gap-1 text-sm'>
           <div className='line-clamp-1 flex gap-2 font-medium'>
-            Active staff accounts
+            {t('admin.dashboard.cards.activeStaff.subtitle')}
           </div>
-          {/* Thêm mô tả phần trăm Active Staff */}
           <div className='text-muted-foreground'>
             {staffCount && activeStaffCount !== null
-              ? `${activeStaffPercentage}% of staff are active`
+              ? t('admin.dashboard.cards.activeStaff.percentage', { percent: activeStaffPercentage })
               : '...'}
           </div>
         </CardFooter>

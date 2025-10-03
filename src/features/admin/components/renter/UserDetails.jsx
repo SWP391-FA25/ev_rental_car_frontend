@@ -1,4 +1,3 @@
-
 import {
   CalendarIcon,
   MailIcon,
@@ -8,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
 import { Badge } from '../../../shared/components/ui/badge';
 import { Button } from '../../../shared/components/ui/button';
 
@@ -16,7 +16,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-
+  DialogDescription,
+  DialogFooter,
 } from '../../../shared/components/ui/dialog';
 import { Input } from '../../../shared/components/ui/input';
 import { Label } from '../../../shared/components/ui/label';
@@ -38,6 +39,7 @@ export default function UserDetails({
   userId,
   onUserUpdated,
 }) {
+  const { t } = useTranslation();
 
   const [user, setUser] = useState(null);
   const [editMode, setEditMode] = useState(false);
@@ -72,16 +74,12 @@ export default function UserDetails({
     try {
       const res = await apiClient.put(endpoints.renters.update(userId), form);
       setEditMode(false);
-      // cập nhật dữ liệu ngay trên Dashboard
       if (onSaved) {
-        // Nếu API trả về dữ liệu mới, dùng nó, nếu không thì dùng form
-        const updatedUser = res.data?.renter ? {
-          id: userId,
-          ...res.data.renter
-        } : { id: userId, ...form };
+        const updatedUser = res.data?.renter
+          ? { id: userId, ...res.data.renter }
+          : { id: userId, ...form };
         onSaved(updatedUser);
       }
-      // reload user info cho modal
       apiClient.get(endpoints.renters.getById(userId)).then(res => {
         const u = res.data?.renter || null;
         setUser(u);
@@ -107,10 +105,10 @@ export default function UserDetails({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserIcon className="h-5 w-5" />
-            User Details
+            {t('userDetails.title')}
           </DialogTitle>
           <DialogDescription>
-            View and manage user information
+            {t('userDetails.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -128,25 +126,51 @@ export default function UserDetails({
           {/* Info Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label>Name</Label>
-              <Input name="name" value={editMode ? form.name : user.name} onChange={editMode ? handleChange : undefined} readOnly={!editMode} icon={<UserIcon />} />
+              <Label>{t('userDetails.labels.name')}</Label>
+              <Input
+                name="name"
+                value={editMode ? form.name : user.name}
+                onChange={editMode ? handleChange : undefined}
+                readOnly={!editMode}
+                icon={<UserIcon />}
+              />
             </div>
             <div>
-              <Label>Email</Label>
-              <Input name="email" value={editMode ? form.email : user.email} onChange={editMode ? handleChange : undefined} readOnly={!editMode} icon={<MailIcon />} />
-              <p className="text-xs text-muted-foreground">Email cannot be changed</p>
+              <Label>{t('userDetails.labels.email')}</Label>
+              <Input
+                name="email"
+                value={editMode ? form.email : user.email}
+                onChange={editMode ? handleChange : undefined}
+                readOnly={!editMode}
+                icon={<MailIcon />}
+              />
+              <p className="text-xs text-muted-foreground">
+                {t('userDetails.notes.emailCannotChange')}
+              </p>
             </div>
             <div>
-              <Label>Phone</Label>
-              <Input name="phone" value={editMode ? form.phone : user.phone} onChange={editMode ? handleChange : undefined} readOnly={!editMode} icon={<PhoneIcon />} />
+              <Label>{t('userDetails.labels.phone')}</Label>
+              <Input
+                name="phone"
+                value={editMode ? form.phone : user.phone}
+                onChange={editMode ? handleChange : undefined}
+                readOnly={!editMode}
+                icon={<PhoneIcon />}
+              />
             </div>
             <div>
-              <Label>Account Status</Label>
+              <Label>{t('userDetails.labels.status')}</Label>
               <Badge variant="default">{user.accountStatus}</Badge>
             </div>
             <div className="md:col-span-2">
-              <Label>Address</Label>
-              <Input name="address" value={editMode ? form.address : user.address} onChange={editMode ? handleChange : undefined} readOnly={!editMode} icon={<MapPinIcon />} />
+              <Label>{t('userDetails.labels.address')}</Label>
+              <Input
+                name="address"
+                value={editMode ? form.address : user.address}
+                onChange={editMode ? handleChange : undefined}
+                readOnly={!editMode}
+                icon={<MapPinIcon />}
+              />
             </div>
           </div>
         </div>
@@ -154,13 +178,25 @@ export default function UserDetails({
         <DialogFooter>
           {editMode ? (
             <>
-              <Button variant="outline" onClick={() => setEditMode(false)} disabled={loading}>Cancel</Button>
-              <Button onClick={handleSave} disabled={loading}>{loading ? 'Saving...' : 'Save Changes'}</Button>
+              <Button
+                variant="outline"
+                onClick={() => setEditMode(false)}
+                disabled={loading}
+              >
+                {t('userForm.buttons.cancel')}
+              </Button>
+              <Button onClick={handleSave} disabled={loading}>
+                {loading ? t('userDetails.actions.saving') : t('userDetails.actions.save')}
+              </Button>
             </>
           ) : (
             <>
-              <Button variant="outline" onClick={onClose}>Close</Button>
-              <Button onClick={() => setEditMode(true)}>Edit</Button>
+              <Button variant="outline" onClick={onClose}>
+                {t('userDetails.actions.close')}
+              </Button>
+              <Button onClick={() => setEditMode(true)}>
+                {t('userDetails.actions.edit')}
+              </Button>
             </>
           )}
         </DialogFooter>

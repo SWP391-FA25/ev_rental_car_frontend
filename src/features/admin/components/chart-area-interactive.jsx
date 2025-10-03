@@ -28,6 +28,7 @@ import {
   ToggleGroupItem,
 } from '../../shared/components/ui/toggle-group';
 import { useIsMobile } from '../hooks/use-mobile';
+import { useTranslation } from 'react-i18next';
 
 
 const chartConfig = {
@@ -42,6 +43,7 @@ const chartConfig = {
 };
 
 export function ChartAreaInteractive() {
+  const { t } = useTranslation();
   const isMobile = useIsMobile();
   const [timeRange, setTimeRange] = React.useState('30d');
   const [chartData, setChartData] = React.useState([]);
@@ -93,12 +95,12 @@ export function ChartAreaInteractive() {
   return (
     <Card className='@container/card'>
       <CardHeader className='relative'>
-        <CardTitle>User Analytics</CardTitle>
+        <CardTitle>{t('admin.dashboard.userActivity.title')}</CardTitle>
         <CardDescription>
           <span className='@[540px]/card:block hidden'>
-            User activity for the last 3 months
+            {t('admin.dashboard.userActivity.subtitleLong')}
           </span>
-          <span className='@[540px]/card:hidden'>User activity</span>
+          <span className='@[540px]/card:hidden'>{t('admin.dashboard.userActivity.subtitleShort')}</span>
         </CardDescription>
         <div className='absolute right-4 top-4'>
           <ToggleGroup
@@ -109,13 +111,13 @@ export function ChartAreaInteractive() {
             className='@[767px]/card:flex hidden'
           >
             <ToggleGroupItem value='90d' className='h-8 px-2.5'>
-              Last 3 months
+              {t('admin.dashboard.userActivity.filter.last3Months')}
             </ToggleGroupItem>
             <ToggleGroupItem value='30d' className='h-8 px-2.5'>
-              Last 30 days
+              {t('admin.dashboard.userActivity.filter.last30Days')}
             </ToggleGroupItem>
             <ToggleGroupItem value='7d' className='h-8 px-2.5'>
-              Last 7 days
+              {t('admin.dashboard.userActivity.filter.last7Days')}
             </ToggleGroupItem>
           </ToggleGroup>
           <Select value={timeRange} onValueChange={setTimeRange}>
@@ -123,17 +125,17 @@ export function ChartAreaInteractive() {
               className='@[767px]/card:hidden flex w-40'
               aria-label='Select a value'
             >
-              <SelectValue placeholder='Last 3 months' />
+              <SelectValue placeholder={t('admin.dashboard.userActivity.filter.last3Months')} />
             </SelectTrigger>
             <SelectContent className='rounded-xl'>
               <SelectItem value='90d' className='rounded-lg'>
-                Last 3 months
+                {t('admin.dashboard.userActivity.filter.last3Months')}
               </SelectItem>
               <SelectItem value='30d' className='rounded-lg'>
-                Last 30 days
+                {t('admin.dashboard.userActivity.filter.last30Days')}
               </SelectItem>
               <SelectItem value='7d' className='rounded-lg'>
-                Last 7 days
+                {t('admin.dashboard.userActivity.filter.last7Days')}
               </SelectItem>
             </SelectContent>
           </Select>

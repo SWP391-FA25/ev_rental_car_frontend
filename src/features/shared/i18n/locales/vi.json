@@ -156,460 +156,633 @@
     "close": "Đóng",
     "cancel": "Hủy"
   },
-  "staffDocuments": {
-    "title": "Xác minh tài liệu",
-    "subtitle": "Xem xét và xác minh tài liệu người dùng để xác thực tài khoản",
-    "filters": {
-      "title": "Bộ lọc",
-      "search": "Tìm kiếm",
-      "searchPlaceholder": "Tìm theo tên, email hoặc loại tài liệu...",
+  "admin": {
+    "header": {
+      "title": "Bảng điều khiển quản trị"
+    },
+    "dashboard": {
+      "loading": "Đang tải người dùng...",
+      "error": "Lỗi: {{message}}",
+      "cards": {
+        "totalUsers": {
+          "title": "Tổng số Người dùng",
+          "subtitle": "Số lượng người dùng đang tăng",
+          "newUsers": "Người dùng mới trong tháng: {{count}}"
+        },
+        "activeUsers": {
+          "title": "Người dùng Hoạt động",
+          "subtitle": "Tỷ lệ tương tác cao",
+          "percentage": "{{percent}} người dùng đang hoạt động"
+        },
+        "totalStaff": {
+          "title": "Tổng số Nhân viên",
+          "subtitle": "Số lượng nhân viên đang tăng",
+          "newStaff": "Nhân viên mới trong tháng: {{count}}"
+        },
+        "activeStaff": {
+          "title": "Nhân viên Hoạt động",
+          "subtitle": "Tài khoản nhân viên đang hoạt động",
+          "percentage": "{{percent}} nhân viên đang hoạt động"
+        }
+      },
+      "userActivity": {
+        "title": "Phân tích Người dùng",
+        "subtitleLong": "Hoạt động người dùng trong 3 tháng gần đây",
+        "subtitleShort": "Hoạt động người dùng",
+        "filter": {
+          "last7Days": "7 ngày qua",
+          "last30Days": "30 ngày qua",
+          "last3Months": "3 tháng qua"
+        }
+      },
+      "recentUserActivity": {
+        "title": "Hoạt động Người dùng gần đây",
+        "newUser": "Đăng ký người dùng mới: {{name}}",
+        "newUserLoading": "Đăng ký người dùng mới: ...",
+        "accountUpdated": "Tài khoản được cập nhật: {{name}}",
+        "accountUpdatedLoading": "Tài khoản được cập nhật: ...",
+        "accountSuspended": "Tài khoản bị tạm ngưng: {{name}}"
+      },
+      "userAccountManagement": {
+        "title": "Quản lý Tài khoản Người dùng",
+        "tabs": {
+          "outline": "Tổng quan",
+          "pastPerformance": "Hiệu suất trước đây",
+          "keyPersonnel": "Nhân sự chính",
+          "focusDocuments": "Tài liệu trọng tâm"
+        },
+        "actions": {
+          "customizeColumns": "Tùy chỉnh cột",
+          "addSection": "Thêm mục"
+        }
+      },
+      "errors": {
+        "fetchUsers": "Không thể tải người dùng"
+      }
+    }
+  },
+  "sidebar": {
+    "quickCreate": "Tạo nhanh",
+    "dashboard": "Bảng điều khiển",
+    "userManagement": "Quản lý Người dùng",
+    "staffManagement": "Quản lý Nhân viên",
+    "stationManagement": "Quản lý Trạm",
+    "vehiclesManagement": "Quản lý Phương tiện",
+    "promotionManagement": "Quản lý Khuyến mãi",
+    "settings": "Cài đặt"
+  },
+  "userManagement": {
+    "title": "Quản lý Người dùng",
+    "description": "Quản lý tài khoản và quyền hạn của người dùng",
+    "searchPlaceholder": "Tìm kiếm người dùng...",
+    "statusLabel": "Trạng thái",
+    "statusAll": "Tất cả",
+    "table": {
+      "name": "Tên",
+      "email": "Email",
+      "phone": "Số điện thoại",
       "status": "Trạng thái",
-      "statusPlaceholder": "Chọn trạng thái",
-      "allStatuses": "Tất cả trạng thái",
-      "type": "Loại tài liệu",
-      "typePlaceholder": "Chọn loại",
-      "allTypes": "Tất cả loại"
+      "joinDate": "Ngày tham gia",
+      "actions": "Hành động"
     },
-    "status": {
-      "pending": "Đang chờ",
-      "approved": "Đã duyệt",
-      "rejected": "Từ chối"
+    "buttons": {
+      "addUser": "Thêm Người dùng"
     },
-    "types": {
-      "driversLicense": "Bằng lái xe",
-      "idCard": "CMND/CCCD",
-      "passport": "Hộ chiếu"
+    "badges": {
+      "active": "HOẠT ĐỘNG",
+      "suspended": "BỊ TẠM NGƯNG"
     },
-    "list": {
-      "title": "Tài liệu cần xác minh",
-      "count": "Tìm thấy {{count}} tài liệu"
+    "stats": {
+      "totalUsers": "Tổng số Người dùng",
+      "activeUsers": "Người dùng Hoạt động",
+      "suspendedUsers": "Người dùng bị Tạm ngưng"
     },
-    "empty": {
-      "title": "Không có tài liệu nào",
-      "subtitle": "Hãy thử điều chỉnh bộ lọc hoặc làm mới danh sách."
-    },
-    "actions": {
-      "refresh": "Làm mới",
-      "preview": "Xem trước",
-      "approve": "Duyệt",
-      "reject": "Từ chối",
-      "download": "Tải xuống"
-    },
-    "preview": {
-      "title": "Xem trước tài liệu",
-      "userInfo": "Thông tin người dùng",
-      "docInfo": "Thông tin tài liệu",
-      "preview": "Xem trước tài liệu",
-      "notAvailable": "Không có bản xem trước"
-    },
+    "action": {
+      "viewDetails": "Xem chi tiết",
+      "suspend": "Tạm ngưng",
+      "delete": "Xóa"
+    }
+  },
+  "userForm": {
+    "title": "Tạo Người Dùng Mới",
+    "description": "Thêm người dùng mới vào hệ thống. Tất cả các trường là bắt buộc.",
+    "basicInfoTitle": "Thông Tin Cơ Bản",
+    "accountSecurityTitle": "Bảo Mật Tài Khoản",
     "fields": {
+      "name": "Họ và Tên",
+      "email": "Email",
+      "phone": "Số Điện Thoại",
+      "address": "Địa Chỉ",
+      "password": "Mật Khẩu",
+      "confirmPassword": "Xác Nhận Mật Khẩu",
+      "status": "Trạng Thái"
+    },
+    "placeholders": {
+      "name": "Nhập tên",
+      "email": "Nhập địa chỉ email",
+      "phone": "Nhập số điện thoại",
+      "address": "Nhập địa chỉ đầy đủ (không bắt buộc)",
+      "password": "Nhập mật khẩu",
+      "confirmPassword": "Xác nhận mật khẩu"
+    },
+    "buttons": {
+      "cancel": "Hủy",
+      "create": "Tạo Người Dùng",
+      "creating": "Đang tạo..."
+    },
+    "validation": {
+      "nameRequired": "Tên là bắt buộc",
+      "emailRequired": "Email là bắt buộc",
+      "emailInvalid": "Vui lòng nhập địa chỉ email hợp lệ",
+      "phoneRequired": "Số điện thoại là bắt buộc",
+      "phoneInvalid": "Vui lòng nhập số điện thoại hợp lệ",
+      "passwordRequired": "Mật khẩu là bắt buộc",
+      "passwordMin": "Mật khẩu phải có ít nhất 6 ký tự",
+      "confirmPasswordMismatch": "Mật khẩu không khớp"
+    }
+  },
+  "userDetails": {
+    "title": "Chi Tiết Người Dùng",
+    "description": "Xem và quản lý thông tin người dùng",
+    "labels": {
       "name": "Họ tên",
       "email": "Email",
       "phone": "Điện thoại",
-      "type": "Loại",
-      "fileName": "Tên tệp",
-      "status": "Trạng thái",
-      "uploaded": "Đã tải lên",
-      "expires": "Hết hạn",
-      "documentNumber": "Số tài liệu"
+      "address": "Địa chỉ",
+      "status": "Trạng Thái Tài Khoản",
+      "role": "Vai Trò",
+      "joinDate": "Ngày Tham Gia"
     },
-    "reject": {
-      "title": "Từ chối tài liệu",
-      "confirm": "Bạn có chắc muốn từ chối {{docType}} của {{name}}?",
-      "description": "Vui lòng cung cấp lý do từ chối. Người dùng sẽ được thông báo và có thể tải lại tài liệu.",
-      "reason": "Lý do từ chối",
-      "reasonPlaceholder": "Nhập lý do từ chối...",
-      "submit": "Từ chối tài liệu"
+    "badges": {
+      "active": "HOẠT ĐỘNG",
+      "suspended": "BỊ TẠM NGƯNG"
     },
-    "common": {
-      "na": "Không có",
-      "unknownUser": "Người dùng không xác định",
-      "noEmail": "Không có email",
-      "theUser": "người dùng"
+    "actions": {
+      "edit": "Sửa",
+      "save": "Lưu Thay Đổi",
+      "saving": "Đang lưu...",
+      "close": "Đóng"
     },
-    "toasts": {
-      "approveSuccess": "Duyệt tài liệu thành công",
-      "rejectSuccess": "Từ chối tài liệu thành công"
-    },
-    "errors": {
-      "fetchFailed": "Không thể tải tài liệu",
-      "approveFailed": "Không thể duyệt tài liệu",
-      "rejectionReasonRequired": "Vui lòng nhập lý do từ chối",
-      "rejectFailed": "Không thể từ chối tài liệu"
+    "notes": {
+      "emailCannotChange": "Email không thể thay đổi"
     }
   },
-  "staffPayments": {
-    "title": "Quản lý thanh toán",
-    "subtitle": "Xử lý thanh toán, hoàn tiền và giải quyết sự cố hóa đơn",
-    "tabs": {
-      "overview": "Tổng quan",
-      "process": "Xử lý thanh toán",
-      "refunds": "Hoàn tiền & điều chỉnh",
-      "issues": "Sự cố hóa đơn"
+  "staffManagement": {
+    "title": "Quản lý nhân viên",
+    "description": "Quản lý tất cả tài khoản, vai trò và phân công của nhân viên.",
+    "buttons": {
+      "addStaff": "Thêm nhân viên"
     },
-    "overview": {
-      "totalRevenue": "Tổng doanh thu",
-      "deltaRevenue": "+12% so với tháng trước",
-      "pendingPayments": "Thanh toán đang chờ",
-      "awaitingProcessing": "Đang chờ xử lý",
-      "failedPayments": "Thanh toán thất bại",
-      "requireAttention": "Cần chú ý",
-      "totalRefunds": "Tổng hoàn tiền",
-      "thisMonth": "Tháng này"
-    },
-    "transactions": {
-      "title": "Giao dịch gần đây",
-      "subtitle": "Các giao dịch thanh toán mới nhất và trạng thái"
+    "filters": {
+      "search": "Tìm kiếm nhân viên...",
+      "status": "Trạng thái",
+      "role": "Vai trò",
+      "all": "Tất cả"
     },
     "table": {
-      "paymentId": "Mã thanh toán",
-      "customer": "Khách hàng",
-      "amount": "Số tiền",
-      "method": "Phương thức",
+      "name": "Tên",
+      "email": "Email",
+      "phone": "Số điện thoại",
+      "role": "Vai trò",
+      "stationAssignment": "Điểm làm việc",
+      "address": "Địa chỉ",
       "status": "Trạng thái",
-      "date": "Ngày",
-      "actions": "Thao tác",
-      "failureReason": "Lý do thất bại"
-    },
-    "menu": {
-      "actions": "Thao tác",
-      "viewDetails": "Xem chi tiết",
-      "generateReceipt": "Tạo hóa đơn",
-      "retryPayment": "Thử lại thanh toán",
-      "manualPayment": "Thanh toán thủ công",
-      "cancelPayment": "Hủy thanh toán",
-      "addNote": "Thêm ghi chú",
-      "markResolved": "Đánh dấu đã xử lý",
-      "downloadReceipt": "Tải biên lai"
-    },
-    "process": {
-      "title": "Xử lý thanh toán thủ công",
-      "subtitle": "Xử lý thanh toán thủ công cho giao dịch tiền mặt hoặc điều chỉnh",
-      "bookingCustomer": "Đơn thuê/Khách hàng",
-      "bookingPlaceholder": "Chọn đơn thuê để thanh toán",
-      "notes": "Ghi chú thanh toán"
-    },
-    "pending": {
-      "title": "Thanh toán đang chờ & thất bại",
-      "subtitle": "Các thanh toán cần chú ý hoặc thử lại"
-    },
-    "refunds": {
-      "title": "Xử lý hoàn tiền",
-      "subtitle": "Hoàn tiền cho các thanh toán đã hoàn tất và hủy đơn",
-      "selectPayment": "Chọn thanh toán để hoàn tiền",
-      "paymentPlaceholder": "Chọn thanh toán cần hoàn",
-      "amount": "Số tiền hoàn",
-      "type": "Loại hoàn tiền",
-      "typePlaceholder": "Chọn loại hoàn",
-      "types": {
-        "full": "Hoàn toàn bộ",
-        "partial": "Hoàn một phần",
-        "adjustment": "Điều chỉnh hóa đơn"
-      },
-      "reason": "Lý do hoàn tiền"
-    },
-    "history": {
-      "title": "Lịch sử hoàn tiền",
-      "subtitle": "Các khoản hoàn tiền gần đây và trạng thái xử lý",
-      "refundId": "Mã hoàn tiền",
-      "originalAmount": "Số tiền gốc",
-      "refundAmount": "Số tiền hoàn",
-      "reason": "Lý do",
-      "processedBy": "Người xử lý"
-    },
-    "issues": {
-      "title": "Sự cố hóa đơn",
-      "subtitle": "Theo dõi và xử lý tranh chấp thanh toán và vấn đề hóa đơn",
-      "reportIssue": "Báo cáo sự cố",
-      "dialog": {
-        "title": "Báo cáo sự cố hóa đơn",
-        "subtitle": "Tạo báo cáo sự cố mới để điều tra",
-        "issueType": "Loại sự cố",
-        "issueTypePlaceholder": "Chọn loại sự cố",
-        "priority": "Mức độ ưu tiên",
-        "priorityPlaceholder": "Chọn mức độ ưu tiên",
-        "description": "Mô tả",
-        "descriptionPlaceholder": "Mô tả chi tiết sự cố hóa đơn...",
-        "create": "Tạo sự cố"
-      },
-      "types": {
-        "paymentFailed": "Thanh toán thất bại",
-        "billingDispute": "Tranh chấp hóa đơn",
-        "overcharge": "Tính dư tiền",
-        "duplicateCharge": "Tính tiền trùng",
-        "refundRequest": "Yêu cầu hoàn tiền"
-      },
-      "priority": {
-        "high": "Cao",
-        "medium": "Trung bình",
-        "low": "Thấp"
-      },
-      "table": {
-        "issueId": "Mã sự cố",
-        "type": "Loại",
-        "priority": "Mức ưu tiên",
-        "description": "Mô tả",
-        "assignedTo": "Người phụ trách"
-      }
-    },
-    "methods": {
-      "cash": "Tiền mặt",
-      "creditCard": "Thẻ tín dụng",
-      "debitCard": "Thẻ ghi nợ",
-      "bankTransfer": "Chuyển khoản ngân hàng",
-      "digitalWallet": "Ví điện tử"
-    },
-    "common": {
-      "amount": "Số tiền",
-      "method": "Phương thức thanh toán"
-    },
-    "placeholders": {
-      "amount": "Nhập số tiền",
-      "method": "Chọn phương thức thanh toán",
-      "notes": "Thêm ghi chú cho thanh toán...",
-      "refundAmount": "Nhập số tiền hoàn",
-      "refundReason": "Giải thích lý do hoàn tiền..."
+      "joinDate": "Ngày tham gia",
+      "actions": "Hành động",
+      "active": "Đang hoạt động",
+      "banned": "Bị cấm",
+      "suspended": "Bị tạm ngưng",
+      "unassigned": "Chưa phân công",
+      "unknownStation": "Không rõ trạm"
     },
     "actions": {
-      "processPayment": "Xử lý thanh toán",
-      "processRefund": "Xử lý hoàn tiền"
+      "viewDetails": "Xem chi tiết",
+      "unassign": "Hủy phân công",
+      "suspend": "Tạm ngưng",
+      "delete": "Xóa"
+    },
+    "stats": {
+      "total": "Tổng số nhân viên",
+      "active": "Nhân viên đang hoạt động",
+      "staff": "Nhân viên",
+      "admins": "Quản trị viên"
+    },
+    "messages": {
+      "loading": "Đang tải danh sách nhân viên...",
+      "errorGeneric": "Lỗi",
+      "noStaff": "Không tìm thấy nhân viên.",
+      "suspended": "Đã tạm ngưng nhân viên thành công.",
+      "errorSuspend": "Tạm ngưng nhân viên thất bại.",
+      "deleted": "Đã xóa nhân viên thành công.",
+      "errorDelete": "Xóa nhân viên thất bại.",
+      "unassigned": "Đã hủy phân công nhân viên.",
+      "errorUnassign": "Hủy phân công thất bại.",
+      "staffCreated": "Tạo nhân viên mới thành công.",
+      "errorCreate": "Tạo nhân viên thất bại.",
+      "staffUpdated": "Cập nhật nhân viên thành công.",
+      "errorUpdate": "Cập nhật nhân viên thất bại."
+    },
+    "dialogs": {
+      "suspend": {
+        "title": "Tạm ngưng nhân viên",
+        "description": "Bạn có chắc chắn muốn tạm ngưng nhân viên này?",
+        "confirm": "Tạm ngưng",
+        "cancel": "Hủy"
+      },
+      "delete": {
+        "title": "Xóa nhân viên",
+        "description": "Bạn có chắc chắn muốn xóa vĩnh viễn nhân viên này?",
+        "confirm": "Xóa",
+        "cancel": "Hủy"
+      },
+      "unassign": {
+        "title": "Hủy phân công",
+        "description": "Bạn có chắc chắn muốn hủy phân công nhân viên này khỏi trạm?",
+        "confirm": "Hủy phân công",
+        "cancel": "Hủy"
+      }
     }
   },
-  "staffStations": {
-    "title": "Quản lý trạm",
-    "subtitle": "Giám sát hoạt động trạm, hạ tầng sạc và bảo trì",
-    "tabs": {
-      "overview": "Tổng quan trạm",
-      "charging": "Cổng sạc",
-      "maintenance": "Bảo trì"
+  "staffDetails": {
+    "title": "Chi tiết nhân viên",
+    "description": "Xem và quản lý thông tin tài khoản nhân viên",
+    "basicInfo": "Thông tin cơ bản",
+    "name": "Tên",
+    "email": "Email",
+    "phone": "Số điện thoại",
+    "role": "Vai trò",
+    "address": "Địa chỉ",
+    "accountStatus": "Trạng thái tài khoản",
+    "status": "Trạng thái",
+    "timeline": "Mốc thời gian",
+    "createdAt": "Ngày tạo",
+    "updatedAt": "Cập nhật lần cuối",
+    "buttons": {
+      "close": "Đóng",
+      "edit": "Chỉnh sửa",
+      "cancel": "Hủy",
+      "save": "Lưu thay đổi",
+      "saving": "Đang lưu..."
     },
-    "overview": {
-      "parkingCapacity": "Sức chứa bãi đỗ",
-      "activePorts": "Cổng đang hoạt động",
-      "amenities": "Tiện ích",
-      "staffOnDuty": "Nhân viên trực",
-      "operatingHours": "Giờ hoạt động"
+    "statusOptions": {
+      "active": "Hoạt động",
+      "suspended": "Tạm ngưng",
+      "banned": "Cấm",
+      "staff": "Nhân viên",
+      "admin": "Quản trị"
+    }
+  },
+  "staffForm": {
+    "title": "Thêm nhân viên mới",
+    "description": "Tạo tài khoản nhân viên mới. Các trường có * là bắt buộc.",
+    "fields": {
+      "name": "Tên *",
+      "email": "Email *",
+      "password": "Mật khẩu *",
+      "phone": "Số điện thoại",
+      "address": "Địa chỉ",
+      "status": "Trạng thái"
     },
-    "charging": {
-      "selectStation": "Chọn trạm",
-      "allStations": "Tất cả trạm",
-      "port": "Cổng #",
-      "power": "Công suất",
-      "currentUser": "Người đang sử dụng",
-      "estimatedCompletion": "Thời gian hoàn thành dự kiến",
-      "resetPort": "Khởi động lại cổng",
-      "editSettings": "Chỉnh sửa cài đặt"
+    "placeholders": {
+      "name": "Nhập họ và tên",
+      "email": "Nhập địa chỉ email",
+      "password": "Nhập mật khẩu",
+      "phone": "Nhập số điện thoại (0xxxxxxxxx)",
+      "address": "Nhập địa chỉ",
+      "status": "Chọn trạng thái"
+    },
+    "buttons": {
+      "cancel": "Hủy",
+      "create": "Tạo nhân viên",
+      "creating": "Đang tạo..."
+    },
+    "statusOptions": {
+      "active": "Hoạt động",
+      "suspended": "Tạm ngưng",
+      "banned": "Cấm"
+    },
+    "validation": {
+      "nameRequired": "Tên là bắt buộc",
+      "emailRequired": "Email là bắt buộc",
+      "passwordRequired": "Mật khẩu là bắt buộc"
+    }
+  },
+  "station": {
+    "management": {
+      "title": "Quản lý trạm sạc",
+      "subtitle": "Quản lý thông tin các trạm sạc",
+      "add": "Thêm trạm",
+      "addNew": "Thêm trạm mới",
+      "addDescription": "Tạo một trạm sạc mới",
+      "noContact": "Không liên lạc",
+      "slots": "Số lượng",
+      "filters": {
+        "search": "Tìm kiếm trạm...",
+        "status": "Trạng thái",
+        "all": "Tất cả"
+      },
+      "table": {
+        "name": "Tên trạm",
+        "location": "Vị trí",
+        "address": "Địa chỉ",
+        "capacity": "Sức chứa",
+        "vehicles": "Phương tiện",
+        "staff": "Nhân viên",
+        "status": "Trạng thái",
+        "actions": "Hành động"
+      },
+      "actions": {
+        "view": "Xem chi tiết",
+        "assign": "Gán nhân viên",
+        "delete": "Xóa"
+      },
+      "confirmDelete": {
+        "title": "Ngưng hoạt động trạm",
+        "description": "Bạn có chắc muốn xóa trạm này? Trạm sẽ không còn khả dụng để đặt mới.",
+        "confirm": "Xóa",
+        "cancel": "Hủy"
+      },
+      "summary": {
+        "totalStations": "Tổng số trạm",
+        "active": "Đang hoạt động",
+        "maintenance": "Bảo trì",
+        "capacity": "Tổng sức chứa"
+      },
+      "assignDialog": {
+        "title": "Gán nhân viên cho trạm",
+        "description": "Gán một nhân viên vào {{stationName}}"
+      },
+      "messages": {
+        "loading": "Đang tải danh sách trạm...",
+        "loadFailed": "Không thể tải trạm",
+        "createSuccess": "Tạo trạm thành công",
+        "createFailed": "Không thể tạo trạm",
+        "updateSuccess": "Cập nhật trạm thành công",
+        "updateFailed": "Không thể cập nhật trạm",
+        "deleteSuccess": "Ngưng hoạt động trạm thành công",
+        "deleteFailed": "Không thể ngưng hoạt động trạm"
+      }
+    },
+    "form": {
+      "name": "Tên trạm",
+      "location": "Vị trí",
+      "address": "Địa chỉ đầy đủ",
+      "status": {
+        "label": "Trạng thái",
+        "active": "Đang hoạt động",
+        "inactive": "Ngừng hoạt động",
+        "maintenance": "Bảo trì"
+      },
+      "capacity": "Sức chứa",
+      "contact": "Thông tin liên hệ",
+      "cancel": "Hủy",
+      "create": "Tạo trạm",
+      "update": "Cập nhật trạm",
+      "saving": "Đang lưu...",
+      "placeholders": {
+        "name": "VD: Trạm trung tâm",
+        "status": "Chọn trạng thái",
+        "capacity": "VD: 10",
+        "contact": "VD: +84 123 456 789 hoặc email@example.com",
+        "address": "Nhập địa chỉ đầy đủ của trạm"
+      },
+      "errors": {
+        "nameRequired": "Tên trạm là bắt buộc",
+        "locationRequired": "Vị trí là bắt buộc",
+        "addressRequired": "Địa chỉ là bắt buộc",
+        "capacityInvalid": "Sức chứa phải là số dương",
+        "statusRequired": "Trạng thái là bắt buộc"
+      }
+    },
+    "details": {
+      "title": "Chi tiết trạm",
+      "edit": "Chỉnh sửa trạm",
+      "info": "Thông tin",
+      "vehicles": "Phương tiện",
+      "staff": "Nhân viên được gán",
+      "emptyVehicles": "Chưa có phương tiện nào gán vào trạm này",
+      "emptyStaff": "Chưa có nhân viên nào gán vào trạm này",
+      "close": "Đóng"
+    }
+  },
+  "vehicle": {
+    "title": "Quản lý phương tiện",
+    "subtitle": "Quản lý đội xe và thông tin của chúng",
+    "actions": {
+      "add": "Thêm phương tiện",
+      "create": "Tạo phương tiện",
+      "update": "Cập nhật phương tiện",
+      "cancel": "Hủy",
+      "delete": "Xóa",
+      "viewDetails": "Xem chi tiết"
+    },
+    "dialogs": {
+      "create": {
+        "title": "Thêm phương tiện mới",
+        "description": "Tạo một phương tiện mới trong đội xe"
+      },
+      "edit": {
+        "title": "Chỉnh sửa phương tiện",
+        "description": "Cập nhật thông tin phương tiện"
+      },
+      "delete": {
+        "title": "Xóa phương tiện",
+        "description": "Bạn có chắc chắn muốn xóa vĩnh viễn phương tiện này? Hành động này không thể hoàn tác và sẽ xóa tất cả hình ảnh liên quan."
+      }
+    },
+    "fields": {
+      "station": "Trạm",
+      "stationPlaceholder": "Chọn trạm",
+      "type": "Loại",
+      "typePlaceholder": "Chọn loại",
+      "brand": "Hãng",
+      "brandPlaceholder": "ví dụ: Tesla",
+      "model": "Mẫu",
+      "modelPlaceholder": "ví dụ: Model 3",
+      "year": "Năm sản xuất",
+      "yearPlaceholder": "2024",
+      "color": "Màu sắc",
+      "colorPlaceholder": "ví dụ: Trắng",
+      "seats": "Số ghế",
+      "seatsPlaceholder": "5",
+      "licensePlate": "Biển số",
+      "licensePlatePlaceholder": "ABC-123",
+      "batteryLevel": "Mức pin (%)",
+      "batteryLevelPlaceholder": "85",
+      "fuelType": "Nhiên liệu",
+      "fuelTypePlaceholder": "Chọn loại nhiên liệu",
+      "status": "Trạng thái",
+      "statusPlaceholder": "Chọn trạng thái"
+    },
+    "table": {
+      "image": "Hình ảnh",
+      "brandModel": "Hãng/Mẫu",
+      "type": "Loại",
+      "licensePlate": "Biển số",
+      "station": "Trạm",
+      "year": "Năm",
+      "fuelType": "Nhiên liệu",
+      "battery": "Pin",
+      "status": "Trạng thái",
+      "actions": "Hành động",
+      "na": "Không có"
     },
     "status": {
-      "active": "Đang hoạt động",
-      "maintenance": "Bảo trì",
-      "offline": "Ngoại tuyến"
-    },
-    "portStatus": {
-      "available": "Còn trống",
-      "inUse": "Đang dùng",
-      "faulty": "Lỗi"
-    },
-    "maintenance": {
-      "filterByPriority": "Lọc theo mức ưu tiên",
-      "allPriorities": "Tất cả mức ưu tiên",
-      "highPriority": "Ưu tiên cao",
-      "mediumPriority": "Ưu tiên trung bình",
-      "lowPriority": "Ưu tiên thấp",
-      "newRequest": "Yêu cầu mới",
-      "dialog": {
-        "title": "Tạo yêu cầu bảo trì",
-        "subtitle": "Báo cáo sự cố bảo trì mới cho cơ sở vật chất hoặc thiết bị của trạm.",
-        "type": "Loại",
-        "typePlaceholder": "Chọn loại",
-        "priority": "Mức ưu tiên",
-        "priorityPlaceholder": "Chọn mức ưu tiên",
-        "descriptionPlaceholder": "Mô tả chi tiết sự cố...",
-        "create": "Tạo yêu cầu"
-      },
-      "types": {
-        "chargingPort": "Cổng sạc",
-        "facility": "Cơ sở vật chất",
-        "lighting": "Chiếu sáng",
-        "security": "An ninh",
-        "cleaning": "Vệ sinh"
-      },
-      "priority": {
-        "high": "Cao",
-        "medium": "Trung bình",
-        "low": "Thấp"
-      },
-      "table": {
-        "requestId": "Mã yêu cầu",
-        "assignedTo": "Người phụ trách"
-      },
-      "editRequest": "Chỉnh sửa yêu cầu",
-      "assignTechnician": "Gán kỹ thuật viên",
-      "deleteRequest": "Xóa yêu cầu"
-    },
-    "common": {
-      "available": "còn trống",
-      "faulty": "Lỗi",
-      "station": "Trạm",
-      "type": "Loại",
-      "priority": "Mức ưu tiên",
-      "description": "Mô tả",
-      "status": "Trạng thái",
-      "actions": "Thao tác",
-      "reportIssue": "Báo cáo sự cố"
-    }
-  },
-  "staffCars": {
-    "title": "Quản lý xe",
-    "subtitle": "Quản lý đặt xe, xử lý trả xe và cập nhật trạng thái xe",
-    "tabs": {
-      "bookings": "Xem đơn đặt",
-      "dropoff": "Trả xe",
-      "status": "Cập nhật trạng thái"
-    },
-    "common": {
-      "filterByStatus": "Lọc theo trạng thái",
-      "customer": "Khách hàng",
-      "vehicle": "Xe",
-      "duration": "Thời lượng",
-      "status": "Trạng thái",
-      "amount": "Số tiền",
-      "actions": "Thao tác"
-    },
-    "actions": {
-      "viewDetails": "Xem chi tiết",
-      "contactCustomer": "Liên hệ khách hàng",
-      "modifyBooking": "Chỉnh sửa đặt xe"
-    },
-    "bookings": {
-      "searchPlaceholder": "Tìm kiếm đơn đặt...",
-      "filters": {
-        "all": "Tất cả đơn đặt"
-      },
-      "table": {
-        "bookingId": "Mã đặt xe"
-      }
-    },
-    "bookingStatus": {
-      "active": "Đang hoạt động",
-      "upcoming": "Sắp diễn ra",
-      "completed": "Hoàn tất",
-      "cancelled": "Đã hủy"
-    },
-    "dropoff": {
-      "title": "Trả xe",
-      "subtitle": "Xử lý trả xe và hoàn tất kiểm tra tình trạng",
-      "selectActive": "Chọn đơn đang hoạt động",
-      "bookingPlaceholder": "Chọn đơn cần xử lý",
-      "finalMileage": "Số km cuối",
-      "batteryLevel": "Mức pin (%)",
-      "damageAssessment": "Đánh giá hư hỏng",
-      "inspectionNotes": "Ghi chú kiểm tra",
-      "completeDropoff": "Hoàn tất trả xe"
-    },
-    "batteryRanges": {
-      "90_100": "90-100%",
-      "80_89": "80-89%",
-      "70_79": "70-79%",
-      "60_69": "60-69%",
-      "50_59": "50-59%",
-      "below50": "Dưới 50%"
-    },
-    "update": {
-      "battery": "Pin:",
-      "mileage": "Số km:",
-      "location": "Vị trí:",
-      "updateStatus": "Cập nhật trạng thái",
-      "dialogTitle": "Cập nhật trạng thái xe",
-      "dialogSubtitle": "Cập nhật trạng thái của {{model}} ({{plate}})",
-      "newStatus": "Trạng thái mới",
-      "notes": "Ghi chú"
-    },
-    "placeholders": {
-      "enterMileage": "Nhập số km hiện tại",
-      "selectBattery": "Chọn mức pin",
-      "inspectionNotes": "Ghi chú thêm về tình trạng xe...",
-      "damageAssessment": "Ghi lại hư hỏng hoặc vấn đề phát hiện...",
-      "selectNewStatus": "Chọn trạng thái mới",
-      "statusNotes": "Thêm ghi chú về thay đổi trạng thái..."
-    },
-    "carStatus": {
+      "all": "Tất cả",
       "available": "Sẵn sàng",
       "rented": "Đang thuê",
       "maintenance": "Bảo trì",
-      "charging": "Đang sạc",
-      "outOfService": "Ngừng phục vụ"
+      "outOfService": "Ngưng hoạt động"
+    },
+    "fuel": {
+      "electric": "Điện",
+      "hybrid": "Lai"
+    },
+    "types": {
+      "sedan": "Sedan",
+      "suv": "SUV",
+      "hatchback": "Hatchback",
+      "coupe": "Coupe"
+    },
+    "stats": {
+      "total": "Tổng số phương tiện",
+      "available": "Sẵn sàng",
+      "rented": "Đang thuê",
+      "electric": "Xe điện"
+    },
+    "messages": {
+      "loading": "Đang tải phương tiện...",
+      "createSuccess": "Tạo phương tiện thành công",
+      "createFailed": "Không thể tạo phương tiện",
+      "updateSuccess": "Cập nhật phương tiện thành công",
+      "updateFailed": "Không thể cập nhật phương tiện",
+      "deleteSuccess": "Đã xóa phương tiện vĩnh viễn",
+      "deleteFailed": "Không thể xóa phương tiện",
+      "loadFailed": "Không thể tải phương tiện"
+    },
+    "filters": {
+      "searchPlaceholder": "Tìm kiếm phương tiện...",
+      "status": "Trạng thái"
     }
   },
-  "staffCustomers": {
-    "title": "Quản lý khách hàng",
-    "subtitle": "Xử lý check-in, xác minh giấy tờ và hỗ trợ khách hàng",
-    "tabs": {
-      "checkin": "Check-in khách hàng",
-      "verification": "Xác minh bằng lái",
-      "support": "Hỗ trợ khách hàng"
+  "promotion": {
+    "title": "Quản lý khuyến mãi",
+    "subtitle": "Quản lý mã khuyến mãi và giảm giá",
+    "add": "Thêm khuyến mãi",
+    "searchPlaceholder": "Tìm kiếm khuyến mãi...",
+    "status": {
+      "all": "Tất cả",
+      "active": "Đang hoạt động",
+      "upcoming": "Sắp diễn ra",
+      "expired": "Đã hết hạn"
     },
-    "common": {
-      "customer": "Khách hàng",
-      "customerName": "Tên khách hàng",
-      "license": "Giấy phép",
-      "expiryDate": "Ngày hết hạn",
-      "currentStatus": "Trạng thái hiện tại",
-      "uploaded": "Đã tải lên",
-      "notUploaded": "Chưa tải",
-      "paymentMethod": "Phương thức thanh toán",
+    "table": {
+      "code": "Mã",
+      "description": "Mô tả",
+      "discount": "Giảm giá",
+      "validFrom": "Bắt đầu",
+      "validUntil": "Kết thúc",
       "status": "Trạng thái",
+      "uses": "Số lượt",
       "actions": "Thao tác",
-      "booking": "Đơn",
-      "at": "tại",
-      "filterByStatus": "Lọc theo trạng thái"
+      "noDescription": "Không có mô tả",
+      "loading": "Đang tải khuyến mãi...",
+      "error": "Lỗi",
+      "empty": "Không tìm thấy khuyến mãi"
+    },
+    "badge": {
+      "upcoming": "Sắp diễn ra",
+      "expired": "Đã hết hạn",
+      "active": "Đang hoạt động"
+    },
+    "stats": {
+      "total": "Tổng số khuyến mãi",
+      "active": "Đang hoạt động",
+      "upcoming": "Sắp diễn ra",
+      "expired": "Đã hết hạn"
+    },
+    "dialog": {
+      "deleteTitle": "Xóa khuyến mãi",
+      "deleteDesc": "Bạn có chắc chắn muốn xóa khuyến mãi \"{{code}}\"? Hành động này không thể hoàn tác.",
+      "deleteConfirm": "Xóa",
+      "deleteCancel": "Hủy"
+    },
+    "actions": {
+      "viewDetails": "Xem chi tiết",
+      "delete": "Xóa"
+    },
+    "toast": {
+      "createSuccess": "Tạo khuyến mãi thành công",
+      "createError": "Tạo khuyến mãi thất bại",
+      "updateSuccess": "Cập nhật khuyến mãi thành công",
+      "updateError": "Cập nhật khuyến mãi thất bại",
+      "deleteSuccess": "Xóa khuyến mãi thành công",
+      "deleteError": "Xóa khuyến mãi thất bại",
+      "deleteBlocked": "Không thể xóa khuyến mãi có lượt đặt xe"
+    }
+  },
+  "promotionDetails": {
+    "title": "Chi tiết khuyến mãi",
+    "description": "Xem và quản lý thông tin khuyến mãi",
+    "basicInfo": "Thông tin cơ bản",
+    "code": "Mã khuyến mãi",
+    "discount": "Giảm giá",
+    "descriptionLabel": "Mô tả",
+    "descriptionPlaceholder": "Mô tả tùy chọn cho khuyến mãi",
+    "validity": "Thời gian hiệu lực",
+    "validFrom": "Bắt đầu từ",
+    "validUntil": "Kết thúc vào",
+    "recentBookings": "Đặt xe gần đây",
+    "booking": "Đặt xe",
+    "promotionTimeline": "Dòng thời gian khuyến mãi",
+    "createdAt": "Ngày tạo",
+    "updatedAt": "Cập nhật lần cuối",
+    "actions": {
+      "close": "Đóng",
+      "edit": "Chỉnh sửa khuyến mãi",
+      "cancel": "Hủy",
+      "save": "Lưu thay đổi",
+      "saving": "Đang lưu..."
+    },
+    "delete": {
+      "title": "Xóa khuyến mãi",
+      "description": "Bạn có chắc muốn xóa khuyến mãi \"{{code}}\"?",
+      "warning": "Khuyến mãi này có {{count}} đặt xe liên quan và không thể xóa.",
+      "cancel": "Hủy",
+      "confirm": "Xóa khuyến mãi"
     },
     "status": {
-      "active": "Hoạt động",
-      "pendingCheckin": "Chờ check-in",
-      "suspended": "Tạm ngưng"
+      "upcoming": "Sắp diễn ra",
+      "expired": "Hết hạn",
+      "active": "Đang hoạt động"
     },
-    "checkin": {
-      "title": "Check-in khách hàng",
-      "subtitle": "Xử lý khách đến và xác minh thông tin",
-      "searchPlaceholder": "Tìm theo tên, email hoặc điện thoại...",
-      "checkIn": "Check-in",
-      "dialogSubtitle": "Hoàn tất check-in cho {{name}}",
-      "identityVerification": "Xác minh danh tính",
-      "licenseVerification": "Xác minh bằng lái",
-      "notes": "Ghi chú check-in",
-      "confirmTerms": "Khách đã xác nhận điều khoản",
-      "complete": "Hoàn tất check-in",
-      "empty": "Không có khách chờ check-in.",
-      "emptySearch": "Không tìm thấy khách phù hợp.",
-      "checkinNotes": "Thêm ghi chú về quá trình check-in..."
-    },
-    "license": {
-      "title": "Xác minh bằng lái",
-      "subtitle": "Xác minh bằng lái và cập nhật trạng thái",
-      "selectCustomer": "Chọn khách hàng",
-      "selectPlaceholder": "Chọn khách để xác minh",
-      "licenseNumber": "Số bằng lái",
-      "licenseState": "Bang/Tỉnh cấp",
-      "licenseDocument": "Tài liệu bằng lái",
-      "viewUploaded": "Xem tài liệu đã tải",
-      "notes": "Ghi chú xác minh",
-      "approve": "Duyệt bằng lái",
-      "reject": "Từ chối bằng lái",
-      "licenseNotes": "Thêm ghi chú về quá trình xác minh bằng lái..."
-    },
-    "support": {
-      "searchPlaceholder": "Tìm khách hàng...",
-      "filters": { "all": "Tất cả khách hàng" },
-      "membership": "Hội viên",
-      "totalBookings": "Tổng đơn",
-      "verification": "Xác minh",
-      "lastBooking": "Lần đặt gần nhất",
-      "never": "Chưa từng",
-      "viewProfile": "Xem hồ sơ",
-      "contactCustomer": "Liên hệ khách",
-      "editDetails": "Sửa thông tin",
-      "verifyDocuments": "Xác minh tài liệu"
-    }
+    "noDescription": "Không có mô tả",
+    "unknown": "Không xác định",
+    "moreBookings": "... và {{count}} đặt xe khác"
+  },
+  "promotionForm": {
+    "titleAdd": "Thêm khuyến mãi mới",
+    "titleEdit": "Chỉnh sửa khuyến mãi",
+    "descAdd": "Điền thông tin để tạo khuyến mãi mới.",
+    "descEdit": "Cập nhật chi tiết khuyến mãi bên dưới.",
+    "codeLabel": "Mã khuyến mãi *",
+    "codePlaceholder": "ví dụ: SUMMER2024",
+    "codeRequired": "Vui lòng nhập mã khuyến mãi",
+    "codeMin": "Mã khuyến mãi phải có ít nhất 3 ký tự",
+    "descriptionLabel": "Mô tả",
+    "descriptionPlaceholder": "Mô tả tùy chọn cho khuyến mãi",
+    "discountLabel": "Giảm giá *",
+    "discountPlaceholder": "0.00",
+    "discountRequired": "Vui lòng nhập giá trị giảm giá",
+    "discountPositive": "Giảm giá phải là số dương",
+    "validFromLabel": "Ngày bắt đầu *",
+    "validFromRequired": "Vui lòng chọn ngày bắt đầu",
+    "validUntilLabel": "Ngày kết thúc *",
+    "validUntilRequired": "Vui lòng chọn ngày kết thúc",
+    "validUntilAfter": "Ngày kết thúc phải sau ngày bắt đầu",
+    "pickDate": "Chọn ngày",
+    "cancel": "Hủy",
+    "submitAdd": "Tạo khuyến mãi",
+    "submitEdit": "Cập nhật khuyến mãi"
   }
 }
