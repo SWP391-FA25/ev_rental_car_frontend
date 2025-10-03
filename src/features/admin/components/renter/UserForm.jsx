@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '../../../shared/components/ui/button';
 import {
@@ -13,6 +14,7 @@ import { Label } from '../../../shared/components/ui/label';
 import { Textarea } from '../../../shared/components/ui/textarea';
 
 export function UserForm({ open, onOpenChange, onUserCreated, createUser }) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -25,7 +27,6 @@ export function UserForm({ open, onOpenChange, onUserCreated, createUser }) {
 
   const [errors, setErrors] = useState({});
 
-  // Reset form when dialog opens/closes
   useEffect(() => {
     if (!open) {
       setFormData({
@@ -44,29 +45,29 @@ export function UserForm({ open, onOpenChange, onUserCreated, createUser }) {
     const newErrors = {};
 
     if (!formData.name.trim()) {
-      newErrors.firstName = 'Name is required';
+      newErrors.name = t('userForm.validation.nameRequired');
     }
 
     if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = t('userForm.validation.emailRequired');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = t('userForm.validation.emailInvalid');
     }
 
     if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
+      newErrors.phone = t('userForm.validation.phoneRequired');
     } else if (!/^[0-9+\-\s()]+$/.test(formData.phone)) {
-      newErrors.phone = 'Please enter a valid phone number';
+      newErrors.phone = t('userForm.validation.phoneInvalid');
     }
 
     if (!formData.password.trim()) {
-      newErrors.password = 'Password is required';
+      newErrors.password = t('userForm.validation.passwordRequired');
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = t('userForm.validation.passwordTooShort');
     }
 
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = t('userForm.validation.passwordMismatch');
     }
 
     setErrors(newErrors);
@@ -76,9 +77,7 @@ export function UserForm({ open, onOpenChange, onUserCreated, createUser }) {
   const handleSubmit = async e => {
     e.preventDefault();
 
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     try {
       setLoading(true);
@@ -95,7 +94,6 @@ export function UserForm({ open, onOpenChange, onUserCreated, createUser }) {
       onUserCreated?.(newUser);
       onOpenChange(false);
     } catch (error) {
-      // Error handling is done in the hook
       console.error('Error creating user:', error);
     } finally {
       setLoading(false);
@@ -108,7 +106,6 @@ export function UserForm({ open, onOpenChange, onUserCreated, createUser }) {
       [field]: value,
     }));
 
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({
         ...prev,
@@ -121,26 +118,28 @@ export function UserForm({ open, onOpenChange, onUserCreated, createUser }) {
     <Dialog open={open} onOpenChange={loading ? undefined : onOpenChange}>
       <DialogContent className='w-[95vw] max-w-[600px] max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
-          <DialogTitle>Create New User</DialogTitle>
+          <DialogTitle>{t('userForm.title')}</DialogTitle>
           <DialogDescription>
-            Add a new user to the system. All fields are required.
+            {t('userForm.description')}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className='space-y-6'>
           {/* Basic Information */}
           <div className='space-y-4'>
-            <h3 className='text-lg font-semibold'>Basic Information</h3>
+            <h3 className='text-lg font-semibold'>
+              {t('userForm.basicInfoTitle')}
+            </h3>
 
             <div className='space-y-2'>
-              <Label htmlFor='name'>Name *</Label>
+              <Label htmlFor='name'>{t('userForm.fields.name')} *</Label>
               <Input
                 id='name'
                 value={formData.name}
                 onChange={e => handleInputChange('name', e.target.value)}
                 className={errors.name ? 'border-red-500' : ''}
                 disabled={loading}
-                placeholder='Enter name'
+                placeholder={t('userForm.placeholders.name')}
               />
               {errors.name && (
                 <p className='text-sm text-red-500'>{errors.name}</p>
@@ -149,7 +148,7 @@ export function UserForm({ open, onOpenChange, onUserCreated, createUser }) {
 
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div className='space-y-2'>
-                <Label htmlFor='email'>Email *</Label>
+                <Label htmlFor='email'>{t('userForm.fields.email')} *</Label>
                 <Input
                   id='email'
                   type='email'
@@ -157,7 +156,7 @@ export function UserForm({ open, onOpenChange, onUserCreated, createUser }) {
                   onChange={e => handleInputChange('email', e.target.value)}
                   className={errors.email ? 'border-red-500' : ''}
                   disabled={loading}
-                  placeholder='Enter email address'
+                  placeholder={t('userForm.placeholders.email')}
                 />
                 {errors.email && (
                   <p className='text-sm text-red-500'>{errors.email}</p>
@@ -165,7 +164,7 @@ export function UserForm({ open, onOpenChange, onUserCreated, createUser }) {
               </div>
 
               <div className='space-y-2'>
-                <Label htmlFor='phone'>Phone Number *</Label>
+                <Label htmlFor='phone'>{t('userForm.fields.phone')} *</Label>
                 <Input
                   id='phone'
                   type='tel'
@@ -173,7 +172,7 @@ export function UserForm({ open, onOpenChange, onUserCreated, createUser }) {
                   onChange={e => handleInputChange('phone', e.target.value)}
                   className={errors.phone ? 'border-red-500' : ''}
                   disabled={loading}
-                  placeholder='Enter phone number'
+                  placeholder={t('userForm.placeholders.phone')}
                 />
                 {errors.phone && (
                   <p className='text-sm text-red-500'>{errors.phone}</p>
@@ -182,7 +181,7 @@ export function UserForm({ open, onOpenChange, onUserCreated, createUser }) {
             </div>
 
             <div className='space-y-2'>
-              <Label htmlFor='address'>Address</Label>
+              <Label htmlFor='address'>{t('userForm.fields.address')}</Label>
               <Textarea
                 id='address'
                 value={formData.address}
@@ -190,18 +189,20 @@ export function UserForm({ open, onOpenChange, onUserCreated, createUser }) {
                 rows={3}
                 className='w-full resize-none'
                 disabled={loading}
-                placeholder='Enter full address (optional)'
+                placeholder={t('userForm.placeholders.address')}
               />
             </div>
           </div>
 
           {/* Account Security */}
           <div className='space-y-4'>
-            <h3 className='text-lg font-semibold'>Account Security</h3>
+            <h3 className='text-lg font-semibold'>
+              {t('userForm.accountSecurityTitle')}
+            </h3>
 
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div className='space-y-2'>
-                <Label htmlFor='password'>Password *</Label>
+                <Label htmlFor='password'>{t('userForm.fields.password')} *</Label>
                 <Input
                   id='password'
                   type='password'
@@ -209,7 +210,7 @@ export function UserForm({ open, onOpenChange, onUserCreated, createUser }) {
                   onChange={e => handleInputChange('password', e.target.value)}
                   className={errors.password ? 'border-red-500' : ''}
                   disabled={loading}
-                  placeholder='Enter password'
+                  placeholder={t('userForm.placeholders.password')}
                 />
                 {errors.password && (
                   <p className='text-sm text-red-500'>{errors.password}</p>
@@ -217,7 +218,7 @@ export function UserForm({ open, onOpenChange, onUserCreated, createUser }) {
               </div>
 
               <div className='space-y-2'>
-                <Label htmlFor='confirmPassword'>Confirm Password *</Label>
+                <Label htmlFor='confirmPassword'>{t('userForm.fields.confirmPassword')} *</Label>
                 <Input
                   id='confirmPassword'
                   type='password'
@@ -227,7 +228,7 @@ export function UserForm({ open, onOpenChange, onUserCreated, createUser }) {
                   }
                   className={errors.confirmPassword ? 'border-red-500' : ''}
                   disabled={loading}
-                  placeholder='Confirm password'
+                  placeholder={t('userForm.placeholders.confirmPassword')}
                 />
                 {errors.confirmPassword && (
                   <p className='text-sm text-red-500'>
@@ -247,14 +248,14 @@ export function UserForm({ open, onOpenChange, onUserCreated, createUser }) {
               disabled={loading}
               className='w-full sm:w-auto'
             >
-              Cancel
+              {t('userForm.buttons.cancel')}
             </Button>
             <Button
               type='submit'
               disabled={loading}
               className='w-full sm:w-auto'
             >
-              {loading ? 'Creating...' : 'Create User'}
+              {loading ? t('userForm.buttons.creating') : t('userForm.buttons.create')}
             </Button>
           </div>
         </form>
