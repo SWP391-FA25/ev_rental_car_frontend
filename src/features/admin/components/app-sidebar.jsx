@@ -1,6 +1,7 @@
 import {
   ArrowUpCircleIcon,
   BarChartIcon,
+  BellIcon,
   Building2Icon,
   FileTextIcon,
   LayoutDashboardIcon,
@@ -53,6 +54,11 @@ const data = {
       title: 'Promotion Management',
       url: '/admin/promotions',
       icon: PercentIcon,
+    },
+    {
+      title: 'Notification Management',
+      url: '/admin/notifications',
+      icon: BellIcon,
     },
     {
       title: 'Settings',

@@ -1,4 +1,12 @@
-import { Car, CreditCard, FileText, MapPin, Users, Wrench } from 'lucide-react';
+import {
+  Bell,
+  Car,
+  CreditCard,
+  FileText,
+  MapPin,
+  Users,
+  Wrench,
+} from 'lucide-react';
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../shared/components/ui/button';
@@ -19,6 +27,7 @@ import { PaymentManagement } from '../components/payment-management';
 import { StaffHeader } from '../components/staff-header';
 import { StaffSidebar } from '../components/staff-sidebar';
 import { StationManagement } from '../components/station-management';
+import { NotificationPreferences } from '../components/NotificationPreferences';
 
 // Removed QuickVerification import
 
@@ -442,6 +451,8 @@ export default function StaffDashboard() {
         return renderPayments();
       case 'documents':
         return <DocumentVerification />;
+      case 'notifications':
+        return <NotificationPreferences />;
       // Removed quick-verify case
       default:
         return renderDashboard();
@@ -466,6 +477,11 @@ export default function StaffDashboard() {
       id: 'documents',
       label: 'Document Verification',
       icon: <FileText className='h-4 w-4' />,
+    },
+    {
+      id: 'notifications',
+      label: 'Notifications',
+      icon: <Bell className='h-4 w-4' />,
     },
     // Removed quick-verify menu item
   ];

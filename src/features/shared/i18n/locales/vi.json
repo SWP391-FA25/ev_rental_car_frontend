@@ -150,6 +150,68 @@
     "support": "Hỗ trợ",
     "alerts": "Thông báo"
   },
+  "staff": {
+    "notifications": {
+      "title": "Tùy chọn thông báo",
+      "description": "Tùy chỉnh cách bạn nhận thông báo",
+      "channels": "Kênh thông báo",
+      "categories": "Loại thông báo",
+      "email": "Thông báo qua email",
+      "emailDesc": "Nhận thông báo qua email",
+      "sms": "Thông báo qua SMS",
+      "smsDesc": "Nhận thông báo khẩn cấp qua SMS",
+      "inApp": "Thông báo trong ứng dụng",
+      "inAppDesc": "Hiển thị thông báo trong ứng dụng",
+      "booking": "Thông báo đặt xe",
+      "bookingDesc": "Thông báo cho đơn đặt xe mới và thay đổi",
+      "maintenance": "Cảnh báo bảo trì",
+      "maintenanceDesc": "Thông báo về vấn đề bảo trì xe/trạm",
+      "payment": "Thông báo thanh toán",
+      "paymentDesc": "Thông báo xác nhận và vấn đề thanh toán",
+      "document": "Xác minh tài liệu",
+      "documentDesc": "Thông báo khi cần xác minh tài liệu",
+      "save": "Lưu tùy chọn",
+      "preferencesSaved": "Đã lưu tùy chọn thông báo thành công"
+    }
+  },
+  "admin": {
+    "notifications": {
+      "title": "Quản lý thông báo",
+      "description": "Quản lý và theo dõi tất cả thông báo hệ thống",
+      "broadcast": "Phát thông báo",
+      "broadcastTitle": "Phát thông báo hệ thống",
+      "broadcastDescription": "Gửi thông báo đến tất cả người dùng trong hệ thống",
+      "create": "Tạo thông báo",
+      "createTitle": "Tạo thông báo mới",
+      "createDescription": "Gửi thông báo đến một người dùng cụ thể",
+      "notificationsList": "Danh sách thông báo",
+      "search": "Tìm kiếm thông báo...",
+      "filterType": "Lọc theo loại",
+      "filterPriority": "Lọc theo mức độ ưu tiên",
+      "user": "Người dùng",
+      "titleField": "Tiêu đề",
+      "messageField": "Nội dung",
+      "type": "Loại",
+      "priority": "Mức độ ưu tiên",
+      "date": "Ngày",
+      "actions": "Thao tác",
+      "selectUser": "Chọn người dùng",
+      "send": "Gửi thông báo",
+      "previous": "Trước",
+      "next": "Sau",
+      "pageInfo": "Trang {{current}} của {{total}}",
+      "noNotifications": "Không tìm thấy thông báo",
+      "noFilteredNotifications": "Không có thông báo nào phù hợp với tìm kiếm hoặc bộ lọc",
+      "noNotificationsDefault": "Hiện chưa có thông báo nào trong hệ thống",
+      "fetchError": "Không thể tải thông báo",
+      "createSuccess": "Tạo thông báo thành công",
+      "createError": "Không thể tạo thông báo",
+      "broadcastSuccess": "Phát thông báo thành công",
+      "broadcastError": "Không thể phát thông báo",
+      "deleteSuccess": "Xóa thông báo thành công",
+      "deleteError": "Không thể xóa thông báo"
+    }
+  },
   "common": {
     "english": "Tiếng Anh",
     "vietnamese": "Tiếng Việt",
@@ -539,6 +601,50 @@
       "maintenance": "Bảo trì",
       "charging": "Đang sạc",
       "outOfService": "Ngừng phục vụ"
+    }
+  },
+  "notifications": {
+    "title": "Thông báo",
+    "description": "Bạn có {{count}} thông báo",
+    "markAllAsRead": "Đánh dấu tất cả đã đọc",
+    "deleteAll": "Xóa tất cả",
+    "search": "Tìm kiếm thông báo...",
+    "markAsRead": "Đánh dấu đã đọc",
+    "delete": "Xóa",
+    "viewAll": "Xem tất cả thông báo",
+    "noNotifications": "Không có thông báo",
+    "selectAll": "Chọn tất cả",
+    "selected": "{{count}} đã chọn",
+    "expires": "Hết hạn",
+    "filters": {
+      "all": "Tất cả",
+      "read": "Đã đọc",
+      "unread": "Chưa đọc"
+    },
+    "sort": {
+      "newest": "Mới nhất trước",
+      "oldest": "Cũ nhất trước",
+      "priority": "Theo mức độ ưu tiên"
+    },
+    "types": {
+      "info": "Thông tin",
+      "success": "Thành công",
+      "warning": "Cảnh báo",
+      "error": "Lỗi"
+    },
+    "priority": {
+      "low": "Thấp",
+      "medium": "Trung bình",
+      "high": "Cao"
+    },
+    "pagination": {
+      "showing": "Hiển thị {{start}} đến {{end}} của {{total}} thông báo",
+      "page": "Trang {{current}} của {{total}}"
+    },
+    "empty": {
+      "title": "Chưa có thông báo",
+      "default": "Bạn chưa có bất kỳ thông báo nào vào lúc này.",
+      "filtered": "Không có thông báo nào phù hợp với tìm kiếm hoặc bộ lọc của bạn."
     }
   },
   "staffCustomers": {

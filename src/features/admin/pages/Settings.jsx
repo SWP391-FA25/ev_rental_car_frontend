@@ -26,6 +26,10 @@ export default function Settings() {
     maintenanceMode: false,
     emailNotifications: true,
     smsNotifications: false,
+    bookingNotifications: true,
+    maintenanceNotifications: true,
+    paymentNotifications: true,
+    documentNotifications: true,
     autoApproveBookings: false,
     maxBookingDays: 30,
     cancellationPolicy: 'Free cancellation up to 24 hours before pickup',
@@ -218,7 +222,84 @@ export default function Settings() {
                 }
               />
             </div>
-            <div className='flex items-center justify-between'>
+
+            {/* Staff Notification Preferences */}
+            <div className='space-y-3 pt-2 border-t'>
+              <h3 className='font-medium'>Staff Notification Preferences</h3>
+              <div className='flex items-center justify-between'>
+                <div className='space-y-0.5'>
+                  <Label htmlFor='bookingNotifications'>
+                    Booking Notifications
+                  </Label>
+                  <p className='text-sm text-muted-foreground'>
+                    Notify for new bookings and changes
+                  </p>
+                </div>
+                <Switch
+                  id='bookingNotifications'
+                  checked={settings.bookingNotifications}
+                  onCheckedChange={checked =>
+                    setSettings({ ...settings, bookingNotifications: checked })
+                  }
+                />
+              </div>
+              <div className='flex items-center justify-between'>
+                <div className='space-y-0.5'>
+                  <Label htmlFor='maintenanceNotifications'>
+                    Maintenance Alerts
+                  </Label>
+                  <p className='text-sm text-muted-foreground'>
+                    Notify for vehicle/station maintenance issues
+                  </p>
+                </div>
+                <Switch
+                  id='maintenanceNotifications'
+                  checked={settings.maintenanceNotifications}
+                  onCheckedChange={checked =>
+                    setSettings({
+                      ...settings,
+                      maintenanceNotifications: checked,
+                    })
+                  }
+                />
+              </div>
+              <div className='flex items-center justify-between'>
+                <div className='space-y-0.5'>
+                  <Label htmlFor='paymentNotifications'>
+                    Payment Notifications
+                  </Label>
+                  <p className='text-sm text-muted-foreground'>
+                    Notify for payment confirmations and issues
+                  </p>
+                </div>
+                <Switch
+                  id='paymentNotifications'
+                  checked={settings.paymentNotifications}
+                  onCheckedChange={checked =>
+                    setSettings({ ...settings, paymentNotifications: checked })
+                  }
+                />
+              </div>
+              <div className='flex items-center justify-between'>
+                <div className='space-y-0.5'>
+                  <Label htmlFor='documentNotifications'>
+                    Document Verification
+                  </Label>
+                  <p className='text-sm text-muted-foreground'>
+                    Notify when documents need verification
+                  </p>
+                </div>
+                <Switch
+                  id='documentNotifications'
+                  checked={settings.documentNotifications}
+                  onCheckedChange={checked =>
+                    setSettings({ ...settings, documentNotifications: checked })
+                  }
+                />
+              </div>
+            </div>
+
+            <div className='flex items-center justify-between pt-2 border-t'>
               <div className='space-y-0.5'>
                 <Label htmlFor='autoApproveBookings'>
                   Auto-approve Bookings

@@ -148,6 +148,68 @@
     "support": "Support",
     "alerts": "Alerts"
   },
+  "staff": {
+    "notifications": {
+      "title": "Notification Preferences",
+      "description": "Customize how you receive notifications",
+      "channels": "Notification Channels",
+      "categories": "Notification Categories",
+      "email": "Email Notifications",
+      "emailDesc": "Receive notifications via email",
+      "sms": "SMS Notifications",
+      "smsDesc": "Receive urgent notifications via SMS",
+      "inApp": "In-App Notifications",
+      "inAppDesc": "Show notifications within the application",
+      "booking": "Booking Notifications",
+      "bookingDesc": "Notify for new bookings and changes",
+      "maintenance": "Maintenance Alerts",
+      "maintenanceDesc": "Notify for vehicle/station maintenance issues",
+      "payment": "Payment Notifications",
+      "paymentDesc": "Notify for payment confirmations and issues",
+      "document": "Document Verification",
+      "documentDesc": "Notify when documents need verification",
+      "save": "Save Preferences",
+      "preferencesSaved": "Notification preferences saved successfully"
+    }
+  },
+  "admin": {
+    "notifications": {
+      "title": "Notification Management",
+      "description": "Manage and monitor all system notifications",
+      "broadcast": "Broadcast Notification",
+      "broadcastTitle": "Broadcast System Notification",
+      "broadcastDescription": "Send a notification to all users in the system",
+      "create": "Create Notification",
+      "createTitle": "Create New Notification",
+      "createDescription": "Send a notification to a specific user",
+      "notificationsList": "Notifications List",
+      "search": "Search notifications...",
+      "filterType": "Filter by type",
+      "filterPriority": "Filter by priority",
+      "user": "User",
+      "titleField": "Title",
+      "messageField": "Message",
+      "type": "Type",
+      "priority": "Priority",
+      "date": "Date",
+      "actions": "Actions",
+      "selectUser": "Select a user",
+      "send": "Send Notification",
+      "previous": "Previous",
+      "next": "Next",
+      "pageInfo": "Page {{current}} of {{total}}",
+      "noNotifications": "No notifications found",
+      "noFilteredNotifications": "No notifications match your search or filters",
+      "noNotificationsDefault": "There are no notifications in the system yet",
+      "fetchError": "Failed to fetch notifications",
+      "createSuccess": "Notification created successfully",
+      "createError": "Failed to create notification",
+      "broadcastSuccess": "Notification broadcast successfully",
+      "broadcastError": "Failed to broadcast notification",
+      "deleteSuccess": "Notification deleted successfully",
+      "deleteError": "Failed to delete notification"
+    }
+  },
   "common": {
     "english": "English",
     "vietnamese": "Vietnamese",
@@ -537,6 +599,50 @@
       "maintenance": "Maintenance",
       "charging": "Charging",
       "outOfService": "Out of Service"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "description": "You have {{count}} notifications",
+    "markAllAsRead": "Mark all as read",
+    "deleteAll": "Delete all",
+    "search": "Search notifications...",
+    "markAsRead": "Mark as read",
+    "delete": "Delete",
+    "viewAll": "View all notifications",
+    "noNotifications": "No notifications",
+    "selectAll": "Select all",
+    "selected": "{{count}} selected",
+    "expires": "Expires",
+    "filters": {
+      "all": "All",
+      "read": "Read",
+      "unread": "Unread"
+    },
+    "sort": {
+      "newest": "Newest first",
+      "oldest": "Oldest first",
+      "priority": "By priority"
+    },
+    "types": {
+      "info": "Info",
+      "success": "Success",
+      "warning": "Warning",
+      "error": "Error"
+    },
+    "priority": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High"
+    },
+    "pagination": {
+      "showing": "Showing {{start}} to {{end}} of {{total}} notifications",
+      "page": "Page {{current}} of {{total}}"
+    },
+    "empty": {
+      "title": "No notifications yet",
+      "default": "You don't have any notifications at the moment.",
+      "filtered": "No notifications match your search or filters."
     }
   },
   "staffCustomers": {
