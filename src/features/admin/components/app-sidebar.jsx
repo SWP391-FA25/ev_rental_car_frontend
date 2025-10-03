@@ -27,47 +27,51 @@ import { useTranslation } from 'react-i18next';
 
 const data = {
   navMain: [
-    { title: 'sidebar.dashboard', url: '/admin', icon: LayoutDashboardIcon },
-    { title: 'sidebar.userManagement', url: '/admin/users', icon: UsersIcon },
     {
-      title: 'sidebar.staffManagement',
+      title: 'Dashboard',
+      url: '/admin',
+      icon: LayoutDashboardIcon,
+    },
+    {
+      title: 'User Management',
+      url: '/admin/users',
+      icon: UsersIcon,
+    },
+    {
+      title: 'Staff Management',
       url: '/admin/staff',
       icon: BarChartIcon,
     },
     {
-      title: 'sidebar.stationManagement',
+      title: 'Station Management',
       url: '/admin/stations',
       icon: Building2Icon,
     },
     {
-      title: 'sidebar.vehiclesManagement',
+      title: 'Vehicals Management',
       url: '/admin/vehicles',
       icon: FileTextIcon,
     },
     {
-      title: 'sidebar.promotionManagement',
+      title: 'Promotion Management',
       url: '/admin/promotions',
       icon: PercentIcon,
     },
     {
-      title: 'sidebar.notificationManagement',
+      title: 'Notification Management',
       url: '/admin/notifications',
       icon: BellIcon,
     },
-    { title: 'sidebar.settings', url: '/admin/settings', icon: SettingsIcon },
+    {
+      title: 'Settings',
+      url: '/admin/settings',
+      icon: SettingsIcon,
+    },
   ],
 };
 
 export function AppSidebar(props) {
   const { user } = useAuth();
-  const { t } = useTranslation();
-
-  // map title sang text theo ngôn ngữ
-  const translatedNav = data.navMain.map(item => ({
-    ...item,
-    title: t(item.title),
-  }));
-
   return (
     <Sidebar collapsible='offcanvas' {...props}>
       <SidebarHeader>
