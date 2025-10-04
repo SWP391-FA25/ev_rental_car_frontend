@@ -22,7 +22,7 @@ export default function SignUp() {
     email: '',
     password: '',
     confirmPassword: '',
-    company: '',
+    address: '',
     phone: '',
   });
   const [error, setError] = useState(null);
@@ -46,18 +46,18 @@ export default function SignUp() {
         phone: formData.phone || undefined,
         // optional fields you might add to UI later
         license: undefined,
-        address: formData.company || undefined,
+        address: formData.address || undefined,
       };
       const res = await apiClient.post(endpoints.auth.register(), payload);
       if (!res?.success) throw new Error(res?.message || 'Signup failed');
       toast.success(
-        `Account created successfully! Welcome, ${formData.firstName}!`,
+        `Account created successfully! Please verify your email to complete registration.`,
         {
           position: 'top-right',
           autoClose: 4000,
         }
       );
-      navigate('/login');
+      navigate('/verify-email');
     } catch (err) {
       setError(err?.message || 'Signup failed');
     }
@@ -137,13 +137,13 @@ export default function SignUp() {
               </div>
 
               <div className='space-y-2'>
-                <Label htmlFor='company'>Company</Label>
+                <Label htmlFor='address'>Address</Label>
                 <Input
-                  id='company'
-                  name='company'
+                  id='address'
+                  name='address'
                   type='text'
-                  placeholder='Your Company Name'
-                  value={formData.company}
+                  placeholder='Your Address'
+                  value={formData.address}
                   onChange={handleChange}
                   required
                 />

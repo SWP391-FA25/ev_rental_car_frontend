@@ -1,6 +1,6 @@
 import { useAuth } from '@/app/providers/AuthProvider';
 import { ArrowLeft, CheckCircle2, Mail, XCircle } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Button } from '../../shared/components/ui/button';
@@ -23,56 +23,59 @@ export default function VerifyEmail() {
   const { user, verifyUser } = useAuth();
   const navigate = useNavigate();
 
+  const handleVerifyToken = useCallback(
+    async verifyToken => {
+      setVerificationStatus('verifying');
+      setErrorMessage('');
+
+      try {
+        const res = await apiClient.get(endpoints.email.verify(verifyToken));
+
+        if (res?.success && res?.message === 'Email verified successfully') {
+          setVerificationStatus('success');
+          toast.success('Email verified successfully!', {
+            position: 'top-center',
+            autoClose: 3000,
+          });
+
+          // Refresh user data to get updated verification status
+          await verifyUser();
+
+          // Redirect after a short delay
+          setTimeout(() => {
+            if (user?.role === 'ADMIN') {
+              navigate('/admin');
+            } else if (user?.role === 'STAFF') {
+              navigate('/staff');
+            } else {
+              navigate('/user');
+            }
+          }, 2000);
+        } else {
+          setVerificationStatus('error');
+          setErrorMessage(res?.message || 'Verification failed');
+        }
+      } catch (err) {
+        setVerificationStatus('error');
+        setErrorMessage(
+          err?.message ||
+            'Failed to verify email. The token may be invalid or expired.'
+        );
+        toast.error(err?.message || 'Verification failed', {
+          position: 'top-center',
+          autoClose: 3000,
+        });
+      }
+    },
+    [user, navigate, verifyUser]
+  );
+
   // Auto-verify if token is present in URL
   useEffect(() => {
     if (token) {
       handleVerifyToken(token);
     }
-  }, [token]);
-
-  const handleVerifyToken = async verifyToken => {
-    setVerificationStatus('verifying');
-    setErrorMessage('');
-
-    try {
-      const res = await apiClient.get(endpoints.email.verify(verifyToken));
-
-      if (res?.message === 'Email verified successfully') {
-        setVerificationStatus('success');
-        toast.success('Email verified successfully!', {
-          position: 'top-center',
-          autoClose: 3000,
-        });
-
-        // Refresh user data to get updated verification status
-        await verifyUser();
-
-        // Redirect after a short delay
-        setTimeout(() => {
-          if (user?.role === 'ADMIN') {
-            navigate('/admin');
-          } else if (user?.role === 'STAFF') {
-            navigate('/staff');
-          } else {
-            navigate('/user');
-          }
-        }, 2000);
-      } else {
-        setVerificationStatus('error');
-        setErrorMessage(res?.message || 'Verification failed');
-      }
-    } catch (err) {
-      setVerificationStatus('error');
-      setErrorMessage(
-        err?.message ||
-          'Failed to verify email. The token may be invalid or expired.'
-      );
-      toast.error(err?.message || 'Verification failed', {
-        position: 'top-center',
-        autoClose: 3000,
-      });
-    }
-  };
+  }, [token, handleVerifyToken]);
 
   const handleSendVerification = async () => {
     if (!user) {
@@ -253,7 +256,7 @@ export default function VerifyEmail() {
                 )}
                 <p className='text-xs text-muted-foreground text-center'>
                   Click the button above to receive a verification email. The
-                  link will be valid for 15 minutes.
+                  link will be valid for 5 minutes.
                 </p>
               </div>
             ) : (
