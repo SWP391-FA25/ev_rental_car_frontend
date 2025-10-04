@@ -51,13 +51,13 @@ export default function SignUp() {
       const res = await apiClient.post(endpoints.auth.register(), payload);
       if (!res?.success) throw new Error(res?.message || 'Signup failed');
       toast.success(
-        `Account created successfully! Welcome, ${formData.firstName}!`,
+        `Account created successfully! Please verify your email to complete registration.`,
         {
           position: 'top-right',
           autoClose: 4000,
         }
       );
-      navigate('/login');
+      navigate('/verify-email');
     } catch (err) {
       setError(err?.message || 'Signup failed');
     }
@@ -137,13 +137,13 @@ export default function SignUp() {
               </div>
 
               <div className='space-y-2'>
-                <Label htmlFor='company'>Address</Label>
+                <Label htmlFor='address'>Address</Label>
                 <Input
                   id='address'
                   name='address'
                   type='text'
                   placeholder='Your Address'
-                  value={formData.company}
+                  value={formData.address}
                   onChange={handleChange}
                   required
                 />

@@ -6,14 +6,16 @@ import Settings from '@/features/admin/pages/Settings.jsx';
 import StaffManagement from '@/features/admin/pages/StaffManagement.jsx';
 import StationManagement from '@/features/admin/pages/StationManagement.jsx';
 import UserManagement from '@/features/admin/pages/UserManagement.jsx';
+import ForgotPassword from '@/features/auth/components/ForgotPassword.jsx';
 import Login from '@/features/auth/components/Login.jsx';
+import ResetPassword from '@/features/auth/components/ResetPassword.jsx';
 import SignUp from '@/features/auth/components/SignUp.jsx';
 import VerifyEmail from '@/features/auth/components/VerifyEmail.jsx';
 import CarDetailPage from '@/features/cars/components/CarDetailPage.jsx';
 import CarsPage from '@/features/cars/components/CarsPage.jsx';
 import Home from '@/features/shared/components/Home.jsx';
-import PolicyPage from '@/features/shared/components/PolicyPage.jsx';
 import { NotificationPage } from '@/features/shared/components/NotificationPage';
+import PolicyPage from '@/features/shared/components/PolicyPage.jsx';
 import StaffDashboard from '@/features/staff/layout/StaffDashboard.jsx';
 import { createBrowserRouter } from 'react-router-dom';
 import VehicleManagement from '../../features/admin/pages/VehicleManagement';
@@ -30,6 +32,8 @@ export const router = createBrowserRouter([
   { path: '/login', element: <Login /> },
   { path: '/signup', element: <SignUp /> },
   { path: '/verify-email', element: <VerifyEmail /> },
+  { path: '/forgot-password', element: <ForgotPassword /> },
+  { path: '/reset-password', element: <ResetPassword /> },
   {
     path: '/admin',
     element: (

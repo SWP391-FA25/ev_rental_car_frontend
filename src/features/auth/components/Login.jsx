@@ -33,10 +33,19 @@ export default function Login() {
       if (res?.success && res?.data?.user) {
         const user = res.data.user;
         login(user);
-        toast.success('Logged in successfully', {
-          position: 'top-center',
-          autoClose: 2000,
-        });
+
+        // Show verification reminder if not verified
+        if (user.verifyStatus !== 'VERIFIED') {
+          toast.info('Please verify your email to unlock all features', {
+            position: 'top-center',
+            autoClose: 2000,
+          });
+        }
+
+        // toast.success('Logged in successfully', {
+        //   position: 'top-center',
+        //   autoClose: 2000,
+        // });
         if (user?.role === 'ADMIN') {
           navigate('/admin');
         } else if (user?.role === 'STAFF') {

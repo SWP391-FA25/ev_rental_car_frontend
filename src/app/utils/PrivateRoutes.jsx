@@ -43,7 +43,12 @@ const PrivateRoutes = ({ children }) => {
     );
   }
 
-  return user ? children : <Navigate to='/login' />;
+  if (!user) {
+    return <Navigate to='/login' />;
+  }
+
+  // Allow access but show verification reminder for unverified users
+  return children;
 };
 
 export default PrivateRoutes;

@@ -1,5 +1,5 @@
 import { Briefcase, Edit, Star } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Avatar,
@@ -9,13 +9,11 @@ import {
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
 import { Input } from '../../shared/components/ui/input';
-import { apiClient } from '../../shared/lib/apiClient';
-import { endpoints } from '../../shared/lib/endpoints';
+import VerificationBanner from '../../shared/components/VerificationBanner';
 
 export default function ProfileContent({ user }) {
   const navigate = useNavigate();
   const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [isEditingLicense, setIsEditingLicense] = useState(false);
   const [profileData, setProfileData] = useState({
     fullName: user?.name || '',
     email: user?.email || '',
@@ -25,74 +23,6 @@ export default function ProfileContent({ user }) {
     facebook: '',
     google: user?.name || '',
   });
-  const [licenseData, setLicenseData] = useState({
-    licenseNumber: '',
-  });
-  const [uploadedImage, setUploadedImage] = useState(null);
-  const [licenseFile, setLicenseFile] = useState(null);
-  const [cccdImage, setCccdImage] = useState(null);
-  const [cccdFile, setCccdFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState('');
-  const [documents, setDocuments] = useState([]);
-  const [loadingDocs, setLoadingDocs] = useState(false);
-
-  const fetchDocuments = async () => {
-    try {
-      setLoadingDocs(true);
-      const res = await apiClient.get(endpoints.documents.myDocuments());
-      if (res?.success && Array.isArray(res.data)) {
-        setDocuments(res.data);
-      }
-    } catch (err) {
-      // ignore for now
-    } finally {
-      setLoadingDocs(false);
-    }
-  };
-
-  const handleDeleteLicense = async () => {
-    try {
-      // If there is an uploaded doc on server, delete it
-      if (licenseDoc?.id) {
-        await apiClient.delete(endpoints.documents.delete(licenseDoc.id));
-        await fetchDocuments();
-      }
-    } catch (err) {
-      // ignore
-    } finally {
-      // Clear local preview/state regardless
-      setUploadedImage(null);
-      setLicenseFile(null);
-    }
-  };
-
-  const handleDeleteCccd = async () => {
-    try {
-      if (idCardDoc?.id) {
-        await apiClient.delete(endpoints.documents.delete(idCardDoc.id));
-        await fetchDocuments();
-      }
-    } catch (err) {
-      // ignore
-    } finally {
-      setCccdImage(null);
-      setCccdFile(null);
-    }
-  };
-
-  useEffect(() => {
-    fetchDocuments();
-  }, []);
-
-  const licenseDoc = useMemo(
-    () => documents.find(d => d.documentType === 'DRIVERS_LICENSE'),
-    [documents]
-  );
-  const idCardDoc = useMemo(
-    () => documents.find(d => d.documentType === 'ID_CARD'),
-    [documents]
-  );
 
   const displayName = user?.name || user?.email || 'User';
   const initials = (() => {
@@ -114,112 +44,15 @@ export default function ProfileContent({ user }) {
     }));
   };
 
-  const handleLicenseInputChange = (field, value) => {
-    setLicenseData(prev => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const handleImageUpload = event => {
-    const file = event.target.files[0];
-    if (file) {
-      setUploadedImage(URL.createObjectURL(file));
-      setLicenseFile(file);
-      setIsEditingLicense(true);
-    }
-  };
-
-  const handleCccdUpload = event => {
-    const file = event.target.files[0];
-    if (file) {
-      setCccdImage(URL.createObjectURL(file));
-      setCccdFile(file);
-    }
-  };
-
-  const uploadDocument = async ({
-    file,
-    documentType,
-    documentNumber,
-    expiryDate,
-  }) => {
-    console.log('uploadDocument called with:', {
-      file,
-      documentType,
-      documentNumber,
-      expiryDate,
-    });
-    if (!file) return { success: false, message: 'No file selected' };
-    try {
-      setUploading(true);
-      setUploadError('');
-      const form = new FormData();
-      form.append('document', file);
-      form.append('documentType', documentType);
-      if (documentNumber && documentNumber.trim()) {
-        form.append('documentNumber', documentNumber.trim());
-      }
-      if (expiryDate && expiryDate.trim()) {
-        form.append('expiryDate', expiryDate.trim());
-      }
-
-      console.log('Sending request to:', endpoints.documents.upload());
-      console.log('FormData contents:');
-      for (let [key, value] of form.entries()) {
-        console.log(key, value);
-      }
-
-      const res = await apiClient.post(endpoints.documents.upload(), form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      console.log('API response:', res);
-      return res;
-    } catch (err) {
-      console.error('Upload error:', err);
-      setUploadError(err?.message || 'Upload failed');
-      return { success: false, message: err?.message };
-    } finally {
-      setUploading(false);
-    }
-  };
-
   const handleSaveProfile = () => {
     setIsEditingProfile(false);
     // Logic to save profile data
   };
 
-  const handleSaveLicense = async () => {
-    console.log('handleSaveLicense called');
-    // use file stored in state (input may be unmounted after preview)
-    const file = licenseFile;
-    console.log('File found:', file);
-    console.log('License number:', licenseData.licenseNumber);
-
-    if (!file) {
-      console.log('No file selected');
-      setUploadError('Vui lòng chọn file ảnh');
-      return;
-    }
-
-    const result = await uploadDocument({
-      file,
-      documentType: 'DRIVERS_LICENSE',
-      documentNumber: licenseData.licenseNumber || undefined,
-      expiryDate: undefined, // TODO: Add expiry date field if needed
-    });
-    console.log('Upload result:', result);
-    if (result?.success) {
-      setIsEditingLicense(false);
-      setUploadError('');
-      await fetchDocuments();
-      // optionally clear selected file
-      // setLicenseFile(null);
-    }
-  };
-
   return (
     <div className='max-w-6xl mx-auto'>
+      {/* Verification Banner */}
+
       {/* Header */}
       <div className='flex items-center justify-between mb-8'>
         <div className='flex items-center gap-3'>
@@ -244,6 +77,7 @@ export default function ProfileContent({ user }) {
           </span>
         </div>
       </div>
+      <VerificationBanner />
 
       <div className='bg-card rounded-lg border border-border p-6 shadow-sm'>
         <div className='flex gap-8'>

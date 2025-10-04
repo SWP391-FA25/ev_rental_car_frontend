@@ -66,8 +66,10 @@ export const endpoints = {
     delete: id => `/api/promotions/${id}`,
   },
   email: {
-    sendVerification: () => '/api/email/send-verification',
-    verify: token => `/api/email/verify/${token}`,
+    sendVerification: () => '/api/emails/send-verification',
+    verify: token => `/api/emails/verify/${token}`,
+    forgotPassword: () => '/api/emails/forgot-password',
+    verifyReset: token => `/api/emails/verify-reset/${token}`,
   },
   assignments: {
     getAll: () => '/api/assignments',
