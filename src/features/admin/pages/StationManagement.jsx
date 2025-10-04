@@ -6,11 +6,12 @@ import {
   SearchIcon,
   TrashIcon,
   UsersIcon,
+  MoreVerticalIcon,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
-import { MoreVerticalIcon } from 'lucide-react';
 import { LocationDisplay } from '../../shared/components/LocationDisplay';
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
@@ -46,12 +47,14 @@ import { StationForm } from '../components/station/StationForm';
 
 // Station status options
 const STATION_STATUS = [
-  { value: 'ACTIVE', label: 'Active' },
-  { value: 'INACTIVE', label: 'Inactive' },
-  { value: 'MAINTENANCE', label: 'Maintenance' },
+  { value: 'ACTIVE', labelKey: 'station.form.status.active' },
+  { value: 'INACTIVE', labelKey: 'station.form.status.inactive' },
+  { value: 'MAINTENANCE', labelKey: 'station.form.status.maintenance' },
 ];
 
 export default function StationManagement() {
+  const { t } = useTranslation();
+
   const [stations, setStations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -77,7 +80,7 @@ export default function StationManagement() {
         setStations(response.data.stations || []);
       }
     } catch (error) {
-      toast.error('Failed to load stations: ' + error.message);
+      toast.error(t('station.management.messages.loadFailed') + ': ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -90,13 +93,13 @@ export default function StationManagement() {
         stationData
       );
       if (response.success) {
-        toast.success('Station created successfully');
+        toast.success(t('station.management.messages.createSuccess'));
         setIsCreateDialogOpen(false);
         loadStations();
         return response.data.station;
       }
     } catch (error) {
-      toast.error('Failed to create station: ' + error.message);
+      toast.error(t('station.management.messages.createFailed') + ': ' + error.message);
       throw error;
     }
   };
@@ -108,14 +111,12 @@ export default function StationManagement() {
         updateData
       );
       if (response.success) {
-        toast.success('Station updated successfully');
+        toast.success(t('station.management.messages.updateSuccess'));
 
-        // Update the selected station with new data
         if (selectedStation && selectedStation.id === stationId) {
           setSelectedStation(response.data.station);
         }
 
-        // Update the station in the stations list
         setStations(prev =>
           prev.map(station =>
             station.id === stationId ? response.data.station : station
@@ -126,7 +127,7 @@ export default function StationManagement() {
         return response.data.station;
       }
     } catch (error) {
-      toast.error('Failed to update station: ' + error.message);
+      toast.error(t('station.management.messages.updateFailed') + ': ' + error.message);
       throw error;
     }
   };
@@ -137,18 +138,17 @@ export default function StationManagement() {
         endpoints.stations.delete(stationId)
       );
       if (response.success) {
-        toast.success('Station deactivated successfully');
+        toast.success(t('station.management.messages.deleteSuccess'));
         setStations(prev => prev.filter(station => station.id !== stationId));
         loadStations();
       }
     } catch (error) {
-      toast.error('Failed to deactivate station: ' + error.message);
+      toast.error(t('station.management.messages.deleteFailed') + ': ' + error.message);
     }
   };
 
   const openViewDialog = async station => {
     try {
-      // Fetch detailed station data including staff
       const response = await apiClient.get(
         endpoints.stations.getById(station.id)
       );
@@ -156,11 +156,10 @@ export default function StationManagement() {
         setSelectedStation(response.data.station);
         setIsViewDialogOpen(true);
       } else {
-        toast.error('Failed to load station details');
+        toast.error(t('station.management.messages.loadFailed'));
       }
     } catch (error) {
-      toast.error('Failed to load station details: ' + error.message);
-      console.error('Error loading station details:', error);
+      toast.error(t('station.management.messages.loadFailed') + ': ' + error.message);
     }
   };
 
@@ -172,7 +171,7 @@ export default function StationManagement() {
   const handleAssignmentSuccess = () => {
     setAssignDialogOpen(false);
     setStationToAssign(null);
-    loadStations(); // Refresh stations to show updated staff count
+    loadStations();
   };
 
   const filteredStations = stations.filter(station => {
@@ -200,13 +199,13 @@ export default function StationManagement() {
 
   const getStatusLabel = status => {
     const statusObj = STATION_STATUS.find(s => s.value === status);
-    return statusObj ? statusObj.label : status;
+    return statusObj ? t(statusObj.labelKey) : status;
   };
 
   if (loading) {
     return (
       <div className='flex items-center justify-center h-64'>
-        <div className='text-lg'>Loading stations...</div>
+        <div className='text-lg'>{t('station.management.messages.loading')}</div>
       </div>
     );
   }
@@ -217,24 +216,24 @@ export default function StationManagement() {
       <div className='flex items-center justify-between'>
         <div>
           <h1 className='text-3xl font-bold tracking-tight'>
-            Station Management
+            {t('station.management.title')}
           </h1>
           <p className='text-muted-foreground'>
-            Manage charging stations and their information
+            {t('station.management.subtitle')}
           </p>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <PlusIcon className='mr-2 h-4 w-4' />
-              Add Station
+              {t('station.management.add')}
             </Button>
           </DialogTrigger>
           <DialogContent className='max-w-2xl max-h-[90vh] overflow-y-auto'>
             <DialogHeader>
-              <DialogTitle>Add New Station</DialogTitle>
+              <DialogTitle>{t('station.management.addNew')}</DialogTitle>
               <DialogDescription>
-                Create a new charging station
+                {t('station.management.addDescription')}
               </DialogDescription>
             </DialogHeader>
             <StationForm
@@ -250,7 +249,7 @@ export default function StationManagement() {
         <div className='relative flex-1 max-w-sm'>
           <SearchIcon className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
           <Input
-            placeholder='Search stations...'
+            placeholder={t('station.management.filters.search')}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             className='pl-10'
@@ -260,20 +259,19 @@ export default function StationManagement() {
           <DropdownMenuTrigger asChild>
             <Button variant='outline'>
               <FilterIcon className='mr-2 h-4 w-4' />
-              Status:{' '}
-              {filterStatus === 'all' ? 'All' : getStatusLabel(filterStatus)}
+              {t('station.management.filters.status')}: {filterStatus === 'all' ? t('station.management.filters.all') : getStatusLabel(filterStatus)}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuItem onClick={() => setFilterStatus('all')}>
-              All
+              {t('station.management.filters.all')}
             </DropdownMenuItem>
             {STATION_STATUS.map(status => (
               <DropdownMenuItem
                 key={status.value}
                 onClick={() => setFilterStatus(status.value.toLowerCase())}
               >
-                {status.label}
+                {t(status.labelKey)}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
@@ -285,14 +283,14 @@ export default function StationManagement() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Location</TableHead>
-              <TableHead>Address</TableHead>
-              <TableHead>Capacity</TableHead>
-              <TableHead>Vehicles</TableHead>
-              <TableHead>Staff</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className='w-[70px]'>Actions</TableHead>
+              <TableHead>{t('station.management.table.name')}</TableHead>
+              <TableHead>{t('station.management.table.location')}</TableHead>
+              <TableHead>{t('station.management.table.address')}</TableHead>
+              <TableHead>{t('station.management.table.capacity')}</TableHead>
+              <TableHead>{t('station.management.table.vehicles')}</TableHead>
+              <TableHead>{t('station.management.table.staff')}</TableHead>
+              <TableHead>{t('station.management.table.status')}</TableHead>
+              <TableHead className='w-[70px]'>{t('station.management.table.actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -302,7 +300,7 @@ export default function StationManagement() {
                   <div>
                     <div className='font-medium'>{station.name}</div>
                     <div className='text-sm text-muted-foreground'>
-                      {station.contact || 'No contact'}
+                      {station.contact || t('station.management.noContact')}
                     </div>
                   </div>
                 </TableCell>
@@ -316,7 +314,7 @@ export default function StationManagement() {
                   {station.address}
                 </TableCell>
                 <TableCell>
-                  <Badge variant='outline'>{station.capacity} slots</Badge>
+                  <Badge variant='outline'>{station.capacity} {t('station.management.slots')}</Badge>
                 </TableCell>
                 <TableCell>
                   <div className='flex items-center'>
@@ -345,13 +343,13 @@ export default function StationManagement() {
                     <DropdownMenuContent align='end'>
                       <DropdownMenuItem onClick={() => openViewDialog(station)}>
                         <EyeIcon className='mr-2 h-4 w-4' />
-                        View Details
+                        {t('station.management.actions.view')}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => openAssignDialog(station)}
                       >
                         <UsersIcon className='mr-2 h-4 w-4' />
-                        Assign Staff
+                        {t('station.management.actions.assign')}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className='text-red-600'
@@ -361,7 +359,7 @@ export default function StationManagement() {
                         }}
                       >
                         <TrashIcon className='mr-2 h-4 w-4' />
-                        Delete
+                        {t('station.management.actions.delete')}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -376,19 +374,19 @@ export default function StationManagement() {
       <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>{stations.length}</div>
-          <div className='text-sm text-muted-foreground'>Total Stations</div>
+          <div className='text-sm text-muted-foreground'>{t('station.management.slots')}</div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>
             {stations.filter(s => s.status === 'ACTIVE').length}
           </div>
-          <div className='text-sm text-muted-foreground'>Active</div>
+          <div className='text-sm text-muted-foreground'>{t('station.form.status.active')}</div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>
             {stations.filter(s => s.status === 'MAINTENANCE').length}
           </div>
-          <div className='text-sm text-muted-foreground'>Maintenance</div>
+          <div className='text-sm text-muted-foreground'>{t('station.form.status.maintenance')}</div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>
@@ -397,7 +395,7 @@ export default function StationManagement() {
               0
             )}
           </div>
-          <div className='text-sm text-muted-foreground'>Total Capacity</div>
+          <div className='text-sm text-muted-foreground'>{t('station.management.summary.capacity')}</div>
         </div>
       </div>
 
@@ -412,16 +410,16 @@ export default function StationManagement() {
       <ConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        title='Deactivate Station'
-        description='Are you sure you want to delete this station? This will make it unavailable for new bookings.'
+        title={t('station.management.confirmDelete.title')}
+        description={t('station.management.confirmDelete.description')}
         onConfirm={() => {
           if (stationToDelete) {
             handleDeleteStation(stationToDelete);
             setStationToDelete(null);
           }
         }}
-        confirmText='Delete'
-        cancelText='Cancel'
+        confirmText={t('station.management.confirmDelete.confirm')}
+        cancelText={t('station.management.confirmDelete.cancel')}
         confirmVariant='destructive'
       />
 
@@ -429,9 +427,9 @@ export default function StationManagement() {
       <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
         <DialogContent className='max-w-md'>
           <DialogHeader>
-            <DialogTitle>Assign Staff to Station</DialogTitle>
+            <DialogTitle>{t('station.management.assignDialog.title')}</DialogTitle>
             <DialogDescription>
-              Assign a staff member to {stationToAssign?.name}
+              {t('station.management.assignDialog.description', { stationName: stationToAssign?.name })}
             </DialogDescription>
           </DialogHeader>
           <SimpleAssignmentForm

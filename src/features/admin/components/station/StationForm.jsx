@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { LocationPicker } from '../../../shared/components/LocationPicker';
 import { Button } from '../../../shared/components/ui/button';
 import { Input } from '../../../shared/components/ui/input';
@@ -14,12 +15,14 @@ import { Textarea } from '../../../shared/components/ui/textarea';
 
 // Station status options
 const STATION_STATUS = [
-  { value: 'ACTIVE', label: 'Active' },
-  { value: 'INACTIVE', label: 'Inactive' },
-  { value: 'MAINTENANCE', label: 'Maintenance' },
+  { value: 'ACTIVE', label: 'station.form.status.active' },
+  { value: 'INACTIVE', label: 'station.form.status.inactive' },
+  { value: 'MAINTENANCE', label: 'station.form.status.maintenance' },
 ];
 
 export function StationForm({ station, onSubmit, onCancel, loading = false }) {
+  const { t } = useTranslation();
+
   const [formData, setFormData] = useState({
     name: '',
     location: '',
@@ -49,7 +52,7 @@ export function StationForm({ station, onSubmit, onCancel, loading = false }) {
     const newErrors = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Station name is required';
+      newErrors.name = t('station.form.errors.nameRequired');
     }
 
     if (
@@ -57,19 +60,19 @@ export function StationForm({ station, onSubmit, onCancel, loading = false }) {
       (typeof formData.location === 'string' && !formData.location.trim()) ||
       (typeof formData.location === 'object' && !formData.location.coordinates)
     ) {
-      newErrors.location = 'Location is required';
+      newErrors.location = t('station.form.errors.locationRequired');
     }
 
     if (!formData.address.trim()) {
-      newErrors.address = 'Address is required';
+      newErrors.address = t('station.form.errors.addressRequired');
     }
 
     if (!formData.capacity || formData.capacity <= 0) {
-      newErrors.capacity = 'Capacity must be a positive number';
+      newErrors.capacity = t('station.form.errors.capacityInvalid');
     }
 
     if (!formData.status) {
-      newErrors.status = 'Status is required';
+      newErrors.status = t('station.form.errors.statusRequired');
     }
 
     setErrors(newErrors);
@@ -101,7 +104,6 @@ export function StationForm({ station, onSubmit, onCancel, loading = false }) {
       [field]: value,
     }));
 
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({
         ...prev,
@@ -115,12 +117,12 @@ export function StationForm({ station, onSubmit, onCancel, loading = false }) {
       <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
         {/* Station Name */}
         <div className='space-y-2'>
-          <Label htmlFor='name'>Station Name *</Label>
+          <Label htmlFor='name'>{t('station.form.name')} *</Label>
           <Input
             id='name'
             value={formData.name}
             onChange={e => handleInputChange('name', e.target.value)}
-            placeholder='e.g., Central Station'
+            placeholder={t('station.form.placeholders.name')}
             className={errors.name ? 'border-red-500' : ''}
           />
           {errors.name && <p className='text-sm text-red-500'>{errors.name}</p>}
@@ -128,18 +130,18 @@ export function StationForm({ station, onSubmit, onCancel, loading = false }) {
 
         {/* Status */}
         <div className='space-y-2'>
-          <Label htmlFor='status'>Status *</Label>
+          <Label htmlFor='status'>{t('station.form.status.label')} *</Label>
           <Select
             value={formData.status}
             onValueChange={value => handleInputChange('status', value)}
           >
             <SelectTrigger className={errors.status ? 'border-red-500' : ''}>
-              <SelectValue placeholder='Select status' />
+              <SelectValue placeholder={t('station.form.placeholders.status')} />
             </SelectTrigger>
             <SelectContent>
               {STATION_STATUS.map(status => (
                 <SelectItem key={status.value} value={status.value}>
-                  {status.label}
+                  {t(status.label)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -154,7 +156,7 @@ export function StationForm({ station, onSubmit, onCancel, loading = false }) {
           <LocationPicker
             value={formData.location}
             onChange={location => handleInputChange('location', location)}
-            label='Location *'
+            label={t('station.form.location') + ' *'}
           />
           {errors.location && (
             <p className='text-sm text-red-500'>{errors.location}</p>
@@ -163,14 +165,14 @@ export function StationForm({ station, onSubmit, onCancel, loading = false }) {
 
         {/* Capacity */}
         <div className='space-y-2'>
-          <Label htmlFor='capacity'>Capacity *</Label>
+          <Label htmlFor='capacity'>{t('station.form.capacity')} *</Label>
           <Input
             id='capacity'
             type='number'
             min='1'
             value={formData.capacity}
             onChange={e => handleInputChange('capacity', e.target.value)}
-            placeholder='e.g., 10'
+            placeholder={t('station.form.placeholders.capacity')}
             className={errors.capacity ? 'border-red-500' : ''}
           />
           {errors.capacity && (
@@ -180,23 +182,23 @@ export function StationForm({ station, onSubmit, onCancel, loading = false }) {
 
         {/* Contact */}
         <div className='space-y-2 md:col-span-2'>
-          <Label htmlFor='contact'>Contact Information</Label>
+          <Label htmlFor='contact'>{t('station.form.contact')}</Label>
           <Input
             id='contact'
             value={formData.contact}
             onChange={e => handleInputChange('contact', e.target.value)}
-            placeholder='e.g., +84 123 456 789 or email@example.com'
+            placeholder={t('station.form.placeholders.contact')}
           />
         </div>
 
         {/* Address */}
         <div className='space-y-2 md:col-span-2'>
-          <Label htmlFor='address'>Full Address *</Label>
+          <Label htmlFor='address'>{t('station.form.address')} *</Label>
           <Textarea
             id='address'
             value={formData.address}
             onChange={e => handleInputChange('address', e.target.value)}
-            placeholder='Enter the complete address of the station'
+            placeholder={t('station.form.placeholders.address')}
             rows={3}
             className={errors.address ? 'border-red-500' : ''}
           />
@@ -214,14 +216,14 @@ export function StationForm({ station, onSubmit, onCancel, loading = false }) {
           onClick={onCancel}
           disabled={loading}
         >
-          Cancel
+          {t('station.form.cancel')}
         </Button>
         <Button type='submit' disabled={loading}>
           {loading
-            ? 'Saving...'
+            ? t('station.form.saving')
             : station
-            ? 'Update Station'
-            : 'Create Station'}
+              ? t('station.form.update')
+              : t('station.form.create')}
         </Button>
       </div>
     </form>

@@ -480,7 +480,7 @@ export function VehicleDetails({
                 ) : (
                   <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                     {vehicle.fuelType === 'ELECTRIC' ||
-                    vehicle.fuelType === 'HYBRID'
+                      vehicle.fuelType === 'HYBRID'
                       ? `${vehicle.batteryLevel}%`
                       : 'N/A'}
                   </div>

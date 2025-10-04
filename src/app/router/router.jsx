@@ -1,5 +1,6 @@
 import AdminDashboard from '@/features/admin/layout/AdminDashboard.jsx';
 import Dashboard from '@/features/admin/pages/Dashboard.jsx';
+import NotificationManagement from '@/features/admin/pages/NotificationManagement.jsx';
 import PromotionManagement from '@/features/admin/pages/PromotionManagement.jsx';
 import Settings from '@/features/admin/pages/Settings.jsx';
 import StaffManagement from '@/features/admin/pages/StaffManagement.jsx';
@@ -11,6 +12,7 @@ import CarDetailPage from '@/features/cars/components/CarDetailPage.jsx';
 import CarsPage from '@/features/cars/components/CarsPage.jsx';
 import Home from '@/features/shared/components/Home.jsx';
 import PolicyPage from '@/features/shared/components/PolicyPage.jsx';
+import { NotificationPage } from '@/features/shared/components/NotificationPage';
 import StaffDashboard from '@/features/staff/layout/StaffDashboard.jsx';
 import { createBrowserRouter } from 'react-router-dom';
 import VehicleManagement from '../../features/admin/pages/VehicleManagement';
@@ -42,6 +44,7 @@ export const router = createBrowserRouter([
       { path: 'stations', element: <StationManagement /> },
       { path: 'vehicles', element: <VehicleManagement /> },
       { path: 'promotions', element: <PromotionManagement /> },
+      { path: 'notifications', element: <NotificationManagement /> },
       { path: 'settings', element: <Settings /> },
     ],
   },
@@ -61,6 +64,16 @@ export const router = createBrowserRouter([
       <PrivateRoutes>
         <RoleBasedRoute allowedRoles={['RENTER']}>
           <UserPage />
+        </RoleBasedRoute>
+      </PrivateRoutes>
+    ),
+  },
+  {
+    path: '/notifications',
+    element: (
+      <PrivateRoutes>
+        <RoleBasedRoute allowedRoles={['RENTER', 'STAFF', 'ADMIN']}>
+          <NotificationPage />
         </RoleBasedRoute>
       </PrivateRoutes>
     ),

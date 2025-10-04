@@ -5,11 +5,12 @@ import {
   PlusIcon,
   SearchIcon,
   TrashIcon,
+  MoreVerticalIcon,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
-import { MoreVerticalIcon } from 'lucide-react';
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
 import { ConfirmDialog } from '../../shared/components/ui/confirm-dialog';
@@ -48,29 +49,31 @@ import {
 import { apiClient } from '../../shared/lib/apiClient';
 import { VehicleDetails } from '../components/vehicle/VehicleDetails';
 
-// Vehicle status options
-const VEHICLE_STATUS = [
-  { value: 'AVAILABLE', label: 'Available' },
-  { value: 'RENTED', label: 'Rented' },
-  { value: 'MAINTENANCE', label: 'Maintenance' },
-  { value: 'OUT_OF_SERVICE', label: 'Out of Service' },
-];
-
-// Vehicle types
-const VEHICLE_TYPES = [
-  { value: 'SEDAN', label: 'Sedan' },
-  { value: 'SUV', label: 'SUV' },
-  { value: 'HATCHBACK', label: 'Hatchback' },
-  { value: 'COUPE', label: 'Coupe' },
-];
-
-// Fuel types
-const FUEL_TYPES = [
-  { value: 'ELECTRIC', label: 'Electric' },
-  { value: 'HYBRID', label: 'Hybrid' },
-];
-
 export default function VehicleManagement() {
+  const { t } = useTranslation();
+
+  // Vehicle status options
+  const VEHICLE_STATUS = [
+    { value: 'AVAILABLE', label: t('vehicle.status.available') },
+    { value: 'RENTED', label: t('vehicle.status.rented') },
+    { value: 'MAINTENANCE', label: t('vehicle.status.maintenance') },
+    { value: 'OUT_OF_SERVICE', label: t('vehicle.status.outOfService') },
+  ];
+
+  // Vehicle types
+  const VEHICLE_TYPES = [
+    { value: 'SEDAN', label: t('vehicle.types.sedan') },
+    { value: 'SUV', label: t('vehicle.types.suv') },
+    { value: 'HATCHBACK', label: t('vehicle.types.hatchback') },
+    { value: 'COUPE', label: t('vehicle.types.coupe') },
+  ];
+
+  // Fuel types
+  const FUEL_TYPES = [
+    { value: 'ELECTRIC', label: t('vehicle.fuel.electric') },
+    { value: 'HYBRID', label: t('vehicle.fuel.hybrid') },
+  ];
+
   const [vehicles, setVehicles] = useState([]);
   const [stations, setStations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -143,7 +146,7 @@ export default function VehicleManagement() {
         setVehicleImages(imagesMap);
       }
     } catch (error) {
-      toast.error('Failed to load vehicles: ' + error.message);
+      toast.error(t('vehicle.messages.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -168,27 +171,23 @@ export default function VehicleManagement() {
         updateData
       );
       if (response.success) {
-        toast.success('Vehicle updated successfully');
+        toast.success(t('vehicle.messages.updateSuccess'));
 
-        // Update the selected vehicle with new data
         if (selectedVehicle && selectedVehicle.id === vehicleId) {
           setSelectedVehicle(response.data.vehicle);
         }
 
-        // Update the vehicle in the vehicles list
         setVehicles(prev =>
           prev.map(vehicle =>
             vehicle.id === vehicleId ? response.data.vehicle : vehicle
           )
         );
 
-        // Reload to ensure consistency
         loadVehicles();
-
         return response.data.vehicle;
       }
     } catch (error) {
-      toast.error('Failed to update vehicle: ' + error.message);
+      toast.error(t('vehicle.messages.updateFailed'));
       throw error;
     } finally {
       setUpdateLoading(false);
@@ -196,7 +195,6 @@ export default function VehicleManagement() {
   };
 
   const handleImageUpload = async vehicleId => {
-    // Reload images for specific vehicle
     try {
       const imageResponse = await apiClient.get(
         `/api/vehicles/${vehicleId}/images`
@@ -214,57 +212,42 @@ export default function VehicleManagement() {
 
   const handleCreateVehicle = async () => {
     try {
-      console.log('Creating vehicle:', formData);
       const response = await apiClient.post('/api/vehicles', formData);
-      console.log('Create vehicle response:', response);
 
       if (response.success) {
-        toast.success('Vehicle created successfully');
+        toast.success(t('vehicle.messages.createSuccess'));
         setIsCreateDialogOpen(false);
         resetForm();
-        // Add to local state immediately for better UX
         if (response.data?.vehicle) {
           setVehicles(prev => [response.data.vehicle, ...prev]);
         }
-        // Reload to ensure consistency
         loadVehicles();
       } else {
-        toast.error(
-          'Failed to create vehicle: ' + (response.message || 'Unknown error')
-        );
+        toast.error(t('vehicle.messages.createFailed'));
       }
     } catch (error) {
-      console.error('Create vehicle error:', error);
-      toast.error('Failed to create vehicle: ' + error.message);
+      toast.error(t('vehicle.messages.createFailed'));
     }
   };
 
   const handleHardDeleteVehicle = async vehicleId => {
     try {
-      console.log('Hard deleting vehicle:', vehicleId);
       const response = await apiClient.delete(`/api/vehicles/${vehicleId}`);
-      console.log('Hard delete response:', response);
 
       if (response.success) {
-        toast.success('Vehicle permanently deleted');
-        // Remove from local state immediately for better UX
+        toast.success(t('vehicle.messages.deleteSuccess'));
         setVehicles(prev => prev.filter(vehicle => vehicle.id !== vehicleId));
-        // Also remove from vehicleImages
         setVehicleImages(prev => {
           const newImages = { ...prev };
           delete newImages[vehicleId];
           return newImages;
         });
-        // Reload to ensure consistency
         loadVehicles();
       } else {
-        toast.error(
-          'Failed to delete vehicle: ' + (response.message || 'Unknown error')
-        );
+        toast.error(t('vehicle.messages.deleteFailed'));
       }
     } catch (error) {
-      console.error('Hard delete error:', error);
-      toast.error('Failed to delete vehicle: ' + error.message);
+      toast.error(t('vehicle.messages.deleteFailed'));
     }
   };
 
@@ -335,40 +318,39 @@ export default function VehicleManagement() {
   if (loading) {
     return (
       <div className='flex items-center justify-center h-64'>
-        <div className='text-lg'>Loading vehicles...</div>
+        <div className='text-lg'>{t('vehicle.messages.loading')}</div>
       </div>
     );
   }
 
   return (
     <div className='space-y-6'>
-      {/* Header */}
       <div className='flex items-center justify-between'>
         <div>
           <h1 className='text-3xl font-bold tracking-tight'>
-            Vehicle Management
+            {t('vehicle.title')}
           </h1>
-          <p className='text-muted-foreground'>
-            Manage fleet vehicles and their information
-          </p>
+          <p className='text-muted-foreground'>{t('vehicle.subtitle')}</p>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <PlusIcon className='mr-2 h-4 w-4' />
-              Add Vehicle
+              {t('vehicle.actions.add')}
             </Button>
           </DialogTrigger>
           <DialogContent className='max-w-2xl'>
             <DialogHeader>
-              <DialogTitle>Add New Vehicle</DialogTitle>
+              <DialogTitle>{t('vehicle.dialogs.create.title')}</DialogTitle>
               <DialogDescription>
-                Create a new vehicle in the fleet
+                {t('vehicle.dialogs.create.description')}
               </DialogDescription>
             </DialogHeader>
             <div className='grid grid-cols-2 gap-4 py-4'>
               <div className='space-y-2'>
-                <Label htmlFor='stationId'>Station *</Label>
+                <Label htmlFor='stationId'>
+                  {t('vehicle.fields.station')} *
+                </Label>
                 <Select
                   value={formData.stationId}
                   onValueChange={value =>
@@ -376,7 +358,9 @@ export default function VehicleManagement() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder='Select station' />
+                    <SelectValue
+                      placeholder={t('vehicle.fields.stationPlaceholder')}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {stations.map(station => (
@@ -388,7 +372,7 @@ export default function VehicleManagement() {
                 </Select>
               </div>
               <div className='space-y-2'>
-                <Label htmlFor='type'>Type *</Label>
+                <Label htmlFor='type'>{t('vehicle.fields.type')} *</Label>
                 <Select
                   value={formData.type}
                   onValueChange={value =>
@@ -396,7 +380,9 @@ export default function VehicleManagement() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder='Select type' />
+                    <SelectValue
+                      placeholder={t('vehicle.fields.typePlaceholder')}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {VEHICLE_TYPES.map(type => (
@@ -408,29 +394,29 @@ export default function VehicleManagement() {
                 </Select>
               </div>
               <div className='space-y-2'>
-                <Label htmlFor='brand'>Brand *</Label>
+                <Label htmlFor='brand'>{t('vehicle.fields.brand')} *</Label>
                 <Input
                   id='brand'
                   value={formData.brand}
                   onChange={e =>
                     setFormData({ ...formData, brand: e.target.value })
                   }
-                  placeholder='e.g., Tesla'
+                  placeholder={t('vehicle.fields.brandPlaceholder')}
                 />
               </div>
               <div className='space-y-2'>
-                <Label htmlFor='model'>Model *</Label>
+                <Label htmlFor='model'>{t('vehicle.fields.model')} *</Label>
                 <Input
                   id='model'
                   value={formData.model}
                   onChange={e =>
                     setFormData({ ...formData, model: e.target.value })
                   }
-                  placeholder='e.g., Model 3'
+                  placeholder={t('vehicle.fields.modelPlaceholder')}
                 />
               </div>
               <div className='space-y-2'>
-                <Label htmlFor='year'>Year *</Label>
+                <Label htmlFor='year'>{t('vehicle.fields.year')} *</Label>
                 <Input
                   id='year'
                   type='number'
@@ -438,22 +424,22 @@ export default function VehicleManagement() {
                   onChange={e =>
                     setFormData({ ...formData, year: e.target.value })
                   }
-                  placeholder='2024'
+                  placeholder={t('vehicle.fields.yearPlaceholder')}
                 />
               </div>
               <div className='space-y-2'>
-                <Label htmlFor='color'>Color</Label>
+                <Label htmlFor='color'>{t('vehicle.fields.color')}</Label>
                 <Input
                   id='color'
                   value={formData.color}
                   onChange={e =>
                     setFormData({ ...formData, color: e.target.value })
                   }
-                  placeholder='e.g., White'
+                  placeholder={t('vehicle.fields.colorPlaceholder')}
                 />
               </div>
               <div className='space-y-2'>
-                <Label htmlFor='seats'>Seats</Label>
+                <Label htmlFor='seats'>{t('vehicle.fields.seats')}</Label>
                 <Input
                   id='seats'
                   type='number'
@@ -461,22 +447,26 @@ export default function VehicleManagement() {
                   onChange={e =>
                     setFormData({ ...formData, seats: e.target.value })
                   }
-                  placeholder='5'
+                  placeholder={t('vehicle.fields.seatsPlaceholder')}
                 />
               </div>
               <div className='space-y-2'>
-                <Label htmlFor='licensePlate'>License Plate</Label>
+                <Label htmlFor='licensePlate'>
+                  {t('vehicle.fields.licensePlate')}
+                </Label>
                 <Input
                   id='licensePlate'
                   value={formData.licensePlate}
                   onChange={e =>
                     setFormData({ ...formData, licensePlate: e.target.value })
                   }
-                  placeholder='ABC-123'
+                  placeholder={t('vehicle.fields.licensePlatePlaceholder')}
                 />
               </div>
               <div className='space-y-2'>
-                <Label htmlFor='batteryLevel'>Battery Level (%)</Label>
+                <Label htmlFor='batteryLevel'>
+                  {t('vehicle.fields.batteryLevel')}
+                </Label>
                 <Input
                   id='batteryLevel'
                   type='number'
@@ -486,11 +476,13 @@ export default function VehicleManagement() {
                   onChange={e =>
                     setFormData({ ...formData, batteryLevel: e.target.value })
                   }
-                  placeholder='85'
+                  placeholder={t('vehicle.fields.batteryLevelPlaceholder')}
                 />
               </div>
               <div className='space-y-2'>
-                <Label htmlFor='fuelType'>Fuel Type *</Label>
+                <Label htmlFor='fuelType'>
+                  {t('vehicle.fields.fuelType')} *
+                </Label>
                 <Select
                   value={formData.fuelType}
                   onValueChange={value =>
@@ -498,7 +490,9 @@ export default function VehicleManagement() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder='Select fuel type' />
+                    <SelectValue
+                      placeholder={t('vehicle.fields.fuelTypePlaceholder')}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {FUEL_TYPES.map(fuel => (
@@ -510,7 +504,7 @@ export default function VehicleManagement() {
                 </Select>
               </div>
               <div className='space-y-2'>
-                <Label htmlFor='status'>Status</Label>
+                <Label htmlFor='status'>{t('vehicle.fields.status')}</Label>
                 <Select
                   value={formData.status}
                   onValueChange={value =>
@@ -518,7 +512,9 @@ export default function VehicleManagement() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder='Select status' />
+                    <SelectValue
+                      placeholder={t('vehicle.fields.statusPlaceholder')}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {VEHICLE_STATUS.map(status => (
@@ -535,20 +531,21 @@ export default function VehicleManagement() {
                 variant='outline'
                 onClick={() => setIsCreateDialogOpen(false)}
               >
-                Cancel
+                {t('vehicle.actions.cancel')}
               </Button>
-              <Button onClick={handleCreateVehicle}>Create Vehicle</Button>
+              <Button onClick={handleCreateVehicle}>
+                {t('vehicle.actions.create')}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
 
-      {/* Filters */}
       <div className='flex items-center space-x-4'>
         <div className='relative flex-1 max-w-sm'>
           <SearchIcon className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
           <Input
-            placeholder='Search vehicles...'
+            placeholder={t('vehicle.filters.searchPlaceholder')}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             className='pl-10'
@@ -558,13 +555,15 @@ export default function VehicleManagement() {
           <DropdownMenuTrigger asChild>
             <Button variant='outline'>
               <FilterIcon className='mr-2 h-4 w-4' />
-              Status:{' '}
-              {filterStatus === 'all' ? 'All' : getStatusLabel(filterStatus)}
+              {t('vehicle.filters.status')}:{' '}
+              {filterStatus === 'all'
+                ? t('vehicle.status.all')
+                : getStatusLabel(filterStatus)}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuItem onClick={() => setFilterStatus('all')}>
-              All
+              {t('vehicle.status.all')}
             </DropdownMenuItem>
             {VEHICLE_STATUS.map(status => (
               <DropdownMenuItem
@@ -578,21 +577,22 @@ export default function VehicleManagement() {
         </DropdownMenu>
       </div>
 
-      {/* Vehicles Table */}
       <div className='rounded-md border'>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Image</TableHead>
-              <TableHead>Brand/Model</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>License Plate</TableHead>
-              <TableHead>Station</TableHead>
-              <TableHead>Year</TableHead>
-              <TableHead>Fuel Type</TableHead>
-              <TableHead>Battery</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className='w-[70px]'>Actions</TableHead>
+              <TableHead>{t('vehicle.table.image')}</TableHead>
+              <TableHead>{t('vehicle.table.brandModel')}</TableHead>
+              <TableHead>{t('vehicle.table.type')}</TableHead>
+              <TableHead>{t('vehicle.table.licensePlate')}</TableHead>
+              <TableHead>{t('vehicle.table.station')}</TableHead>
+              <TableHead>{t('vehicle.table.year')}</TableHead>
+              <TableHead>{t('vehicle.table.fuelType')}</TableHead>
+              <TableHead>{t('vehicle.table.battery')}</TableHead>
+              <TableHead>{t('vehicle.table.status')}</TableHead>
+              <TableHead className='w-[70px]'>
+                {t('vehicle.table.actions')}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -633,15 +633,19 @@ export default function VehicleManagement() {
                     </div>
                   </TableCell>
                   <TableCell>{getTypeLabel(vehicle.type)}</TableCell>
-                  <TableCell>{vehicle.licensePlate || 'N/A'}</TableCell>
-                  <TableCell>{vehicle.station?.name || 'N/A'}</TableCell>
+                  <TableCell>
+                    {vehicle.licensePlate || t('vehicle.table.na')}
+                  </TableCell>
+                  <TableCell>
+                    {vehicle.station?.name || t('vehicle.table.na')}
+                  </TableCell>
                   <TableCell>{vehicle.year}</TableCell>
                   <TableCell>{getFuelTypeLabel(vehicle.fuelType)}</TableCell>
                   <TableCell>
                     {vehicle.fuelType === 'ELECTRIC' ||
-                    vehicle.fuelType === 'HYBRID'
+                      vehicle.fuelType === 'HYBRID'
                       ? `${vehicle.batteryLevel}%`
-                      : 'N/A'}
+                      : t('vehicle.table.na')}
                   </TableCell>
                   <TableCell>
                     <Badge variant={getStatusBadgeVariant(vehicle.status)}>
@@ -660,7 +664,7 @@ export default function VehicleManagement() {
                           onClick={() => openViewDialog(vehicle)}
                         >
                           <EyeIcon className='mr-2 h-4 w-4' />
-                          View Details
+                          {t('vehicle.actions.viewDetails')}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className='text-red-600'
@@ -670,7 +674,7 @@ export default function VehicleManagement() {
                           }}
                         >
                           <TrashIcon className='mr-2 h-4 w-4' />
-                          Delete
+                          {t('vehicle.actions.delete')}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -682,42 +686,52 @@ export default function VehicleManagement() {
         </Table>
       </div>
 
-      {/* Summary Stats */}
       <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>{vehicles.length}</div>
-          <div className='text-sm text-muted-foreground'>Total Vehicles</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('vehicle.stats.total')}
+          </div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>
             {vehicles.filter(v => v.status === 'AVAILABLE').length}
           </div>
-          <div className='text-sm text-muted-foreground'>Available</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('vehicle.stats.available')}
+          </div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>
             {vehicles.filter(v => v.status === 'RENTED').length}
           </div>
-          <div className='text-sm text-muted-foreground'>Rented</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('vehicle.stats.rented')}
+          </div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>
             {vehicles.filter(v => v.fuelType === 'ELECTRIC').length}
           </div>
-          <div className='text-sm text-muted-foreground'>Electric Vehicles</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('vehicle.stats.electric')}
+          </div>
         </div>
       </div>
 
-      {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className='max-w-2xl'>
           <DialogHeader>
-            <DialogTitle>Edit Vehicle</DialogTitle>
-            <DialogDescription>Update vehicle information</DialogDescription>
+            <DialogTitle>{t('vehicle.dialogs.edit.title')}</DialogTitle>
+            <DialogDescription>
+              {t('vehicle.dialogs.edit.description')}
+            </DialogDescription>
           </DialogHeader>
           <div className='grid grid-cols-2 gap-4 py-4'>
             <div className='space-y-2'>
-              <Label htmlFor='edit-stationId'>Station</Label>
+              <Label htmlFor='edit-stationId'>
+                {t('vehicle.fields.station')}
+              </Label>
               <Select
                 value={formData.stationId}
                 onValueChange={value =>
@@ -725,7 +739,9 @@ export default function VehicleManagement() {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder='Select station' />
+                  <SelectValue
+                    placeholder={t('vehicle.fields.stationPlaceholder')}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {stations.map(station => (
@@ -737,7 +753,7 @@ export default function VehicleManagement() {
               </Select>
             </div>
             <div className='space-y-2'>
-              <Label htmlFor='edit-type'>Type</Label>
+              <Label htmlFor='edit-type'>{t('vehicle.fields.type')}</Label>
               <Select
                 value={formData.type}
                 onValueChange={value =>
@@ -745,7 +761,9 @@ export default function VehicleManagement() {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder='Select type' />
+                  <SelectValue
+                    placeholder={t('vehicle.fields.typePlaceholder')}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {VEHICLE_TYPES.map(type => (
@@ -757,7 +775,7 @@ export default function VehicleManagement() {
               </Select>
             </div>
             <div className='space-y-2'>
-              <Label htmlFor='edit-brand'>Brand</Label>
+              <Label htmlFor='edit-brand'>{t('vehicle.fields.brand')}</Label>
               <Input
                 id='edit-brand'
                 value={formData.brand}
@@ -767,7 +785,7 @@ export default function VehicleManagement() {
               />
             </div>
             <div className='space-y-2'>
-              <Label htmlFor='edit-model'>Model</Label>
+              <Label htmlFor='edit-model'>{t('vehicle.fields.model')}</Label>
               <Input
                 id='edit-model'
                 value={formData.model}
@@ -777,7 +795,7 @@ export default function VehicleManagement() {
               />
             </div>
             <div className='space-y-2'>
-              <Label htmlFor='edit-year'>Year</Label>
+              <Label htmlFor='edit-year'>{t('vehicle.fields.year')}</Label>
               <Input
                 id='edit-year'
                 type='number'
@@ -788,7 +806,7 @@ export default function VehicleManagement() {
               />
             </div>
             <div className='space-y-2'>
-              <Label htmlFor='edit-color'>Color</Label>
+              <Label htmlFor='edit-color'>{t('vehicle.fields.color')}</Label>
               <Input
                 id='edit-color'
                 value={formData.color}
@@ -798,7 +816,7 @@ export default function VehicleManagement() {
               />
             </div>
             <div className='space-y-2'>
-              <Label htmlFor='edit-seats'>Seats</Label>
+              <Label htmlFor='edit-seats'>{t('vehicle.fields.seats')}</Label>
               <Input
                 id='edit-seats'
                 type='number'
@@ -809,7 +827,9 @@ export default function VehicleManagement() {
               />
             </div>
             <div className='space-y-2'>
-              <Label htmlFor='edit-licensePlate'>License Plate</Label>
+              <Label htmlFor='edit-licensePlate'>
+                {t('vehicle.fields.licensePlate')}
+              </Label>
               <Input
                 id='edit-licensePlate'
                 value={formData.licensePlate}
@@ -819,7 +839,9 @@ export default function VehicleManagement() {
               />
             </div>
             <div className='space-y-2'>
-              <Label htmlFor='edit-batteryLevel'>Battery Level (%)</Label>
+              <Label htmlFor='edit-batteryLevel'>
+                {t('vehicle.fields.batteryLevel')}
+              </Label>
               <Input
                 id='edit-batteryLevel'
                 type='number'
@@ -832,7 +854,9 @@ export default function VehicleManagement() {
               />
             </div>
             <div className='space-y-2'>
-              <Label htmlFor='edit-fuelType'>Fuel Type</Label>
+              <Label htmlFor='edit-fuelType'>
+                {t('vehicle.fields.fuelType')}
+              </Label>
               <Select
                 value={formData.fuelType}
                 onValueChange={value =>
@@ -840,7 +864,9 @@ export default function VehicleManagement() {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder='Select fuel type' />
+                  <SelectValue
+                    placeholder={t('vehicle.fields.fuelTypePlaceholder')}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {FUEL_TYPES.map(fuel => (
@@ -852,7 +878,7 @@ export default function VehicleManagement() {
               </Select>
             </div>
             <div className='space-y-2'>
-              <Label htmlFor='edit-status'>Status</Label>
+              <Label htmlFor='edit-status'>{t('vehicle.fields.status')}</Label>
               <Select
                 value={formData.status}
                 onValueChange={value =>
@@ -860,7 +886,9 @@ export default function VehicleManagement() {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder='Select status' />
+                  <SelectValue
+                    placeholder={t('vehicle.fields.statusPlaceholder')}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {VEHICLE_STATUS.map(status => (
@@ -877,14 +905,15 @@ export default function VehicleManagement() {
               variant='outline'
               onClick={() => setIsEditDialogOpen(false)}
             >
-              Cancel
+              {t('vehicle.actions.cancel')}
             </Button>
-            <Button onClick={handleUpdateVehicle}>Update Vehicle</Button>
+            <Button onClick={handleUpdateVehicle}>
+              {t('vehicle.actions.update')}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Vehicle Details Dialog */}
       <VehicleDetails
         open={isViewDialogOpen}
         onOpenChange={setIsViewDialogOpen}
@@ -897,16 +926,16 @@ export default function VehicleManagement() {
       <ConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        title='Delete Vehicle'
-        description='Are you sure you want to permanently delete this vehicle? This action cannot be undone and will delete all associated images.'
+        title={t('vehicle.dialogs.delete.title')}
+        description={t('vehicle.dialogs.delete.description')}
         onConfirm={() => {
           if (vehicleToDelete) {
             handleHardDeleteVehicle(vehicleToDelete);
             setVehicleToDelete(null);
           }
         }}
-        confirmText='Delete'
-        cancelText='Cancel'
+        confirmText={t('vehicle.actions.delete')}
+        cancelText={t('vehicle.actions.cancel')}
         confirmVariant='destructive'
       />
     </div>

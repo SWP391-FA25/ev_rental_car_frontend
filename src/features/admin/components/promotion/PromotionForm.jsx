@@ -1,6 +1,7 @@
 import { format } from 'date-fns';
 import { CalendarIcon, LoaderIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '../../../shared/components/ui/button';
 import { Calendar } from '../../../shared/components/ui/calendar';
@@ -29,6 +30,7 @@ export function PromotionForm({
   promotion = null,
   loading = false,
 }) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     code: '',
     description: '',
@@ -67,23 +69,23 @@ export function PromotionForm({
     const newErrors = {};
 
     if (!formData.code.trim()) {
-      newErrors.code = 'Promotion code is required';
+      newErrors.code = t('promotionForm.codeRequired');
     } else if (formData.code.length < 3) {
-      newErrors.code = 'Promotion code must be at least 3 characters';
+      newErrors.code = t('promotionForm.codeMin');
     }
 
     if (!formData.discount) {
-      newErrors.discount = 'Discount is required';
+      newErrors.discount = t('promotionForm.discountRequired');
     } else if (isNaN(formData.discount) || parseFloat(formData.discount) <= 0) {
-      newErrors.discount = 'Discount must be a positive number';
+      newErrors.discount = t('promotionForm.discountPositive');
     }
 
     if (!formData.validFrom) {
-      newErrors.validFrom = 'Valid from date is required';
+      newErrors.validFrom = t('promotionForm.validFromRequired');
     }
 
     if (!formData.validUntil) {
-      newErrors.validUntil = 'Valid until date is required';
+      newErrors.validUntil = t('promotionForm.validUntilRequired');
     }
 
     if (
@@ -91,7 +93,7 @@ export function PromotionForm({
       formData.validUntil &&
       formData.validFrom >= formData.validUntil
     ) {
-      newErrors.validUntil = 'Valid until must be after valid from date';
+      newErrors.validUntil = t('promotionForm.validUntilAfter');
     }
 
     setErrors(newErrors);
@@ -100,10 +102,7 @@ export function PromotionForm({
 
   const handleSubmit = async e => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     try {
       const submitData = {
@@ -113,7 +112,6 @@ export function PromotionForm({
         validFrom: formData.validFrom.toISOString(),
         validUntil: formData.validUntil.toISOString(),
       };
-
       await onSubmit(submitData);
       onOpenChange(false);
     } catch (error) {
@@ -133,25 +131,23 @@ export function PromotionForm({
       <DialogContent className='sm:max-w-[500px]'>
         <DialogHeader>
           <DialogTitle>
-            {isEdit ? 'Edit Promotion' : 'Add New Promotion'}
+            {isEdit ? t('promotionForm.titleEdit') : t('promotionForm.titleAdd')}
           </DialogTitle>
           <DialogDescription>
-            {isEdit
-              ? 'Update the promotion details below.'
-              : 'Fill in the details to create a new promotion.'}
+            {isEdit ? t('promotionForm.descEdit') : t('promotionForm.descAdd')}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className='space-y-4'>
           <div className='space-y-2'>
-            <Label htmlFor='code'>Promotion Code *</Label>
+            <Label htmlFor='code'>{t('promotionForm.codeLabel')}</Label>
             <Input
               id='code'
               value={formData.code}
               onChange={e =>
                 handleInputChange('code', e.target.value.toUpperCase())
               }
-              placeholder='e.g., SUMMER2024'
+              placeholder={t('promotionForm.codePlaceholder')}
               className={errors.code ? 'border-red-500' : ''}
             />
             {errors.code && (
@@ -160,18 +156,20 @@ export function PromotionForm({
           </div>
 
           <div className='space-y-2'>
-            <Label htmlFor='description'>Description</Label>
+            <Label htmlFor='description'>
+              {t('promotionForm.descriptionLabel')}
+            </Label>
             <Textarea
               id='description'
               value={formData.description}
               onChange={e => handleInputChange('description', e.target.value)}
-              placeholder='Optional description for the promotion'
+              placeholder={t('promotionForm.descriptionPlaceholder')}
               rows={3}
             />
           </div>
 
           <div className='space-y-2'>
-            <Label htmlFor='discount'>Discount *</Label>
+            <Label htmlFor='discount'>{t('promotionForm.discountLabel')}</Label>
             <div className='flex items-center space-x-2'>
               <Input
                 id='discount'
@@ -180,7 +178,7 @@ export function PromotionForm({
                 min='0'
                 value={formData.discount}
                 onChange={e => handleInputChange('discount', e.target.value)}
-                placeholder='0.00'
+                placeholder={t('promotionForm.discountPlaceholder')}
                 className={errors.discount ? 'border-red-500' : ''}
               />
               <span className='text-sm text-muted-foreground'>%</span>
@@ -192,7 +190,7 @@ export function PromotionForm({
 
           <div className='grid grid-cols-2 gap-4'>
             <div className='space-y-2'>
-              <Label>Valid From *</Label>
+              <Label>{t('promotionForm.validFromLabel')}</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -207,7 +205,7 @@ export function PromotionForm({
                     {formData.validFrom ? (
                       format(formData.validFrom, 'PPP')
                     ) : (
-                      <span>Pick a date</span>
+                      <span>{t('promotionForm.pickDate')}</span>
                     )}
                   </Button>
                 </PopoverTrigger>
@@ -227,7 +225,7 @@ export function PromotionForm({
             </div>
 
             <div className='space-y-2'>
-              <Label>Valid Until *</Label>
+              <Label>{t('promotionForm.validUntilLabel')}</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -242,7 +240,7 @@ export function PromotionForm({
                     {formData.validUntil ? (
                       format(formData.validUntil, 'PPP')
                     ) : (
-                      <span>Pick a date</span>
+                      <span>{t('promotionForm.pickDate')}</span>
                     )}
                   </Button>
                 </PopoverTrigger>
@@ -272,11 +270,13 @@ export function PromotionForm({
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
-              Cancel
+              {t('promotionForm.cancel')}
             </Button>
             <Button type='submit' disabled={loading}>
               {loading && <LoaderIcon className='mr-2 h-4 w-4 animate-spin' />}
-              {isEdit ? 'Update Promotion' : 'Create Promotion'}
+              {isEdit
+                ? t('promotionForm.submitEdit')
+                : t('promotionForm.submitAdd')}
             </Button>
           </DialogFooter>
         </form>

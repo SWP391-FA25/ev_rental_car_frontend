@@ -32,8 +32,11 @@ import { endpoints } from '../../shared/lib/endpoints';
 import { StaffDetails } from '../components/staff/StaffDetails';
 import { StaffForm } from '../components/staff/StaffForm';
 import { useStaff } from '../hooks/useStaff';
+import { useTranslation } from 'react-i18next';
 
 export default function StaffManagement() {
+  const { t } = useTranslation();
+
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterRole, setFilterRole] = useState('all');
@@ -72,14 +75,10 @@ export default function StaffManagement() {
 
   useEffect(() => {
     loadAssignments();
-
-    // Listen for assignment changes from other components
     const handleAssignmentChange = () => {
       loadAssignments();
     };
-
     window.addEventListener('assignmentChanged', handleAssignmentChange);
-
     return () => {
       window.removeEventListener('assignmentChanged', handleAssignmentChange);
     };
@@ -98,17 +97,15 @@ export default function StaffManagement() {
     return matchesSearch && matchesStatus && matchesRole;
   });
 
-  // Helper function to get station assignment for a staff member
-  const getStaffAssignment = staffId => {
-    return assignments.find(assignment => assignment.userId === staffId);
-  };
+  // Helpers
+  const getStaffAssignment = staffId =>
+    assignments.find(assignment => assignment.userId === staffId);
 
   const getStatusBadgeVariant = status => {
     switch (status) {
       case 'ACTIVE':
         return 'default';
       case 'SUSPENDED':
-        return 'destructive';
       case 'BANNED':
         return 'destructive';
       default:
@@ -124,20 +121,21 @@ export default function StaffManagement() {
   const handleSuspendStaff = async id => {
     try {
       await softDeleteStaff(id);
-      toast.success('Staff account suspended successfully');
+      toast.success(t('staffManagement.messages.suspended'));
+      setSelectedStaff(prev =>
+        prev && prev.id === id ? { ...prev, accountStatus: 'SUSPENDED' } : prev
+      );
     } catch (err) {
-      toast.error('Failed to suspend staff account');
-      console.error('Error suspending staff:', err);
+      toast.error(t('staffManagement.messages.errorSuspend'));
     }
   };
 
   const handleDeleteStaff = async id => {
     try {
       await deleteStaff(id);
-      toast.success('Staff account deleted successfully');
+      toast.success(t('staffManagement.messages.deleted'));
     } catch (err) {
-      toast.error('Failed to delete staff account');
-      console.error('Error deleting staff:', err);
+      toast.error(t('staffManagement.messages.errorDelete'));
     }
   };
 
@@ -147,14 +145,12 @@ export default function StaffManagement() {
         endpoints.assignments.delete(assignmentId)
       );
       if (response.success) {
-        toast.success('Staff unassigned successfully');
-        loadAssignments(); // Refresh assignments
-        // Dispatch event to notify other components
+        toast.success(t('staffManagement.messages.unassigned'));
+        loadAssignments();
         window.dispatchEvent(new CustomEvent('assignmentChanged'));
       }
     } catch (err) {
-      toast.error('Failed to unassign staff');
-      console.error('Error unassigning staff:', err);
+      toast.error(t('staffManagement.messages.errorUnassign'));
     }
   };
 
@@ -172,9 +168,9 @@ export default function StaffManagement() {
   const handleCreateStaff = async staffData => {
     try {
       await createStaff(staffData);
-      toast.success('Staff created successfully');
+      toast.success(t('staffManagement.messages.staffCreated'));
     } catch (err) {
-      toast.error('Failed to create staff');
+      toast.error(t('staffManagement.messages.errorCreate'));
       throw err;
     }
   };
@@ -187,13 +183,12 @@ export default function StaffManagement() {
   const handleUpdateStaff = async (id, staffData) => {
     try {
       const updatedStaff = await updateStaff(id, staffData);
-      // Update the selected staff with the latest data
       if (selectedStaff && selectedStaff.id === id) {
         setSelectedStaff(updatedStaff);
       }
-      toast.success('Staff updated successfully');
+      toast.success(t('staffManagement.messages.staffUpdated'));
     } catch (err) {
-      toast.error('Failed to update staff');
+      toast.error(t('staffManagement.messages.errorUpdate'));
       throw err;
     }
   };
@@ -204,15 +199,15 @@ export default function StaffManagement() {
       <div className='flex items-center justify-between'>
         <div>
           <h1 className='text-3xl font-bold tracking-tight'>
-            Staff Management
+            {t('staffManagement.title')}
           </h1>
           <p className='text-muted-foreground'>
-            Manage staff accounts and permissions
+            {t('staffManagement.description')}
           </p>
         </div>
         <Button onClick={() => setShowStaffForm(true)} disabled={loading}>
           <PlusIcon className='mr-2 h-4 w-4' />
-          Add Staff
+          {t('staffManagement.buttons.addStaff')}
         </Button>
       </div>
 
@@ -221,7 +216,7 @@ export default function StaffManagement() {
         <div className='relative flex-1 max-w-sm'>
           <SearchIcon className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
           <Input
-            placeholder='Search staff...'
+            placeholder={t('staffManagement.filters.search')}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             className='pl-10'
@@ -231,56 +226,46 @@ export default function StaffManagement() {
           <DropdownMenuTrigger asChild>
             <Button variant='outline'>
               <FilterIcon className='mr-2 h-4 w-4' />
-              Status: {filterStatus === 'all' ? 'All' : filterStatus}
+              {t('staffManagement.filters.status')}: {filterStatus === 'all' ? t('staffManagement.filters.all') : filterStatus}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => setFilterStatus('all')}>
-              All
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFilterStatus('active')}>
-              Active
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFilterStatus('banned')}>
-              Banned
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFilterStatus('suspended')}>
-              Suspended
-            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilterStatus('all')}>{t('staffManagement.filters.all')}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilterStatus('active')}>{t('staffManagement.table.active')}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilterStatus('banned')}>{t('staffManagement.table.banned')}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilterStatus('suspended')}>{t('staffManagement.table.suspended')}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilterStatus('admin')}>Admin</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant='outline'>
               <FilterIcon className='mr-2 h-4 w-4' />
-              Role: {filterRole === 'all' ? 'All' : filterRole}
+              {t('staffManagement.filters.role')}: {filterRole === 'all' ? t('staffManagement.filters.all') : filterRole}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => setFilterRole('all')}>
-              All
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFilterRole('staff')}>
-              Staff
-            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilterRole('all')}>{t('staffManagement.filters.all')}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilterRole('staff')}>Staff</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilterRole('admin')}>Admin</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
-      {/* Staff Table */}
-      <div className='rounded-md border'>
+      {/* Table */}
+      <div className='rounded-md border min-h-[400px]'>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Station Assignment</TableHead>
-              <TableHead>Address</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Join Date</TableHead>
-              <TableHead className='w-[70px]'>Actions</TableHead>
+              <TableHead>{t('staffManagement.table.name')}</TableHead>
+              <TableHead>{t('staffManagement.table.email')}</TableHead>
+              <TableHead>{t('staffManagement.table.phone')}</TableHead>
+              <TableHead>{t('staffManagement.table.role')}</TableHead>
+              <TableHead>{t('staffManagement.table.stationAssignment')}</TableHead>
+              <TableHead>{t('staffManagement.table.address')}</TableHead>
+              <TableHead>{t('staffManagement.table.status')}</TableHead>
+              <TableHead>{t('staffManagement.table.joinDate')}</TableHead>
+              <TableHead className='w-[70px]'>{t('staffManagement.table.actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -289,34 +274,26 @@ export default function StaffManagement() {
                 <TableCell colSpan={9} className='text-center py-8'>
                   <div className='flex items-center justify-center gap-2'>
                     <LoaderIcon className='h-4 w-4 animate-spin' />
-                    Loading staff...
+                    {t('staffManagement.messages.loading')}
                   </div>
                 </TableCell>
               </TableRow>
             ) : error ? (
               <TableRow>
-                <TableCell
-                  colSpan={9}
-                  className='text-center py-8 text-red-500'
-                >
-                  Error: {error}
+                <TableCell colSpan={9} className='text-center py-8 text-red-500'>
+                  {t('staffManagement.messages.errorGeneric')}: {error}
                 </TableCell>
               </TableRow>
             ) : filteredStaff.length === 0 ? (
               <TableRow>
-                <TableCell
-                  colSpan={9}
-                  className='text-center py-8 text-muted-foreground'
-                >
-                  No staff found
+                <TableCell colSpan={9} className='text-center py-8 text-muted-foreground'>
+                  {t('staffManagement.messages.noStaff')}
                 </TableCell>
               </TableRow>
             ) : (
               filteredStaff.map(staffItem => (
                 <TableRow key={staffItem.id}>
-                  <TableCell className='font-medium'>
-                    {staffItem.name}
-                  </TableCell>
+                  <TableCell className='font-medium'>{staffItem.name}</TableCell>
                   <TableCell>{staffItem.email}</TableCell>
                   <TableCell>{staffItem.phone || 'N/A'}</TableCell>
                   <TableCell>
@@ -331,21 +308,19 @@ export default function StaffManagement() {
                         <div className='flex items-center gap-2'>
                           <MapPinIcon className='h-4 w-4 text-gray-500' />
                           <span className='text-sm'>
-                            {assignment.station?.name || 'Unknown Station'}
+                            {assignment.station?.name || t('staffManagement.table.unknownStation')}
                           </span>
                         </div>
                       ) : (
                         <Badge variant='outline' className='text-gray-500'>
-                          Unassigned
+                          {t('staffManagement.table.unassigned')}
                         </Badge>
                       );
                     })()}
                   </TableCell>
                   <TableCell>{staffItem.address || 'N/A'}</TableCell>
                   <TableCell>
-                    <Badge
-                      variant={getStatusBadgeVariant(staffItem.accountStatus)}
-                    >
+                    <Badge variant={getStatusBadgeVariant(staffItem.accountStatus)}>
                       {staffItem.accountStatus}
                     </Badge>
                   </TableCell>
@@ -358,25 +333,20 @@ export default function StaffManagement() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align='end'>
-                        <DropdownMenuItem
-                          onClick={() => handleViewDetails(staffItem)}
-                        >
-                          View Details
+                        <DropdownMenuItem onClick={() => handleViewDetails(staffItem)}>
+                          {t('staffManagement.actions.viewDetails')}
                         </DropdownMenuItem>
                         {getStaffAssignment(staffItem.id) && (
                           <DropdownMenuItem
                             onClick={() => {
-                              setStaffToUnassign(
-                                getStaffAssignment(staffItem.id).id
-                              );
+                              setStaffToUnassign(getStaffAssignment(staffItem.id).id);
                               setUnassignDialogOpen(true);
                             }}
                             className='text-blue-600'
                           >
-                            Unassign from Station
+                            {t('staffManagement.actions.unassign')}
                           </DropdownMenuItem>
                         )}
-                        {/* <DropdownMenuItem>Reset Password</DropdownMenuItem> */}
                         <DropdownMenuItem
                           onClick={() => {
                             setStaffToSuspend(staffItem.id);
@@ -384,7 +354,7 @@ export default function StaffManagement() {
                           }}
                           className='text-orange-600'
                         >
-                          Suspend Staff
+                          {t('staffManagement.actions.suspend')}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => {
@@ -393,7 +363,7 @@ export default function StaffManagement() {
                           }}
                           className='text-red-600'
                         >
-                          Delete Staff
+                          {t('staffManagement.actions.delete')}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -409,25 +379,25 @@ export default function StaffManagement() {
       <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>{staff.length}</div>
-          <div className='text-sm text-muted-foreground'>Total Staff</div>
+          <div className='text-sm text-muted-foreground'>{t('staffManagement.stats.total')}</div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>
             {staff.filter(s => s.accountStatus === 'ACTIVE').length}
           </div>
-          <div className='text-sm text-muted-foreground'>Active Staff</div>
+          <div className='text-sm text-muted-foreground'>{t('staffManagement.stats.active')}</div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>
             {staff.filter(s => s.role === 'STAFF').length}
           </div>
-          <div className='text-sm text-muted-foreground'>Staff Members</div>
+          <div className='text-sm text-muted-foreground'>{t('staffManagement.stats.staff')}</div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>
             {staff.filter(s => s.role === 'ADMIN').length}
           </div>
-          <div className='text-sm text-muted-foreground'>Admins</div>
+          <div className='text-sm text-muted-foreground'>{t('staffManagement.stats.admins')}</div>
         </div>
       </div>
 
@@ -448,54 +418,52 @@ export default function StaffManagement() {
         loading={loading}
       />
 
-      {/* Suspend Staff Confirmation Dialog */}
+      {/* Confirm Dialogs */}
       <ConfirmDialog
         open={suspendDialogOpen}
         onOpenChange={setSuspendDialogOpen}
-        title='Suspend Staff'
-        description='Are you sure you want to suspend this staff member? They will not be able to access the system until reactivated.'
+        title={t('staffManagement.dialogs.suspend.title')}
+        description={t('staffManagement.dialogs.suspend.description')}
         onConfirm={() => {
           if (staffToSuspend) {
             handleSuspendStaff(staffToSuspend);
             setStaffToSuspend(null);
           }
         }}
-        confirmText='Suspend'
-        cancelText='Cancel'
+        confirmText={t('staffManagement.dialogs.suspend.confirm')}
+        cancelText={t('staffManagement.dialogs.suspend.cancel')}
         confirmVariant='destructive'
       />
 
-      {/* Delete Staff Confirmation Dialog */}
       <ConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        title='Delete Staff'
-        description='Are you sure you want to permanently delete this staff account? This action cannot be undone and will remove all staff data.'
+        title={t('staffManagement.dialogs.delete.title')}
+        description={t('staffManagement.dialogs.delete.description')}
         onConfirm={() => {
           if (staffToDelete) {
             handleDeleteStaff(staffToDelete);
             setStaffToDelete(null);
           }
         }}
-        confirmText='Delete'
-        cancelText='Cancel'
+        confirmText={t('staffManagement.dialogs.delete.confirm')}
+        cancelText={t('staffManagement.dialogs.delete.cancel')}
         confirmVariant='destructive'
       />
 
-      {/* Unassign Staff Confirmation Dialog */}
       <ConfirmDialog
         open={unassignDialogOpen}
         onOpenChange={setUnassignDialogOpen}
-        title='Unassign Staff'
-        description='Are you sure you want to unassign this staff member from their current station? They will become available for assignment to other stations.'
+        title={t('staffManagement.dialogs.unassign.title')}
+        description={t('staffManagement.dialogs.unassign.description')}
         onConfirm={() => {
           if (staffToUnassign) {
             handleUnassignStaff(staffToUnassign);
             setStaffToUnassign(null);
           }
         }}
-        confirmText='Unassign'
-        cancelText='Cancel'
+        confirmText={t('staffManagement.dialogs.unassign.confirm')}
+        cancelText={t('staffManagement.dialogs.unassign.cancel')}
         confirmVariant='default'
       />
     </div>

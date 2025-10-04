@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
 import {
@@ -22,6 +23,7 @@ import { Textarea } from '../../../shared/components/ui/textarea';
 import { Button } from './../../../shared/components/ui/button';
 
 export function StaffForm({ open, onOpenChange, onSubmit, loading = false }) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -34,17 +36,16 @@ export function StaffForm({ open, onOpenChange, onSubmit, loading = false }) {
   const handleSubmit = async e => {
     e.preventDefault();
 
-    // Basic validation
     if (!formData.name.trim()) {
-      toast.error('Name is required');
+      toast.error(t('staffForm.validation.nameRequired'));
       return;
     }
     if (!formData.email.trim()) {
-      toast.error('Email is required');
+      toast.error(t('staffForm.validation.emailRequired'));
       return;
     }
     if (!formData.password.trim()) {
-      toast.error('Password is required');
+      toast.error(t('staffForm.validation.passwordRequired'));
       return;
     }
 
@@ -60,7 +61,6 @@ export function StaffForm({ open, onOpenChange, onSubmit, loading = false }) {
       });
       onOpenChange(false);
     } catch (error) {
-      // Error handling is done in parent component
       console.log(error);
     }
   };
@@ -76,28 +76,26 @@ export function StaffForm({ open, onOpenChange, onSubmit, loading = false }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='sm:max-w-[425px]'>
         <DialogHeader>
-          <DialogTitle>Add New Staff</DialogTitle>
-          <DialogDescription>
-            Create a new staff account. All fields marked with * are required.
-          </DialogDescription>
+          <DialogTitle>{t('staffForm.title')}</DialogTitle>
+          <DialogDescription>{t('staffForm.description')}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className='grid gap-4 py-4'>
             <div className='grid grid-cols-4 items-center gap-4'>
               <Label htmlFor='name' className='text-right'>
-                Name *
+                {t('staffForm.fields.name')}
               </Label>
               <Input
                 id='name'
                 value={formData.name}
                 onChange={e => handleInputChange('name', e.target.value)}
                 className='col-span-3'
-                placeholder='Enter full name'
+                placeholder={t('staffForm.placeholders.name')}
               />
             </div>
             <div className='grid grid-cols-4 items-center gap-4'>
               <Label htmlFor='email' className='text-right'>
-                Email *
+                {t('staffForm.fields.email')}
               </Label>
               <Input
                 id='email'
@@ -105,12 +103,12 @@ export function StaffForm({ open, onOpenChange, onSubmit, loading = false }) {
                 value={formData.email}
                 onChange={e => handleInputChange('email', e.target.value)}
                 className='col-span-3'
-                placeholder='Enter email address'
+                placeholder={t('staffForm.placeholders.email')}
               />
             </div>
             <div className='grid grid-cols-4 items-center gap-4'>
               <Label htmlFor='password' className='text-right'>
-                Password *
+                {t('staffForm.fields.password')}
               </Label>
               <Input
                 id='password'
@@ -118,51 +116,49 @@ export function StaffForm({ open, onOpenChange, onSubmit, loading = false }) {
                 value={formData.password}
                 onChange={e => handleInputChange('password', e.target.value)}
                 className='col-span-3'
-                placeholder='Enter password'
+                placeholder={t('staffForm.placeholders.password')}
               />
             </div>
             <div className='grid grid-cols-4 items-center gap-4'>
               <Label htmlFor='phone' className='text-right'>
-                Phone
+                {t('staffForm.fields.phone')}
               </Label>
               <Input
                 id='phone'
                 value={formData.phone}
                 onChange={e => handleInputChange('phone', e.target.value)}
                 className='col-span-3'
-                placeholder='Enter phone number (0xxxxxxxxx)'
+                placeholder={t('staffForm.placeholders.phone')}
               />
             </div>
             <div className='grid grid-cols-4 items-center gap-4'>
               <Label htmlFor='address' className='text-right'>
-                Address
+                {t('staffForm.fields.address')}
               </Label>
               <Textarea
                 id='address'
                 value={formData.address}
                 onChange={e => handleInputChange('address', e.target.value)}
                 className='col-span-3'
-                placeholder='Enter address'
+                placeholder={t('staffForm.placeholders.address')}
                 rows={3}
               />
             </div>
             <div className='grid grid-cols-4 items-center gap-4'>
               <Label htmlFor='status' className='text-right'>
-                Status
+                {t('staffForm.fields.status')}
               </Label>
               <Select
                 value={formData.accountStatus}
-                onValueChange={value =>
-                  handleInputChange('accountStatus', value)
-                }
+                onValueChange={value => handleInputChange('accountStatus', value)}
               >
                 <SelectTrigger className='col-span-3'>
-                  <SelectValue placeholder='Select status' />
+                  <SelectValue placeholder={t('staffForm.placeholders.status')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value='ACTIVE'>Active</SelectItem>
-                  <SelectItem value='SUSPENDED'>Suspended</SelectItem>
-                  <SelectItem value='BANNED'>Banned</SelectItem>
+                  <SelectItem value='ACTIVE'>{t('staffForm.statusOptions.active')}</SelectItem>
+                  <SelectItem value='SUSPENDED'>{t('staffForm.statusOptions.suspended')}</SelectItem>
+                  <SelectItem value='BANNED'>{t('staffForm.statusOptions.banned')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -174,10 +170,10 @@ export function StaffForm({ open, onOpenChange, onSubmit, loading = false }) {
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
-              Cancel
+              {t('staffForm.buttons.cancel')}
             </Button>
             <Button type='submit' disabled={loading}>
-              {loading ? 'Creating...' : 'Create Staff'}
+              {loading ? t('staffForm.buttons.creating') : t('staffForm.buttons.create')}
             </Button>
           </DialogFooter>
         </form>
