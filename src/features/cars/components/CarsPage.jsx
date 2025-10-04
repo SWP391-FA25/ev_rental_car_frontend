@@ -1,11 +1,11 @@
 import Footer from '@/features/shared/components/homepage/Footer';
 import Navbar from '@/features/shared/components/homepage/Navbar';
+import { Alert, AlertDescription } from '@/features/shared/components/ui/alert';
 import { Button } from '@/features/shared/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
-  CardTitle,
 } from '@/features/shared/components/ui/card';
 import { Input } from '@/features/shared/components/ui/input';
 import {
@@ -15,114 +15,80 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/features/shared/components/ui/select';
+import { Skeleton } from '@/features/shared/components/ui/skeleton';
 import gsap from 'gsap';
-import { Fuel, MapPin, Settings, Users } from 'lucide-react';
+import {
+  AlertCircle,
+  Fuel,
+  MapPin,
+  RefreshCw,
+  Settings,
+  Users,
+} from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useLocation } from '../hooks/useLocation';
+import { useNearbyStations } from '../hooks/useNearbyStations';
+import { useVehicles } from '../hooks/useVehicles';
+import LocationInputSection from './LocationInputSection';
+import NearbyStationsList from './NearbyStationsList';
+import StationVehicleGrid from './StationVehicleGrid';
 
-const mockCars = [
-  {
-    id: 1,
-    name: 'BMW X5',
-    type: 'SUV',
-    year: 2006,
-    image:
+// Helper function to transform vehicle data for display
+const transformVehicleData = vehicle => {
+  return {
+    id: vehicle.id,
+    name: `${vehicle.brand} ${vehicle.model}`,
+    type: vehicle.type,
+    year: vehicle.year,
+    images:
+      vehicle.images?.[0]?.url ||
       'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=1200&q=80',
-    price: 300,
+    price: 200, // Default price - should come from backend
     period: 'day',
-    seats: 4,
-    transmission: 'Semi-Automatic',
-    fuelType: 'Hybrid',
-    location: 'New York',
-    available: true,
-  },
-  {
-    id: 2,
-    name: 'Toyota Corolla',
-    type: 'Sedan',
-    year: 2021,
-    image:
-      'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?auto=format&fit=crop&w=1200&q=80',
-    price: 130,
-    period: 'day',
-    seats: 4,
-    transmission: 'Automatic',
-    fuelType: 'Diesel',
-    location: 'Los Angeles',
-    available: true,
-  },
-  {
-    id: 3,
-    name: 'Jeep Wrangler',
-    type: 'SUV',
-    year: 2023,
-    image:
-      'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=1200&q=80',
-    price: 200,
-    period: 'day',
-    seats: 4,
-    transmission: 'Automatic',
-    fuelType: 'Hybrid',
-    location: 'Los Angeles',
-    available: true,
-  },
-  {
-    id: 4,
-    name: 'Ford Neo 6',
-    type: 'Sedan',
-    year: 2022,
-    image:
-      'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?auto=format&fit=crop&w=1200&q=80',
-    price: 209,
-    period: 'day',
-    seats: 2,
-    transmission: 'Semi-Automatic',
-    fuelType: 'Diesel',
-    location: 'Houston',
-    available: true,
-  },
-  {
-    id: 5,
-    name: 'Audi A4',
-    type: 'Sedan',
-    year: 2020,
-    image:
-      'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-    price: 180,
-    period: 'day',
-    seats: 5,
-    transmission: 'Automatic',
-    fuelType: 'Petrol',
-    location: 'Chicago',
-    available: true,
-  },
-  {
-    id: 6,
-    name: 'Tesla Model 3',
-    type: 'Sedan',
-    year: 2022,
-    image:
-      'https://images.unsplash.com/photo-1606661001092-1d1b92aecd82?auto=format&fit=crop&w=1200&q=80',
-    price: 240,
-    period: 'day',
-    seats: 5,
-    transmission: 'Automatic',
-    fuelType: 'Electric',
-    location: 'San Francisco',
-    available: true,
-  },
-];
+    seats: vehicle.seats,
+    transmission: 'Automatic', // Default - should come from backend
+    fuelType: vehicle.fuelType,
+    location: vehicle.station?.name || 'Unknown Location',
+    available: vehicle.status === 'AVAILABLE',
+    batteryLevel: vehicle.batteryLevel,
+    color: vehicle.color,
+    licensePlate: vehicle.licensePlate,
+  };
+};
 
 export default function CarsPage() {
   const [query, setQuery] = useState('');
   const [type, setType] = useState('all');
   const [transmission, setTransmission] = useState('all');
   const [fuel, setFuel] = useState('all');
+  const [selectedStation, setSelectedStation] = useState(null);
+  const [viewMode, setViewMode] = useState('all'); // 'all' or 'location'
+  const navigate = useNavigate();
 
   const toolbarRef = useRef(null);
+  const { vehicles, loading, error, fetchVehicles } = useVehicles();
+  const {
+    userLocation,
+    getCurrentLocation,
+    setLocation,
+    loading: locationLoading,
+    error: locationError,
+  } = useLocation();
+  const {
+    stations,
+    loading: stationsLoading,
+    error: stationsError,
+    refetch: refetchStations,
+  } = useNearbyStations(userLocation);
+
+  // Transform vehicles data for display
+  const transformedVehicles = useMemo(() => {
+    return vehicles.map(transformVehicleData);
+  }, [vehicles]);
 
   const filtered = useMemo(() => {
-    return mockCars.filter(car => {
+    return transformedVehicles.filter(car => {
       const matchQuery = `${car.name} ${car.type} ${car.location}`
         .toLowerCase()
         .includes(query.trim().toLowerCase());
@@ -132,13 +98,28 @@ export default function CarsPage() {
       const matchFuel = fuel === 'all' || car.fuelType === fuel;
       return matchQuery && matchType && matchTransmission && matchFuel;
     });
-  }, [query, type, transmission, fuel]);
+  }, [transformedVehicles, query, type, transmission, fuel]);
 
   const resetFilters = () => {
     setQuery('');
     setType('all');
     setTransmission('all');
     setFuel('all');
+    setSelectedStation(null);
+    setViewMode('all');
+  };
+
+  const handleStationSelect = station => {
+    setSelectedStation(station);
+  };
+
+  const handleBackToStations = () => {
+    setSelectedStation(null);
+  };
+
+  const handleLocationSelect = location => {
+    setLocation(location);
+    setViewMode('location');
   };
 
   useEffect(() => {
@@ -160,117 +141,238 @@ export default function CarsPage() {
           ref={toolbarRef}
           className='mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between'
         >
-          <h1 className='text-3xl font-bold'>Available Cars</h1>
-          <div className='grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4'>
-            <Input
-              placeholder='Search by name, type, location...'
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-            />
-            <Select value={type} onValueChange={setType}>
-              <SelectTrigger>
-                <SelectValue placeholder='Type' />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='all'>All Types</SelectItem>
-                <SelectItem value='SUV'>SUV</SelectItem>
-                <SelectItem value='Sedan'>Sedan</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={transmission} onValueChange={setTransmission}>
-              <SelectTrigger>
-                <SelectValue placeholder='Transmission' />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='all'>All Transmissions</SelectItem>
-                <SelectItem value='Automatic'>Automatic</SelectItem>
-                <SelectItem value='Semi-Automatic'>Semi-Automatic</SelectItem>
-                <SelectItem value='Manual'>Manual</SelectItem>
-              </SelectContent>
-            </Select>
-            <div className='flex gap-2'>
-              <Select value={fuel} onValueChange={setFuel}>
-                <SelectTrigger>
-                  <SelectValue placeholder='Fuel' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='all'>All Fuels</SelectItem>
-                  <SelectItem value='Electric'>Electric</SelectItem>
-                  <SelectItem value='Hybrid'>Hybrid</SelectItem>
-                  <SelectItem value='Diesel'>Diesel</SelectItem>
-                  <SelectItem value='Petrol'>Petrol</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button variant='outline' onClick={resetFilters}>
-                Reset
+          <div>
+            <h1 className='text-3xl font-bold'>Available Cars</h1>
+            <div className='flex gap-2 mt-2'>
+              <Button
+                variant={viewMode === 'all' ? 'default' : 'outline'}
+                size='sm'
+                onClick={() => setViewMode('all')}
+              >
+                All Vehicles
+              </Button>
+              <Button
+                variant={viewMode === 'location' ? 'default' : 'outline'}
+                size='sm'
+                onClick={() => setViewMode('location')}
+              >
+                Find Near Me
               </Button>
             </div>
           </div>
+          {viewMode === 'all' && (
+            <div className='grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4'>
+              <Input
+                placeholder='Search by name, type, location...'
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+              />
+              <Select value={type} onValueChange={setType}>
+                <SelectTrigger>
+                  <SelectValue placeholder='Type' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='all'>All Types</SelectItem>
+                  <SelectItem value='SUV'>SUV</SelectItem>
+                  <SelectItem value='SEDAN'>Sedan</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={transmission} onValueChange={setTransmission}>
+                <SelectTrigger>
+                  <SelectValue placeholder='Transmission' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='all'>All Transmissions</SelectItem>
+                  <SelectItem value='Automatic'>Automatic</SelectItem>
+                  <SelectItem value='Semi-Automatic'>Semi-Automatic</SelectItem>
+                  <SelectItem value='Manual'>Manual</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className='flex gap-2'>
+                <Select value={fuel} onValueChange={setFuel}>
+                  <SelectTrigger>
+                    <SelectValue placeholder='Fuel' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='all'>All Fuels</SelectItem>
+                    <SelectItem value='Electric'>Electric</SelectItem>
+                    <SelectItem value='Hybrid'>Hybrid</SelectItem>
+                    <SelectItem value='Diesel'>Diesel</SelectItem>
+                    <SelectItem value='Petrol'>Petrol</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button variant='outline' onClick={resetFilters}>
+                  Reset
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
 
-        {filtered.length === 0 ? (
-          <p className='text-muted-foreground'>No cars match your filters.</p>
-        ) : (
-          <div className='grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'>
-            {filtered.map(vehicle => (
-              <Card
-                key={vehicle.id}
-                className='overflow-hidden hover:shadow-lg transition-all duration-300 group p-0'
-                data-car-card
-              >
-                <Link
-                  to={`/cars/${vehicle.id}`}
-                  className='relative block h-48 overflow-hidden rounded-t-lg'
-                >
-                  <img
-                    src={vehicle.image}
-                    alt={vehicle.name}
-                    className='w-full h-full object-cover'
-                  />
-                  <div className='absolute bottom-3 right-3 bg-black/80 text-white px-3 py-1 rounded-lg'>
-                    <span className='text-lg font-bold'>${vehicle.price}</span>
-                    <span className='text-sm'>/{vehicle.period}</span>
-                  </div>
-                </Link>
-                <CardContent className='p-4'>
-                  <div className='mb-3'>
-                    <CardTitle className='text-lg font-bold text-foreground'>
-                      {vehicle.name}
-                    </CardTitle>
-                    <CardDescription className='text-sm text-muted-foreground'>
-                      {vehicle.type} • {vehicle.year}
-                    </CardDescription>
-                  </div>
-                  <div className='grid grid-cols-2 gap-3 mb-4'>
-                    <div className='flex items-center gap-2 text-sm text-muted-foreground'>
-                      <Users className='w-4 h-4' />
-                      <span>{vehicle.seats} Seats</span>
-                    </div>
-                    <div className='flex items-center gap-2 text-sm text-muted-foreground'>
-                      <Fuel className='w-4 h-4' />
-                      <span>{vehicle.fuelType}</span>
-                    </div>
-                    <div className='flex items-center gap-2 text-sm text-muted-foreground'>
-                      <Settings className='w-4 h-4' />
-                      <span>{vehicle.transmission}</span>
-                    </div>
-                    <div className='flex items-center gap-2 text-sm text-muted-foreground'>
-                      <MapPin className='w-4 h-4' />
-                      <span>{vehicle.location}</span>
-                    </div>
-                  </div>
-                  <div className='flex justify-between items-center'>
-                    <Button size='sm' variant='default'>
-                      Book now
-                    </Button>
-                    <Button size='sm' variant='outline'>
-                      Details
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+        {/* Location-based View */}
+        {viewMode === 'location' && (
+          <div className='space-y-6'>
+            <LocationInputSection
+              userLocation={userLocation}
+              onLocationSelect={handleLocationSelect}
+              onGetCurrentLocation={getCurrentLocation}
+              loading={locationLoading}
+              error={locationError}
+            />
+
+            {userLocation && !selectedStation && (
+              <NearbyStationsList
+                stations={stations}
+                loading={stationsLoading}
+                error={stationsError}
+                onStationSelect={handleStationSelect}
+                selectedStation={selectedStation}
+                onRefetch={refetchStations}
+              />
+            )}
+
+            {selectedStation && (
+              <StationVehicleGrid
+                station={selectedStation}
+                onBackToStations={handleBackToStations}
+              />
+            )}
           </div>
+        )}
+
+        {/* All Vehicles View */}
+        {viewMode === 'all' && (
+          <>
+            {/* Error State */}
+            {error && (
+              <Alert variant='destructive' className='mb-6'>
+                <AlertCircle className='h-4 w-4' />
+                <AlertDescription className='flex items-center justify-between'>
+                  <span>{error}</span>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={fetchVehicles}
+                    className='ml-4'
+                  >
+                    <RefreshCw className='h-4 w-4 mr-2' />
+                    Retry
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Loading State */}
+            {loading ? (
+              <div className='grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'>
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <Card key={index} className='overflow-hidden p-0'>
+                    <Skeleton className='h-48 w-full' />
+                    <CardContent className='p-4'>
+                      <div className='mb-3'>
+                        <Skeleton className='h-6 w-3/4 mb-2' />
+                        <Skeleton className='h-4 w-1/2' />
+                      </div>
+                      <div className='grid grid-cols-2 gap-3 mb-4'>
+                        <Skeleton className='h-4 w-full' />
+                        <Skeleton className='h-4 w-full' />
+                        <Skeleton className='h-4 w-full' />
+                        <Skeleton className='h-4 w-full' />
+                      </div>
+                      <div className='flex justify-between items-center'>
+                        <Skeleton className='h-8 w-20' />
+                        <Skeleton className='h-8 w-16' />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className='text-center py-12'>
+                <p className='text-muted-foreground mb-4'>
+                  {transformedVehicles.length === 0
+                    ? 'No vehicles available at the moment.'
+                    : 'No cars match your filters.'}
+                </p>
+                {transformedVehicles.length === 0 && (
+                  <Button variant='outline' onClick={fetchVehicles}>
+                    <RefreshCw className='h-4 w-4 mr-2' />
+                    Refresh
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className='grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'>
+                {filtered.map(vehicle => (
+                  <Card
+                    key={vehicle.id}
+                    className='overflow-hidden hover:shadow-lg transition-all duration-300 group p-0'
+                    data-car-card
+                  >
+                    <Link
+                      to={`/cars/${vehicle.id}`}
+                      className='relative block h-48 overflow-hidden rounded-t-lg'
+                    >
+                      <img
+                        src={vehicle.images}
+                        alt={vehicle.name}
+                        className='w-full h-full object-cover'
+                      />
+
+                      {!vehicle.available && (
+                        <div className='absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded text-xs font-medium'>
+                          Unavailable
+                        </div>
+                      )}
+                    </Link>
+                    <CardContent className='px-4 pb-4'>
+                      <div className='mb-3'>
+                        <CardDescription className='text-lg font-bold text-foreground'>
+                          {vehicle.name}
+                        </CardDescription>
+                        <CardDescription className='text-sm text-muted-foreground'>
+                          {vehicle.type} • {vehicle.year}
+                        </CardDescription>
+                      </div>
+                      <div className='grid grid-cols-2 gap-3 mb-4'>
+                        <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+                          <Users className='w-4 h-4' />
+                          <span>{vehicle.seats} Seats</span>
+                        </div>
+                        <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+                          <Fuel className='w-4 h-4' />
+                          <span>{vehicle.fuelType}</span>
+                        </div>
+                        <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+                          <Settings className='w-4 h-4' />
+                          <span>{vehicle.transmission}</span>
+                        </div>
+                        <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+                          <MapPin className='w-4 h-4' />
+                          <span>{vehicle.location}</span>
+                        </div>
+                      </div>
+                      <div className='flex justify-between items-center'>
+                        <Button
+                          size='sm'
+                          variant='default'
+                          disabled={!vehicle.available}
+                          onClick={() => {
+                            navigate(`/cars/${vehicle.id}`);
+                          }}
+                        >
+                          {vehicle.available ? 'Book now' : 'Unavailable'}
+                        </Button>
+                        <Button size='sm' variant='outline'>
+                          Details
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </main>
       <Footer />

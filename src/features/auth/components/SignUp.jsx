@@ -22,7 +22,7 @@ export default function SignUp() {
     email: '',
     password: '',
     confirmPassword: '',
-    company: '',
+    address: '',
     phone: '',
   });
   const [error, setError] = useState(null);
@@ -46,7 +46,7 @@ export default function SignUp() {
         phone: formData.phone || undefined,
         // optional fields you might add to UI later
         license: undefined,
-        address: formData.company || undefined,
+        address: formData.address || undefined,
       };
       const res = await apiClient.post(endpoints.auth.register(), payload);
       if (!res?.success) throw new Error(res?.message || 'Signup failed');
@@ -137,12 +137,12 @@ export default function SignUp() {
               </div>
 
               <div className='space-y-2'>
-                <Label htmlFor='company'>Company</Label>
+                <Label htmlFor='company'>Address</Label>
                 <Input
-                  id='company'
-                  name='company'
+                  id='address'
+                  name='address'
                   type='text'
-                  placeholder='Your Company Name'
+                  placeholder='Your Address'
                   value={formData.company}
                   onChange={handleChange}
                   required

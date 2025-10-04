@@ -14,7 +14,7 @@ import PolicyPage from '@/features/shared/components/PolicyPage.jsx';
 import StaffDashboard from '@/features/staff/layout/StaffDashboard.jsx';
 import { createBrowserRouter } from 'react-router-dom';
 import VehicleManagement from '../../features/admin/pages/VehicleManagement';
-import UserPage from '../../features/booking/components/UserPage';
+import UserPage from '../../features/user/layout/UserPage';
 import UserProfileLayout from '../../features/user/layout/UserProfileLayout';
 import PrivateRoutes from '../utils/PrivateRoutes';
 import RoleBasedRoute from '../utils/RoleBaseRoutes';

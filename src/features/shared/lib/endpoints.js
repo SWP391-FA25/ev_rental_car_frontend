@@ -19,13 +19,16 @@ export const endpoints = {
   stations: {
     getAll: () => '/api/stations',
     getById: id => `/api/stations/${id}`,
+    getNearby: () => '/api/stations/nearby',
     create: () => '/api/stations',
     update: id => `/api/stations/${id}`,
     delete: id => `/api/stations/${id}`,
     softDelete: id => `/api/stations/soft-delete/${id}`,
     getUnavailable: () => '/api/stations/unavailable',
-    getVehicles: stationId => `/api/stations/${stationId}/vehicles`,
-    getStaff: stationId => `/api/stations/${stationId}/staff`,
+    getVehiclesAtStation: stationId =>
+      `/api/stations/station/getVehiclesAtStation/${stationId}`,
+    getStaffAtStation: stationId =>
+      `/api/stations/station/getStaffAtStation/${stationId}`,
   },
   vehicles: {
     getAll: () => '/api/vehicles',
@@ -70,5 +73,16 @@ export const endpoints = {
     update: id => `/api/assignments/${id}`,
     delete: id => `/api/assignments/${id}`,
     getUnassignedStaff: () => '/api/assignments/unassigned-staff',
+  },
+  bookings: {
+    getAll: () => '/api/bookings',
+    getAnalytics: () => '/api/bookings/analytics',
+    getById: id => `/api/bookings/${id}`,
+    getUserBookings: userId => `/api/bookings/user/${userId}`,
+    create: () => '/api/bookings',
+    update: id => `/api/bookings/${id}`,
+    updateStatus: id => `/api/bookings/${id}/status`,
+    cancel: id => `/api/bookings/${id}/cancel`,
+    complete: id => `/api/bookings/${id}/complete`,
   },
 };

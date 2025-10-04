@@ -1,63 +1,80 @@
 import Footer from '@/features/shared/components/homepage/Footer';
 import Navbar from '@/features/shared/components/homepage/Navbar';
+import { Alert, AlertDescription } from '@/features/shared/components/ui/alert';
 import { Button } from '@/features/shared/components/ui/button';
 import { Card } from '@/features/shared/components/ui/card';
 import { Input } from '@/features/shared/components/ui/input';
+import { Skeleton } from '@/features/shared/components/ui/skeleton';
 import gsap from 'gsap';
-import { ArrowLeft, Fuel, MapPin, Settings, Users } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import {
+  AlertCircle,
+  ArrowLeft,
+  Fuel,
+  MapPin,
+  RefreshCw,
+  Settings,
+  Users,
+} from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { useVehicles } from '../hooks/useVehicles';
 
-const mockCars = {
-  1: {
-    id: 1,
-    name: 'BMW X5',
-    type: 'SUV',
-    year: 2006,
+// Helper function to transform vehicle data for display
+const transformVehicleData = vehicle => {
+  return {
+    id: vehicle.id,
+    name: `${vehicle.brand} ${vehicle.model}`,
+    type: vehicle.type,
+    year: vehicle.year,
     image:
+      vehicle.images?.[0]?.url ||
       'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=1600&q=80',
-    price: 300,
+    price: 200, // Default price - should come from backend
     period: 'day',
-    seats: 4,
-    transmission: 'Semi-Automatic',
-    fuelType: 'Hybrid',
-    location: 'New York',
-    description:
-      'The BMW X5 is a mid-size luxury SUV produced by BMW. It combines performance, comfort, and advanced technology.',
+    seats: vehicle.seats,
+    transmission: 'Automatic', // Default - should come from backend
+    fuelType: vehicle.fuelType,
+    location: vehicle.station?.name || 'Unknown Location',
+    available: vehicle.status === 'AVAILABLE',
+    batteryLevel: vehicle.batteryLevel,
+    color: vehicle.color,
+    licensePlate: vehicle.licensePlate,
+    description: `The ${vehicle.brand} ${vehicle.model} is a ${vehicle.type} with excellent performance and modern features.`,
     features: [
-      'Leather Seats',
-      'Panoramic Sunroof',
-      '360 Camera',
-      'Wireless Charging',
+      'Air Conditioning',
+      'Bluetooth Connectivity',
+      'Backup Camera',
+      'Keyless Entry',
     ],
-  },
-  2: {
-    id: 2,
-    name: 'Toyota Corolla',
-    type: 'Sedan',
-    year: 2021,
-    image:
-      'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?auto=format&fit=crop&w=1600&q=80',
-    price: 130,
-    period: 'day',
-    seats: 4,
-    transmission: 'Automatic',
-    fuelType: 'Diesel',
-    location: 'Los Angeles',
-    description: 'Reliable sedan with excellent fuel efficiency and comfort.',
-    features: ['Cruise Control', 'Bluetooth', 'Rear Camera', 'ABS'],
-  },
+  };
 };
 
 export default function CarDetailPage() {
   const { id } = useParams();
-  const car = mockCars[id];
+  const { getVehicleById, error } = useVehicles();
+  const [car, setCar] = useState(null);
+  const [loadingCar, setLoadingCar] = useState(true);
   const heroRef = useRef(null);
   const chipsRef = useRef(null);
   const sidebarRef = useRef(null);
 
+  // Fetch vehicle data
   useEffect(() => {
-    if (heroRef.current) {
+    const fetchVehicle = async () => {
+      if (id) {
+        setLoadingCar(true);
+        const vehicleData = await getVehicleById(id);
+        if (vehicleData) {
+          setCar(transformVehicleData(vehicleData));
+        }
+        setLoadingCar(false);
+      }
+    };
+    fetchVehicle();
+  }, [id, getVehicleById]);
+
+  useEffect(() => {
+    if (car && heroRef.current) {
       gsap.from(heroRef.current, {
         opacity: 0,
         y: 24,
@@ -65,7 +82,7 @@ export default function CarDetailPage() {
         ease: 'power2.out',
       });
     }
-    if (chipsRef.current) {
+    if (car && chipsRef.current) {
       const items = chipsRef.current.children;
       gsap.from(items, {
         opacity: 0,
@@ -76,7 +93,7 @@ export default function CarDetailPage() {
         delay: 0.1,
       });
     }
-    if (sidebarRef.current) {
+    if (car && sidebarRef.current) {
       gsap.from(sidebarRef.current, {
         opacity: 0,
         x: 16,
@@ -85,14 +102,86 @@ export default function CarDetailPage() {
         delay: 0.15,
       });
     }
-  }, []);
+  }, [car]);
 
+  // Loading state
+  if (loadingCar) {
+    return (
+      <div className='min-h-screen bg-background text-foreground'>
+        <Navbar />
+        <main className='container mx-auto px-4 py-24'>
+          <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
+            <div className='lg:col-span-2'>
+              <Skeleton className='h-[420px] w-full rounded-xl mb-4' />
+              <Skeleton className='h-8 w-3/4 mb-2' />
+              <Skeleton className='h-4 w-1/2 mb-6' />
+              <div className='grid grid-cols-2 md:grid-cols-4 gap-3 mb-8'>
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className='h-12 w-full' />
+                ))}
+              </div>
+              <Skeleton className='h-20 w-full mb-4' />
+              <Skeleton className='h-16 w-full' />
+            </div>
+            <div className='lg:col-span-1'>
+              <Card className='p-5'>
+                <Skeleton className='h-8 w-24 mb-4' />
+                <div className='space-y-3'>
+                  <Skeleton className='h-10 w-full' />
+                  <Skeleton className='h-10 w-full' />
+                  <Skeleton className='h-10 w-full' />
+                </div>
+              </Card>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className='min-h-screen bg-background text-foreground'>
+        <Navbar />
+        <main className='container mx-auto px-4 py-24'>
+          <Alert variant='destructive'>
+            <AlertCircle className='h-4 w-4' />
+            <AlertDescription className='flex items-center justify-between'>
+              <span>{error}</span>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => window.location.reload()}
+                className='ml-4'
+              >
+                <RefreshCw className='h-4 w-4 mr-2' />
+                Retry
+              </Button>
+            </AlertDescription>
+          </Alert>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Not found state
   if (!car) {
     return (
       <div className='min-h-screen bg-background text-foreground'>
         <Navbar />
         <main className='container mx-auto px-4 py-24'>
-          <p className='text-muted-foreground'>Car not found.</p>
+          <div className='text-center'>
+            <h1 className='text-2xl font-bold mb-4'>Vehicle not found</h1>
+            <p className='text-muted-foreground mb-6'>
+              The vehicle you're looking for doesn't exist or has been removed.
+            </p>
+            <Link to='/cars'>
+              <Button>Back to Cars</Button>
+            </Link>
+          </div>
         </main>
         <Footer />
       </div>
@@ -185,7 +274,9 @@ export default function CarDetailPage() {
                   </div>
                   <Input type='date' />
                 </div>
-                <Button className='w-full'>Book Now</Button>
+                <Button className='w-full' disabled={!car.available}>
+                  {car.available ? 'Book Now' : 'Unavailable'}
+                </Button>
                 <div className='text-xs text-muted-foreground text-center'>
                   No credit card required to reserve
                 </div>
