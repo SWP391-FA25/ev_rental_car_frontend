@@ -900,5 +900,224 @@
       "verification": "License Verification",
       "support": "Customer Support"
     }
+  },
+  "staffPayments": {
+    "title": "Payment Management",
+    "subtitle": "Process payments, handle refunds, and resolve billing issues",
+    "tabs": {
+      "overview": "Overview",
+      "process": "Process Payments",
+      "refunds": "Refunds & Adjustments",
+      "issues": "Billing Issues"
+    },
+    "overview": {
+      "totalRevenue": "Total Revenue",
+      "deltaRevenue": "+12% from last month",
+      "pendingPayments": "Pending Payments",
+      "awaitingProcessing": "Awaiting processing",
+      "failedPayments": "Failed Payments",
+      "requireAttention": "Require attention",
+      "totalRefunds": "Total Refunds",
+      "thisMonth": "This month"
+    },
+    "transactions": {
+      "title": "Recent Transactions",
+      "subtitle": "Latest payment transactions and their status"
+    },
+    "table": {
+      "paymentId": "Payment ID",
+      "customer": "Customer",
+      "amount": "Amount",
+      "method": "Method",
+      "status": "Status",
+      "date": "Date",
+      "actions": "Actions",
+      "failureReason": "Failure Reason"
+    },
+    "methods": {
+      "cash": "Cash",
+      "creditCard": "Credit Card",
+      "debitCard": "Debit Card",
+      "bankTransfer": "Bank Transfer",
+      "digitalWallet": "Digital Wallet"
+    },
+    "menu": {
+      "actions": "Actions",
+      "viewDetails": "View Details",
+      "generateReceipt": "Generate Receipt",
+      "retryPayment": "Retry Payment",
+      "manualPayment": "Manual Payment",
+      "cancelPayment": "Cancel Payment",
+      "addNote": "Add Note",
+      "markResolved": "Mark Resolved",
+      "downloadReceipt": "Download Receipt"
+    },
+    "process": {
+      "title": "Process Manual Payment",
+      "subtitle": "Process payments manually for cash transactions or payment corrections",
+      "bookingCustomer": "Booking/Customer",
+      "bookingPlaceholder": "Select booking for payment",
+      "notes": "Payment Notes"
+    },
+    "pending": {
+      "title": "Pending & Failed Payments",
+      "subtitle": "Payments that require attention or retry"
+    },
+    "refunds": {
+      "title": "Process Refund",
+      "subtitle": "Issue refunds for completed payments and booking cancellations",
+      "selectPayment": "Select Payment to Refund",
+      "paymentPlaceholder": "Choose payment for refund",
+      "amount": "Refund Amount",
+      "type": "Refund Type",
+      "typePlaceholder": "Select refund type",
+      "types": {
+        "full": "Full Refund",
+        "partial": "Partial Refund",
+        "adjustment": "Billing Adjustment"
+      },
+      "reason": "Refund Reason"
+    },
+    "history": {
+      "title": "Refund History",
+      "subtitle": "Recent refunds and their processing status",
+      "refundId": "Refund ID",
+      "originalAmount": "Original Amount",
+      "refundAmount": "Refund Amount",
+      "reason": "Reason",
+      "processedBy": "Processed By"
+    },
+    "issues": {
+      "title": "Billing Issues",
+      "subtitle": "Track and resolve payment disputes and billing problems",
+      "reportIssue": "Report Issue",
+      "dialog": {
+        "title": "Report Billing Issue",
+        "subtitle": "Create a new billing issue report for investigation",
+        "issueType": "Issue Type",
+        "issueTypePlaceholder": "Select issue type",
+        "priority": "Priority",
+        "priorityPlaceholder": "Select priority",
+        "description": "Description",
+        "descriptionPlaceholder": "Describe the billing issue in detail...",
+        "create": "Create Issue"
+      },
+      "types": {
+        "paymentFailed": "Payment Failed",
+        "billingDispute": "Billing Dispute",
+        "overcharge": "Overcharge",
+        "duplicateCharge": "Duplicate Charge",
+        "refundRequest": "Refund Request"
+      },
+      "priority": {
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low"
+      },
+      "table": {
+        "issueId": "Issue ID",
+        "type": "Type",
+        "priority": "Priority",
+        "description": "Description",
+        "assignedTo": "Assigned To"
+      }
+    },
+    "common": {
+      "amount": "Amount",
+      "method": "Payment Method"
+    },
+    "placeholders": {
+      "amount": "Enter amount",
+      "method": "Select payment method",
+      "notes": "Add any notes about this payment...",
+      "refundAmount": "Enter refund amount",
+      "refundReason": "Explain the reason for this refund..."
+    },
+    "actions": {
+      "processPayment": "Process Payment",
+      "processRefund": "Process Refund"
+    }
+  },
+  "staffDocuments": {
+    "title": "Document Verification",
+    "subtitle": "Review and verify user documents for account authentication",
+    "filters": {
+      "title": "Filters",
+      "search": "Search",
+      "searchPlaceholder": "Search by user name, email, or document type...",
+      "status": "Status",
+      "statusPlaceholder": "Select status",
+      "allStatuses": "All Statuses",
+      "type": "Document Type",
+      "typePlaceholder": "Select type",
+      "allTypes": "All Types"
+    },
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "types": {
+      "driversLicense": "Driver's License",
+      "idCard": "ID Card",
+      "passport": "Passport"
+    },
+    "list": {
+      "title": "Documents to Verify",
+      "count": "{{count}} documents found"
+    },
+    "empty": {
+      "title": "No documents found",
+      "subtitle": "Try adjusting your filters or refresh the list."
+    },
+    "actions": {
+      "refresh": "Refresh",
+      "preview": "Preview",
+      "approve": "Approve",
+      "reject": "Reject",
+      "download": "Download"
+    },
+    "preview": {
+      "title": "Document Preview",
+      "userInfo": "User Information",
+      "docInfo": "Document Information",
+      "preview": "Document Preview",
+      "notAvailable": "Preview not available"
+    },
+    "fields": {
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "type": "Type",
+      "fileName": "File Name",
+      "status": "Status",
+      "uploaded": "Uploaded",
+      "expires": "Expires",
+      "documentNumber": "Document #"
+    },
+    "reject": {
+      "title": "Reject Document",
+      "confirm": "Are you sure you want to reject {{name}}'s {{docType}}?",
+      "description": "Please provide a reason for rejection. The user will be notified and can re-upload their document.",
+      "reason": "Rejection Reason",
+      "reasonPlaceholder": "Enter reason for rejection...",
+      "submit": "Reject Document"
+    },
+    "common": {
+      "na": "N/A",
+      "unknownUser": "Unknown User",
+      "noEmail": "No email provided",
+      "theUser": "the user"
+    },
+    "toasts": {
+      "approveSuccess": "Document approved successfully",
+      "rejectSuccess": "Document rejected successfully"
+    },
+    "errors": {
+      "fetchFailed": "Failed to fetch documents",
+      "approveFailed": "Failed to approve document",
+      "rejectionReasonRequired": "Please provide a rejection reason",
+      "rejectFailed": "Failed to reject document"
+    }
   }
 }

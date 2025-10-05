@@ -803,5 +803,224 @@
       "editDetails": "Sửa thông tin",
       "verifyDocuments": "Xác minh tài liệu"
     }
+  },
+  "staffDocuments": {
+    "title": "Xác minh tài liệu",
+    "subtitle": "Xem xét và xác minh tài liệu người dùng để xác thực tài khoản",
+    "filters": {
+      "title": "Bộ lọc",
+      "search": "Tìm kiếm",
+      "searchPlaceholder": "Tìm theo tên, email hoặc loại tài liệu...",
+      "status": "Trạng thái",
+      "statusPlaceholder": "Chọn trạng thái",
+      "allStatuses": "Tất cả trạng thái",
+      "type": "Loại tài liệu",
+      "typePlaceholder": "Chọn loại",
+      "allTypes": "Tất cả loại"
+    },
+    "status": {
+      "pending": "Đang chờ",
+      "approved": "Đã duyệt",
+      "rejected": "Từ chối"
+    },
+    "types": {
+      "driversLicense": "Bằng lái xe",
+      "idCard": "CMND/CCCD",
+      "passport": "Hộ chiếu"
+    },
+    "list": {
+      "title": "Tài liệu cần xác minh",
+      "count": "Tìm thấy {{count}} tài liệu"
+    },
+    "empty": {
+      "title": "Không có tài liệu nào",
+      "subtitle": "Hãy thử điều chỉnh bộ lọc hoặc làm mới danh sách."
+    },
+    "actions": {
+      "refresh": "Làm mới",
+      "preview": "Xem trước",
+      "approve": "Duyệt",
+      "reject": "Từ chối",
+      "download": "Tải xuống"
+    },
+    "preview": {
+      "title": "Xem trước tài liệu",
+      "userInfo": "Thông tin người dùng",
+      "docInfo": "Thông tin tài liệu",
+      "preview": "Xem trước tài liệu",
+      "notAvailable": "Không có bản xem trước"
+    },
+    "fields": {
+      "name": "Họ tên",
+      "email": "Email",
+      "phone": "Điện thoại",
+      "type": "Loại",
+      "fileName": "Tên tệp",
+      "status": "Trạng thái",
+      "uploaded": "Đã tải lên",
+      "expires": "Hết hạn",
+      "documentNumber": "Số tài liệu"
+    },
+    "reject": {
+      "title": "Từ chối tài liệu",
+      "confirm": "Bạn có chắc muốn từ chối {{docType}} của {{name}}?",
+      "description": "Vui lòng cung cấp lý do từ chối. Người dùng sẽ được thông báo và có thể tải lại tài liệu.",
+      "reason": "Lý do từ chối",
+      "reasonPlaceholder": "Nhập lý do từ chối...",
+      "submit": "Từ chối tài liệu"
+    },
+    "common": {
+      "na": "Không có",
+      "unknownUser": "Người dùng không xác định",
+      "noEmail": "Không có email",
+      "theUser": "người dùng"
+    },
+    "toasts": {
+      "approveSuccess": "Duyệt tài liệu thành công",
+      "rejectSuccess": "Từ chối tài liệu thành công"
+    },
+    "errors": {
+      "fetchFailed": "Không thể tải tài liệu",
+      "approveFailed": "Không thể duyệt tài liệu",
+      "rejectionReasonRequired": "Vui lòng nhập lý do từ chối",
+      "rejectFailed": "Không thể từ chối tài liệu"
+    }
+  },
+  "staffPayments": {
+    "title": "Quản lý thanh toán",
+    "subtitle": "Xử lý thanh toán, hoàn tiền và giải quyết sự cố hóa đơn",
+    "tabs": {
+      "overview": "Tổng quan",
+      "process": "Xử lý thanh toán",
+      "refunds": "Hoàn tiền & điều chỉnh",
+      "issues": "Sự cố hóa đơn"
+    },
+    "overview": {
+      "totalRevenue": "Tổng doanh thu",
+      "deltaRevenue": "+12% so với tháng trước",
+      "pendingPayments": "Thanh toán đang chờ",
+      "awaitingProcessing": "Đang chờ xử lý",
+      "failedPayments": "Thanh toán thất bại",
+      "requireAttention": "Cần chú ý",
+      "totalRefunds": "Tổng hoàn tiền",
+      "thisMonth": "Tháng này"
+    },
+    "transactions": {
+      "title": "Giao dịch gần đây",
+      "subtitle": "Các giao dịch thanh toán mới nhất và trạng thái"
+    },
+    "table": {
+      "paymentId": "Mã thanh toán",
+      "customer": "Khách hàng",
+      "amount": "Số tiền",
+      "method": "Phương thức",
+      "status": "Trạng thái",
+      "date": "Ngày",
+      "actions": "Thao tác",
+      "failureReason": "Lý do thất bại"
+    },
+    "menu": {
+      "actions": "Thao tác",
+      "viewDetails": "Xem chi tiết",
+      "generateReceipt": "Tạo hóa đơn",
+      "retryPayment": "Thử lại thanh toán",
+      "manualPayment": "Thanh toán thủ công",
+      "cancelPayment": "Hủy thanh toán",
+      "addNote": "Thêm ghi chú",
+      "markResolved": "Đánh dấu đã xử lý",
+      "downloadReceipt": "Tải biên lai"
+    },
+    "process": {
+      "title": "Xử lý thanh toán thủ công",
+      "subtitle": "Xử lý thanh toán thủ công cho giao dịch tiền mặt hoặc điều chỉnh",
+      "bookingCustomer": "Đơn thuê/Khách hàng",
+      "bookingPlaceholder": "Chọn đơn thuê để thanh toán",
+      "notes": "Ghi chú thanh toán"
+    },
+    "pending": {
+      "title": "Thanh toán đang chờ & thất bại",
+      "subtitle": "Các thanh toán cần chú ý hoặc thử lại"
+    },
+    "refunds": {
+      "title": "Xử lý hoàn tiền",
+      "subtitle": "Hoàn tiền cho các thanh toán đã hoàn tất và hủy đơn",
+      "selectPayment": "Chọn thanh toán để hoàn tiền",
+      "paymentPlaceholder": "Chọn thanh toán cần hoàn",
+      "amount": "Số tiền hoàn",
+      "type": "Loại hoàn tiền",
+      "typePlaceholder": "Chọn loại hoàn",
+      "types": {
+        "full": "Hoàn toàn bộ",
+        "partial": "Hoàn một phần",
+        "adjustment": "Điều chỉnh hóa đơn"
+      },
+      "reason": "Lý do hoàn tiền"
+    },
+    "history": {
+      "title": "Lịch sử hoàn tiền",
+      "subtitle": "Các khoản hoàn tiền gần đây và trạng thái xử lý",
+      "refundId": "Mã hoàn tiền",
+      "originalAmount": "Số tiền gốc",
+      "refundAmount": "Số tiền hoàn",
+      "reason": "Lý do",
+      "processedBy": "Người xử lý"
+    },
+    "issues": {
+      "title": "Sự cố hóa đơn",
+      "subtitle": "Theo dõi và xử lý tranh chấp thanh toán và vấn đề hóa đơn",
+      "reportIssue": "Báo cáo sự cố",
+      "dialog": {
+        "title": "Báo cáo sự cố hóa đơn",
+        "subtitle": "Tạo báo cáo sự cố mới để điều tra",
+        "issueType": "Loại sự cố",
+        "issueTypePlaceholder": "Chọn loại sự cố",
+        "priority": "Mức độ ưu tiên",
+        "priorityPlaceholder": "Chọn mức độ ưu tiên",
+        "description": "Mô tả",
+        "descriptionPlaceholder": "Mô tả chi tiết sự cố hóa đơn...",
+        "create": "Tạo sự cố"
+      },
+      "types": {
+        "paymentFailed": "Thanh toán thất bại",
+        "billingDispute": "Tranh chấp hóa đơn",
+        "overcharge": "Tính dư tiền",
+        "duplicateCharge": "Tính tiền trùng",
+        "refundRequest": "Yêu cầu hoàn tiền"
+      },
+      "priority": {
+        "high": "Cao",
+        "medium": "Trung bình",
+        "low": "Thấp"
+      },
+      "table": {
+        "issueId": "Mã sự cố",
+        "type": "Loại",
+        "priority": "Mức ưu tiên",
+        "description": "Mô tả",
+        "assignedTo": "Người phụ trách"
+      }
+    },
+    "methods": {
+      "cash": "Tiền mặt",
+      "creditCard": "Thẻ tín dụng",
+      "debitCard": "Thẻ ghi nợ",
+      "bankTransfer": "Chuyển khoản ngân hàng",
+      "digitalWallet": "Ví điện tử"
+    },
+    "common": {
+      "amount": "Số tiền",
+      "method": "Phương thức thanh toán"
+    },
+    "placeholders": {
+      "amount": "Nhập số tiền",
+      "method": "Chọn phương thức thanh toán",
+      "notes": "Thêm ghi chú cho thanh toán...",
+      "refundAmount": "Nhập số tiền hoàn",
+      "refundReason": "Giải thích lý do hoàn tiền..."
+    },
+    "actions": {
+      "processPayment": "Xử lý thanh toán",
+      "processRefund": "Xử lý hoàn tiền"
+    }
   }
 }
