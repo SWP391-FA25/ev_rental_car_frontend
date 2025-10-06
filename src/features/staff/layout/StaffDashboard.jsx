@@ -28,90 +28,91 @@ import { StaffHeader } from '../components/staff-header';
 import { StaffSidebar } from '../components/staff-sidebar';
 import { StationManagement } from '../components/station-management';
 import { NotificationPreferences } from '../components/NotificationPreferences';
+import { endpoints } from '../../shared/lib/endpoints';
 
 // Removed QuickVerification import
 
-const mockStaffData = [
-  {
-    id: 'STAFF001',
-    name: 'John Smith',
-    email: 'john.smith@company.com',
-    role: 'Station Manager',
-    station: 'Downtown Station',
-    avatar: '/api/placeholder/32/32',
-    shift: 'Morning (6AM - 2PM)',
-    status: 'Active',
-    permissions: ['car_management', 'customer_service', 'payment_processing'],
-  },
-  {
-    id: 'STAFF002',
-    name: 'Sarah Johnson',
-    email: 'sarah.j@company.com',
-    role: 'Customer Service Rep',
-    station: 'Airport Station',
-    avatar: '/api/placeholder/32/32',
-    shift: 'Evening (2PM - 10PM)',
-    status: 'Active',
-    permissions: ['customer_service', 'payment_processing'],
-  },
-  {
-    id: 'STAFF003',
-    name: 'Mike Chen',
-    email: 'mike.chen@company.com',
-    role: 'Maintenance Tech',
-    station: 'Mall Station',
-    avatar: '/api/placeholder/32/32',
-    shift: 'Night (10PM - 6AM)',
-    status: 'Off Duty',
-    permissions: ['car_management'],
-  },
-];
+// const mockStaffData = [
+//   {
+//     id: 'STAFF001',
+//     name: 'John Smith',
+//     email: 'john.smith@company.com',
+//     role: 'Station Manager',
+//     station: 'Downtown Station',
+//     avatar: '/api/placeholder/32/32',
+//     shift: 'Morning (6AM - 2PM)',
+//     status: 'Active',
+//     permissions: ['car_management', 'customer_service', 'payment_processing'],
+//   },
+//   {
+//     id: 'STAFF002',
+//     name: 'Sarah Johnson',
+//     email: 'sarah.j@company.com',
+//     role: 'Customer Service Rep',
+//     station: 'Airport Station',
+//     avatar: '/api/placeholder/32/32',
+//     shift: 'Evening (2PM - 10PM)',
+//     status: 'Active',
+//     permissions: ['customer_service', 'payment_processing'],
+//   },
+//   {
+//     id: 'STAFF003',
+//     name: 'Mike Chen',
+//     email: 'mike.chen@company.com',
+//     role: 'Maintenance Tech',
+//     station: 'Mall Station',
+//     avatar: '/api/placeholder/32/32',
+//     shift: 'Night (10PM - 6AM)',
+//     status: 'Off Duty',
+//     permissions: ['car_management'],
+//   },
+// ];
 
-const mockCarData = [
-  {
-    id: 'CAR001',
-    model: 'Tesla Model 3',
-    licensePlate: 'EV-123-ABC',
-    station: 'Downtown Station',
-    status: 'Available',
-    batteryLevel: 85,
-    mileage: 25430,
-    lastService: '2024-01-15',
-    currentBooking: null,
-    location: { lat: 40.7128, lng: -74.006 },
-  },
-  {
-    id: 'CAR002',
-    model: 'Nissan Leaf',
-    licensePlate: 'EV-456-DEF',
-    station: 'Airport Station',
-    status: 'Rented',
-    batteryLevel: 62,
-    mileage: 18750,
-    lastService: '2024-01-10',
-    currentBooking: {
-      id: 'BOOK001',
-      customer: 'Alice Johnson',
-      startTime: '2024-01-20T09:00:00Z',
-      endTime: '2024-01-22T18:00:00Z',
-      pickupLocation: 'Airport Station',
-      dropoffLocation: 'Downtown Station',
-    },
-    location: { lat: 40.6892, lng: -74.1745 },
-  },
-  {
-    id: 'CAR003',
-    model: 'BMW i3',
-    licensePlate: 'EV-789-GHI',
-    station: 'Mall Station',
-    status: 'Maintenance',
-    batteryLevel: 0,
-    mileage: 32100,
-    lastService: '2024-01-18',
-    currentBooking: null,
-    location: { lat: 40.7282, lng: -73.7949 },
-  },
-];
+// const mockCarData = [
+//   {
+//     id: 'CAR001',
+//     model: 'Tesla Model 3',
+//     licensePlate: 'EV-123-ABC',
+//     station: 'Downtown Station',
+//     status: 'Available',
+//     batteryLevel: 85,
+//     mileage: 25430,
+//     lastService: '2024-01-15',
+//     currentBooking: null,
+//     location: { lat: 40.7128, lng: -74.006 },
+//   },
+//   {
+//     id: 'CAR002',
+//     model: 'Nissan Leaf',
+//     licensePlate: 'EV-456-DEF',
+//     station: 'Airport Station',
+//     status: 'Rented',
+//     batteryLevel: 62,
+//     mileage: 18750,
+//     lastService: '2024-01-10',
+//     currentBooking: {
+//       id: 'BOOK001',
+//       customer: 'Alice Johnson',
+//       startTime: '2024-01-20T09:00:00Z',
+//       endTime: '2024-01-22T18:00:00Z',
+//       pickupLocation: 'Airport Station',
+//       dropoffLocation: 'Downtown Station',
+//     },
+//     location: { lat: 40.6892, lng: -74.1745 },
+//   },
+//   {
+//     id: 'CAR003',
+//     model: 'BMW i3',
+//     licensePlate: 'EV-789-GHI',
+//     station: 'Mall Station',
+//     status: 'Maintenance',
+//     batteryLevel: 0,
+//     mileage: 32100,
+//     lastService: '2024-01-18',
+//     currentBooking: null,
+//     location: { lat: 40.7282, lng: -73.7949 },
+//   },
+// ];
 
 const mockStationData = [
   {
@@ -259,14 +260,43 @@ const mockPaymentData = [
 export default function StaffDashboard() {
   const [activeTab, setActiveTab] = React.useState('dashboard');
   const { t } = useTranslation();
+  const [carData, setCarData] = React.useState([]);
+  const [staffData, setStaffData] = React.useState(null);
+
+  // Fetch vehicles
+  React.useEffect(() => {
+    fetch(endpoints.vehicles.getAll())
+      .then(res => res.json())
+      .then(json => {
+        if (json.success && json.data && Array.isArray(json.data.vehicles)) {
+          setCarData(json.data.vehicles);
+        }
+      });
+  }, []);
+
+  // Fetch staff info (current logged-in user)
+  React.useEffect(() => {
+    fetch(endpoints.auth.me())
+      .then(res => res.json())
+      .then(json => {
+        if (json.success && json.data && json.data.user) {
+          setStaffData(json.data.user);
+        }
+      });
+  }, []);
+
   const renderDashboard = () => (
     <div className='space-y-6'>
       <div>
         <h1 className='text-2xl font-bold'>{t('dashboard.title')}</h1>
         <p className='text-muted-foreground'>
-          {t('dashboard.welcome', {
+          {/* {t('dashboard.welcome', {
             name: mockStaffData[0].name,
             shift: mockStaffData[0].shift,
+          })} */}
+          {t('dashboard.welcome', {
+            name: staffData?.name || '',
+            shift: '', // No shift info from API, leave blank or add if available
           })}
         </p>
       </div>
@@ -281,8 +311,11 @@ export default function StaffDashboard() {
             <Car className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>
+            {/* <div className='text-2xl font-bold'>
               {mockCarData.filter(car => car.status === 'Available').length}
+            </div> */}
+            <div className='text-2xl font-bold'>
+              {carData.filter(car => car.status === 'AVAILABLE').length}
             </div>
             <p className='text-xs text-muted-foreground'>
               {t('dashboard.availableCarsSub')}
@@ -298,8 +331,11 @@ export default function StaffDashboard() {
             <Car className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>
+            {/* <div className='text-2xl font-bold'>
               {mockCarData.filter(car => car.status === 'Rented').length}
+            </div> */}
+            <div className='text-2xl font-bold'>
+              {carData.filter(car => car.status === 'RENTED').length}
             </div>
             <p className='text-xs text-muted-foreground'>
               {t('dashboard.activeRentalsSub')}
@@ -315,8 +351,11 @@ export default function StaffDashboard() {
             <Wrench className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>
+            {/* <div className='text-2xl font-bold'>
               {mockCarData.filter(car => car.status === 'Maintenance').length}
+            </div> */}
+            <div className='text-2xl font-bold'>
+              {carData.filter(car => car.status === 'MAINTENANCE').length}
             </div>
             <p className='text-xs text-muted-foreground'>
               {t('dashboard.maintenanceSub')}
@@ -489,8 +528,10 @@ export default function StaffDashboard() {
   return (
     <SidebarProvider>
       <StaffSidebar
-        staff={mockStaffData[0]}
-        cars={mockCarData}
+        // staff={mockStaffData[0]}
+        // cars={mockCarData}
+        staff={staffData}
+        cars={carData}
         stations={mockStationData}
         customers={mockCustomerData}
         payments={mockPaymentData}
