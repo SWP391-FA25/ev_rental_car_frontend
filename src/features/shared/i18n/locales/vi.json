@@ -422,7 +422,9 @@
       "viewDetails": "Xem chi tiết",
       "unassign": "Hủy phân công",
       "suspend": "Tạm ngưng",
-      "delete": "Xóa"
+      "delete": "Xóa",
+      "processPayment": "Xử lý thanh toán",
+      "processRefund": "Xử lý hoàn tiền"
     },
     "stats": {
       "total": "Tổng số nhân viên",
@@ -517,10 +519,6 @@
       "notes": "Thêm ghi chú cho thanh toán...",
       "refundAmount": "Nhập số tiền hoàn",
       "refundReason": "Giải thích lý do hoàn tiền..."
-    },
-    "actions": {
-      "processPayment": "Xử lý thanh toán",
-      "processRefund": "Xử lý hoàn tiền"
     }
   },
   "staffStations": {
