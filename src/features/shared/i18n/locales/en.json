@@ -102,7 +102,7 @@
   },
   "dashboard": {
     "title": "Staff Dashboard",
-    "welcome": "Welcome back, {{name}}",
+    "welcome": "Welcome back, {{name}}. Your shift: {{shift}}",
     "availableCars": "Available Cars",
     "availableCarsSub": "Ready for rental",
     "activeRentals": "Active Rentals",
@@ -1119,6 +1119,210 @@
       "approveFailed": "Failed to approve document",
       "rejectionReasonRequired": "Please provide a rejection reason",
       "rejectFailed": "Failed to reject document"
+    }
+  },
+  "staffCars": {
+    "title": "Car Management",
+    "subtitle": "Manage bookings, process drop-offs, and update vehicle status",
+    "tabs": {
+      "bookings": "View Bookings",
+      "dropoff": "Car Drop-off",
+      "status": "Update Status"
+    },
+    "common": {
+      "filterByStatus": "Filter by status",
+      "customer": "Customer",
+      "vehicle": "Vehicle",
+      "duration": "Duration",
+      "status": "Status",
+      "amount": "Amount",
+      "actions": "Actions"
+    },
+    "actions": {
+      "viewDetails": "View Details",
+      "contactCustomer": "Contact Customer",
+      "modifyBooking": "Modify Booking"
+    },
+    "bookings": {
+      "searchPlaceholder": "Search bookings...",
+      "filters": {
+        "all": "All Bookings"
+      },
+      "table": {
+        "bookingId": "Booking ID"
+      }
+    },
+    "bookingStatus": {
+      "active": "Active",
+      "upcoming": "Upcoming",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "dropoff": {
+      "title": "Car Drop-off",
+      "subtitle": "Process vehicle return and complete inspection",
+      "selectActive": "Select Active Booking",
+      "bookingPlaceholder": "Select booking to process",
+      "finalMileage": "Final Mileage",
+      "batteryLevel": "Battery Level (%)",
+      "damageAssessment": "Damage Assessment",
+      "inspectionNotes": "Inspection Notes",
+      "completeDropoff": "Complete Drop-off"
+    },
+    "batteryRanges": {
+      "90_100": "90-100%",
+      "80_89": "80-89%",
+      "70_79": "70-79%",
+      "60_69": "60-69%",
+      "50_59": "50-59%",
+      "below50": "Below 50%"
+    },
+    "update": {
+      "battery": "Battery:",
+      "mileage": "Mileage:",
+      "location": "Location:",
+      "updateStatus": "Update Status",
+      "dialogTitle": "Update Vehicle Status",
+      "dialogSubtitle": "Update status for {{model}} ({{plate}})",
+      "newStatus": "New Status",
+      "notes": "Notes"
+    },
+    "placeholders": {
+      "enterMileage": "Enter current mileage",
+      "selectBattery": "Select battery level",
+      "inspectionNotes": "Add notes about vehicle condition...",
+      "damageAssessment": "Record any damages or issues found...",
+      "selectNewStatus": "Select new status",
+      "statusNotes": "Add notes about status change..."
+    },
+    "carStatus": {
+      "available": "Available",
+      "rented": "Rented",
+      "maintenance": "Maintenance",
+      "charging": "Charging",
+      "outOfService": "Out of Service"
+    }
+  },
+  "staffStations": {
+    "title": "Station Management",
+    "subtitle": "Monitor station operations, charging infrastructure, and maintenance",
+    "tabs": {
+      "overview": "Station Overview",
+      "charging": "Charging Stations",
+      "maintenance": "Maintenance Requests"
+    },
+    "overview": {
+      "parkingCapacity": "Parking Capacity",
+      "activePorts": "Active Charging Ports",
+      "amenities": "Amenities",
+      "staffOnDuty": "Staff on Duty",
+      "operatingHours": "Operating Hours"
+    },
+    "charging": {
+      "selectStation": "Select Station",
+      "allStations": "All Stations",
+      "port": "Port #",
+      "power": "Power",
+      "currentUser": "Current User",
+      "estimatedCompletion": "Estimated Completion",
+      "resetPort": "Reset Port",
+      "editSettings": "Edit Settings"
+    },
+    "status": {
+      "active": "Active",
+      "maintenance": "Maintenance",
+      "offline": "Offline"
+    },
+    "portStatus": {
+      "available": "Available",
+      "inUse": "In Use",
+      "faulty": "Faulty"
+    },
+    "maintenance": {
+      "filterByPriority": "Filter by Priority",
+      "allPriorities": "All Priorities",
+      "highPriority": "High Priority",
+      "mediumPriority": "Medium Priority",
+      "lowPriority": "Low Priority",
+      "newRequest": "New Request",
+      "dialog": {
+        "title": "Create Maintenance Request",
+        "subtitle": "Report a new maintenance issue for station facilities or equipment.",
+        "type": "Type",
+        "typePlaceholder": "Select type",
+        "priority": "Priority",
+        "priorityPlaceholder": "Select priority",
+        "descriptionPlaceholder": "Describe the issue in detail...",
+        "create": "Create Request"
+      },
+      "types": {
+        "chargingPort": "Charging Port",
+        "facility": "Facility",
+        "lighting": "Lighting",
+        "security": "Security",
+        "cleaning": "Cleaning"
+      },
+      "priority": {
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low"
+      },
+      "table": {
+        "requestId": "Request ID",
+        "assignedTo": "Assigned To"
+      },
+      "editRequest": "Edit Request",
+      "assignTechnician": "Assign Technician",
+      "deleteRequest": "Delete Request"
+    },
+    "common": {
+      "available": "available",
+      "faulty": "faulty",
+      "station": "Station",
+      "type": "Type",
+      "priority": "Priority",
+      "description": "Description",
+      "status": "Status",
+      "actions": "Actions",
+      "reportIssue": "Report Issue"
+    }
+  },
+  "admin": {
+    "notifications": {
+      "title": "Notification Management",
+      "description": "Manage and monitor all system notifications",
+      "broadcast": "Broadcast Notification",
+      "create": "Create Notification",
+      "broadcastTitle": "Broadcast System Notification",
+      "broadcastDescription": "Send a notification to all users in the system",
+      "createTitle": "Create New Notification",
+      "createDescription": "Send a notification to a specific user",
+      "notificationsList": "Notifications List",
+      "search": "Search notifications...",
+      "filterType": "Filter by type",
+      "filterPriority": "Filter by priority",
+      "user": "User",
+      "titleField": "Title",
+      "messageField": "Message",
+      "type": "Type",
+      "priority": "Priority",
+      "date": "Date",
+      "actions": "Actions",
+      "selectUser": "Select a user",
+      "send": "Send Notification",
+      "previous": "Previous",
+      "next": "Next",
+      "pageInfo": "Page {{current}} of {{total}}",
+      "noNotifications": "No notifications found",
+      "noFilteredNotifications": "No notifications match your search or filters",
+      "noNotificationsDefault": "There are no notifications in the system yet",
+      "fetchError": "Failed to fetch notifications",
+      "createSuccess": "Notification created successfully",
+      "createError": "Failed to create notification",
+      "broadcastSuccess": "Notification broadcast successfully",
+      "broadcastError": "Failed to broadcast notification",
+      "deleteSuccess": "Notification deleted successfully",
+      "deleteError": "Failed to delete notification"
     }
   }
 }
