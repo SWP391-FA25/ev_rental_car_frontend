@@ -142,7 +142,8 @@
     "auth": {
       "logout_success": "Đăng xuất thành công"
     },
-    "searchPlaceholder": "Tìm khách hàng, xe, đơn thuê..."
+    "searchPlaceholder": "Tìm khách hàng, xe, đơn thuê...",
+    "notifications": "Thông báo"
   },
   "staffHeader": {
     "title": "Bảng điều khiển nhân viên",

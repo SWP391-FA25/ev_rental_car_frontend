@@ -142,7 +142,8 @@
     "auth": {
       "logout_success": "Logout successful"
     },
-    "searchPlaceholder": "Search customers, cars, rentals..."
+    "searchPlaceholder": "Search customers, cars, rentals...",
+    "notifications": "Notifications"
   },
   "staffHeader": {
     "title": "Staff Dashboard",
