@@ -102,7 +102,7 @@
   },
   "dashboard": {
     "title": "Bảng điều khiển nhân viên",
-    "welcome": "Chào mừng trở lại, {{name}}. Ca làm việc của bạn: {{shift}}",
+    "welcome": "Chào mừng trở lại, {{name}}. ",
     "availableCars": "Xe sẵn sàng",
     "availableCarsSub": "Sẵn sàng cho thuê",
     "activeRentals": "Xe đang được thuê",
@@ -791,7 +791,9 @@
     },
     "support": {
       "searchPlaceholder": "Tìm khách hàng...",
-      "filters": { "all": "Tất cả khách hàng" },
+      "filters": {
+        "all": "Tất cả khách hàng"
+      },
       "membership": "Hội viên",
       "totalBookings": "Tổng đơn",
       "verification": "Xác minh",

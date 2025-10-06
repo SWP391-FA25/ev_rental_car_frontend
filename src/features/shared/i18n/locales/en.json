@@ -102,7 +102,7 @@
   },
   "dashboard": {
     "title": "Staff Dashboard",
-    "welcome": "Welcome back, {{name}}. Your shift: {{shift}}",
+    "welcome": "Welcome back, {{name}}",
     "availableCars": "Available Cars",
     "availableCarsSub": "Ready for rental",
     "activeRentals": "Active Rentals",

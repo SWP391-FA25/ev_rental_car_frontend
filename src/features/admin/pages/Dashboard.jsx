@@ -96,21 +96,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* User Accounts Table */}
-      <div className='rounded-lg border bg-card mx-4 lg:mx-6'>
-        <div className='p-6'>
-          <h3 className='text-lg font-semibold mb-4'>
-            {t('admin.dashboard.userAccountManagement.title')}
-          </h3>
-          {loading ? (
-            <div className='py-8 text-center'>{t('admin.dashboard.loading')}</div>
-          ) : error ? (
-            <div className='py-8 text-center text-red-500'>{t('admin.dashboard.error', { message: error })}</div>
-          ) : (
-            <DataTable data={userData} />
-          )}
-        </div>
-      </div>
+
     </>
   );
 }
