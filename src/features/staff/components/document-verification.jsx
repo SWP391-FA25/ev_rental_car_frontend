@@ -85,11 +85,13 @@ const DocumentVerification = () => {
           filters.documentType !== 'ALL' ? filters.documentType : undefined,
       });
 
-      if (response && response.success) {
-        setDocuments(response.data.documents || []);
+      const success = response?.data?.success;
+      if (success) {
+        const docs = response?.data?.data?.documents || [];
+        setDocuments(docs);
       } else {
         throw new Error(
-          response?.message || t('staffDocuments.errors.fetchFailed')
+          response?.data?.message || t('staffDocuments.errors.fetchFailed')
         );
       }
     } catch (error) {
@@ -154,7 +156,8 @@ const DocumentVerification = () => {
         status: 'APPROVED',
       });
 
-      if (response && response.success) {
+      const success = response?.data?.success;
+      if (success) {
         toast.success(t('staffDocuments.toasts.approveSuccess'));
         // Update the document in the list
         setDocuments(prev =>
@@ -164,7 +167,7 @@ const DocumentVerification = () => {
         );
       } else {
         throw new Error(
-          response?.message || t('staffDocuments.errors.approveFailed')
+          response?.data?.message || t('staffDocuments.errors.approveFailed')
         );
       }
     } catch (error) {
@@ -188,7 +191,8 @@ const DocumentVerification = () => {
         }
       );
 
-      if (response && response.success) {
+      const success = response?.data?.success;
+      if (success) {
         toast.success(t('staffDocuments.toasts.rejectSuccess'));
         // Update the document in the list
         setDocuments(prev =>
@@ -203,7 +207,7 @@ const DocumentVerification = () => {
         setSelectedDocument(null);
       } else {
         throw new Error(
-          response?.message || t('staffDocuments.errors.rejectFailed')
+          response?.data?.message || t('staffDocuments.errors.rejectFailed')
         );
       }
     } catch (error) {
