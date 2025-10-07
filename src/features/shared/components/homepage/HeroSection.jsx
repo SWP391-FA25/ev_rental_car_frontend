@@ -1,23 +1,27 @@
 import { gsap } from 'gsap';
-import { Calendar, Clock, MapPin, Search } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { AlertCircle, Search } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearch } from '../../hooks/useSearch';
+import { Alert, AlertDescription } from '../ui/alert';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/select';
+import DatePicker from '../ui/DatePicker';
+import StationSelector from '../ui/StationSelector';
 
 export default function HeroSection() {
   const headlineRef = useRef(null);
   const searchFormRef = useRef(null);
   const { t } = useTranslation();
+  const [pickupDate, setPickupDate] = useState();
+  const [returnDate, setReturnDate] = useState();
+  const [selectedStation, setSelectedStation] = useState();
+  const {
+    performSearch,
+    loading: searchLoading,
+    error: searchError,
+    clearError,
+  } = useSearch();
   useEffect(() => {
     const headline = headlineRef.current;
     const searchForm = searchFormRef.current;
@@ -70,6 +74,23 @@ export default function HeroSection() {
         {char === ' ' ? '\u00A0' : char}
       </span>
     ));
+  };
+
+  const handleSearch = async () => {
+    clearError();
+
+    const searchParams = {
+      stationId: selectedStation?.id,
+      pickupDate,
+      returnDate,
+    };
+
+    await performSearch(searchParams);
+  };
+
+  const handleStationChange = station => {
+    setSelectedStation(station);
+    clearError();
   };
 
   return (
@@ -129,59 +150,59 @@ export default function HeroSection() {
         >
           <Card className='w-full max-w-6xl bg-card/95 backdrop-blur-sm shadow-xl border border-border py-0'>
             <CardContent className='p-4 sm:p-6'>
-              <div className='grid grid-cols-1 sm:grid-cols-5 gap-4 items-end'>
+              {/* Error Alert */}
+              {searchError && (
+                <Alert variant='destructive' className='mb-4'>
+                  <AlertCircle className='h-4 w-4' />
+                  <AlertDescription>{searchError}</AlertDescription>
+                </Alert>
+              )}
+
+              <div className='grid grid-cols-1 sm:grid-cols-4 gap-4 items-end'>
                 {/* Pickup Location */}
-                <div className='space-y-2'>
-                  <Label className='flex items-center gap-2 text-sm font-semibold text-foreground'>
-                    <MapPin className='w-5 h-5' />
-                    <span>{t('hero.location')}</span>
-                  </Label>
-                  <Select>
-                    <SelectTrigger className='w-full'>
-                      <SelectValue placeholder={t('hero.destination')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value='new-york'>New York</SelectItem>
-                      <SelectItem value='phoenix'>Phoenix</SelectItem>
-                      <SelectItem value='austin'>Austin</SelectItem>
-                      <SelectItem value='miami'>Miami</SelectItem>
-                      <SelectItem value='chicago'>Chicago</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <StationSelector
+                  label={t('hero.location')}
+                  placeholder={t('hero.destination')}
+                  value={selectedStation}
+                  onChange={handleStationChange}
+                />
 
                 {/* Pickup Date */}
-                <div className='space-y-2'>
-                  <Label className='flex items-center gap-2 text-sm font-semibold text-foreground'>
-                    <Calendar className='w-5 h-5' />
-                    <span>{t('hero.date')}</span>
-                  </Label>
-                  <Input type='date' className='w-full' />
-                </div>
+                <DatePicker
+                  label={t('hero.date')}
+                  placeholder={t('hero.date')}
+                  value={pickupDate}
+                  onChange={setPickupDate}
+                />
 
                 {/* Pickup Time */}
-                <div className='space-y-2'>
+                {/* <div className='space-y-2'>
                   <Label className='flex items-center gap-2 text-sm font-semibold text-foreground'>
                     <Clock className='w-5 h-5' />
                     <span>{t('hero.time')}</span>
                   </Label>
                   <Input type='time' className='w-full' />
-                </div>
+                </div> */}
 
                 {/* Return Date */}
-                <div className='space-y-2'>
-                  <Label className='flex items-center gap-2 text-sm font-semibold text-foreground'>
-                    <Calendar className='w-5 h-5' />
-                    <span>{t('hero.returnDate')}</span>
-                  </Label>
-                  <Input type='date' className='w-full' />
-                </div>
+                <DatePicker
+                  label={t('hero.returnDate')}
+                  placeholder={t('hero.returnDate')}
+                  value={returnDate}
+                  onChange={setReturnDate}
+                  disabled={!pickupDate}
+                  minDate={pickupDate || new Date()}
+                />
 
                 {/* Search Button */}
                 <div className='space-y-2'>
-                  <Button className='w-full h-10'>
+                  <Button
+                    className='w-full h-10'
+                    onClick={handleSearch}
+                    disabled={searchLoading}
+                  >
                     <Search className='w-5 h-5 mr-2' />
-                    {t('hero.search')}
+                    {searchLoading ? 'Searching...' : t('hero.search')}
                   </Button>
                 </div>
               </div>

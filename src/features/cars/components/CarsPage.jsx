@@ -26,7 +26,7 @@ import {
   Users,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useLocation } from '../hooks/useLocation';
 import { useNearbyStations } from '../hooks/useNearbyStations';
 import { useVehicles } from '../hooks/useVehicles';
@@ -64,6 +64,7 @@ export default function CarsPage() {
   const [fuel, setFuel] = useState('all');
   const [selectedStation, setSelectedStation] = useState(null);
   const [viewMode, setViewMode] = useState('all'); // 'all' or 'location'
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
   const toolbarRef = useRef(null);
@@ -121,6 +122,37 @@ export default function CarsPage() {
     setLocation(location);
     setViewMode('location');
   };
+
+  // Handle URL search parameters
+  useEffect(() => {
+    const stationId = searchParams.get('station');
+    const pickupDate = searchParams.get('pickupDate');
+    const returnDate = searchParams.get('returnDate');
+    const vehicleType = searchParams.get('type');
+    const fuelType = searchParams.get('fuel');
+
+    if (stationId) {
+      // Find and set the selected station
+      const station = stations.find(s => s.id === stationId);
+      if (station) {
+        setSelectedStation(station);
+        setViewMode('location');
+      }
+    }
+
+    if (vehicleType && vehicleType !== 'all') {
+      setType(vehicleType);
+    }
+
+    if (fuelType && fuelType !== 'all') {
+      setFuel(fuelType);
+    }
+
+    // Clear URL parameters after processing
+    if (stationId || pickupDate || returnDate || vehicleType || fuelType) {
+      setSearchParams({});
+    }
+  }, [searchParams, stations, setSearchParams]);
 
   useEffect(() => {
     if (toolbarRef.current) {
