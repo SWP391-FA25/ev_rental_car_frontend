@@ -20,6 +20,7 @@ import * as React from 'react';
 
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '../../shared/components/ui/alert';
 import {
   Card,
   CardContent,
@@ -61,6 +62,8 @@ import {
   TableHeader,
   TableRow,
 } from '../../shared/components/ui/table';
+import { apiClient } from '../../shared/lib/apiClient';
+import { endpoints } from '../../shared/lib/endpoints';
 import {
   Tabs,
   TabsContent,
@@ -68,6 +71,7 @@ import {
   TabsTrigger,
 } from '../../shared/components/ui/tabs';
 import { Textarea } from '../../shared/components/ui/textarea';
+import { AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 const mockPayments = [
@@ -269,22 +273,57 @@ function PaymentStatusBadge({ status }) {
 
 function PaymentOverview() {
   const { t } = useTranslation();
-  const totalRevenue = mockPayments
-    .filter(payment => payment.status === 'Completed')
-    .reduce((sum, payment) => sum + payment.amount, 0);
+  const [payments, setPayments] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState(null);
 
-  const pendingPayments = mockPayments.filter(
-    payment => payment.status === 'Pending'
-  ).length;
-  const failedPayments = mockPayments.filter(
-    payment => payment.status === 'Failed'
-  ).length;
-  const totalRefunds = mockPayments
-    .filter(payment => payment.status === 'Refunded')
-    .reduce((sum, payment) => sum + payment.refunded, 0);
+  React.useEffect(() => {
+    let mounted = true;
+    async function fetchPayments() {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await apiClient.get(endpoints.payments.getAll());
+        const paymentsData =
+          res.data?.payments || res.data?.data?.payments || res.data?.data || [];
+        if (mounted) setPayments(paymentsData);
+      } catch (err) {
+        if (mounted) setError(err.message || 'Failed to fetch payments');
+        console.error('Error fetching payments:', err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    fetchPayments();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const paymentsSource = payments.length ? payments : mockPayments;
+
+  const totalRevenue = paymentsSource
+    .filter(p => p.status === 'Completed')
+    .reduce((sum, p) => sum + (p.amount ?? p.totalAmount ?? 0), 0);
+
+  const pendingPayments = paymentsSource.filter(p => p.status === 'Pending')
+    .length;
+  const failedPayments = paymentsSource.filter(p => p.status === 'Failed')
+    .length;
+  const totalRefunds = paymentsSource
+    .filter(p => p.status === 'Refunded')
+    .reduce((sum, p) => sum + (p.refunded ?? p.refundAmount ?? 0), 0);
 
   return (
     <div className='space-y-6'>
+      {error && (
+        <Alert variant='destructive'>
+          <AlertCircle className='h-4 w-4' />
+          <AlertTitle>{t('staffPayments.common.error')}</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
       <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
         <Card>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
@@ -429,8 +468,37 @@ function ProcessPayments() {
   const [amount, setAmount] = React.useState('');
   const [paymentMethod, setPaymentMethod] = React.useState('');
   const [notes, setNotes] = React.useState('');
+  const [payments, setPayments] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState(null);
 
-  const pendingPayments = mockPayments.filter(
+  React.useEffect(() => {
+    let mounted = true;
+    async function fetchPayments() {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await apiClient.get(endpoints.payments.getAll());
+        const paymentsData =
+          res.data?.payments || res.data?.data?.payments || res.data?.data || [];
+        if (mounted) setPayments(paymentsData);
+      } catch (err) {
+        if (mounted) setError(err.message || 'Failed to fetch payments');
+        console.error('Error fetching payments:', err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    fetchPayments();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const paymentsSource = payments.length ? payments : mockPayments;
+
+  const pendingPayments = paymentsSource.filter(
     payment => payment.status === 'Pending' || payment.status === 'Failed'
   );
 

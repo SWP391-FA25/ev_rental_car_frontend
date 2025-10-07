@@ -91,4 +91,11 @@ export const endpoints = {
     cancel: id => `/api/bookings/${id}/cancel`,
     complete: id => `/api/bookings/${id}/complete`,
   },
+  payments: {
+    getAll: () => '/api/payments',
+    getById: id => `/api/payments/${id}`,
+    create: () => '/api/payments',
+    update: id => `/api/payments/${id}`,
+    delete: id => `/api/payments/${id}`,
+  },
 };

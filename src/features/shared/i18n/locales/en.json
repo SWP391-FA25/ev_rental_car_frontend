@@ -948,7 +948,9 @@
       "notes": "Verification Notes",
       "approve": "Approve License",
       "reject": "Reject License",
-      "licenseNotes": "Add notes about the license verification..."
+      "licenseNotes": "Add notes about the license verification...",
+      "noCustomers": "No customer pending license verification.",
+      "allVerified": "All customers have been verified."
     },
     "support": {
       "searchPlaceholder": "Search customers...",
@@ -961,7 +963,8 @@
       "viewProfile": "View Profile",
       "contactCustomer": "Contact Customer",
       "editDetails": "Edit Details",
-      "verifyDocuments": "Verify Documents"
+      "verifyDocuments": "Verify Documents",
+      "noCustomers": "No information of Customer."
     }
   },
   "staffPayments": {
