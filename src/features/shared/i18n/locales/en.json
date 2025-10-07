@@ -900,6 +900,68 @@
       "checkin": "Customer Check-in",
       "verification": "License Verification",
       "support": "Customer Support"
+    },
+    "common": {
+      "customer": "Customer",
+      "customerName": "Customer Name",
+      "license": "License",
+      "expiryDate": "Expiry Date",
+      "currentStatus": "Current Status",
+      "uploaded": "Uploaded",
+      "notUploaded": "Not uploaded",
+      "paymentMethod": "Payment Method",
+      "status": "Status",
+      "actions": "Actions",
+      "booking": "Booking",
+      "at": "at",
+      "filterByStatus": "Filter by status"
+    },
+    "status": {
+      "active": "Active",
+      "pendingCheckin": "Pending Check-in",
+      "suspended": "Suspended"
+    },
+    "checkin": {
+      "title": "Customer Check-in",
+      "subtitle": "Process customer arrivals and verify their information",
+      "searchPlaceholder": "Search by name, email, or phone...",
+      "checkIn": "Check In",
+      "dialogSubtitle": "Complete check-in process for {{name}}",
+      "identityVerification": "Identity Verification",
+      "licenseVerification": "License Verification",
+      "notes": "Check-in Notes",
+      "confirmTerms": "Customer confirmed terms and conditions",
+      "complete": "Complete Check-in",
+      "empty": "No customers pending check-in.",
+      "emptySearch": "No customers found matching your search.",
+      "checkinNotes": "Add notes about the check-in process..."
+    },
+    "license": {
+      "title": "License Verification",
+      "subtitle": "Verify customer driver's licenses and update verification status",
+      "selectCustomer": "Select Customer",
+      "selectPlaceholder": "Choose customer for license verification",
+      "licenseNumber": "License Number",
+      "licenseState": "License State",
+      "licenseDocument": "License Document",
+      "viewUploaded": "View Uploaded License",
+      "notes": "Verification Notes",
+      "approve": "Approve License",
+      "reject": "Reject License",
+      "licenseNotes": "Add notes about the license verification..."
+    },
+    "support": {
+      "searchPlaceholder": "Search customers...",
+      "filters": { "all": "All Customers" },
+      "membership": "Membership",
+      "totalBookings": "Total Bookings",
+      "verification": "Verification",
+      "lastBooking": "Last Booking",
+      "never": "Never",
+      "viewProfile": "View Profile",
+      "contactCustomer": "Contact Customer",
+      "editDetails": "Edit Details",
+      "verifyDocuments": "Verify Documents"
     }
   },
   "staffPayments": {
