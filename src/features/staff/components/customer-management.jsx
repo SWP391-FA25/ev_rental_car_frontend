@@ -426,10 +426,10 @@ function CustomerCheckIn() {
                               alt={customer.name}
                             />
                             <AvatarFallback>
-                              {customer.name
+                              {(customer.name ?? '')
                                 .split(' ')
-                                .map(n => n[0])
-                                .join('')}
+                                .map(n => n?.[0] ?? '')
+                                .join('') || '?'}
                             </AvatarFallback>
                           </Avatar>
                           <div className='space-y-1'>
@@ -1035,10 +1035,10 @@ function CustomerSupport() {
                           alt={customer.name}
                         />
                         <AvatarFallback>
-                          {customer.name
+                          {(customer.name ?? '')
                             .split(' ')
-                            .map(n => n[0])
-                            .join('')}
+                            .map(n => n?.[0] ?? '')
+                            .join('') || '?'}
                         </AvatarFallback>
                       </Avatar>
                       <div>
