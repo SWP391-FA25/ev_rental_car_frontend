@@ -34,8 +34,8 @@ export default function Login() {
         const user = res.data.user;
         login(user);
 
-        // Show verification reminder if not verified
-        if (user.verifyStatus !== 'VERIFIED') {
+        // Show verification reminder only for RENTER role if not verified
+        if (user.role === 'RENTER' && user.verifyStatus !== 'VERIFIED') {
           toast.info('Please verify your email to unlock all features', {
             position: 'top-center',
             autoClose: 2000,
