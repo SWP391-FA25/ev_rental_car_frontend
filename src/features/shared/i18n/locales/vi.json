@@ -126,6 +126,7 @@
   "staffSidebar": {
     "dashboard": "Bảng điều khiển",
     "cars": "Quản lý xe",
+    "bookings": "Đặt lịch",
     "stations": "Trạm",
     "customers": "Khách hàng",
     "payments": "Thanh toán",

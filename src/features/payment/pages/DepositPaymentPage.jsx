@@ -2,6 +2,7 @@ import { useBooking } from '@/features/booking/hooks/useBooking';
 import { Badge } from '@/features/shared/components/ui/badge';
 import { Button } from '@/features/shared/components/ui/button';
 import { Card } from '@/features/shared/components/ui/card';
+import { formatCurrency } from '@/features/shared/lib/utils';
 import { ArrowLeft, Calendar, CreditCard, MapPin } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -148,13 +149,17 @@ export default function DepositPaymentPage() {
                 <span className='text-sm text-muted-foreground'>
                   Total Amount:
                 </span>
-                <span className='font-semibold'>${booking.totalAmount}</span>
+                <span className='font-semibold'>
+                  {formatCurrency(booking.totalAmount, 'VND')}
+                </span>
               </div>
 
               <div className='border-t pt-4'>
                 <div className='flex justify-between items-center text-lg font-bold'>
                   <span>Deposit Amount:</span>
-                  <span className='text-primary'>${booking.depositAmount}</span>
+                  <span className='text-primary'>
+                    {formatCurrency(booking.depositAmount, 'VND')}
+                  </span>
                 </div>
               </div>
 
@@ -178,7 +183,7 @@ export default function DepositPaymentPage() {
                 ) : (
                   <>
                     <CreditCard className='h-4 w-4 mr-2' />
-                    Pay Deposit ${booking.depositAmount}
+                    Pay Deposit {formatCurrency(booking.depositAmount, 'VND')}
                   </>
                 )}
               </Button>

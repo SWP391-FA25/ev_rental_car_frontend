@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from '../../../shared/components/ui/select';
 import { apiClient } from '../../../shared/lib/apiClient';
+import { formatCurrency } from '../../../shared/lib/utils';
 import { Badge } from './../../../shared/components/ui/badge';
 
 // Vehicle status options
@@ -584,7 +585,9 @@ export function VehicleDetails({
                   />
                 ) : (
                   <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
-                    ${vehicle.pricing?.baseRate || 'N/A'}
+                    {vehicle.pricing?.baseRate
+                      ? formatCurrency(vehicle.pricing.baseRate, 'VND')
+                      : 'N/A'}
                   </div>
                 )}
               </div>
@@ -606,7 +609,9 @@ export function VehicleDetails({
                   />
                 ) : (
                   <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
-                    ${vehicle.pricing?.hourlyRate || 'N/A'}
+                    {vehicle.pricing?.hourlyRate
+                      ? formatCurrency(vehicle.pricing.hourlyRate, 'VND')
+                      : 'N/A'}
                   </div>
                 )}
               </div>
@@ -628,7 +633,9 @@ export function VehicleDetails({
                   />
                 ) : (
                   <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
-                    ${vehicle.pricing?.weeklyRate || 'N/A'}
+                    {vehicle.pricing?.weeklyRate
+                      ? formatCurrency(vehicle.pricing.weeklyRate, 'VND')
+                      : 'N/A'}
                   </div>
                 )}
               </div>
@@ -650,7 +657,9 @@ export function VehicleDetails({
                   />
                 ) : (
                   <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
-                    ${vehicle.pricing?.monthlyRate || 'N/A'}
+                    {vehicle.pricing?.monthlyRate
+                      ? formatCurrency(vehicle.pricing.monthlyRate, 'VND')
+                      : 'N/A'}
                   </div>
                 )}
               </div>
@@ -672,7 +681,9 @@ export function VehicleDetails({
                   />
                 ) : (
                   <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
-                    ${vehicle.pricing?.depositAmount || 'N/A'}
+                    {vehicle.pricing?.depositAmount
+                      ? formatCurrency(vehicle.pricing.depositAmount, 'VND')
+                      : 'N/A'}
                   </div>
                 )}
               </div>

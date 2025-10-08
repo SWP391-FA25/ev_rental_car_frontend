@@ -20,6 +20,9 @@ import {
   SidebarInset,
   SidebarProvider,
 } from '../../shared/components/ui/sidebar';
+import { endpoints } from '../../shared/lib/endpoints';
+import { NotificationPreferences } from '../components/NotificationPreferences';
+import BookingManagement from '../components/booking-management';
 import { CarManagement } from '../components/car-management';
 import { CustomerManagement } from '../components/customer-management';
 import DocumentVerification from '../components/document-verification';
@@ -27,8 +30,6 @@ import { PaymentManagement } from '../components/payment-management';
 import { StaffHeader } from '../components/staff-header';
 import { StaffSidebar } from '../components/staff-sidebar';
 import { StationManagement } from '../components/station-management';
-import { NotificationPreferences } from '../components/NotificationPreferences';
-import { endpoints } from '../../shared/lib/endpoints';
 
 // Removed QuickVerification import
 
@@ -386,7 +387,10 @@ export default function StaffDashboard() {
             <CardTitle>{t('dashboard.quickActions')}</CardTitle>
           </CardHeader>
           <CardContent className='grid grid-cols-2 gap-3'>
-            <Button onClick={() => setActiveTab('cars')}>
+            <Button onClick={() => setActiveTab('bookings')}>
+              Manage Bookings
+            </Button>
+            <Button variant='outline' onClick={() => setActiveTab('cars')}>
               {t('dashboard.manageCars')}
             </Button>
             <Button variant='outline' onClick={() => setActiveTab('customers')}>
@@ -476,6 +480,10 @@ export default function StaffDashboard() {
     return <PaymentManagement />;
   };
 
+  const renderBookings = () => {
+    return <BookingManagement />;
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
@@ -488,6 +496,8 @@ export default function StaffDashboard() {
         return renderCustomers();
       case 'payments':
         return renderPayments();
+      case 'bookings':
+        return renderBookings();
       case 'documents':
         return <DocumentVerification />;
       case 'notifications':
@@ -500,6 +510,11 @@ export default function StaffDashboard() {
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <Car className='h-4 w-4' /> },
+    {
+      id: 'bookings',
+      label: 'Booking Management',
+      icon: <FileText className='h-4 w-4' />,
+    },
     { id: 'cars', label: 'Car Management', icon: <Car className='h-4 w-4' /> },
     { id: 'stations', label: 'Stations', icon: <MapPin className='h-4 w-4' /> },
     {

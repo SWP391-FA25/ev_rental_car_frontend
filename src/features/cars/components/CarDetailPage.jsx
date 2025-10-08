@@ -6,6 +6,7 @@ import { Button } from '@/features/shared/components/ui/button';
 import { Card } from '@/features/shared/components/ui/card';
 import { Input } from '@/features/shared/components/ui/input';
 import { Skeleton } from '@/features/shared/components/ui/skeleton';
+import { formatCurrency } from '@/features/shared/lib/utils';
 import gsap from 'gsap';
 import {
   AlertCircle,
@@ -428,23 +429,33 @@ export default function CarDetailPage() {
                   <div className='border-t pt-4 space-y-2'>
                     <div className='flex justify-between text-sm'>
                       <span>Base Price ({estimatedPrice.durationHours}h)</span>
-                      <span>${estimatedPrice.basePrice.toFixed(2)}</span>
+                      <span>
+                        {formatCurrency(estimatedPrice.basePrice, 'VND')}
+                      </span>
                     </div>
                     <div className='flex justify-between text-sm'>
                       <span>Insurance (10%)</span>
-                      <span>${estimatedPrice.insuranceAmount.toFixed(2)}</span>
+                      <span>
+                        {formatCurrency(estimatedPrice.insuranceAmount, 'VND')}
+                      </span>
                     </div>
                     <div className='flex justify-between text-sm'>
                       <span>Tax (8%)</span>
-                      <span>${estimatedPrice.taxAmount.toFixed(2)}</span>
+                      <span>
+                        {formatCurrency(estimatedPrice.taxAmount, 'VND')}
+                      </span>
                     </div>
                     <div className='flex justify-between text-sm'>
                       <span>Deposit</span>
-                      <span>${estimatedPrice.depositAmount}</span>
+                      <span>
+                        {formatCurrency(estimatedPrice.depositAmount, 'VND')}
+                      </span>
                     </div>
                     <div className='border-t pt-2 flex justify-between font-semibold'>
                       <span>Total Payable</span>
-                      <span>${estimatedPrice.totalPayable.toFixed(2)}</span>
+                      <span>
+                        {formatCurrency(estimatedPrice.totalPayable, 'VND')}
+                      </span>
                     </div>
                   </div>
                 )}
