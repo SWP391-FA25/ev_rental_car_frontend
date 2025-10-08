@@ -9,6 +9,8 @@ import {
   FileText,
   Mail,
   MoreHorizontal,
+  ChevronLeft,
+  ChevronRight,
   Phone,
   Search,
   Shield,
@@ -90,28 +92,15 @@ import documentService from '../../shared/services/documentService';
 
 function CustomerStatusBadge({ status }) {
   const config = {
-    Active: { variant: 'default', icon: CheckCircle, color: 'text-green-600' },
-    'Pending Check-in': {
-      variant: 'secondary',
-      icon: Clock,
-      color: 'text-blue-600',
-    },
-    Suspended: { variant: 'destructive', icon: Ban, color: 'text-red-600' },
-    Inactive: {
-      variant: 'outline',
-      icon: AlertTriangle,
-      color: 'text-gray-600',
-    },
+    Active: { variant: 'default' },
+    'Pending Check-in': { variant: 'secondary' },
+    Suspended: { variant: 'destructive' },
+    Inactive: { variant: 'outline' },
   };
 
-  const { variant, icon: Icon, color } = config[status] || config['Active'];
+  const { variant } = config[status] || config['Active'];
 
-  return (
-    <Badge variant={variant} className='gap-1'>
-      <Icon className={`h-3 w-3 ${color}`} />
-      {status}
-    </Badge>
-  );
+  return <Badge variant={variant}>{status}</Badge>;
 }
 
 function VerificationStatusBadge({ status }) {
@@ -764,6 +753,9 @@ function CustomerSupport() {
   const [renterDetails, setRenterDetails] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isDocVerifyOpen, setIsDocVerifyOpen] = useState(false);
+  // Phân trang: giới hạn 10 người dùng mỗi trang để giảm lag
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
   const computeVerificationStatusForUser = docsForUser => {
     const identityDocs = docsForUser.filter(
@@ -801,7 +793,6 @@ function CustomerSupport() {
           email: renter.email,
           phone: renter.phone,
           avatar: renter.avatar || '/api/placeholder/32/32',
-          membershipType: renter.membershipType || 'Standard',
           // Map trạng thái dựa trên accountStatus thay vì isActive để tránh hiển thị sai
           status:
             renter.accountStatus === 'ACTIVE'
@@ -809,8 +800,8 @@ function CustomerSupport() {
               : renter.accountStatus === 'SUSPENDED'
               ? 'Suspended'
               : 'Inactive',
-          totalBookings: renter.totalBookings || 0,
-          lastBooking: renter.lastBooking || null,
+          // totalBookings: renter.totalBookings || 0,
+          // lastBooking: renter.lastBooking || null,
           verificationStatus: {
             identity: renter.identityVerified ? 'Verified' : 'Pending',
             license: renter.licenseVerified ? 'Verified' : 'Pending',
@@ -871,6 +862,25 @@ function CustomerSupport() {
       return matchesTerm && matchesStatus;
     });
   }, [renters, searchTerm, statusFilter]);
+
+  // Tính toán phân trang dựa trên filteredCustomers
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredCustomers.length / pageSize)
+  );
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const pagedCustomers = filteredCustomers.slice(startIndex, endIndex);
+
+  // Khi thay đổi bộ lọc hoặc tìm kiếm, reset về trang 1 và chặn vượt quá totalPages
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
 
   const handleUpdateStatus = async (id, newStatus) => {
     try {
@@ -973,7 +983,7 @@ function CustomerSupport() {
         </Select>
       </div>
 
-      <div className='rounded-md border'>
+      <div className='rounded-md border text-sm'>
         {loading && (
           <div className='flex justify-center items-center p-8'>
             <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary'></div>
@@ -995,150 +1005,140 @@ function CustomerSupport() {
         )}
 
         {!loading && !error && renters.length > 0 && (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t('staffCustomers.common.customer')}</TableHead>
-                <TableHead>{t('staffCustomers.support.membership')}</TableHead>
-                <TableHead>{t('staffCustomers.common.status')}</TableHead>
-                <TableHead>
-                  {t('staffCustomers.support.totalBookings')}
-                </TableHead>
-                <TableHead>
-                  {t('staffCustomers.support.verification')}
-                </TableHead>
-                <TableHead>{t('staffCustomers.support.lastBooking')}</TableHead>
-                <TableHead className='text-right'>
-                  {t('staffCustomers.common.actions')}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredCustomers.map(customer => (
-                <TableRow key={customer.id}>
-                  <TableCell>
-                    <div className='flex items-center gap-3'>
-                      <Avatar className='h-8 w-8'>
-                        <AvatarImage
-                          src={customer.avatar}
-                          alt={customer.name}
-                        />
-                        <AvatarFallback>
-                          {(customer.name ?? '')
-                            .split(' ')
-                            .map(n => n?.[0] ?? '')
-                            .join('') || '?'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className='font-medium'>{customer.name}</div>
-                        <div className='text-sm text-muted-foreground'>
-                          {customer.email}
+          <>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('staffCustomers.common.customer')}</TableHead>
+                  <TableHead>{t('staffCustomers.common.status')}</TableHead>
+                  <TableHead className='text-right end-0'>
+                    {t('staffCustomers.common.actions')}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pagedCustomers.map(customer => (
+                  <TableRow key={customer.id} className='hover:bg-muted/50 transition-colors'>
+                    <TableCell>
+                      <div className='flex items-center gap-3'>
+                        <Avatar className='h-8 w-8'>
+                          <AvatarImage
+                            src={customer.avatar}
+                            alt={customer.name}
+                          />
+                          <AvatarFallback>
+                            {(customer.name ?? '')
+                              .split(' ')
+                              .map(n => n?.[0] ?? '')
+                              .join('') || '?'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className='font-medium text-foreground'>{customer.name}</div>
+                          <div className='text-sm text-muted-foreground'>
+                            {customer.email}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        customer.membershipType === 'Premium'
-                          ? 'default'
-                          : 'secondary'
-                      }
-                    >
-                      {customer.membershipType}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <CustomerStatusBadge status={customer.status} />
-                  </TableCell>
-                  <TableCell>{customer.totalBookings}</TableCell>
-                  <TableCell>
-                    <div className='space-y-1'>
-                      <div className='flex items-center gap-2'>
-                        <span className='text-xs'>ID:</span>
-                        <VerificationStatusBadge
-                          status={
-                            customer.verificationStatus?.identity || 'Pending'
-                          }
-                        />
-                      </div>
-                      <div className='flex items-center gap-2'>
-                        <span className='text-xs'>
-                          {t('staffCustomers.common.license')}:
-                        </span>
-                        <VerificationStatusBadge
-                          status={
-                            customer.verificationStatus?.license || 'Pending'
-                          }
-                        />
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {customer.lastBooking
-                      ? new Date(customer.lastBooking).toLocaleDateString()
-                      : t('staffCustomers.support.never')}
-                  </TableCell>
-                  <TableCell className='text-right'>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant='ghost' className='h-8 w-8 p-0'>
-                          <MoreHorizontal className='h-4 w-4' />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align='end' className='z-50'>
-                        <DropdownMenuLabel>
-                          {t('staffCustomers.common.actions')}
-                        </DropdownMenuLabel>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setSelectedRenterId(customer.id);
-                            setIsDetailsOpen(true);
-                          }}
-                        >
-                          <Eye className='mr-2 h-4 w-4' />
-                          {t('staffCustomers.support.viewProfile')}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleContactCustomer(customer)}
-                        >
-                          <Phone className='mr-2 h-4 w-4' />
-                          {t('staffCustomers.support.contactCustomer')}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setSelectedRenterId(customer.id);
-                            setIsDocVerifyOpen(true);
-                          }}
-                        >
-                          <Shield className='mr-2 h-4 w-4' />
-                          {t('staffSidebar.documents')}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() =>
-                            handleUpdateStatus(customer.id, 'SUSPENDED')
-                          }
-                        >
-                          <Ban className='mr-2 h-4 w-4' />
-                          {t('staffCustomers.support.suspend', {
-                            defaultValue: 'Suspend',
-                          })}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                    </TableCell>
+                    <TableCell>
+                      <CustomerStatusBadge status={customer.status} />
+                    </TableCell>
+                    <TableCell className='text-right'>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant='ghost' className='h-8 w-8 p-0'>
+                            <MoreHorizontal className='h-4 w-4' />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align='end' className='z-50'>
+                          <DropdownMenuLabel>
+                            {t('staffCustomers.common.actions')}
+                          </DropdownMenuLabel>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedRenterId(customer.id);
+                              setIsDetailsOpen(true);
+                            }}
+                          >
+                            <Eye className='mr-2 h-4 w-4' />
+                            {t('staffCustomers.support.viewProfile')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleContactCustomer(customer)}
+                          >
+                            <Phone className='mr-2 h-4 w-4' />
+                            {t('staffCustomers.support.contactCustomer')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedRenterId(customer.id);
+                              setIsDocVerifyOpen(true);
+                            }}
+                          >
+                            <Shield className='mr-2 h-4 w-4' />
+                            {t('staffSidebar.documents')}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleUpdateStatus(customer.id, 'SUSPENDED')
+                            }
+                          >
+                            <Ban className='mr-2 h-4 w-4' />
+                            {t('staffCustomers.support.suspend', {
+                              defaultValue: 'Suspend',
+                            })}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <div className='flex items-center justify-between px-4 py-3 border-t'>
+              <div className='text-sm text-muted-foreground'>
+                Hiển thị {filteredCustomers.length === 0 ? 0 : startIndex + 1}–
+                {Math.min(endIndex, filteredCustomers.length)} trong{' '}
+                {filteredCustomers.length} khách hàng
+              </div>
+              <div className='flex items-center gap-2'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                >
+                  <ChevronLeft className='mr-1 h-4 w-4' />
+                  Trước
+                </Button>
+                <span className='text-sm'>
+                  Trang {currentPage}/{totalPages}
+                </span>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  disabled={currentPage === totalPages}
+                  onClick={() =>
+                    setCurrentPage(p => Math.min(totalPages, p + 1))
+                  }
+                >
+                  Sau
+                  <ChevronRight className='ml-1 h-4 w-4' />
+                </Button>
+              </div>
+            </div>
+          </>
         )}
 
         <UserDetails
           isOpen={isDetailsOpen}
           onClose={() => setIsDetailsOpen(false)}
           userId={selectedRenterId}
+          verificationStatus={
+            renters.find(r => r.id === selectedRenterId)?.verificationStatus
+          }
           onUserUpdated={updated => {
             if (!updated?.id) return;
             setRenters(prev =>
