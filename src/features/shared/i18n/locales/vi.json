@@ -787,7 +787,9 @@
       "notes": "Ghi chú xác minh",
       "approve": "Duyệt bằng lái",
       "reject": "Từ chối bằng lái",
-      "licenseNotes": "Thêm ghi chú về quá trình xác minh bằng lái..."
+      "licenseNotes": "Thêm ghi chú về quá trình xác minh bằng lái...",
+      "noCustomers": "Chưa có khách hàng nào chờ xác minh.",
+      "allVerified": "Tất cả khách hàng đã được xác minh."
     },
     "support": {
       "searchPlaceholder": "Tìm khách hàng...",
@@ -802,7 +804,8 @@
       "viewProfile": "Xem hồ sơ",
       "contactCustomer": "Liên hệ khách",
       "editDetails": "Sửa thông tin",
-      "verifyDocuments": "Xác minh tài liệu"
+      "verifyDocuments": "Xác minh tài liệu",
+      "noCustomers": "Không tìm thấy thông tin khách hàng."
     }
   },
   "staffDocuments": {
