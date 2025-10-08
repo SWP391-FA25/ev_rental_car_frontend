@@ -16,7 +16,7 @@ import {
   AlertCircle,
   Info as InfoIcon,
 } from 'lucide-react';
-import * as React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 
 import {
@@ -83,121 +83,10 @@ import { Textarea } from '../../shared/components/ui/textarea';
 import { useTranslation } from 'react-i18next';
 import { endpoints } from '../../shared/lib/endpoints';
 import { apiClient } from '../../shared/lib/apiClient';
-
-const mockCustomers = [
-  {
-    id: 'CUST001',
-    name: 'Alice Johnson',
-    email: 'alice.johnson@email.com',
-    phone: '+1-555-0123',
-    avatar: '/api/placeholder/32/32',
-    licenseNumber: 'NY123456789',
-    licenseExpiry: '2026-08-15',
-    licenseState: 'NY',
-    membershipType: 'Premium',
-    joinDate: '2023-03-15',
-    totalBookings: 28,
-    status: 'Active',
-    lastBooking: '2024-01-15T10:00:00Z',
-    currentBooking: {
-      id: 'BOOK001',
-      car: 'Tesla Model 3 (EV-123-ABC)',
-      startTime: '2024-01-20T09:00:00Z',
-      endTime: '2024-01-22T18:00:00Z',
-      pickupLocation: 'Downtown Station',
-    },
-    verificationStatus: {
-      identity: 'Verified',
-      license: 'Verified',
-      payment: 'Verified',
-    },
-    documents: {
-      license: { uploaded: true, verified: true, uploadDate: '2023-03-15' },
-      insurance: { uploaded: true, verified: true, uploadDate: '2023-03-15' },
-    },
-  },
-  {
-    id: 'CUST002',
-    name: 'Bob Wilson',
-    email: 'bob.wilson@email.com',
-    phone: '+1-555-0456',
-    avatar: '/api/placeholder/32/32',
-    licenseNumber: 'NY987654321',
-    licenseExpiry: '2025-12-20',
-    licenseState: 'NY',
-    membershipType: 'Standard',
-    joinDate: '2023-07-22',
-    totalBookings: 15,
-    status: 'Pending Check-in',
-    lastBooking: '2024-01-10T14:00:00Z',
-    currentBooking: {
-      id: 'BOOK002',
-      car: 'Nissan Leaf (EV-456-DEF)',
-      startTime: '2024-01-21T14:00:00Z',
-      endTime: '2024-01-23T12:00:00Z',
-      pickupLocation: 'Airport Station',
-    },
-    verificationStatus: {
-      identity: 'Verified',
-      license: 'Pending',
-      payment: 'Verified',
-    },
-    documents: {
-      license: { uploaded: true, verified: false, uploadDate: '2024-01-20' },
-      insurance: { uploaded: false, verified: false, uploadDate: null },
-    },
-  },
-  {
-    id: 'CUST003',
-    name: 'Carol Davis',
-    email: 'carol.davis@email.com',
-    phone: '+1-555-0789',
-    avatar: '/api/placeholder/32/32',
-    licenseNumber: 'CA555123789',
-    licenseExpiry: '2027-03-10',
-    licenseState: 'CA',
-    membershipType: 'Basic',
-    joinDate: '2023-11-08',
-    totalBookings: 5,
-    status: 'Active',
-    lastBooking: '2024-01-05T16:00:00Z',
-    currentBooking: null,
-    verificationStatus: {
-      identity: 'Verified',
-      license: 'Expired',
-      payment: 'Pending',
-    },
-    documents: {
-      license: { uploaded: true, verified: false, uploadDate: '2023-11-08' },
-      insurance: { uploaded: true, verified: true, uploadDate: '2023-11-08' },
-    },
-  },
-];
-
-const mockIncidents = [
-  {
-    id: 'INC001',
-    customerId: 'CUST001',
-    bookingId: 'BOOK001',
-    type: 'Vehicle Damage',
-    description: 'Minor scratch on rear bumper',
-    reportedDate: '2024-01-18T15:30:00Z',
-    status: 'Resolved',
-    severity: 'Low',
-    reportedBy: 'John Smith',
-  },
-  {
-    id: 'INC002',
-    customerId: 'CUST002',
-    bookingId: 'BOOK002',
-    type: 'Late Return',
-    description: 'Vehicle returned 2 hours late',
-    reportedDate: '2024-01-17T20:00:00Z',
-    status: 'In Review',
-    severity: 'Medium',
-    reportedBy: 'Sarah Johnson',
-  },
-];
+import { useNavigate } from 'react-router-dom';
+import UserDetails from '../../admin/components/renter/UserDetails';
+import DocumentVerification from './document-verification';
+import documentService from '../../shared/services/documentService';
 
 function CustomerStatusBadge({ status }) {
   const config = {
@@ -257,18 +146,18 @@ function VerificationStatusBadge({ status }) {
 
 function CustomerCheckIn() {
   const { t } = useTranslation();
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [selectedCustomer, setSelectedCustomer] = React.useState(null);
-  const [checkInNotes, setCheckInNotes] = React.useState('');
-  const [renters, setRenters] = React.useState([]);
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState(null);
-  const [submitting, setSubmitting] = React.useState(false);
-  const [selectedRenterId, setSelectedRenterId] = React.useState(null);
-  const [renterDetails, setRenterDetails] = React.useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [checkInNotes, setCheckInNotes] = useState('');
+  const [renters, setRenters] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [selectedRenterId, setSelectedRenterId] = useState(null);
+  const [renterDetails, setRenterDetails] = useState(null);
 
   // Fetch renter details when selectedRenterId changes
-  React.useEffect(() => {
+  useEffect(() => {
     async function fetchRenterDetails() {
       if (!selectedRenterId) return;
 
@@ -294,7 +183,7 @@ function CustomerCheckIn() {
     fetchRenterDetails();
   }, [selectedRenterId]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     async function fetchPendingRenters() {
       try {
         setLoading(true);
@@ -605,14 +494,14 @@ function CustomerCheckIn() {
 
 function LicenseVerification() {
   const { t } = useTranslation();
-  const [selectedCustomer, setSelectedCustomer] = React.useState('');
-  const [verificationNotes, setVerificationNotes] = React.useState('');
-  const [renters, setRenters] = React.useState([]);
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState(null);
-  const [submitting, setSubmitting] = React.useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState('');
+  const [verificationNotes, setVerificationNotes] = useState('');
+  const [renters, setRenters] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     async function fetchPendingLicenseRenters() {
       try {
         setLoading(true);
@@ -865,15 +754,39 @@ function LicenseVerification() {
 
 function CustomerSupport() {
   const { t } = useTranslation();
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [statusFilter, setStatusFilter] = React.useState('all');
-  const [renters, setRenters] = React.useState([]);
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState(null);
-  const [selectedRenterId, setSelectedRenterId] = React.useState(null);
-  const [renterDetails, setRenterDetails] = React.useState(null);
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [renters, setRenters] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [selectedRenterId, setSelectedRenterId] = useState(null);
+  const [renterDetails, setRenterDetails] = useState(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isDocVerifyOpen, setIsDocVerifyOpen] = useState(false);
 
-  React.useEffect(() => {
+  const computeVerificationStatusForUser = docsForUser => {
+    const identityDocs = docsForUser.filter(
+      d => d.documentType === 'ID_CARD' || d.documentType === 'PASSPORT'
+    );
+    const licenseDocs = docsForUser.filter(
+      d => d.documentType === 'DRIVERS_LICENSE'
+    );
+
+    const mapStatus = arr => {
+      if (arr.length === 0) return 'Pending';
+      if (arr.some(d => d.status === 'APPROVED')) return 'Verified';
+      if (arr.some(d => d.status === 'REJECTED')) return 'Failed';
+      return 'Pending';
+    };
+
+    return {
+      identity: mapStatus(identityDocs),
+      license: mapStatus(licenseDocs),
+    };
+  };
+
+  useEffect(() => {
     async function fetchRenters() {
       try {
         setLoading(true);
@@ -882,14 +795,20 @@ function CustomerSupport() {
         // Kiểm tra xem data.renters có tồn tại không
         const rentersData =
           response.data?.renters || response.data?.data?.renters || [];
-        const formattedRenters = rentersData.map(renter => ({
+        let formattedRenters = rentersData.map(renter => ({
           id: renter.id,
           name: renter.name,
           email: renter.email,
           phone: renter.phone,
           avatar: renter.avatar || '/api/placeholder/32/32',
           membershipType: renter.membershipType || 'Standard',
-          status: renter.isActive ? 'Active' : 'Inactive',
+          // Map trạng thái dựa trên accountStatus thay vì isActive để tránh hiển thị sai
+          status:
+            renter.accountStatus === 'ACTIVE'
+              ? 'Active'
+              : renter.accountStatus === 'SUSPENDED'
+              ? 'Suspended'
+              : 'Inactive',
           totalBookings: renter.totalBookings || 0,
           lastBooking: renter.lastBooking || null,
           verificationStatus: {
@@ -898,6 +817,32 @@ function CustomerSupport() {
             payment: renter.paymentVerified ? 'Verified' : 'Pending',
           },
         }));
+
+        try {
+          const docsRes = await documentService.getAllDocuments();
+          const docsSuccess = docsRes?.success;
+          if (docsSuccess) {
+            const docs = docsRes?.data?.documents || [];
+            const byUser = {};
+            for (const doc of docs) {
+              const uid = doc?.user?.id;
+              if (!uid) continue;
+              if (!byUser[uid]) byUser[uid] = [];
+              byUser[uid].push(doc);
+            }
+            formattedRenters = formattedRenters.map(r => {
+              const docsForUser = byUser[r.id] || [];
+              if (docsForUser.length === 0) return r;
+              const vs = computeVerificationStatusForUser(docsForUser);
+              return {
+                ...r,
+                verificationStatus: { ...r.verificationStatus, ...vs },
+              };
+            });
+          }
+        } catch (e) {
+          // Nếu không lấy được documents, giữ nguyên theo cờ booleans
+        }
         setRenters(formattedRenters);
       } catch (err) {
         setError(err.message);
@@ -910,7 +855,68 @@ function CustomerSupport() {
     fetchRenters();
   }, []);
 
-  React.useEffect(() => {
+  const filteredCustomers = useMemo(() => {
+    const term = (searchTerm || '').toLowerCase();
+    return renters.filter(c => {
+      const matchesTerm =
+        term === '' ||
+        (c.name && c.name.toLowerCase().includes(term)) ||
+        (c.email && c.email.toLowerCase().includes(term)) ||
+        (c.phone && c.phone.includes(searchTerm));
+      const matchesStatus =
+        statusFilter === 'all' ||
+        (statusFilter === 'active' && c.status === 'Active') ||
+        (statusFilter === 'inactive' &&
+          (c.status === 'Inactive' || c.status === 'Suspended'));
+      return matchesTerm && matchesStatus;
+    });
+  }, [renters, searchTerm, statusFilter]);
+
+  const handleUpdateStatus = async (id, newStatus) => {
+    try {
+      setLoading(true);
+      const payload = { accountStatus: newStatus };
+      const res = await apiClient.put(endpoints.renters.update(id), payload);
+      const success = res?.data?.success ?? true;
+      if (!success) {
+        throw new Error(res?.data?.message || 'Cập nhật trạng thái thất bại');
+      }
+      setRenters(prev =>
+        prev.map(r =>
+          r.id === id
+            ? { ...r, status: newStatus === 'ACTIVE' ? 'Active' : 'Suspended' }
+            : r
+        )
+      );
+      toast.success('Đã cập nhật trạng thái người dùng');
+    } catch (err) {
+      console.error('Error updating status:', err);
+      toast.error(err.message || 'Cập nhật trạng thái thất bại');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleContactCustomer = customer => {
+    const phone = customer.phone || 'Không có số điện thoại';
+    try {
+      if (navigator?.clipboard && customer.phone) {
+        navigator.clipboard.writeText(customer.phone);
+        toast.info(`SĐT khách hàng: ${phone} (đã sao chép)`);
+      } else {
+        toast.info(`SĐT khách hàng: ${phone}`);
+      }
+    } catch {
+      toast.info(`SĐT khách hàng: ${phone}`);
+    }
+  };
+
+  const handleVerifyDocuments = () => {
+    // Mở Dialog chứa DocumentVerification ngay trong Customer Management
+    setIsDocVerifyOpen(true);
+  };
+
+  useEffect(() => {
     async function fetchRenterDetails() {
       if (!selectedRenterId) return;
 
@@ -933,23 +939,6 @@ function CustomerSupport() {
 
     fetchRenterDetails();
   }, [selectedRenterId]);
-
-  const filteredCustomers = renters.filter(customer => {
-    const matchesSearch =
-      searchTerm === '' ||
-      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (customer.id &&
-        customer.id.toLowerCase().includes(searchTerm.toLowerCase()));
-
-    const matchesStatus =
-      statusFilter === 'all' ||
-      (customer.status &&
-        customer.status.toLowerCase().replace(' ', '-') === statusFilter);
-
-    return matchesSearch && matchesStatus;
-  });
-
   return (
     <div className='space-y-4'>
       <div className='flex flex-col sm:flex-row gap-4'>
@@ -1103,23 +1092,39 @@ function CustomerSupport() {
                           {t('staffCustomers.common.actions')}
                         </DropdownMenuLabel>
                         <DropdownMenuItem
-                          onClick={() => setSelectedRenterId(customer.id)}
+                          onClick={() => {
+                            setSelectedRenterId(customer.id);
+                            setIsDetailsOpen(true);
+                          }}
                         >
                           <Eye className='mr-2 h-4 w-4' />
                           {t('staffCustomers.support.viewProfile')}
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleContactCustomer(customer)}
+                        >
                           <Phone className='mr-2 h-4 w-4' />
                           {t('staffCustomers.support.contactCustomer')}
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>
-                          <Edit className='mr-2 h-4 w-4' />
-                          {t('staffCustomers.support.editDetails')}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelectedRenterId(customer.id);
+                            setIsDocVerifyOpen(true);
+                          }}
+                        >
                           <Shield className='mr-2 h-4 w-4' />
-                          {t('staffCustomers.support.verifyDocuments')}
+                          {t('staffSidebar.documents')}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() =>
+                            handleUpdateStatus(customer.id, 'SUSPENDED')
+                          }
+                        >
+                          <Ban className='mr-2 h-4 w-4' />
+                          {t('staffCustomers.support.suspend', {
+                            defaultValue: 'Suspend',
+                          })}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -1129,6 +1134,46 @@ function CustomerSupport() {
             </TableBody>
           </Table>
         )}
+
+        <UserDetails
+          isOpen={isDetailsOpen}
+          onClose={() => setIsDetailsOpen(false)}
+          userId={selectedRenterId}
+          onUserUpdated={updated => {
+            if (!updated?.id) return;
+            setRenters(prev =>
+              prev.map(r => (r.id === updated.id ? { ...r, ...updated } : r))
+            );
+          }}
+        />
+
+        <Dialog open={isDocVerifyOpen} onOpenChange={setIsDocVerifyOpen}>
+          <DialogContent className='max-w-5xl'>
+            <DialogHeader>
+              <DialogTitle>{t('staffSidebar.documents')}</DialogTitle>
+              <DialogDescription>
+                {t('staffDocuments.description', {
+                  defaultValue: 'Verify customer documents',
+                })}
+              </DialogDescription>
+            </DialogHeader>
+            <DocumentVerification
+              userId={selectedRenterId}
+              onVerificationUpdated={(uid, verificationStatus) => {
+                setRenters(prev =>
+                  prev.map(r =>
+                    r.id === uid ? { ...r, verificationStatus } : r
+                  )
+                );
+                setRenterDetails(prev =>
+                  prev && prev.id === uid
+                    ? { ...prev, verificationStatus }
+                    : prev
+                );
+              }}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
@@ -1150,9 +1195,6 @@ export function CustomerManagement() {
           <TabsTrigger value='checkin'>
             {t('staffCustomers.tabs.checkin')}
           </TabsTrigger>
-          <TabsTrigger value='verification'>
-            {t('staffCustomers.tabs.verification')}
-          </TabsTrigger>
           <TabsTrigger value='support'>
             {t('staffCustomers.tabs.support')}
           </TabsTrigger>
@@ -1160,10 +1202,6 @@ export function CustomerManagement() {
 
         <TabsContent value='checkin' className='space-y-4'>
           <CustomerCheckIn />
-        </TabsContent>
-
-        <TabsContent value='verification' className='space-y-4'>
-          <LicenseVerification />
         </TabsContent>
 
         <TabsContent value='support' className='space-y-4'>
