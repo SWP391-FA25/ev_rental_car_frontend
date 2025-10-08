@@ -76,11 +76,15 @@ export default function StationManagement() {
     try {
       setLoading(true);
       const response = await apiClient.get(endpoints.stations.getAll());
-      if (response.success) {
+      console.debug('[admin] loadStations response:', response);
+      if (response && response.success) {
         setStations(response.data.stations || []);
+      } else {
+        console.warn('[admin] loadStations: unexpected response shape', response);
       }
     } catch (error) {
-      toast.error(t('station.management.messages.loadFailed') + ': ' + error.message);
+      console.error('[admin] loadStations error:', error);
+      toast.error(t('station.management.messages.loadFailed') + ': ' + (error?.message || error));
     } finally {
       setLoading(false);
     }
@@ -92,14 +96,16 @@ export default function StationManagement() {
         endpoints.stations.create(),
         stationData
       );
-      if (response.success) {
+      console.debug('[admin] createStation response:', response);
+      if (response && response.success) {
         toast.success(t('station.management.messages.createSuccess'));
         setIsCreateDialogOpen(false);
         loadStations();
         return response.data.station;
       }
     } catch (error) {
-      toast.error(t('station.management.messages.createFailed') + ': ' + error.message);
+      console.error('[admin] createStation error:', error);
+      toast.error(t('station.management.messages.createFailed') + ': ' + (error?.message || error));
       throw error;
     }
   };
@@ -110,7 +116,8 @@ export default function StationManagement() {
         endpoints.stations.update(stationId),
         updateData
       );
-      if (response.success) {
+      console.debug('[admin] updateStation response:', stationId, response);
+      if (response && response.success) {
         toast.success(t('station.management.messages.updateSuccess'));
 
         if (selectedStation && selectedStation.id === stationId) {
@@ -127,7 +134,8 @@ export default function StationManagement() {
         return response.data.station;
       }
     } catch (error) {
-      toast.error(t('station.management.messages.updateFailed') + ': ' + error.message);
+      console.error('[admin] updateStation error:', error);
+      toast.error(t('station.management.messages.updateFailed') + ': ' + (error?.message || error));
       throw error;
     }
   };
@@ -137,13 +145,15 @@ export default function StationManagement() {
       const response = await apiClient.delete(
         endpoints.stations.delete(stationId)
       );
-      if (response.success) {
+      console.debug('[admin] deleteStation response:', stationId, response);
+      if (response && response.success) {
         toast.success(t('station.management.messages.deleteSuccess'));
         setStations(prev => prev.filter(station => station.id !== stationId));
         loadStations();
       }
     } catch (error) {
-      toast.error(t('station.management.messages.deleteFailed') + ': ' + error.message);
+      console.error('[admin] deleteStation error:', error);
+      toast.error(t('station.management.messages.deleteFailed') + ': ' + (error?.message || error));
     }
   };
 
@@ -152,14 +162,17 @@ export default function StationManagement() {
       const response = await apiClient.get(
         endpoints.stations.getById(station.id)
       );
-      if (response.success) {
+      console.debug('[admin] getStationById response:', station.id, response);
+      if (response && response.success) {
         setSelectedStation(response.data.station);
         setIsViewDialogOpen(true);
       } else {
+        console.warn('[admin] getStationById unexpected response', response);
         toast.error(t('station.management.messages.loadFailed'));
       }
     } catch (error) {
-      toast.error(t('station.management.messages.loadFailed') + ': ' + error.message);
+      console.error('[admin] getStationById error:', error);
+      toast.error(t('station.management.messages.loadFailed') + ': ' + (error?.message || error));
     }
   };
 
