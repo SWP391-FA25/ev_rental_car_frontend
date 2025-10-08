@@ -44,8 +44,11 @@ const transformVehicleData = vehicle => {
     images:
       vehicle.images?.[0]?.url ||
       'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=1200&q=80',
-    price: 200, // Default price - should come from backend
-    period: 'day',
+    pricing: {
+      hourlyRate: vehicle.pricing?.hourlyRate || 15,
+      baseRate: vehicle.pricing?.baseRate || 200,
+      depositAmount: vehicle.pricing?.depositAmount || 500,
+    },
     seats: vehicle.seats,
     transmission: 'Automatic', // Default - should come from backend
     fuelType: vehicle.fuelType,
@@ -54,6 +57,7 @@ const transformVehicleData = vehicle => {
     batteryLevel: vehicle.batteryLevel,
     color: vehicle.color,
     licensePlate: vehicle.licensePlate,
+    stationId: vehicle.stationId,
   };
 };
 
@@ -385,6 +389,17 @@ export default function CarsPage() {
                         </div>
                       </div>
                       <div className='flex justify-between items-center'>
+                        <div>
+                          <div className='text-lg font-semibold'>
+                            ${vehicle.pricing.hourlyRate}
+                            <span className='text-sm text-muted-foreground'>
+                              /hour
+                            </span>
+                          </div>
+                          <div className='text-xs text-muted-foreground'>
+                            +${vehicle.pricing.depositAmount} deposit
+                          </div>
+                        </div>
                         <Button
                           size='sm'
                           variant='default'
@@ -394,9 +409,6 @@ export default function CarsPage() {
                           }}
                         >
                           {vehicle.available ? 'Book now' : 'Unavailable'}
-                        </Button>
-                        <Button size='sm' variant='outline'>
-                          Details
                         </Button>
                       </div>
                     </CardContent>

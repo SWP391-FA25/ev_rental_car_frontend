@@ -2,14 +2,14 @@ import {
   EyeIcon,
   FilterIcon,
   ImageIcon,
+  MoreVerticalIcon,
   PlusIcon,
   SearchIcon,
   TrashIcon,
-  MoreVerticalIcon,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
@@ -80,7 +80,6 @@ export default function VehicleManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [updateLoading, setUpdateLoading] = useState(false);
@@ -101,6 +100,13 @@ export default function VehicleManagement() {
     batteryLevel: '',
     fuelType: '',
     status: 'AVAILABLE',
+    // Pricing fields
+    baseRate: '',
+    hourlyRate: '',
+    weeklyRate: '',
+    monthlyRate: '',
+    depositAmount: '',
+    insuranceRate: '',
   });
 
   // Load vehicles and stations
@@ -145,7 +151,7 @@ export default function VehicleManagement() {
         });
         setVehicleImages(imagesMap);
       }
-    } catch (error) {
+    } catch {
       toast.error(t('vehicle.messages.loadFailed'));
     } finally {
       setLoading(false);
@@ -158,8 +164,8 @@ export default function VehicleManagement() {
       if (response.success) {
         setStations(response.data.stations || []);
       }
-    } catch (error) {
-      console.error('Failed to load stations:', error);
+    } catch (err) {
+      console.error('Failed to load stations:', err);
     }
   };
 
@@ -186,9 +192,9 @@ export default function VehicleManagement() {
         loadVehicles();
         return response.data.vehicle;
       }
-    } catch (error) {
+    } catch (err) {
       toast.error(t('vehicle.messages.updateFailed'));
-      throw error;
+      throw err;
     } finally {
       setUpdateLoading(false);
     }
@@ -225,7 +231,7 @@ export default function VehicleManagement() {
       } else {
         toast.error(t('vehicle.messages.createFailed'));
       }
-    } catch (error) {
+    } catch {
       toast.error(t('vehicle.messages.createFailed'));
     }
   };
@@ -246,7 +252,7 @@ export default function VehicleManagement() {
       } else {
         toast.error(t('vehicle.messages.deleteFailed'));
       }
-    } catch (error) {
+    } catch {
       toast.error(t('vehicle.messages.deleteFailed'));
     }
   };
@@ -264,6 +270,13 @@ export default function VehicleManagement() {
       batteryLevel: '',
       fuelType: '',
       status: 'AVAILABLE',
+      // Pricing fields
+      baseRate: '',
+      hourlyRate: '',
+      weeklyRate: '',
+      monthlyRate: '',
+      depositAmount: '',
+      insuranceRate: '',
     });
     setSelectedVehicle(null);
   };
@@ -339,7 +352,7 @@ export default function VehicleManagement() {
               {t('vehicle.actions.add')}
             </Button>
           </DialogTrigger>
-          <DialogContent className='max-w-2xl'>
+          <DialogContent className='max-w-2xl max-h-[90vh] overflow-y-auto'>
             <DialogHeader>
               <DialogTitle>{t('vehicle.dialogs.create.title')}</DialogTitle>
               <DialogDescription>
@@ -526,6 +539,106 @@ export default function VehicleManagement() {
                 </Select>
               </div>
             </div>
+
+            {/* Pricing Section */}
+            <div className='border-t pt-4'>
+              <h3 className='text-lg font-semibold mb-4'>
+                Pricing Information
+              </h3>
+              <div className='grid grid-cols-2 gap-4'>
+                <div className='space-y-2'>
+                  <Label htmlFor='baseRate'>Base Rate (Daily) *</Label>
+                  <Input
+                    id='baseRate'
+                    type='number'
+                    min='0'
+                    step='0.01'
+                    value={formData.baseRate}
+                    onChange={e =>
+                      setFormData({ ...formData, baseRate: e.target.value })
+                    }
+                    placeholder='200.00'
+                  />
+                </div>
+                <div className='space-y-2'>
+                  <Label htmlFor='hourlyRate'>Hourly Rate *</Label>
+                  <Input
+                    id='hourlyRate'
+                    type='number'
+                    min='0'
+                    step='0.01'
+                    value={formData.hourlyRate}
+                    onChange={e =>
+                      setFormData({ ...formData, hourlyRate: e.target.value })
+                    }
+                    placeholder='15.00'
+                  />
+                </div>
+                <div className='space-y-2'>
+                  <Label htmlFor='weeklyRate'>Weekly Rate</Label>
+                  <Input
+                    id='weeklyRate'
+                    type='number'
+                    min='0'
+                    step='0.01'
+                    value={formData.weeklyRate}
+                    onChange={e =>
+                      setFormData({ ...formData, weeklyRate: e.target.value })
+                    }
+                    placeholder='1200.00'
+                  />
+                </div>
+                <div className='space-y-2'>
+                  <Label htmlFor='monthlyRate'>Monthly Rate</Label>
+                  <Input
+                    id='monthlyRate'
+                    type='number'
+                    min='0'
+                    step='0.01'
+                    value={formData.monthlyRate}
+                    onChange={e =>
+                      setFormData({ ...formData, monthlyRate: e.target.value })
+                    }
+                    placeholder='4500.00'
+                  />
+                </div>
+                <div className='space-y-2'>
+                  <Label htmlFor='depositAmount'>Deposit Amount *</Label>
+                  <Input
+                    id='depositAmount'
+                    type='number'
+                    min='0'
+                    step='0.01'
+                    value={formData.depositAmount}
+                    onChange={e =>
+                      setFormData({
+                        ...formData,
+                        depositAmount: e.target.value,
+                      })
+                    }
+                    placeholder='500.00'
+                  />
+                </div>
+                <div className='space-y-2'>
+                  <Label htmlFor='insuranceRate'>Insurance Rate (%)</Label>
+                  <Input
+                    id='insuranceRate'
+                    type='number'
+                    min='0'
+                    max='1'
+                    step='0.01'
+                    value={formData.insuranceRate}
+                    onChange={e =>
+                      setFormData({
+                        ...formData,
+                        insuranceRate: e.target.value,
+                      })
+                    }
+                    placeholder='0.10 (10%)'
+                  />
+                </div>
+              </div>
+            </div>
             <DialogFooter>
               <Button
                 variant='outline'
@@ -643,7 +756,7 @@ export default function VehicleManagement() {
                   <TableCell>{getFuelTypeLabel(vehicle.fuelType)}</TableCell>
                   <TableCell>
                     {vehicle.fuelType === 'ELECTRIC' ||
-                      vehicle.fuelType === 'HYBRID'
+                    vehicle.fuelType === 'HYBRID'
                       ? `${vehicle.batteryLevel}%`
                       : t('vehicle.table.na')}
                   </TableCell>
@@ -718,201 +831,6 @@ export default function VehicleManagement() {
           </div>
         </div>
       </div>
-
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className='max-w-2xl'>
-          <DialogHeader>
-            <DialogTitle>{t('vehicle.dialogs.edit.title')}</DialogTitle>
-            <DialogDescription>
-              {t('vehicle.dialogs.edit.description')}
-            </DialogDescription>
-          </DialogHeader>
-          <div className='grid grid-cols-2 gap-4 py-4'>
-            <div className='space-y-2'>
-              <Label htmlFor='edit-stationId'>
-                {t('vehicle.fields.station')}
-              </Label>
-              <Select
-                value={formData.stationId}
-                onValueChange={value =>
-                  setFormData({ ...formData, stationId: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue
-                    placeholder={t('vehicle.fields.stationPlaceholder')}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {stations.map(station => (
-                    <SelectItem key={station.id} value={station.id}>
-                      {station.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='edit-type'>{t('vehicle.fields.type')}</Label>
-              <Select
-                value={formData.type}
-                onValueChange={value =>
-                  setFormData({ ...formData, type: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue
-                    placeholder={t('vehicle.fields.typePlaceholder')}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {VEHICLE_TYPES.map(type => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='edit-brand'>{t('vehicle.fields.brand')}</Label>
-              <Input
-                id='edit-brand'
-                value={formData.brand}
-                onChange={e =>
-                  setFormData({ ...formData, brand: e.target.value })
-                }
-              />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='edit-model'>{t('vehicle.fields.model')}</Label>
-              <Input
-                id='edit-model'
-                value={formData.model}
-                onChange={e =>
-                  setFormData({ ...formData, model: e.target.value })
-                }
-              />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='edit-year'>{t('vehicle.fields.year')}</Label>
-              <Input
-                id='edit-year'
-                type='number'
-                value={formData.year}
-                onChange={e =>
-                  setFormData({ ...formData, year: e.target.value })
-                }
-              />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='edit-color'>{t('vehicle.fields.color')}</Label>
-              <Input
-                id='edit-color'
-                value={formData.color}
-                onChange={e =>
-                  setFormData({ ...formData, color: e.target.value })
-                }
-              />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='edit-seats'>{t('vehicle.fields.seats')}</Label>
-              <Input
-                id='edit-seats'
-                type='number'
-                value={formData.seats}
-                onChange={e =>
-                  setFormData({ ...formData, seats: e.target.value })
-                }
-              />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='edit-licensePlate'>
-                {t('vehicle.fields.licensePlate')}
-              </Label>
-              <Input
-                id='edit-licensePlate'
-                value={formData.licensePlate}
-                onChange={e =>
-                  setFormData({ ...formData, licensePlate: e.target.value })
-                }
-              />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='edit-batteryLevel'>
-                {t('vehicle.fields.batteryLevel')}
-              </Label>
-              <Input
-                id='edit-batteryLevel'
-                type='number'
-                min='0'
-                max='100'
-                value={formData.batteryLevel}
-                onChange={e =>
-                  setFormData({ ...formData, batteryLevel: e.target.value })
-                }
-              />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='edit-fuelType'>
-                {t('vehicle.fields.fuelType')}
-              </Label>
-              <Select
-                value={formData.fuelType}
-                onValueChange={value =>
-                  setFormData({ ...formData, fuelType: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue
-                    placeholder={t('vehicle.fields.fuelTypePlaceholder')}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {FUEL_TYPES.map(fuel => (
-                    <SelectItem key={fuel.value} value={fuel.value}>
-                      {fuel.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='edit-status'>{t('vehicle.fields.status')}</Label>
-              <Select
-                value={formData.status}
-                onValueChange={value =>
-                  setFormData({ ...formData, status: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue
-                    placeholder={t('vehicle.fields.statusPlaceholder')}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {VEHICLE_STATUS.map(status => (
-                    <SelectItem key={status.value} value={status.value}>
-                      {status.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant='outline'
-              onClick={() => setIsEditDialogOpen(false)}
-            >
-              {t('vehicle.actions.cancel')}
-            </Button>
-            <Button onClick={handleUpdateVehicle}>
-              {t('vehicle.actions.update')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <VehicleDetails
         open={isViewDialogOpen}

@@ -67,6 +67,13 @@ export function VehicleDetails({
     batteryLevel: '',
     fuelType: '',
     status: 'AVAILABLE',
+    // Pricing fields
+    baseRate: '',
+    hourlyRate: '',
+    weeklyRate: '',
+    monthlyRate: '',
+    depositAmount: '',
+    insuranceRate: '',
   });
 
   // Update formData when vehicle prop changes
@@ -84,6 +91,13 @@ export function VehicleDetails({
         batteryLevel: vehicle.batteryLevel?.toString() || '',
         fuelType: vehicle.fuelType || '',
         status: vehicle.status || 'AVAILABLE',
+        // Pricing fields
+        baseRate: vehicle.pricing?.baseRate?.toString() || '',
+        hourlyRate: vehicle.pricing?.hourlyRate?.toString() || '',
+        weeklyRate: vehicle.pricing?.weeklyRate?.toString() || '',
+        monthlyRate: vehicle.pricing?.monthlyRate?.toString() || '',
+        depositAmount: vehicle.pricing?.depositAmount?.toString() || '',
+        insuranceRate: vehicle.pricing?.insuranceRate?.toString() || '',
       });
       loadVehicleImages(vehicle.id);
     }
@@ -138,6 +152,15 @@ export function VehicleDetails({
           batteryLevel: updatedVehicle.batteryLevel?.toString() || '',
           fuelType: updatedVehicle.fuelType || '',
           status: updatedVehicle.status || 'AVAILABLE',
+          // Pricing fields
+          baseRate: updatedVehicle.pricing?.baseRate?.toString() || '',
+          hourlyRate: updatedVehicle.pricing?.hourlyRate?.toString() || '',
+          weeklyRate: updatedVehicle.pricing?.weeklyRate?.toString() || '',
+          monthlyRate: updatedVehicle.pricing?.monthlyRate?.toString() || '',
+          depositAmount:
+            updatedVehicle.pricing?.depositAmount?.toString() || '',
+          insuranceRate:
+            updatedVehicle.pricing?.insuranceRate?.toString() || '',
         });
       }
     } catch (err) {
@@ -159,6 +182,13 @@ export function VehicleDetails({
         batteryLevel: vehicle.batteryLevel?.toString() || '',
         fuelType: vehicle.fuelType || '',
         status: vehicle.status || 'AVAILABLE',
+        // Pricing fields
+        baseRate: vehicle.pricing?.baseRate?.toString() || '',
+        hourlyRate: vehicle.pricing?.hourlyRate?.toString() || '',
+        weeklyRate: vehicle.pricing?.weeklyRate?.toString() || '',
+        monthlyRate: vehicle.pricing?.monthlyRate?.toString() || '',
+        depositAmount: vehicle.pricing?.depositAmount?.toString() || '',
+        insuranceRate: vehicle.pricing?.insuranceRate?.toString() || '',
       });
     }
     setIsEditing(false);
@@ -181,7 +211,7 @@ export function VehicleDetails({
     try {
       setImageLoading(true);
       const formData = new FormData();
-      formData.append('image', file);
+      formData.append('images', file);
 
       const response = await apiClient.post(
         `/api/vehicles/${vehicle.id}/images`,
@@ -203,6 +233,7 @@ export function VehicleDetails({
       }
     } catch (error) {
       toast.error('Failed to upload image: ' + error.message);
+      console.log(error.message);
     } finally {
       setImageLoading(false);
     }
@@ -480,7 +511,7 @@ export function VehicleDetails({
                 ) : (
                   <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                     {vehicle.fuelType === 'ELECTRIC' ||
-                      vehicle.fuelType === 'HYBRID'
+                    vehicle.fuelType === 'HYBRID'
                       ? `${vehicle.batteryLevel}%`
                       : 'N/A'}
                   </div>
@@ -527,6 +558,148 @@ export function VehicleDetails({
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center font-mono text-sm'>
                   {vehicle.id}
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Pricing Information */}
+          <div className='space-y-4'>
+            <h3 className='text-lg font-semibold'>Pricing Information</h3>
+
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+              <div className='space-y-2'>
+                <Label htmlFor='baseRate'>Base Rate (Daily)</Label>
+                {isEditing ? (
+                  <Input
+                    id='baseRate'
+                    type='number'
+                    min='0'
+                    step='0.01'
+                    value={formData.baseRate}
+                    onChange={e =>
+                      handleInputChange('baseRate', e.target.value)
+                    }
+                    className='w-full'
+                    disabled={loading}
+                  />
+                ) : (
+                  <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
+                    ${vehicle.pricing?.baseRate || 'N/A'}
+                  </div>
+                )}
+              </div>
+
+              <div className='space-y-2'>
+                <Label htmlFor='hourlyRate'>Hourly Rate</Label>
+                {isEditing ? (
+                  <Input
+                    id='hourlyRate'
+                    type='number'
+                    min='0'
+                    step='0.01'
+                    value={formData.hourlyRate}
+                    onChange={e =>
+                      handleInputChange('hourlyRate', e.target.value)
+                    }
+                    className='w-full'
+                    disabled={loading}
+                  />
+                ) : (
+                  <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
+                    ${vehicle.pricing?.hourlyRate || 'N/A'}
+                  </div>
+                )}
+              </div>
+
+              <div className='space-y-2'>
+                <Label htmlFor='weeklyRate'>Weekly Rate</Label>
+                {isEditing ? (
+                  <Input
+                    id='weeklyRate'
+                    type='number'
+                    min='0'
+                    step='0.01'
+                    value={formData.weeklyRate}
+                    onChange={e =>
+                      handleInputChange('weeklyRate', e.target.value)
+                    }
+                    className='w-full'
+                    disabled={loading}
+                  />
+                ) : (
+                  <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
+                    ${vehicle.pricing?.weeklyRate || 'N/A'}
+                  </div>
+                )}
+              </div>
+
+              <div className='space-y-2'>
+                <Label htmlFor='monthlyRate'>Monthly Rate</Label>
+                {isEditing ? (
+                  <Input
+                    id='monthlyRate'
+                    type='number'
+                    min='0'
+                    step='0.01'
+                    value={formData.monthlyRate}
+                    onChange={e =>
+                      handleInputChange('monthlyRate', e.target.value)
+                    }
+                    className='w-full'
+                    disabled={loading}
+                  />
+                ) : (
+                  <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
+                    ${vehicle.pricing?.monthlyRate || 'N/A'}
+                  </div>
+                )}
+              </div>
+
+              <div className='space-y-2'>
+                <Label htmlFor='depositAmount'>Deposit Amount</Label>
+                {isEditing ? (
+                  <Input
+                    id='depositAmount'
+                    type='number'
+                    min='0'
+                    step='0.01'
+                    value={formData.depositAmount}
+                    onChange={e =>
+                      handleInputChange('depositAmount', e.target.value)
+                    }
+                    className='w-full'
+                    disabled={loading}
+                  />
+                ) : (
+                  <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
+                    ${vehicle.pricing?.depositAmount || 'N/A'}
+                  </div>
+                )}
+              </div>
+
+              <div className='space-y-2'>
+                <Label htmlFor='insuranceRate'>Insurance Rate (%)</Label>
+                {isEditing ? (
+                  <Input
+                    id='insuranceRate'
+                    type='number'
+                    min='0'
+                    max='1'
+                    step='0.01'
+                    value={formData.insuranceRate}
+                    onChange={e =>
+                      handleInputChange('insuranceRate', e.target.value)
+                    }
+                    className='w-full'
+                    disabled={loading}
+                  />
+                ) : (
+                  <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
+                    {vehicle.pricing?.insuranceRate
+                      ? `${(vehicle.pricing.insuranceRate * 100).toFixed(1)}%`
+                      : 'N/A'}
+                  </div>
+                )}
               </div>
             </div>
           </div>

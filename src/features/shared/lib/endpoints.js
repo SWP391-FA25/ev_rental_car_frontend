@@ -91,4 +91,8 @@ export const endpoints = {
     cancel: id => `/api/bookings/${id}/cancel`,
     complete: id => `/api/bookings/${id}/complete`,
   },
+  payment: {
+    createDeposit: () => '/api/payos/create',
+    getStatus: paymentId => `/api/payos/status/${paymentId}`,
+  },
 };
