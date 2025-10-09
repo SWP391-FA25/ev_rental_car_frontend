@@ -297,8 +297,8 @@ export default function StaffDashboard() {
         const docs = (json && json.data && Array.isArray(json.data.documents))
           ? json.data.documents
           : Array.isArray(json && json.documents)
-          ? json.documents
-          : null;
+            ? json.documents
+            : null;
         if (Array.isArray(docs)) {
           const pending = docs.filter(doc => {
             const status = (doc.status || doc.verificationStatus || '').toString().toLowerCase();

@@ -759,7 +759,7 @@ export default function VehicleManagement() {
                   <TableCell>{getFuelTypeLabel(vehicle.fuelType)}</TableCell>
                   <TableCell>
                     {vehicle.fuelType === 'ELECTRIC' ||
-                    vehicle.fuelType === 'HYBRID'
+                      vehicle.fuelType === 'HYBRID'
                       ? `${vehicle.batteryLevel}%`
                       : t('vehicle.table.na')}
                   </TableCell>
