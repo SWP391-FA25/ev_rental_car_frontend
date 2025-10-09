@@ -40,6 +40,7 @@ const DocumentUpload = () => {
     expiryDate: '',
   });
   const [errors, setErrors] = useState({});
+  const [fileInputKey, setFileInputKey] = useState(0);
 
   const isImageUrl = url => {
     if (!url || typeof url !== 'string') return false;
@@ -85,6 +86,11 @@ const DocumentUpload = () => {
     }
 
     setSelectedFile(file);
+
+    // Clear file error when user selects a file
+    if (errors.file) {
+      setErrors(prev => ({ ...prev, file: '' }));
+    }
 
     // Create preview URL
     if (file.type.startsWith('image/')) {
@@ -160,6 +166,9 @@ const DocumentUpload = () => {
           documentNumber: '',
           expiryDate: '',
         });
+        // Clear validation errors and reset file input
+        setErrors({});
+        setFileInputKey(k => k + 1);
         // Refresh documents list
         fetchUserDocuments();
       } else {
@@ -354,6 +363,7 @@ const DocumentUpload = () => {
                     type='file'
                     accept='.jpg,.jpeg,.png,.pdf'
                     onChange={handleFileChange}
+                    key={fileInputKey}
                     className={errors.file ? 'border-red-500' : ''}
                   />
                   {errors.file && (

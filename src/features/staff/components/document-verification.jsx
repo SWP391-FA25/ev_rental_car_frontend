@@ -534,8 +534,8 @@ const DocumentVerification = ({ userId, onVerificationUpdated }) => {
                 ).length;
                 return (
                   <div key={user.id} className='border rounded-lg'>
-                    <div className='flex items-center justify-between p-4 bg-muted/50 rounded-t-lg'>
-                      <div className='flex items-center gap-3'>
+                    <div className='flex flex-col md:flex-row items-start md:items-center justify-between p-4 bg-muted/50 rounded-t-lg gap-3'>
+                      <div className='flex items-center gap-3 w-full md:w-auto'>
                         <button
                           className='p-1 rounded hover:bg-muted'
                           onClick={() => toggleUserExpand(user.id)}
@@ -547,37 +547,37 @@ const DocumentVerification = ({ userId, onVerificationUpdated }) => {
                             <ChevronRight className='h-5 w-5' />
                           )}
                         </button>
-                        <div>
-                          <div className='font-medium'>
+                        <div className='min-w-0'>
+                          <div className='font-medium truncate'>
                             {user?.name ||
                               t('staffDocuments.common.unknownUser')}
                           </div>
-                          <div className='text-sm text-muted-foreground'>
+                          <div className='text-sm text-muted-foreground truncate'>
                             {user?.email || t('staffDocuments.common.noEmail')}
                             {user?.phone ? ` • ${user.phone}` : ''}
                           </div>
                         </div>
-                        <div className='flex items-center gap-2'>
-                          {pendingCount > 0 && (
-                            <Button
-                              className='flex-1'
-                              onClick={() => handleBatchApprove(user.id)}
-                            >
-                              <CheckCircle className='h-4 w-4 mr-1' />
-                              {t('staffDocuments.actions.batchApprove')}
-                            </Button>
-                          )}
-                          {pendingCount > 0 && (
-                            <Button
-                              className='flex-1'
-                              variant='destructive'
-                              onClick={() => handleOpenBatchReject(user.id)}
-                            >
-                              <XCircle className='h-4 w-4 mr-1' />
-                              {t('staffDocuments.actions.batchReject')}
-                            </Button>
-                          )}
-                        </div>
+                      </div>
+                      <div className='flex flex-wrap items-center gap-2 w-full md:w-auto'>
+                        {pendingCount > 0 && (
+                          <Button
+                            className='w-full md:w-auto'
+                            onClick={() => handleBatchApprove(user.id)}
+                          >
+                            <CheckCircle className='h-4 w-4 mr-1' />
+                            {t('staffDocuments.actions.batchApprove')}
+                          </Button>
+                        )}
+                        {pendingCount > 0 && (
+                          <Button
+                            className='w-full md:w-auto'
+                            variant='destructive'
+                            onClick={() => handleOpenBatchReject(user.id)}
+                          >
+                            <XCircle className='h-4 w-4 mr-1' />
+                            {t('staffDocuments.actions.batchReject')}
+                          </Button>
+                        )}
                       </div>
                     </div>
                     {isExpanded && (
@@ -606,7 +606,7 @@ const DocumentVerification = ({ userId, onVerificationUpdated }) => {
                                     {t('staffDocuments.fields.uploaded')}:{' '}
                                     {formatDate(document.uploadedAt)}
                                   </div>
-                                  <div className='mt-3 flex gap-2'>
+                                  <div className='mt-3 flex flex-wrap gap-2'>
                                     <Button
                                       size='sm'
                                       variant='outline'
@@ -618,7 +618,7 @@ const DocumentVerification = ({ userId, onVerificationUpdated }) => {
                                     {document.status === 'PENDING' && (
                                       <>
                                         <Button
-                                          className='flex-1'
+                                          className='w-full md:w-auto'
                                           onClick={() =>
                                             handleApprove(document.id)
                                           }
@@ -627,7 +627,7 @@ const DocumentVerification = ({ userId, onVerificationUpdated }) => {
                                           {t('staffDocuments.actions.approve')}
                                         </Button>
                                         <Button
-                                          className='flex-1'
+                                          className='w-full md:w-auto'
                                           variant='destructive'
                                           onClick={() =>
                                             handleOpenReject(document)
