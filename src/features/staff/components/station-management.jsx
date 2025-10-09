@@ -49,6 +49,7 @@ import { StationForm } from '../../admin/components/station/StationForm';
 const STATION_STATUS = [
   { value: 'ACTIVE', labelKey: 'station.form.status.active' },
   { value: 'INACTIVE', labelKey: 'station.form.status.inactive' },
+  { value: 'PENDING', labelKey: 'station.form.status.pending' },
   { value: 'MAINTENANCE', labelKey: 'station.form.status.maintenance' },
 ];
 
@@ -202,6 +203,8 @@ export default function StationManagement() {
       case 'ACTIVE':
         return 'default';
       case 'INACTIVE':
+        return 'secondary';
+      case 'PENDING':
         return 'secondary';
       case 'MAINTENANCE':
         return 'outline';

@@ -56,6 +56,7 @@ export function CarManagement() {
   const VEHICLE_STATUS = [
     { value: 'AVAILABLE', label: t('vehicle.status.available') },
     { value: 'RENTED', label: t('vehicle.status.rented') },
+    { value: 'PENDING', label: t('vehicle.status.pending') },
     { value: 'MAINTENANCE', label: t('vehicle.status.maintenance') },
     { value: 'OUT_OF_SERVICE', label: t('vehicle.status.outOfService') },
   ];
@@ -289,6 +290,8 @@ export function CarManagement() {
       case 'AVAILABLE':
         return 'default';
       case 'RENTED':
+        return 'secondary';
+      case 'PENDING':
         return 'secondary';
       case 'MAINTENANCE':
         return 'outline';

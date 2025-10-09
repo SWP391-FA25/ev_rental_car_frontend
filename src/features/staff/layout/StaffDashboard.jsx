@@ -20,16 +20,15 @@ import {
   SidebarInset,
   SidebarProvider,
 } from '../../shared/components/ui/sidebar';
-import { endpoints } from '../../shared/lib/endpoints';
-import { NotificationPreferences } from '../components/NotificationPreferences';
-import BookingManagement from '../components/booking-management';
 import { CarManagement } from '../components/car-management';
 import { CustomerManagement } from '../components/customer-management';
 import DocumentVerification from '../components/document-verification';
 import { PaymentManagement } from '../components/payment-management';
 import { StaffHeader } from '../components/staff-header';
 import { StaffSidebar } from '../components/staff-sidebar';
-import { StationManagement } from '../components/station-management';
+import StationManagement from '../components/station-management';
+import { NotificationPreferences } from '../components/NotificationPreferences';
+import { endpoints } from '../../shared/lib/endpoints';
 
 // Removed QuickVerification import
 
@@ -264,6 +263,9 @@ export default function StaffDashboard() {
   const [carData, setCarData] = React.useState([]);
   const [staffData, setStaffData] = React.useState(null);
 
+  // pending verifications count
+  const [pendingVerificationsCount, setPendingVerificationsCount] = React.useState(0);
+
   // Fetch vehicles
   React.useEffect(() => {
     fetch(endpoints.vehicles.getAll())
@@ -283,6 +285,32 @@ export default function StaffDashboard() {
         if (json.success && json.data && json.data.user) {
           setStaffData(json.data.user);
         }
+      });
+  }, []);
+
+  // Fetch pending document verifications
+  React.useEffect(() => {
+    fetch(endpoints.documents.getAll())
+      .then(res => res.json())
+      .then(json => {
+        // support multiple shapes: json.data.documents or json.documents
+        const docs = (json && json.data && Array.isArray(json.data.documents))
+          ? json.data.documents
+          : Array.isArray(json && json.documents)
+          ? json.documents
+          : null;
+        if (Array.isArray(docs)) {
+          const pending = docs.filter(doc => {
+            const status = (doc.status || doc.verificationStatus || '').toString().toLowerCase();
+            return status && status !== 'verified' && status !== 'approved';
+          }).length;
+          setPendingVerificationsCount(pending);
+        } else {
+          console.warn('documents.getAll returned unexpected shape', json);
+        }
+      })
+      .catch(err => {
+        console.error('Failed to load documents for pending verifications:', err);
       });
   }, []);
 
@@ -372,7 +400,7 @@ export default function StaffDashboard() {
             <FileText className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>12</div>
+            <div className='text-2xl font-bold'>{pendingVerificationsCount}</div>
             <p className='text-xs text-muted-foreground'>
               {t('dashboard.pendingVerificationsSub')}
             </p>
@@ -387,10 +415,7 @@ export default function StaffDashboard() {
             <CardTitle>{t('dashboard.quickActions')}</CardTitle>
           </CardHeader>
           <CardContent className='grid grid-cols-2 gap-3'>
-            <Button onClick={() => setActiveTab('bookings')}>
-              Manage Bookings
-            </Button>
-            <Button variant='outline' onClick={() => setActiveTab('cars')}>
+            <Button onClick={() => setActiveTab('cars')}>
               {t('dashboard.manageCars')}
             </Button>
             <Button variant='outline' onClick={() => setActiveTab('customers')}>
@@ -480,10 +505,6 @@ export default function StaffDashboard() {
     return <PaymentManagement />;
   };
 
-  const renderBookings = () => {
-    return <BookingManagement />;
-  };
-
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
@@ -496,8 +517,6 @@ export default function StaffDashboard() {
         return renderCustomers();
       case 'payments':
         return renderPayments();
-      case 'bookings':
-        return renderBookings();
       case 'documents':
         return <DocumentVerification />;
       case 'notifications':
@@ -510,11 +529,6 @@ export default function StaffDashboard() {
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <Car className='h-4 w-4' /> },
-    {
-      id: 'bookings',
-      label: 'Booking Management',
-      icon: <FileText className='h-4 w-4' />,
-    },
     { id: 'cars', label: 'Car Management', icon: <Car className='h-4 w-4' /> },
     { id: 'stations', label: 'Stations', icon: <MapPin className='h-4 w-4' /> },
     {
