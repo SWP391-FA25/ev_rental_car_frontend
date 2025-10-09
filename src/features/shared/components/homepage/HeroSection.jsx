@@ -1,8 +1,8 @@
+import { useSearch } from '@/features/search/hooks/useSearch';
 import { gsap } from 'gsap';
 import { AlertCircle, Search } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSearch } from '../../hooks/useSearch';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
