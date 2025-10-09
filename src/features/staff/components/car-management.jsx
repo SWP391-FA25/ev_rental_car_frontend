@@ -502,28 +502,7 @@ export function CarManagement() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className='space-y-2'>
-                <Label htmlFor='status'>{t('vehicle.fields.status')}</Label>
-                <Select
-                  value={formData.status}
-                  onValueChange={value =>
-                    setFormData({ ...formData, status: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={t('vehicle.fields.statusPlaceholder')}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {VEHICLE_STATUS.map(status => (
-                      <SelectItem key={status.value} value={status.value}>
-                        {status.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+
             </div>
             <DialogFooter>
               <Button
