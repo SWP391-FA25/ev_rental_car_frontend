@@ -48,12 +48,13 @@ import { toast } from 'sonner';
 import documentService from '../../shared/services/documentService';
 import { useTranslation } from 'react-i18next';
 
-const DocumentVerification = () => {
+const DocumentVerification = ({ userId, onVerificationUpdated }) => {
   const { t } = useTranslation();
   const [documents, setDocuments] = useState([]);
   const [groupedDocuments, setGroupedDocuments] = useState({});
   const [expandedUsers, setExpandedUsers] = useState({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isRejectOpen, setIsRejectOpen] = useState(false);
@@ -72,6 +73,11 @@ const DocumentVerification = () => {
     fetchDocuments();
   }, []);
 
+  // Refetch from API when server-side filters change
+  useEffect(() => {
+    fetchDocuments();
+  }, [filters.status, filters.documentType]);
+
   useEffect(() => {
     applyFilters();
   }, [documents, filters, searchTerm]);
@@ -79,14 +85,17 @@ const DocumentVerification = () => {
   const fetchDocuments = async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await documentService.getAllDocuments({
         status: filters.status !== 'ALL' ? filters.status : undefined,
         documentType:
           filters.documentType !== 'ALL' ? filters.documentType : undefined,
       });
 
-      if (response && response.success) {
-        setDocuments(response.data.documents || []);
+      const success = response?.success;
+      if (success) {
+        const docs = response?.data?.documents || [];
+        setDocuments(docs);
       } else {
         throw new Error(
           response?.message || t('staffDocuments.errors.fetchFailed')
@@ -94,7 +103,9 @@ const DocumentVerification = () => {
       }
     } catch (error) {
       console.error('Error fetching documents:', error);
-      toast.error(error.message || t('staffDocuments.errors.fetchFailed'));
+      const msg = error.message || t('staffDocuments.errors.fetchFailed');
+      setError(msg);
+      toast.error(msg);
       setDocuments([]);
     } finally {
       setLoading(false);
@@ -103,6 +114,11 @@ const DocumentVerification = () => {
 
   const applyFilters = () => {
     let result = [...documents];
+
+    // Filter by selected user when provided
+    if (userId) {
+      result = result.filter(doc => doc.user?.id === userId);
+    }
 
     // Apply status filter
     if (filters.status !== 'ALL') {
@@ -141,11 +157,43 @@ const DocumentVerification = () => {
     setGroupedDocuments(grouped);
   };
 
+  // Ensure selected user's group expanded by default
+  useEffect(() => {
+    if (userId && groupedDocuments[userId]) {
+      setExpandedUsers(prev => ({ ...prev, [userId]: true }));
+    }
+  }, [userId, groupedDocuments]);
+
   const toggleUserExpand = userId => {
     setExpandedUsers(prev => ({
       ...prev,
       [userId]: !prev[userId],
     }));
+  };
+
+  const computeVerificationStatusForUser = docsForUser => {
+    // Identity docs can be ID_CARD or PASSPORT
+    const identityDocs = docsForUser.filter(
+      d => d.documentType === 'ID_CARD' || d.documentType === 'PASSPORT'
+    );
+    const licenseDocs = docsForUser.filter(
+      d => d.documentType === 'DRIVERS_LICENSE'
+    );
+
+    const mapStatus = arr => {
+      if (arr.length === 0) return 'Pending';
+      // Nếu đã có ít nhất một tài liệu được duyệt, coi là Verified
+      if (arr.some(d => d.status === 'APPROVED')) return 'Verified';
+      // Nếu có bất kỳ bị từ chối, coi là Failed
+      if (arr.some(d => d.status === 'REJECTED')) return 'Failed';
+      // Còn lại là Pending (chưa có approved, chỉ pending)
+      return 'Pending';
+    };
+
+    return {
+      identity: mapStatus(identityDocs),
+      license: mapStatus(licenseDocs),
+    };
   };
 
   const handleApprove = async documentId => {
@@ -154,14 +202,23 @@ const DocumentVerification = () => {
         status: 'APPROVED',
       });
 
-      if (response && response.success) {
+      const success = response?.success;
+      if (success) {
         toast.success(t('staffDocuments.toasts.approveSuccess'));
-        // Update the document in the list
-        setDocuments(prev =>
-          prev.map(doc =>
+        // Update the document in the list and propagate verification status
+        setDocuments(prev => {
+          const next = prev.map(doc =>
             doc.id === documentId ? { ...doc, status: 'APPROVED' } : doc
-          )
-        );
+          );
+          const target = next.find(d => d.id === documentId);
+          const uid = target?.user?.id;
+          if (uid) {
+            const docsForUser = next.filter(d => d.user?.id === uid);
+            const vs = computeVerificationStatusForUser(docsForUser);
+            onVerificationUpdated?.(uid, vs);
+          }
+          return next;
+        });
       } else {
         throw new Error(
           response?.message || t('staffDocuments.errors.approveFailed')
@@ -188,16 +245,24 @@ const DocumentVerification = () => {
         }
       );
 
-      if (response && response.success) {
+      const success = response?.success;
+      if (success) {
         toast.success(t('staffDocuments.toasts.rejectSuccess'));
-        // Update the document in the list
-        setDocuments(prev =>
-          prev.map(doc =>
+        // Update the document in the list and propagate verification status
+        setDocuments(prev => {
+          const next = prev.map(doc =>
             doc.id === selectedDocument.id
               ? { ...doc, status: 'REJECTED' }
               : doc
-          )
-        );
+          );
+          const uid = selectedDocument?.user?.id;
+          if (uid) {
+            const docsForUser = next.filter(d => d.user?.id === uid);
+            const vs = computeVerificationStatusForUser(docsForUser);
+            onVerificationUpdated?.(uid, vs);
+          }
+          return next;
+        });
         setIsRejectOpen(false);
         setRejectionReason('');
         setSelectedDocument(null);
@@ -225,6 +290,44 @@ const DocumentVerification = () => {
   const handleOpenBatchReject = userId => {
     setSelectedUserForBatch(userId);
     setIsBatchRejectOpen(true);
+  };
+
+  const handleBatchApprove = async userId => {
+    try {
+      const pendingDocs = documents.filter(
+        d => d.user?.id === userId && d.status === 'PENDING'
+      );
+      for (const doc of pendingDocs) {
+        const res = await documentService.verifyDocument(doc.id, {
+          status: 'APPROVED',
+        });
+        if (!res?.success) {
+          throw new Error(
+            res?.message || t('staffDocuments.errors.approveFailed')
+          );
+        }
+      }
+
+      // Update local state and propagate verification status
+      setDocuments(prev => {
+        const next = prev.map(d =>
+          d.user?.id === userId && d.status === 'PENDING'
+            ? { ...d, status: 'APPROVED' }
+            : d
+        );
+        const docsForUser = next.filter(d => d.user?.id === userId);
+        const vs = computeVerificationStatusForUser(docsForUser);
+        onVerificationUpdated?.(userId, vs);
+        return next;
+      });
+      toast.success(
+        t('staffDocuments.toasts.batchApproveSuccess') ||
+          'Approved all pending documents'
+      );
+    } catch (err) {
+      console.error('Batch approve error:', err);
+      toast.error(err.message || t('staffDocuments.errors.approveFailed'));
+    }
   };
 
   const getStatusBadge = status => {
@@ -399,6 +502,11 @@ const DocumentVerification = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {error && (
+            <div className='mb-4 rounded border border-red-200 bg-red-50 text-red-700 p-3'>
+              {error}
+            </div>
+          )}
           {loading ? (
             <div className='flex justify-center items-center h-32'>
               <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary'></div>
@@ -414,72 +522,133 @@ const DocumentVerification = () => {
               </p>
             </div>
           ) : (
-            <div className='space-y-4'>
-              {filteredDocuments.map(document => (
-                <div
-                  key={document.id}
-                  className='flex flex-col md:flex-row items-start md:items-center justify-between p-4 border rounded-lg bg-card gap-4'
-                >
-                  <div className='flex items-start gap-4'>
-                    <div className='bg-muted p-3 rounded-lg'>
-                      <FileText className='h-6 w-6' />
-                    </div>
-                    <div>
-                      <h3 className='font-medium'>
-                        {document.user?.name ||
-                          t('staffDocuments.common.unknownUser')}
-                      </h3>
-                      <p className='text-sm text-muted-foreground'>
-                        {document.user?.email ||
-                          t('staffDocuments.common.noEmail')}
-                      </p>
-                      <div className='flex items-center gap-2 mt-1'>
-                        <span className='text-xs bg-secondary px-2 py-1 rounded'>
-                          {getDocumentTypeLabel(document.documentType)}
-                        </span>
-                        {getStatusBadge(document.status)}
+            <div className='space-y-6'>
+              {(userId
+                ? [groupedDocuments[userId]].filter(Boolean)
+                : Object.values(groupedDocuments)
+              ).map(group => {
+                const user = group.user;
+                const isExpanded = !!expandedUsers[user.id];
+                const pendingCount = group.documents.filter(
+                  d => d.status === 'PENDING'
+                ).length;
+                return (
+                  <div key={user.id} className='border rounded-lg'>
+                    <div className='flex items-center justify-between p-4 bg-muted/50 rounded-t-lg'>
+                      <div className='flex items-center gap-3'>
+                        <button
+                          className='p-1 rounded hover:bg-muted'
+                          onClick={() => toggleUserExpand(user.id)}
+                          aria-label={isExpanded ? 'Collapse' : 'Expand'}
+                        >
+                          {isExpanded ? (
+                            <ChevronDown className='h-5 w-5' />
+                          ) : (
+                            <ChevronRight className='h-5 w-5' />
+                          )}
+                        </button>
+                        <div>
+                          <div className='font-medium'>
+                            {user?.name ||
+                              t('staffDocuments.common.unknownUser')}
+                          </div>
+                          <div className='text-sm text-muted-foreground'>
+                            {user?.email || t('staffDocuments.common.noEmail')}
+                            {user?.phone ? ` • ${user.phone}` : ''}
+                          </div>
+                        </div>
+                        <div className='flex items-center gap-2'>
+                          {pendingCount > 0 && (
+                            <Button
+                              className='flex-1'
+                              onClick={() => handleBatchApprove(user.id)}
+                            >
+                              <CheckCircle className='h-4 w-4 mr-1' />
+                              {t('staffDocuments.actions.batchApprove')}
+                            </Button>
+                          )}
+                          {pendingCount > 0 && (
+                            <Button
+                              className='flex-1'
+                              variant='destructive'
+                              onClick={() => handleOpenBatchReject(user.id)}
+                            >
+                              <XCircle className='h-4 w-4 mr-1' />
+                              {t('staffDocuments.actions.batchReject')}
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
+                    {isExpanded && (
+                      <div className='p-4'>
+                        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+                          {group.documents.map(document => (
+                            <div
+                              key={document.id}
+                              className='border rounded-lg p-3 bg-card'
+                            >
+                              <div className='flex items-start gap-3'>
+                                <div className='p-2 rounded bg-muted'>
+                                  {getDocumentIcon(document.documentType)}
+                                </div>
+                                <div className='flex-1'>
+                                  <div className='flex items-center justify-between'>
+                                    <div className='font-medium'>
+                                      {getDocumentTypeLabel(
+                                        document.documentType
+                                      )}
+                                    </div>
+                                    {getStatusBadge(document.status)}
+                                  </div>
+                                  <div className='text-xs text-muted-foreground mt-1'>
+                                    <Calendar className='inline h-3 w-3 mr-1' />
+                                    {t('staffDocuments.fields.uploaded')}:{' '}
+                                    {formatDate(document.uploadedAt)}
+                                  </div>
+                                  <div className='mt-3 flex gap-2'>
+                                    <Button
+                                      size='sm'
+                                      variant='outline'
+                                      onClick={() => handlePreview(document)}
+                                    >
+                                      <Eye className='h-4 w-4 mr-1' />
+                                      {t('staffDocuments.actions.preview')}
+                                    </Button>
+                                    {document.status === 'PENDING' && (
+                                      <>
+                                        <Button
+                                          className='flex-1'
+                                          onClick={() =>
+                                            handleApprove(document.id)
+                                          }
+                                        >
+                                          <CheckCircle className='h-4 w-4 mr-1' />
+                                          {t('staffDocuments.actions.approve')}
+                                        </Button>
+                                        <Button
+                                          className='flex-1'
+                                          variant='destructive'
+                                          onClick={() =>
+                                            handleOpenReject(document)
+                                          }
+                                        >
+                                          <XCircle className='h-4 w-4 mr-1' />
+                                          {t('staffDocuments.actions.reject')}
+                                        </Button>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
-
-                  <div className='flex flex-col md:flex-row items-start md:items-center gap-2'>
-                    <div className='text-sm text-muted-foreground'>
-                      <Calendar className='inline h-4 w-4 mr-1' />
-                      {t('staffDocuments.fields.uploaded')}:{' '}
-                      {formatDate(document.uploadedAt)}
-                    </div>
-                    <div className='flex gap-2'>
-                      <Button
-                        size='sm'
-                        variant='outline'
-                        onClick={() => handlePreview(document)}
-                      >
-                        <Eye className='h-4 w-4 mr-1' />
-                        {t('staffDocuments.actions.preview')}
-                      </Button>
-                      {document.status === 'PENDING' && (
-                        <>
-                          <Button
-                            size='sm'
-                            onClick={() => handleApprove(document.id)}
-                          >
-                            <CheckCircle className='h-4 w-4 mr-1' />
-                            {t('staffDocuments.actions.approve')}
-                          </Button>
-                          <Button
-                            size='sm'
-                            variant='destructive'
-                            onClick={() => handleOpenReject(document)}
-                          >
-                            <XCircle className='h-4 w-4 mr-1' />
-                            {t('staffDocuments.actions.reject')}
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
@@ -656,6 +825,97 @@ const DocumentVerification = () => {
               </DialogFooter>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+      {/* Batch Reject Dialog */}
+      <Dialog open={isBatchRejectOpen} onOpenChange={setIsBatchRejectOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('staffDocuments.batchReject.title')}</DialogTitle>
+          </DialogHeader>
+          <div className='space-y-4'>
+            <p className='text-sm text-muted-foreground'>
+              {t('staffDocuments.batchReject.description')}
+            </p>
+            <div>
+              <Label htmlFor='batch-rejection-reason'>
+                {t('staffDocuments.batchReject.reason')}
+              </Label>
+              <Textarea
+                id='batch-rejection-reason'
+                placeholder={t('staffDocuments.batchReject.placeholder')}
+                value={batchRejectionReason}
+                onChange={e => setBatchRejectionReason(e.target.value)}
+                rows={4}
+              />
+            </div>
+            <DialogFooter className='gap-2 sm:gap-0'>
+              <Button
+                variant='outline'
+                onClick={() => setIsBatchRejectOpen(false)}
+              >
+                {t('common.cancel', { defaultValue: 'Cancel' })}
+              </Button>
+              <Button
+                variant='destructive'
+                onClick={async () => {
+                  if (!selectedUserForBatch) return;
+                  if (!batchRejectionReason.trim()) {
+                    toast.error(
+                      t('staffDocuments.errors.rejectionReasonRequired')
+                    );
+                    return;
+                  }
+                  try {
+                    const docs =
+                      groupedDocuments[selectedUserForBatch]?.documents || [];
+                    const pendingDocs = docs.filter(
+                      d => d.status === 'PENDING'
+                    );
+                    await Promise.all(
+                      pendingDocs.map(d =>
+                        documentService.verifyDocument(d.id, {
+                          status: 'REJECTED',
+                          rejectionReason: batchRejectionReason,
+                        })
+                      )
+                    );
+                    // Update local state and propagate verification status
+                    setDocuments(prev => {
+                      const next = prev.map(doc =>
+                        doc.user?.id === selectedUserForBatch &&
+                        doc.status === 'PENDING'
+                          ? { ...doc, status: 'REJECTED' }
+                          : doc
+                      );
+                      if (selectedUserForBatch) {
+                        const docsForUser = next.filter(
+                          d => d.user?.id === selectedUserForBatch
+                        );
+                        const vs =
+                          computeVerificationStatusForUser(docsForUser);
+                        onVerificationUpdated?.(selectedUserForBatch, vs);
+                      }
+                      return next;
+                    });
+                    toast.success(
+                      t('staffDocuments.toasts.batchRejectSuccess')
+                    );
+                    setBatchRejectionReason('');
+                    setSelectedUserForBatch(null);
+                    setIsBatchRejectOpen(false);
+                  } catch (err) {
+                    console.error('Batch reject error:', err);
+                    toast.error(
+                      err.message || t('staffDocuments.errors.rejectFailed')
+                    );
+                  }
+                }}
+              >
+                {t('staffDocuments.actions.confirmReject')}
+              </Button>
+            </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

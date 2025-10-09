@@ -26,7 +26,7 @@ import {
   Users,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useLocation } from '../hooks/useLocation';
 import { useNearbyStations } from '../hooks/useNearbyStations';
 import { useVehicles } from '../hooks/useVehicles';
@@ -44,8 +44,11 @@ const transformVehicleData = vehicle => {
     images:
       vehicle.images?.[0]?.url ||
       'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=1200&q=80',
-    price: 200, // Default price - should come from backend
-    period: 'day',
+    pricing: {
+      hourlyRate: vehicle.pricing?.hourlyRate || 15,
+      baseRate: vehicle.pricing?.baseRate || 200,
+      depositAmount: vehicle.pricing?.depositAmount || 500,
+    },
     seats: vehicle.seats,
     transmission: 'Automatic', // Default - should come from backend
     fuelType: vehicle.fuelType,
@@ -54,6 +57,7 @@ const transformVehicleData = vehicle => {
     batteryLevel: vehicle.batteryLevel,
     color: vehicle.color,
     licensePlate: vehicle.licensePlate,
+    stationId: vehicle.stationId,
   };
 };
 
@@ -64,6 +68,7 @@ export default function CarsPage() {
   const [fuel, setFuel] = useState('all');
   const [selectedStation, setSelectedStation] = useState(null);
   const [viewMode, setViewMode] = useState('all'); // 'all' or 'location'
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
   const toolbarRef = useRef(null);
@@ -121,6 +126,37 @@ export default function CarsPage() {
     setLocation(location);
     setViewMode('location');
   };
+
+  // Handle URL search parameters
+  useEffect(() => {
+    const stationId = searchParams.get('station');
+    const pickupDate = searchParams.get('pickupDate');
+    const returnDate = searchParams.get('returnDate');
+    const vehicleType = searchParams.get('type');
+    const fuelType = searchParams.get('fuel');
+
+    if (stationId) {
+      // Find and set the selected station
+      const station = stations.find(s => s.id === stationId);
+      if (station) {
+        setSelectedStation(station);
+        setViewMode('location');
+      }
+    }
+
+    if (vehicleType && vehicleType !== 'all') {
+      setType(vehicleType);
+    }
+
+    if (fuelType && fuelType !== 'all') {
+      setFuel(fuelType);
+    }
+
+    // Clear URL parameters after processing
+    if (stationId || pickupDate || returnDate || vehicleType || fuelType) {
+      setSearchParams({});
+    }
+  }, [searchParams, stations, setSearchParams]);
 
   useEffect(() => {
     if (toolbarRef.current) {
@@ -353,6 +389,17 @@ export default function CarsPage() {
                         </div>
                       </div>
                       <div className='flex justify-between items-center'>
+                        <div>
+                          <div className='text-lg font-semibold'>
+                            ${vehicle.pricing.hourlyRate}
+                            <span className='text-sm text-muted-foreground'>
+                              /hour
+                            </span>
+                          </div>
+                          <div className='text-xs text-muted-foreground'>
+                            +${vehicle.pricing.depositAmount} deposit
+                          </div>
+                        </div>
                         <Button
                           size='sm'
                           variant='default'
@@ -362,9 +409,6 @@ export default function CarsPage() {
                           }}
                         >
                           {vehicle.available ? 'Book now' : 'Unavailable'}
-                        </Button>
-                        <Button size='sm' variant='outline'>
-                          Details
                         </Button>
                       </div>
                     </CardContent>

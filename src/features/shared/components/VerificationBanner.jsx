@@ -8,8 +8,13 @@ export default function VerificationBanner() {
   const { user } = useAuth();
   const [isDismissed, setIsDismissed] = useState(false);
 
-  // Don't show banner if user is verified or banner is dismissed
-  if (!user || user.verifyStatus === 'VERIFIED' || isDismissed) {
+  // Don't show banner if user is not RENTER, verified, or banner is dismissed
+  if (
+    !user ||
+    user.role !== 'RENTER' ||
+    user.verifyStatus === 'VERIFIED' ||
+    isDismissed
+  ) {
     return null;
   }
 

@@ -15,7 +15,7 @@
     "title1": "EV Rental - Cùng Bạn",
     "title2": "Trên Mọi Hành Trình",
     "location": "Địa điểm lấy xe",
-    "destination": "Chọn thành phố",
+    "destination": "Chọn trạm",
     "time": "Thời gian lấy xe",
     "date": "Ngày lấy xe",
     "returnDate": "Ngày trả xe",
@@ -126,6 +126,7 @@
   "staffSidebar": {
     "dashboard": "Bảng điều khiển",
     "cars": "Quản lý xe",
+    "bookings": "Đặt lịch",
     "stations": "Trạm",
     "customers": "Khách hàng",
     "payments": "Thanh toán",
@@ -787,7 +788,9 @@
       "notes": "Ghi chú xác minh",
       "approve": "Duyệt bằng lái",
       "reject": "Từ chối bằng lái",
-      "licenseNotes": "Thêm ghi chú về quá trình xác minh bằng lái..."
+      "licenseNotes": "Thêm ghi chú về quá trình xác minh bằng lái...",
+      "noCustomers": "Chưa có khách hàng nào chờ xác minh.",
+      "allVerified": "Tất cả khách hàng đã được xác minh."
     },
     "support": {
       "searchPlaceholder": "Tìm khách hàng...",
@@ -802,7 +805,8 @@
       "viewProfile": "Xem hồ sơ",
       "contactCustomer": "Liên hệ khách",
       "editDetails": "Sửa thông tin",
-      "verifyDocuments": "Xác minh tài liệu"
+      "verifyDocuments": "Xác minh tài liệu",
+      "noCustomers": "Không tìm thấy thông tin khách hàng."
     }
   },
   "staffDocuments": {
@@ -842,7 +846,9 @@
       "preview": "Xem trước",
       "approve": "Duyệt",
       "reject": "Từ chối",
-      "download": "Tải xuống"
+      "download": "Tải xuống",
+      "batchApprove": "Duyệt hàng loạt",
+      "batchReject": "Từ chối hàng loạt"
     },
     "preview": {
       "title": "Xem trước tài liệu",

@@ -1,10 +1,22 @@
+import { useBooking } from '@/features/booking/hooks/useBooking';
 import Footer from '@/features/shared/components/homepage/Footer';
 import Navbar from '@/features/shared/components/homepage/Navbar';
 import { Alert, AlertDescription } from '@/features/shared/components/ui/alert';
 import { Button } from '@/features/shared/components/ui/button';
 import { Card } from '@/features/shared/components/ui/card';
-import { Input } from '@/features/shared/components/ui/input';
+import { DatePicker } from '@/features/shared/components/ui/date-picker';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/features/shared/components/ui/select';
 import { Skeleton } from '@/features/shared/components/ui/skeleton';
+import { TimePicker } from '@/features/shared/components/ui/time-picker';
+import { apiClient } from '@/features/shared/lib/apiClient';
+import { endpoints } from '@/features/shared/lib/endpoints';
+import { formatCurrency } from '@/features/shared/lib/utils';
 import gsap from 'gsap';
 import {
   AlertCircle,
@@ -16,7 +28,8 @@ import {
   Users,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'sonner';
 import { useVehicles } from '../hooks/useVehicles';
 
 // Helper function to transform vehicle data for display
@@ -29,8 +42,11 @@ const transformVehicleData = vehicle => {
     image:
       vehicle.images?.[0]?.url ||
       'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=1600&q=80',
-    price: 200, // Default price - should come from backend
-    period: 'day',
+    pricing: {
+      hourlyRate: vehicle.pricing?.hourlyRate || 15,
+      baseRate: vehicle.pricing?.baseRate || 200,
+      depositAmount: vehicle.pricing?.depositAmount || 500,
+    },
     seats: vehicle.seats,
     transmission: 'Automatic', // Default - should come from backend
     fuelType: vehicle.fuelType,
@@ -39,6 +55,7 @@ const transformVehicleData = vehicle => {
     batteryLevel: vehicle.batteryLevel,
     color: vehicle.color,
     licensePlate: vehicle.licensePlate,
+    stationId: vehicle.stationId,
     description: `The ${vehicle.brand} ${vehicle.model} is a ${vehicle.type} with excellent performance and modern features.`,
     features: [
       'Air Conditioning',
@@ -51,9 +68,20 @@ const transformVehicleData = vehicle => {
 
 export default function CarDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { getVehicleById, error } = useVehicles();
+  const { createBooking, loading: bookingLoading } = useBooking();
   const [car, setCar] = useState(null);
   const [loadingCar, setLoadingCar] = useState(true);
+  const [selectedDates, setSelectedDates] = useState({
+    startDate: undefined,
+    endDate: undefined,
+    startTime: '09:00',
+    endTime: '18:00',
+  });
+  const [promotions, setPromotions] = useState([]);
+  const [selectedPromotionId, setSelectedPromotionId] = useState('none');
+  const [loadingPromotions, setLoadingPromotions] = useState(false);
   const heroRef = useRef(null);
   const chipsRef = useRef(null);
   const sidebarRef = useRef(null);
@@ -72,6 +100,23 @@ export default function CarDetailPage() {
     };
     fetchVehicle();
   }, [id, getVehicleById]);
+
+  // Fetch active promotions
+  useEffect(() => {
+    const fetchPromotions = async () => {
+      try {
+        setLoadingPromotions(true);
+        const response = await apiClient.get(endpoints.promotions.getActive());
+        setPromotions(response.data.promotions || []);
+      } catch (error) {
+        console.error('Error fetching promotions:', error);
+        toast.error('Failed to load promotions');
+      } finally {
+        setLoadingPromotions(false);
+      }
+    };
+    fetchPromotions();
+  }, []);
 
   useEffect(() => {
     if (car && heroRef.current) {
@@ -103,6 +148,107 @@ export default function CarDetailPage() {
       });
     }
   }, [car]);
+
+  // Calculate estimated price
+  const calculateEstimatedPrice = () => {
+    if (!selectedDates.startDate || !selectedDates.endDate || !car?.pricing)
+      return null;
+
+    const start = new Date(selectedDates.startDate);
+    start.setHours(
+      parseInt(selectedDates.startTime.split(':')[0]),
+      parseInt(selectedDates.startTime.split(':')[1])
+    );
+
+    const end = new Date(selectedDates.endDate);
+    end.setHours(
+      parseInt(selectedDates.endTime.split(':')[0]),
+      parseInt(selectedDates.endTime.split(':')[1])
+    );
+
+    const durationHours = Math.ceil((end - start) / (1000 * 60 * 60));
+
+    const basePrice = car.pricing.hourlyRate * durationHours;
+    const insuranceAmount = basePrice * 0.1; // 10%
+    const taxAmount = basePrice * 0.08; // 8%
+    const subtotal = basePrice + insuranceAmount + taxAmount;
+
+    // Calculate discount if promotion is selected
+    let discountAmount = 0;
+    if (selectedPromotionId && selectedPromotionId !== 'none') {
+      const promotion = promotions.find(p => p.id === selectedPromotionId);
+      if (promotion) {
+        discountAmount = subtotal * promotion.discount;
+      }
+    }
+
+    const finalTotal = subtotal - discountAmount;
+
+    return {
+      basePrice,
+      insuranceAmount,
+      taxAmount,
+      subtotal,
+      discountAmount,
+      finalTotal,
+      depositAmount: car.pricing.depositAmount,
+      totalPayable: finalTotal + car.pricing.depositAmount,
+      durationHours,
+    };
+  };
+
+  const estimatedPrice = calculateEstimatedPrice();
+
+  const handleBooking = async () => {
+    if (!selectedDates.startDate || !selectedDates.endDate) {
+      toast.error('Please select pickup and return dates');
+      return;
+    }
+
+    try {
+      const startDateTime = new Date(selectedDates.startDate);
+      startDateTime.setHours(
+        parseInt(selectedDates.startTime.split(':')[0]),
+        parseInt(selectedDates.startTime.split(':')[1])
+      );
+
+      const endDateTime = new Date(selectedDates.endDate);
+      endDateTime.setHours(
+        parseInt(selectedDates.endTime.split(':')[0]),
+        parseInt(selectedDates.endTime.split(':')[1])
+      );
+
+      const bookingData = {
+        vehicleId: car.id,
+        stationId: car.stationId,
+        startTime: startDateTime.toISOString(),
+        endTime: endDateTime.toISOString(),
+        promotions:
+          selectedPromotionId && selectedPromotionId !== 'none'
+            ? [selectedPromotionId]
+            : [],
+        // pickupLocation và dropoffLocation không cần vì station-based
+      };
+
+      const result = await createBooking(bookingData);
+      console.log('Booking result:', result); // ✅ Debug log
+
+      if (!result || !result.booking) {
+        console.error('Invalid booking response:', result);
+        toast.error('Invalid booking response from server');
+        return;
+      }
+
+      const booking = result.booking;
+
+      // Redirect đến payment cho deposit
+      navigate(
+        `/payment/deposit?bookingId=${booking.id}&amount=${booking.depositAmount}`
+      );
+    } catch (error) {
+      console.error('Booking failed:', error);
+    }
+  };
 
   // Loading state
   if (loadingCar) {
@@ -255,30 +401,167 @@ export default function CarDetailPage() {
 
           <div className='lg:col-span-1'>
             <Card ref={sidebarRef} className='p-5 sticky top-24'>
-              <div className='flex items-baseline justify-between'>
-                <div className='text-2xl font-bold'>${car.price}</div>
-                <div className='text-xs text-muted-foreground'>
-                  per {car.period}
-                </div>
-              </div>
-              <div className='mt-4 space-y-3'>
-                <div>
-                  <div className='text-xs text-muted-foreground mb-1'>
-                    Pickup Date
+              {/* Booking Form */}
+              <div className='space-y-4'>
+                <div className='grid grid-cols-2 gap-3'>
+                  <div>
+                    <label className='text-xs text-muted-foreground mb-1 block'>
+                      Pickup Date
+                    </label>
+                    <DatePicker
+                      value={selectedDates.startDate}
+                      onChange={date =>
+                        setSelectedDates(prev => ({
+                          ...prev,
+                          startDate: date,
+                        }))
+                      }
+                      placeholder='Select pickup date'
+                      minDate={new Date()}
+                    />
                   </div>
-                  <Input type='date' />
-                </div>
-                <div>
-                  <div className='text-xs text-muted-foreground mb-1'>
-                    Return Date
+                  <div>
+                    <label className='text-xs text-muted-foreground mb-1 block'>
+                      Pickup Time
+                    </label>
+                    <TimePicker
+                      value={selectedDates.startTime}
+                      onChange={time =>
+                        setSelectedDates(prev => ({
+                          ...prev,
+                          startTime: time,
+                        }))
+                      }
+                      placeholder='Select pickup time'
+                    />
                   </div>
-                  <Input type='date' />
                 </div>
-                <Button className='w-full' disabled={!car.available}>
-                  {car.available ? 'Book Now' : 'Unavailable'}
+
+                <div className='grid grid-cols-2 gap-3'>
+                  <div>
+                    <label className='text-xs text-muted-foreground mb-1 block'>
+                      Return Date
+                    </label>
+                    <DatePicker
+                      value={selectedDates.endDate}
+                      onChange={date =>
+                        setSelectedDates(prev => ({
+                          ...prev,
+                          endDate: date,
+                        }))
+                      }
+                      placeholder='Select return date'
+                      minDate={selectedDates.startDate || new Date()}
+                    />
+                  </div>
+                  <div>
+                    <label className='text-xs text-muted-foreground mb-1 block'>
+                      Return Time
+                    </label>
+                    <TimePicker
+                      value={selectedDates.endTime}
+                      onChange={time =>
+                        setSelectedDates(prev => ({
+                          ...prev,
+                          endTime: time,
+                        }))
+                      }
+                      placeholder='Select return time'
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className='text-xs text-muted-foreground mb-1 block'>
+                    Promotion (Optional)
+                  </label>
+                  <Select
+                    value={selectedPromotionId}
+                    onValueChange={setSelectedPromotionId}
+                    disabled={loadingPromotions}
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={
+                          loadingPromotions
+                            ? 'Loading promotions...'
+                            : 'Select promotion'
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='none'>No promotion</SelectItem>
+                      {promotions.map(promotion => (
+                        <SelectItem key={promotion.id} value={promotion.id}>
+                          {promotion.code} - {promotion.discount}%
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Price Breakdown */}
+                {estimatedPrice && (
+                  <div className='border-t pt-4 space-y-2'>
+                    <div className='flex justify-between text-sm'>
+                      <span>Base Price ({estimatedPrice.durationHours}h)</span>
+                      <span>
+                        {formatCurrency(estimatedPrice.basePrice, 'VND')}
+                      </span>
+                    </div>
+                    <div className='flex justify-between text-sm'>
+                      <span>Insurance (10%)</span>
+                      <span>
+                        {formatCurrency(estimatedPrice.insuranceAmount, 'VND')}
+                      </span>
+                    </div>
+                    <div className='flex justify-between text-sm'>
+                      <span>Tax (8%)</span>
+                      <span>
+                        {formatCurrency(estimatedPrice.taxAmount, 'VND')}
+                      </span>
+                    </div>
+                    {estimatedPrice.discountAmount > 0 && (
+                      <div className='flex justify-between text-sm text-green-600'>
+                        <span>
+                          Discount (
+                          {
+                            promotions.find(p => p.id === selectedPromotionId)
+                              ?.code
+                          }
+                          )
+                        </span>
+                        <span>
+                          -
+                          {formatCurrency(estimatedPrice.discountAmount, 'VND')}
+                        </span>
+                      </div>
+                    )}
+                    <div className='flex justify-between text-sm'>
+                      <span>Deposit</span>
+                      <span>
+                        {formatCurrency(estimatedPrice.depositAmount, 'VND')}
+                      </span>
+                    </div>
+                    <div className='border-t pt-2 flex justify-between font-semibold'>
+                      <span>Total Payable</span>
+                      <span>
+                        {formatCurrency(estimatedPrice.totalPayable, 'VND')}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <Button
+                  className='w-full'
+                  disabled={!car.available || bookingLoading}
+                  onClick={handleBooking}
+                >
+                  {bookingLoading ? 'Creating Booking...' : 'Book Now'}
                 </Button>
+
                 <div className='text-xs text-muted-foreground text-center'>
-                  No credit card required to reserve
+                  Pay deposit to secure your booking
                 </div>
               </div>
             </Card>
