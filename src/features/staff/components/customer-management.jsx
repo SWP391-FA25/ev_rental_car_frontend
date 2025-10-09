@@ -792,6 +792,7 @@ function CustomerSupport() {
           name: renter.name,
           email: renter.email,
           phone: renter.phone,
+          createdAt: renter.createdAt || renter.created_at || null,
           avatar: renter.avatar || '/api/placeholder/32/32',
           // Map trạng thái dựa trên accountStatus thay vì isActive để tránh hiển thị sai
           status:
@@ -857,8 +858,8 @@ function CustomerSupport() {
       const matchesStatus =
         statusFilter === 'all' ||
         (statusFilter === 'active' && c.status === 'Active') ||
-        (statusFilter === 'inactive' &&
-          (c.status === 'Inactive' || c.status === 'Suspended'));
+        (statusFilter === 'inactive' && c.status === 'Inactive') ||
+        (statusFilter === 'suspended' && c.status === 'Suspended');
       return matchesTerm && matchesStatus;
     });
   }, [renters, searchTerm, statusFilter]);
@@ -979,6 +980,11 @@ function CustomerSupport() {
             <SelectItem value='inactive'>
               {t('staffCustomers.status.inactive')}
             </SelectItem>
+            <SelectItem value='suspended'>
+              {t('userManagement.badges.suspended', {
+                defaultValue: 'Suspended',
+              })}
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -1006,45 +1012,57 @@ function CustomerSupport() {
 
         {!loading && !error && renters.length > 0 && (
           <>
-            <Table>
+            <Table className='table-fixed w-full'>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t('staffCustomers.common.customer')}</TableHead>
-                  <TableHead>{t('staffCustomers.common.status')}</TableHead>
-                  <TableHead className='text-right end-0'>
-                    {t('staffCustomers.common.actions')}
+                  <TableHead className='w-2/12'>
+                    {t('userManagement.table.name', { defaultValue: 'Tên' })}
+                  </TableHead>
+                  <TableHead className='w-3/12'>
+                    {t('userManagement.table.email', { defaultValue: 'Email' })}
+                  </TableHead>
+                  <TableHead className='w-2/12'>
+                    {t('userManagement.table.phone', {
+                      defaultValue: 'Số điện thoại',
+                    })}
+                  </TableHead>
+                  <TableHead className='w-2/12'>
+                    {t('userManagement.table.status', {
+                      defaultValue: 'Trạng thái',
+                    })}
+                  </TableHead>
+                  <TableHead className='w-2/12'>
+                    {t('userManagement.table.joinDate', {
+                      defaultValue: 'Ngày tạo',
+                    })}
+                  </TableHead>
+                  <TableHead className='w-1/12 text-center'>
+                    {t('userManagement.table.actions', {
+                      defaultValue: 'Thao tác',
+                    })}
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {pagedCustomers.map(customer => (
-                  <TableRow key={customer.id} className='hover:bg-muted/50 transition-colors'>
-                    <TableCell>
-                      <div className='flex items-center gap-3'>
-                        <Avatar className='h-8 w-8'>
-                          <AvatarImage
-                            src={customer.avatar}
-                            alt={customer.name}
-                          />
-                          <AvatarFallback>
-                            {(customer.name ?? '')
-                              .split(' ')
-                              .map(n => n?.[0] ?? '')
-                              .join('') || '?'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className='font-medium text-foreground'>{customer.name}</div>
-                          <div className='text-sm text-muted-foreground'>
-                            {customer.email}
-                          </div>
-                        </div>
-                      </div>
+                  <TableRow
+                    key={customer.id}
+                    className='hover:bg-muted/50 transition-colors'
+                  >
+                    <TableCell className='font-medium'>
+                      {customer.name}
                     </TableCell>
+                    <TableCell>{customer.email}</TableCell>
+                    <TableCell>{customer.phone || '—'}</TableCell>
                     <TableCell>
                       <CustomerStatusBadge status={customer.status} />
                     </TableCell>
-                    <TableCell className='text-right'>
+                    <TableCell>
+                      {customer.createdAt
+                        ? new Date(customer.createdAt).toLocaleDateString()
+                        : 'N/A'}
+                    </TableCell>
+                    <TableCell className='text-center'>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant='ghost' className='h-8 w-8 p-0'>
@@ -1070,7 +1088,7 @@ function CustomerSupport() {
                             <Phone className='mr-2 h-4 w-4' />
                             {t('staffCustomers.support.contactCustomer')}
                           </DropdownMenuItem>
-                          <DropdownMenuItem
+                          {/* <DropdownMenuItem
                             onClick={() => {
                               setSelectedRenterId(customer.id);
                               setIsDocVerifyOpen(true);
@@ -1079,7 +1097,7 @@ function CustomerSupport() {
                             <Shield className='mr-2 h-4 w-4' />
                             {t('staffSidebar.documents')}
                           </DropdownMenuItem>
-                          <DropdownMenuSeparator />
+                          <DropdownMenuSeparator /> */}
                           <DropdownMenuItem
                             onClick={() =>
                               handleUpdateStatus(customer.id, 'SUSPENDED')

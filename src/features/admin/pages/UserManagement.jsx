@@ -1,5 +1,11 @@
-import { FilterIcon, PlusIcon, SearchIcon } from 'lucide-react';
-import { useState } from 'react';
+import {
+  FilterIcon,
+  PlusIcon,
+  SearchIcon,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { MoreVerticalIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -14,6 +20,13 @@ import {
 } from '../../shared/components/ui/dropdown-menu';
 import { Input } from '../../shared/components/ui/input';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '../../shared/components/ui/dialog';
+import {
   Table,
   TableBody,
   TableCell,
@@ -24,6 +37,7 @@ import {
 import UserDetails from '../components/renter/UserDetails';
 import { UserForm } from '../components/renter/UserForm';
 import { useUsers } from '../hooks/useUsers';
+import DocumentVerification from '../../staff/components/document-verification';
 
 export default function UserManagement() {
   const { t } = useTranslation();
@@ -31,13 +45,19 @@ export default function UserManagement() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isDocVerifyOpen, setIsDocVerifyOpen] = useState(false);
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToSuspend, setUserToSuspend] = useState(null);
   const [userToDelete, setUserToDelete] = useState(null);
 
-  const { users, loading, createUser, suspendUser, deleteUser } = useUsers();
+  const { users, loading, createUser, suspendUser, deleteUser, fetchUsers } =
+    useUsers();
+
+  // Pagination state: 10 users per page
+  const [page, setPage] = useState(1);
+  const limit = 10;
 
   const filteredUsers = users.filter(user => {
     const matchesSearch =
@@ -49,9 +69,25 @@ export default function UserManagement() {
     return matchesSearch && matchesStatus;
   });
 
+  // Derived pagination data
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / limit));
+  const currentUsers = filteredUsers.slice((page - 1) * limit, page * limit);
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+
+  // Reset to first page when filters/search change
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, filterStatus]);
+
   const handleViewDetails = userId => {
     setSelectedUserId(userId);
     setIsDetailsOpen(true);
+  };
+
+  const handleViewDocuments = userId => {
+    setSelectedUserId(userId);
+    setIsDocVerifyOpen(true);
   };
 
   const getStatusBadgeVariant = status => {
@@ -73,38 +109,64 @@ export default function UserManagement() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className='flex items-center justify-between'>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className='text-3xl font-bold tracking-tight'>
             {t('userManagement.title')}
           </h1>
-          <p className="text-muted-foreground">
+          <p className='text-muted-foreground'>
             {t('userManagement.description')}
           </p>
         </div>
         <Button onClick={() => setIsCreateFormOpen(true)}>
-          <PlusIcon className="mr-2 h-4 w-4" />
+          <PlusIcon className='mr-2 h-4 w-4' />
           {t('userManagement.buttons.addUser')}
         </Button>
       </div>
 
+      {/* Stats (moved to top) */}
+      <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold'>{users.length}</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('userManagement.stats.totalUsers')}
+          </div>
+        </div>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold'>
+            {users.filter(u => u.accountStatus === 'ACTIVE').length}
+          </div>
+          <div className='text-sm text-muted-foreground'>
+            {t('userManagement.stats.activeUsers')}
+          </div>
+        </div>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold'>
+            {users.filter(u => u.accountStatus === 'SUSPENDED').length}
+          </div>
+          <div className='text-sm text-muted-foreground'>
+            {t('userManagement.stats.suspendedUsers')}
+          </div>
+        </div>
+      </div>
+
       {/* Filters */}
-      <div className="flex items-center space-x-4">
-        <div className="relative flex-1 max-w-sm">
-          <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <div className='flex items-center space-x-4'>
+        <div className='relative flex-1 max-w-sm'>
+          <SearchIcon className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
           <Input
             placeholder={t('userManagement.searchPlaceholder')}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className='pl-10'
           />
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline">
-              <FilterIcon className="mr-2 h-4 w-4" />
+            <Button variant='outline'>
+              <FilterIcon className='mr-2 h-4 w-4' />
               {t('userManagement.statusLabel')}:{' '}
               {filterStatus === 'all'
                 ? t('userManagement.statusAll')
@@ -129,7 +191,7 @@ export default function UserManagement() {
       </div>
 
       {/* Users Table */}
-      <div className="rounded-md border">
+      <div className='rounded-md border'>
         <Table>
           <TableHeader>
             <TableRow>
@@ -144,7 +206,7 @@ export default function UserManagement() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">
+                <TableCell colSpan={6} className='text-center py-8'>
                   {t('common.loading')}
                 </TableCell>
               </TableRow>
@@ -152,15 +214,15 @@ export default function UserManagement() {
               <TableRow>
                 <TableCell
                   colSpan={6}
-                  className="text-center py-8 text-muted-foreground"
+                  className='text-center py-8 text-muted-foreground'
                 >
                   {t('common.noData')}
                 </TableCell>
               </TableRow>
             ) : (
-              filteredUsers.map(user => (
+              currentUsers.map(user => (
                 <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.name}</TableCell>
+                  <TableCell className='font-medium'>{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.phone}</TableCell>
                   <TableCell>
@@ -172,22 +234,27 @@ export default function UserManagement() {
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreVerticalIcon className="h-4 w-4" />
+                        <Button variant='ghost' className='h-8 w-8 p-0'>
+                          <MoreVerticalIcon className='h-4 w-4' />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                      <DropdownMenuContent align='end'>
                         <DropdownMenuItem
                           onClick={() => handleViewDetails(user.id)}
                         >
                           {t('userManagement.action.viewDetails')}
                         </DropdownMenuItem>
+                        {/* <DropdownMenuItem
+                          onClick={() => handleViewDocuments(user.id)}
+                        >
+                          {t('staffSidebar.documents')}
+                        </DropdownMenuItem> */}
                         <DropdownMenuItem
                           onClick={() => {
                             setUserToSuspend(user.id);
                             setSuspendDialogOpen(true);
                           }}
-                          className="text-orange-600"
+                          className='text-orange-600'
                         >
                           {t('userManagement.action.suspend')}
                         </DropdownMenuItem>
@@ -196,7 +263,7 @@ export default function UserManagement() {
                             setUserToDelete(user.id);
                             setDeleteDialogOpen(true);
                           }}
-                          className="text-red-600"
+                          className='text-red-600'
                         >
                           {t('userManagement.action.delete')}
                         </DropdownMenuItem>
@@ -210,29 +277,35 @@ export default function UserManagement() {
         </Table>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="rounded-lg border p-4">
-          <div className="text-2xl font-bold">{users.length}</div>
-          <div className="text-sm text-muted-foreground">
-            {t('userManagement.stats.totalUsers')}
-          </div>
+      {/* Pagination Controls (match Customer Management style) */}
+      <div className='flex items-center justify-between px-4 py-3 border-t'>
+        <div className='text-sm text-muted-foreground'>
+          Hiển thị {filteredUsers.length === 0 ? 0 : startIndex + 1}–
+          {Math.min(endIndex, filteredUsers.length)} trong{' '}
+          {filteredUsers.length} người dùng
         </div>
-        <div className="rounded-lg border p-4">
-          <div className="text-2xl font-bold">
-            {users.filter(u => u.accountStatus === 'ACTIVE').length}
-          </div>
-          <div className="text-sm text-muted-foreground">
-            {t('userManagement.stats.activeUsers')}
-          </div>
-        </div>
-        <div className="rounded-lg border p-4">
-          <div className="text-2xl font-bold">
-            {users.filter(u => u.accountStatus === 'SUSPENDED').length}
-          </div>
-          <div className="text-sm text-muted-foreground">
-            {t('userManagement.stats.suspendedUsers')}
-          </div>
+        <div className='flex items-center gap-2'>
+          <Button
+            variant='outline'
+            size='sm'
+            disabled={page === 1}
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+          >
+            <ChevronLeft className='mr-1 h-4 w-4' />
+            Trước
+          </Button>
+          <span className='text-sm'>
+            Trang {page}/{totalPages}
+          </span>
+          <Button
+            variant='outline'
+            size='sm'
+            disabled={page === totalPages}
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+          >
+            Sau
+            <ChevronRight className='ml-1 h-4 w-4' />
+          </Button>
         </div>
       </div>
 
@@ -242,6 +315,28 @@ export default function UserManagement() {
         onClose={() => setIsDetailsOpen(false)}
         userId={selectedUserId}
       />
+
+      {/* Document Verification
+      <Dialog open={isDocVerifyOpen} onOpenChange={setIsDocVerifyOpen}>
+        <DialogContent className='max-w-5xl'>
+          <DialogHeader>
+            <DialogTitle>{t('staffSidebar.documents')}</DialogTitle>
+            <DialogDescription>
+              {t('staffDocuments.description', {
+                defaultValue: 'Verify customer documents',
+              })}
+            </DialogDescription>
+          </DialogHeader>
+          <DocumentVerification
+            userId={selectedUserId}
+            onVerificationUpdated={() => {
+              // Sau khi duyệt/từ chối tài liệu, làm mới danh sách
+              // để hiển thị trạng thái và ảnh tài liệu mới nhất.
+              fetchUsers();
+            }}
+          />
+        </DialogContent>
+      </Dialog> */}
 
       {/* Form */}
       <UserForm
@@ -264,7 +359,7 @@ export default function UserManagement() {
         }}
         confirmText={t('common.suspend')}
         cancelText={t('common.cancel')}
-        confirmVariant="destructive"
+        confirmVariant='destructive'
       />
 
       <ConfirmDialog
@@ -280,7 +375,7 @@ export default function UserManagement() {
         }}
         confirmText={t('common.delete')}
         cancelText={t('common.cancel')}
-        confirmVariant="destructive"
+        confirmVariant='destructive'
       />
     </div>
   );

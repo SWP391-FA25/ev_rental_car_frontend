@@ -389,7 +389,7 @@
       "close": "Đóng"
     },
     "notes": {
-      "emailCannotChange": "Email không thể thay đổi"
+      "emailCannotChange": "Thay đổi email có thể yêu cầu xác thực lại"
     }
   },
   "staffManagement": {
