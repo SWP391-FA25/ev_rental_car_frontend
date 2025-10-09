@@ -1142,7 +1142,9 @@
       "preview": "Preview",
       "approve": "Approve",
       "reject": "Reject",
-      "download": "Download"
+      "download": "Download",
+      "batchApprove": "Batch Approve",
+      "batchReject": "Batch Reject"
     },
     "preview": {
       "title": "Document Preview",

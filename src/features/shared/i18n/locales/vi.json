@@ -846,7 +846,9 @@
       "preview": "Xem trước",
       "approve": "Duyệt",
       "reject": "Từ chối",
-      "download": "Tải xuống"
+      "download": "Tải xuống",
+      "batchApprove": "Duyệt hàng loạt",
+      "batchReject": "Từ chối hàng loạt"
     },
     "preview": {
       "title": "Xem trước tài liệu",
