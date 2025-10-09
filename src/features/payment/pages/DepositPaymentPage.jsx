@@ -145,13 +145,55 @@ export default function DepositPaymentPage() {
                 <span className='text-sm'>{booking.station.name}</span>
               </div>
 
-              <div className='flex justify-between items-center'>
-                <span className='text-sm text-muted-foreground'>
-                  Total Amount:
-                </span>
-                <span className='font-semibold'>
-                  {formatCurrency(booking.totalAmount, 'VND')}
-                </span>
+              {/* Price Breakdown */}
+              <div className='space-y-2'>
+                <div className='flex justify-between items-center'>
+                  <span className='text-sm text-muted-foreground'>
+                    Base Price:
+                  </span>
+                  <span className='text-sm'>
+                    {formatCurrency(booking.basePrice || 0, 'VND')}
+                  </span>
+                </div>
+
+                <div className='flex justify-between items-center'>
+                  <span className='text-sm text-muted-foreground'>
+                    Insurance:
+                  </span>
+                  <span className='text-sm'>
+                    {formatCurrency(booking.insuranceAmount || 0, 'VND')}
+                  </span>
+                </div>
+
+                <div className='flex justify-between items-center'>
+                  <span className='text-sm text-muted-foreground'>Tax:</span>
+                  <span className='text-sm'>
+                    {formatCurrency(booking.taxAmount || 0, 'VND')}
+                  </span>
+                </div>
+
+                {booking.discountAmount > 0 && (
+                  <div className='flex justify-between items-center text-green-600'>
+                    <span className='text-sm'>
+                      Discount (
+                      {booking.promotionBookings?.[0]?.promotion?.code ||
+                        'Applied'}
+                      ):
+                    </span>
+                    <span className='text-sm'>
+                      -{formatCurrency(booking.discountAmount, 'VND')}
+                    </span>
+                  </div>
+                )}
+
+                <div className='border-t pt-2 flex justify-between items-center'>
+                  <span className='text-sm text-muted-foreground'>
+                    Total Amount:
+                  </span>
+                  <span className='font-semibold'>
+                    {formatCurrency(booking.totalAmount, 'VND')}
+                  </span>
+                </div>
               </div>
 
               <div className='border-t pt-4'>

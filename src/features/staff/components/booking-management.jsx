@@ -3,6 +3,7 @@ import {
   Car,
   CheckCircle,
   Clock,
+  CreditCard,
   Eye,
   Filter,
   MoreVertical,
@@ -52,6 +53,7 @@ const BookingManagement = () => {
   const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [depositFilter, setDepositFilter] = useState('ALL');
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState(null);
   const [pagination, setPagination] = useState({
@@ -73,6 +75,8 @@ const BookingManagement = () => {
 
         if (statusFilter && statusFilter !== 'ALL')
           params.append('status', statusFilter);
+        if (depositFilter && depositFilter !== 'ALL')
+          params.append('depositStatus', depositFilter);
         if (searchTerm) params.append('search', searchTerm);
 
         const response = await apiClient.get(
@@ -90,7 +94,7 @@ const BookingManagement = () => {
         setLoading(false);
       }
     },
-    [statusFilter, searchTerm]
+    [statusFilter, depositFilter, searchTerm]
   );
 
   // Fetch booking details
@@ -227,6 +231,49 @@ const BookingManagement = () => {
     );
   };
 
+  // Get deposit status badge
+  const getDepositBadge = depositStatus => {
+    const depositConfig = {
+      PENDING: {
+        variant: 'outline',
+        icon: Clock,
+        label: 'Pending',
+        color: 'text-orange-600',
+      },
+      PAID: {
+        variant: 'default',
+        icon: CheckCircle,
+        label: 'Paid',
+        color: 'text-green-600',
+      },
+      FAILED: {
+        variant: 'destructive',
+        icon: XCircle,
+        label: 'Failed',
+        color: 'text-red-600',
+      },
+      REFUNDED: {
+        variant: 'secondary',
+        icon: CreditCard,
+        label: 'Refunded',
+        color: 'text-blue-600',
+      },
+    };
+
+    const config = depositConfig[depositStatus] || depositConfig.PENDING;
+    const Icon = config.icon;
+
+    return (
+      <Badge
+        variant={config.variant}
+        className={`flex items-center gap-1 ${config.color}`}
+      >
+        <Icon className='h-3 w-3' />
+        {config.label}
+      </Badge>
+    );
+  };
+
   // Format currency
   const formatPrice = amount => {
     return formatCurrency(amount, 'VND');
@@ -316,6 +363,107 @@ const BookingManagement = () => {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant='outline'>
+              <CreditCard className='mr-2 h-4 w-4' />
+              Deposit: {depositFilter === 'ALL' ? 'All' : depositFilter}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem
+              onClick={() => {
+                setDepositFilter('ALL');
+                fetchBookings(1);
+              }}
+            >
+              All Deposits
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                setDepositFilter('PENDING');
+                fetchBookings(1);
+              }}
+            >
+              Pending Payment
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                setDepositFilter('PAID');
+                fetchBookings(1);
+              }}
+            >
+              Paid
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                setDepositFilter('FAILED');
+                fetchBookings(1);
+              }}
+            >
+              Failed
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                setDepositFilter('REFUNDED');
+                fetchBookings(1);
+              }}
+            >
+              Refunded
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Summary Stats */}
+      <div className='grid grid-cols-1 md:grid-cols-6 gap-4'>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold text-foreground'>
+            {bookings.length}
+          </div>
+          <div className='text-sm text-muted-foreground'>Booking Amount</div>
+        </div>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold text-orange-600'>
+            {
+              bookings.filter(b => (b.depositStatus || 'PENDING') === 'PENDING')
+                .length
+            }
+          </div>
+          <div className='text-sm text-muted-foreground'>Pending Deposits</div>
+        </div>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold text-green-600'>
+            {
+              bookings.filter(b => (b.depositStatus || 'PENDING') === 'PAID')
+                .length
+            }
+          </div>
+          <div className='text-sm text-muted-foreground'>Paid Deposits</div>
+        </div>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold text-blue-600'>
+            {bookings.filter(b => b.status === 'IN_PROGRESS').length}
+          </div>
+          <div className='text-sm text-muted-foreground'>In Progress</div>
+        </div>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold text-green-600'>
+            {bookings.filter(b => b.status === 'COMPLETED').length}
+          </div>
+          <div className='text-sm text-muted-foreground'>Completed</div>
+        </div>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold text-blue-600'>
+            {
+              bookings.filter(
+                b => (b.depositStatus || 'PENDING') === 'REFUNDED'
+              ).length
+            }
+          </div>
+          <div className='text-sm text-muted-foreground'>Refunded</div>
+        </div>
       </div>
 
       {/* Bookings Table */}
@@ -328,7 +476,7 @@ const BookingManagement = () => {
               <TableHead>Station</TableHead>
               <TableHead>Date & Time</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Total Amount</TableHead>
+              <TableHead>Deposit Status</TableHead>
               <TableHead className='w-[70px]'>Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -384,12 +532,10 @@ const BookingManagement = () => {
                   </TableCell>
                   <TableCell>{getStatusBadge(booking.status)}</TableCell>
                   <TableCell>
-                    <div>
-                      <p className='font-medium'>
-                        {formatPrice(booking.totalAmount)}
-                      </p>
-                      <p className='text-sm text-muted-foreground'>
-                        Deposit: {formatPrice(booking.depositAmount)}
+                    <div className='space-y-1 flex flex-col items-center'>
+                      {getDepositBadge(booking.depositStatus || 'PENDING')}
+                      <p className='text-xs text-muted-foreground'>
+                        {formatPrice(booking.depositAmount)}
                       </p>
                     </div>
                   </TableCell>
@@ -407,15 +553,26 @@ const BookingManagement = () => {
                           <Eye className='mr-2 h-4 w-4' />
                           View Details
                         </DropdownMenuItem>
-                        {booking.status === 'PENDING' && (
-                          <DropdownMenuItem
-                            onClick={() => confirmBooking(booking.id)}
-                            className='text-green-600'
-                          >
-                            <CheckCircle className='mr-2 h-4 w-4' />
-                            Confirm Booking
-                          </DropdownMenuItem>
-                        )}
+                        {booking.status === 'PENDING' &&
+                          booking.depositStatus === 'PAID' && (
+                            <DropdownMenuItem
+                              onClick={() => confirmBooking(booking.id)}
+                              className='text-green-600'
+                            >
+                              <CheckCircle className='mr-2 h-4 w-4' />
+                              Confirm Booking
+                            </DropdownMenuItem>
+                          )}
+                        {booking.status === 'PENDING' &&
+                          booking.depositStatus !== 'PAID' && (
+                            <DropdownMenuItem
+                              disabled
+                              className='text-muted-foreground'
+                            >
+                              <Clock className='mr-2 h-4 w-4' />
+                              Waiting for Deposit
+                            </DropdownMenuItem>
+                          )}
                         {booking.status === 'CONFIRMED' && (
                           <DropdownMenuItem
                             onClick={() => startRental(booking.id)}
@@ -459,32 +616,6 @@ const BookingManagement = () => {
             )}
           </TableBody>
         </Table>
-      </div>
-
-      {/* Summary Stats */}
-      <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
-        <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>{pagination.totalItems}</div>
-          <div className='text-sm text-muted-foreground'>Total Bookings</div>
-        </div>
-        <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>
-            {bookings.filter(b => b.status === 'PENDING').length}
-          </div>
-          <div className='text-sm text-muted-foreground'>Pending</div>
-        </div>
-        <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>
-            {bookings.filter(b => b.status === 'IN_PROGRESS').length}
-          </div>
-          <div className='text-sm text-muted-foreground'>In Progress</div>
-        </div>
-        <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>
-            {bookings.filter(b => b.status === 'COMPLETED').length}
-          </div>
-          <div className='text-sm text-muted-foreground'>Completed</div>
-        </div>
       </div>
 
       {/* Pagination */}

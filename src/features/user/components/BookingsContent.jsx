@@ -223,7 +223,7 @@ export default function BookingsContent() {
           bookings.map(booking => (
             <Card
               key={booking.id}
-              className='p-4 md:p-6 hover:shadow-md transition-shadow'
+              className='p-2 md:p-4 hover:shadow-md transition-shadow'
               data-booking-card
             >
               <div className='grid grid-cols-1 md:grid-cols-[240px_1fr_auto] gap-4 md:gap-6 items-center'>
@@ -240,22 +240,9 @@ export default function BookingsContent() {
                 </div>
 
                 {/* Details */}
-                <div className='space-y-3'>
-                  {/* Header with badges */}
-                  <div className='flex items-center gap-3'>
-                    {/* <Badge variant='outline' className='text-xs font-mono'>
-                      Booking #{booking.id.substring(0, 8)}
-                    </Badge>
-                    <Badge
-                      variant={getStatusBadgeVariant(booking.status)}
-                      className='text-xs font-medium'
-                    >
-                      {getStatusLabel(booking.status)}
-                    </Badge> */}
-                  </div>
-
+                <div className='space-y-2'>
                   {/* Vehicle info */}
-                  <div className='flex items-center gap-3'>
+                  <div className='flex gap-3'>
                     <div>
                       <h3 className='font-semibold text-lg text-foreground'>
                         {booking.vehicle?.brand} {booking.vehicle?.model}
@@ -265,12 +252,12 @@ export default function BookingsContent() {
                       </p>
                     </div>
                     <div>
-                      <Badge
+                      {/* <Badge
                         variant='outline'
                         className='text-xs block font-mono'
                       >
                         Booking #{booking.id.substring(0, 8)}
-                      </Badge>
+                      </Badge */}
                       <Badge
                         variant={getStatusBadgeVariant(booking.status)}
                         className='text-xs font-medium'
@@ -283,17 +270,13 @@ export default function BookingsContent() {
                   {/* Booking details grid */}
                   <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm'>
                     {/* Rental period */}
-                    <div className='flex items-start gap-3'>
+                    <div className='flex items-start  gap-3'>
                       <CalendarDays className='w-4 h-4 mt-0.5 text-muted-foreground flex-shrink-0' />
                       <div className='min-w-0'>
                         <p className='text-muted-foreground text-xs mb-1'>
                           Thời gian thuê
                         </p>
                         <p className='font-medium text-foreground'>
-                          {formatDateOnly(booking.startTime)} -{' '}
-                          {formatDateOnly(booking.endTime)}
-                        </p>
-                        <p className='text-xs text-muted-foreground'>
                           {formatDate(booking.startTime)} -{' '}
                           {formatDate(booking.endTime)}
                         </p>

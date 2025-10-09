@@ -4,8 +4,18 @@ import Navbar from '@/features/shared/components/homepage/Navbar';
 import { Alert, AlertDescription } from '@/features/shared/components/ui/alert';
 import { Button } from '@/features/shared/components/ui/button';
 import { Card } from '@/features/shared/components/ui/card';
-import { Input } from '@/features/shared/components/ui/input';
+import { DatePicker } from '@/features/shared/components/ui/date-picker';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/features/shared/components/ui/select';
 import { Skeleton } from '@/features/shared/components/ui/skeleton';
+import { TimePicker } from '@/features/shared/components/ui/time-picker';
+import { apiClient } from '@/features/shared/lib/apiClient';
+import { endpoints } from '@/features/shared/lib/endpoints';
 import { formatCurrency } from '@/features/shared/lib/utils';
 import gsap from 'gsap';
 import {
@@ -64,12 +74,14 @@ export default function CarDetailPage() {
   const [car, setCar] = useState(null);
   const [loadingCar, setLoadingCar] = useState(true);
   const [selectedDates, setSelectedDates] = useState({
-    startDate: '',
-    endDate: '',
+    startDate: undefined,
+    endDate: undefined,
     startTime: '09:00',
     endTime: '18:00',
   });
-  const [promotionCode, setPromotionCode] = useState('');
+  const [promotions, setPromotions] = useState([]);
+  const [selectedPromotionId, setSelectedPromotionId] = useState('none');
+  const [loadingPromotions, setLoadingPromotions] = useState(false);
   const heroRef = useRef(null);
   const chipsRef = useRef(null);
   const sidebarRef = useRef(null);
@@ -88,6 +100,23 @@ export default function CarDetailPage() {
     };
     fetchVehicle();
   }, [id, getVehicleById]);
+
+  // Fetch active promotions
+  useEffect(() => {
+    const fetchPromotions = async () => {
+      try {
+        setLoadingPromotions(true);
+        const response = await apiClient.get(endpoints.promotions.getActive());
+        setPromotions(response.data.promotions || []);
+      } catch (error) {
+        console.error('Error fetching promotions:', error);
+        toast.error('Failed to load promotions');
+      } finally {
+        setLoadingPromotions(false);
+      }
+    };
+    fetchPromotions();
+  }, []);
 
   useEffect(() => {
     if (car && heroRef.current) {
@@ -125,10 +154,18 @@ export default function CarDetailPage() {
     if (!selectedDates.startDate || !selectedDates.endDate || !car?.pricing)
       return null;
 
-    const start = new Date(
-      `${selectedDates.startDate}T${selectedDates.startTime}`
+    const start = new Date(selectedDates.startDate);
+    start.setHours(
+      parseInt(selectedDates.startTime.split(':')[0]),
+      parseInt(selectedDates.startTime.split(':')[1])
     );
-    const end = new Date(`${selectedDates.endDate}T${selectedDates.endTime}`);
+
+    const end = new Date(selectedDates.endDate);
+    end.setHours(
+      parseInt(selectedDates.endTime.split(':')[0]),
+      parseInt(selectedDates.endTime.split(':')[1])
+    );
+
     const durationHours = Math.ceil((end - start) / (1000 * 60 * 60));
 
     const basePrice = car.pricing.hourlyRate * durationHours;
@@ -136,13 +173,26 @@ export default function CarDetailPage() {
     const taxAmount = basePrice * 0.08; // 8%
     const subtotal = basePrice + insuranceAmount + taxAmount;
 
+    // Calculate discount if promotion is selected
+    let discountAmount = 0;
+    if (selectedPromotionId && selectedPromotionId !== 'none') {
+      const promotion = promotions.find(p => p.id === selectedPromotionId);
+      if (promotion) {
+        discountAmount = subtotal * promotion.discount;
+      }
+    }
+
+    const finalTotal = subtotal - discountAmount;
+
     return {
       basePrice,
       insuranceAmount,
       taxAmount,
       subtotal,
+      discountAmount,
+      finalTotal,
       depositAmount: car.pricing.depositAmount,
-      totalPayable: subtotal + car.pricing.depositAmount,
+      totalPayable: finalTotal + car.pricing.depositAmount,
       durationHours,
     };
   };
@@ -156,11 +206,16 @@ export default function CarDetailPage() {
     }
 
     try {
-      const startDateTime = new Date(
-        `${selectedDates.startDate}T${selectedDates.startTime}`
+      const startDateTime = new Date(selectedDates.startDate);
+      startDateTime.setHours(
+        parseInt(selectedDates.startTime.split(':')[0]),
+        parseInt(selectedDates.startTime.split(':')[1])
       );
-      const endDateTime = new Date(
-        `${selectedDates.endDate}T${selectedDates.endTime}`
+
+      const endDateTime = new Date(selectedDates.endDate);
+      endDateTime.setHours(
+        parseInt(selectedDates.endTime.split(':')[0]),
+        parseInt(selectedDates.endTime.split(':')[1])
       );
 
       const bookingData = {
@@ -168,7 +223,10 @@ export default function CarDetailPage() {
         stationId: car.stationId,
         startTime: startDateTime.toISOString(),
         endTime: endDateTime.toISOString(),
-        promotions: promotionCode ? [promotionCode] : [],
+        promotions:
+          selectedPromotionId && selectedPromotionId !== 'none'
+            ? [selectedPromotionId]
+            : [],
         // pickupLocation và dropoffLocation không cần vì station-based
       };
 
@@ -350,31 +408,31 @@ export default function CarDetailPage() {
                     <label className='text-xs text-muted-foreground mb-1 block'>
                       Pickup Date
                     </label>
-                    <Input
-                      type='date'
+                    <DatePicker
                       value={selectedDates.startDate}
-                      onChange={e =>
+                      onChange={date =>
                         setSelectedDates(prev => ({
                           ...prev,
-                          startDate: e.target.value,
+                          startDate: date,
                         }))
                       }
-                      min={new Date().toISOString().split('T')[0]}
+                      placeholder='Select pickup date'
+                      minDate={new Date()}
                     />
                   </div>
                   <div>
                     <label className='text-xs text-muted-foreground mb-1 block'>
                       Pickup Time
                     </label>
-                    <Input
-                      type='time'
+                    <TimePicker
                       value={selectedDates.startTime}
-                      onChange={e =>
+                      onChange={time =>
                         setSelectedDates(prev => ({
                           ...prev,
-                          startTime: e.target.value,
+                          startTime: time,
                         }))
                       }
+                      placeholder='Select pickup time'
                     />
                   </div>
                 </div>
@@ -384,44 +442,62 @@ export default function CarDetailPage() {
                     <label className='text-xs text-muted-foreground mb-1 block'>
                       Return Date
                     </label>
-                    <Input
-                      type='date'
+                    <DatePicker
                       value={selectedDates.endDate}
-                      onChange={e =>
+                      onChange={date =>
                         setSelectedDates(prev => ({
                           ...prev,
-                          endDate: e.target.value,
+                          endDate: date,
                         }))
                       }
-                      min={selectedDates.startDate}
+                      placeholder='Select return date'
+                      minDate={selectedDates.startDate || new Date()}
                     />
                   </div>
                   <div>
                     <label className='text-xs text-muted-foreground mb-1 block'>
                       Return Time
                     </label>
-                    <Input
-                      type='time'
+                    <TimePicker
                       value={selectedDates.endTime}
-                      onChange={e =>
+                      onChange={time =>
                         setSelectedDates(prev => ({
                           ...prev,
-                          endTime: e.target.value,
+                          endTime: time,
                         }))
                       }
+                      placeholder='Select return time'
                     />
                   </div>
                 </div>
 
                 <div>
                   <label className='text-xs text-muted-foreground mb-1 block'>
-                    Promotion Code (Optional)
+                    Promotion (Optional)
                   </label>
-                  <Input
-                    placeholder='Enter promotion code'
-                    value={promotionCode}
-                    onChange={e => setPromotionCode(e.target.value)}
-                  />
+                  <Select
+                    value={selectedPromotionId}
+                    onValueChange={setSelectedPromotionId}
+                    disabled={loadingPromotions}
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={
+                          loadingPromotions
+                            ? 'Loading promotions...'
+                            : 'Select promotion'
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='none'>No promotion</SelectItem>
+                      {promotions.map(promotion => (
+                        <SelectItem key={promotion.id} value={promotion.id}>
+                          {promotion.code} - {promotion.discount}%
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Price Breakdown */}
@@ -445,6 +521,22 @@ export default function CarDetailPage() {
                         {formatCurrency(estimatedPrice.taxAmount, 'VND')}
                       </span>
                     </div>
+                    {estimatedPrice.discountAmount > 0 && (
+                      <div className='flex justify-between text-sm text-green-600'>
+                        <span>
+                          Discount (
+                          {
+                            promotions.find(p => p.id === selectedPromotionId)
+                              ?.code
+                          }
+                          )
+                        </span>
+                        <span>
+                          -
+                          {formatCurrency(estimatedPrice.discountAmount, 'VND')}
+                        </span>
+                      </div>
+                    )}
                     <div className='flex justify-between text-sm'>
                       <span>Deposit</span>
                       <span>
