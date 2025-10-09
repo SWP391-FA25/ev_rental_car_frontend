@@ -41,6 +41,11 @@ const DocumentUpload = () => {
   });
   const [errors, setErrors] = useState({});
 
+  const isImageUrl = url => {
+    if (!url || typeof url !== 'string') return false;
+    return /(\.png|\.jpg|\.jpeg|\.gif|\.webp)$/i.test(url.split('?')[0]);
+  };
+
   useEffect(() => {
     fetchUserDocuments();
   }, []);
@@ -234,6 +239,13 @@ const DocumentUpload = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
+  // Chỉ hiển thị 2 loại tài liệu chính: CMND/Hộ chiếu (ID) và GPLX
+  const identityDoc = documents.find(
+    d => d.documentType === 'ID_CARD' || d.documentType === 'PASSPORT'
+  );
+  const licenseDoc = documents.find(d => d.documentType === 'DRIVERS_LICENSE');
+  const docsToShow = [identityDoc, licenseDoc].filter(Boolean);
+
   return (
     <div className='space-y-6'>
       <div>
@@ -270,7 +282,7 @@ const DocumentUpload = () => {
         <CardContent>
           <form onSubmit={handleUpload} className='space-y-6'>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-              <div className='space-y-4'>
+              <div className='space-y-10'>
                 <div>
                   <Label className='mb-2' htmlFor='documentType'>
                     Document Type *
@@ -421,11 +433,11 @@ const DocumentUpload = () => {
               </p>
             </div>
           ) : (
-            <div className='space-y-4'>
-              {documents.map(document => (
+            <div className='grid grid-cols-1 sm:grid-cols-2 gap-6 justify-items-center'>
+              {docsToShow.map(document => (
                 <div
                   key={document.id}
-                  className='flex flex-col md:flex-row items-start md:items-center justify-between p-4 border rounded-lg bg-card gap-4'
+                  className='w-full max-w-[520px] p-5 border rounded-lg bg-card flex flex-col gap-3 hover:shadow-lg transition-shadow'
                 >
                   <div className='flex items-start gap-4'>
                     <div className='bg-muted p-3 rounded-lg'>
@@ -455,10 +467,21 @@ const DocumentUpload = () => {
                             </div>
                           )}
                       </div>
+                      {document.fileUrl && isImageUrl(document.fileUrl) && (
+                        <div className='mt-3'>
+                          <img
+                            src={document.fileUrl}
+                            alt={`${getDocumentTypeLabel(
+                              document.documentType
+                            )} preview`}
+                            className='w-full max-w-[420px] h-52 object-cover rounded-lg mx-auto shadow-md border'
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  <div className='flex gap-2'>
+                  <div className='flex gap-2 justify-center'>
                     {document.fileUrl && (
                       <a
                         href={document.fileUrl}
