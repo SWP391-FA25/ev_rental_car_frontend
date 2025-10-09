@@ -29,6 +29,7 @@ export const endpoints = {
       `/api/stations/station/getVehiclesAtStation/${stationId}`,
     getStaffAtStation: stationId =>
       `/api/stations/station/getStaffAtStation/${stationId}`,
+    getVehiclesDuringPeriod: () => '/api/stations/vehicles-availability',
   },
   vehicles: {
     getAll: () => '/api/vehicles',
