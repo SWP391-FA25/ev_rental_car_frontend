@@ -13,6 +13,9 @@ import SignUp from '@/features/auth/components/SignUp.jsx';
 import VerifyEmail from '@/features/auth/components/VerifyEmail.jsx';
 import CarDetailPage from '@/features/cars/components/CarDetailPage.jsx';
 import CarsPage from '@/features/cars/components/CarsPage.jsx';
+import DepositPaymentPage from '@/features/payment/pages/DepositPaymentPage.jsx';
+import PaymentCancelPage from '@/features/payment/pages/PaymentCancelPage.jsx';
+import PaymentSuccessPage from '@/features/payment/pages/PaymentSuccessPage.jsx';
 import Home from '@/features/shared/components/Home.jsx';
 import { NotificationPage } from '@/features/shared/components/NotificationPage';
 import PolicyPage from '@/features/shared/components/PolicyPage.jsx';
@@ -29,6 +32,9 @@ export const router = createBrowserRouter([
   { path: '/cars', element: <CarsPage /> },
   { path: '/cars/:id', element: <CarDetailPage /> },
   { path: '/policy', element: <PolicyPage /> },
+  { path: '/payment/deposit', element: <DepositPaymentPage /> },
+  { path: '/payment/success', element: <PaymentSuccessPage /> },
+  { path: '/payment/cancel', element: <PaymentCancelPage /> },
   { path: '/login', element: <Login /> },
   { path: '/signup', element: <SignUp /> },
   { path: '/verify-email', element: <VerifyEmail /> },

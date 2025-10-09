@@ -126,6 +126,7 @@
   "staffSidebar": {
     "dashboard": "Dashboard",
     "cars": "Manage Cars",
+    "bookings": "Bookings",
     "stations": "Stations",
     "customers": "Customers",
     "payments": "Payments",

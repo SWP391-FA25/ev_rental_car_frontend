@@ -57,7 +57,7 @@ export default function SignUp() {
           autoClose: 4000,
         }
       );
-      navigate('/verify-email');
+      navigate('/user');
     } catch (err) {
       setError(err?.message || 'Signup failed');
     }
