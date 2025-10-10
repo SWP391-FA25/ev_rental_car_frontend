@@ -8,8 +8,8 @@ import {
   TrashIcon,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
@@ -47,9 +47,10 @@ import {
   TableRow,
 } from '../../shared/components/ui/table';
 import { apiClient } from '../../shared/lib/apiClient';
+import { endpoints } from '../../shared/lib/endpoints';
 import { VehicleDetails } from '../../admin/components/vehicle/VehicleDetails';
 
-export function CarManagement() {
+export default function VehicleManagement() {
   const { t } = useTranslation();
 
   // Vehicle status options
@@ -101,6 +102,13 @@ export function CarManagement() {
     batteryLevel: '',
     fuelType: '',
     status: 'AVAILABLE',
+    // Pricing fields
+    baseRate: '',
+    hourlyRate: '',
+    weeklyRate: '',
+    monthlyRate: '',
+    depositAmount: '',
+    insuranceRate: '',
   });
 
   // Load vehicles and stations
@@ -112,7 +120,9 @@ export function CarManagement() {
   const loadVehicles = async () => {
     try {
       setLoading(true);
+      console.debug('loadVehicles: requesting /api/vehicles');
       const response = await apiClient.get('/api/vehicles');
+      console.debug('loadVehicles response:', response);
       if (response.success) {
         const vehiclesData = response.data.vehicles || [];
         setVehicles(vehiclesData);
@@ -144,8 +154,11 @@ export function CarManagement() {
           imagesMap[result.vehicleId] = result.images;
         });
         setVehicleImages(imagesMap);
+      } else {
+        console.warn('loadVehicles unexpected response shape:', response);
       }
-    } catch (error) {
+    } catch (err) {
+      console.error('loadVehicles error:', err);
       toast.error(t('vehicle.messages.loadFailed'));
     } finally {
       setLoading(false);
@@ -154,22 +167,26 @@ export function CarManagement() {
 
   const loadStations = async () => {
     try {
+      console.debug('loadStations: requesting /api/stations');
       const response = await apiClient.get('/api/stations');
+      console.debug('loadStations response:', response);
       if (response.success) {
         setStations(response.data.stations || []);
       }
-    } catch (error) {
-      console.error('Failed to load stations:', error);
+    } catch (err) {
+      console.error('Failed to load stations:', err);
     }
   };
 
   const handleUpdateVehicle = async (vehicleId, updateData) => {
     try {
       setUpdateLoading(true);
+      console.debug('handleUpdateVehicle called', { vehicleId, updateData });
       const response = await apiClient.put(
         `/api/vehicles/${vehicleId}`,
         updateData
       );
+      console.debug('handleUpdateVehicle response:', response);
       if (response.success) {
         toast.success(t('vehicle.messages.updateSuccess'));
 
@@ -186,9 +203,10 @@ export function CarManagement() {
         loadVehicles();
         return response.data.vehicle;
       }
-    } catch (error) {
+    } catch (err) {
+      console.error('Update error', err);
       toast.error(t('vehicle.messages.updateFailed'));
-      throw error;
+      throw err;
     } finally {
       setUpdateLoading(false);
     }
@@ -212,9 +230,27 @@ export function CarManagement() {
 
   const handleCreateVehicle = async () => {
     try {
-      const response = await apiClient.post('/api/vehicles', formData);
+      setLoading(true);
+      const payload = {
+        ...formData,
+        year: formData.year ? Number(formData.year) : undefined,
+        seats: formData.seats ? Number(formData.seats) : undefined,
+        batteryLevel: formData.batteryLevel ? Number(formData.batteryLevel) : undefined,
+        baseRate: formData.baseRate ? Number(formData.baseRate) : undefined,
+        hourlyRate: formData.hourlyRate ? Number(formData.hourlyRate) : undefined,
+        weeklyRate: formData.weeklyRate ? Number(formData.weeklyRate) : undefined,
+        monthlyRate: formData.monthlyRate ? Number(formData.monthlyRate) : undefined,
+        depositAmount: formData.depositAmount ? Number(formData.depositAmount) : undefined,
+        insuranceRate: formData.insuranceRate ? Number(formData.insuranceRate) : undefined,
+      };
+      // Stringified payload log so you can copy/paste into API client or inspect exact body
+      console.debug('admin createVehicle payload (object):', payload);
+      try { console.debug('admin createVehicle payload (string):', JSON.stringify(payload)); } catch (e) { console.debug('payload stringify failed', e); }
 
-      if (response.success) {
+      const response = await apiClient.post(endpoints.vehicles.create(), payload);
+      console.debug('admin createVehicle response:', response);
+      // If apiClient wraps errors, also inspect response.data
+      if (response && response.success) {
         toast.success(t('vehicle.messages.createSuccess'));
         setIsCreateDialogOpen(false);
         resetForm();
@@ -223,18 +259,26 @@ export function CarManagement() {
         }
         loadVehicles();
       } else {
-        toast.error(t('vehicle.messages.createFailed'));
+        const msg = response?.data || response?.message || response?.error || JSON.stringify(response);
+        console.warn('admin create failed', response);
+        toast.error(t('vehicle.messages.createFailed') + (msg ? ': ' + (typeof msg === 'string' ? msg : JSON.stringify(msg)) : ''));
       }
-    } catch (error) {
-      toast.error(t('vehicle.messages.createFailed'));
+    } catch (err) {
+      // Log error response body (common with axios/fetch wrappers)
+      console.error('admin createVehicle error', err, 'response.data=', err?.response?.data);
+      const serverMsg = err?.response?.data?.message ?? err?.response?.data ?? err?.message ?? err;
+      toast.error((t('vehicle.messages.createFailed') || 'Create failed') + ': ' + (typeof serverMsg === 'string' ? serverMsg : JSON.stringify(serverMsg)));
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleHardDeleteVehicle = async vehicleId => {
     try {
+      console.debug('handleHardDeleteVehicle calling delete for', vehicleId);
       const response = await apiClient.delete(`/api/vehicles/${vehicleId}`);
-
-      if (response.success) {
+      console.debug('handleHardDeleteVehicle response:', response);
+      if (response && (response.success || response.status === 200)) {
         toast.success(t('vehicle.messages.deleteSuccess'));
         setVehicles(prev => prev.filter(vehicle => vehicle.id !== vehicleId));
         setVehicleImages(prev => {
@@ -244,9 +288,10 @@ export function CarManagement() {
         });
         loadVehicles();
       } else {
+        console.warn('delete returned unexpected:', response);
         toast.error(t('vehicle.messages.deleteFailed'));
       }
-    } catch (error) {
+    } catch {
       toast.error(t('vehicle.messages.deleteFailed'));
     }
   };
@@ -264,11 +309,19 @@ export function CarManagement() {
       batteryLevel: '',
       fuelType: '',
       status: 'AVAILABLE',
+      // Pricing fields
+      baseRate: '',
+      hourlyRate: '',
+      weeklyRate: '',
+      monthlyRate: '',
+      depositAmount: '',
+      insuranceRate: '',
     });
     setSelectedVehicle(null);
   };
 
   const openViewDialog = vehicle => {
+    console.debug('openViewDialog vehicle:', vehicle?.id);
     setSelectedVehicle(vehicle);
     setIsViewDialogOpen(true);
   };
@@ -341,7 +394,7 @@ export function CarManagement() {
               {t('vehicle.actions.add')}
             </Button>
           </DialogTrigger>
-          <DialogContent className='max-w-2xl'>
+          <DialogContent className='max-w-2xl max-h-[90vh] overflow-y-auto'>
             <DialogHeader>
               <DialogTitle>{t('vehicle.dialogs.create.title')}</DialogTitle>
               <DialogDescription>
@@ -505,7 +558,128 @@ export function CarManagement() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className='space-y-2'>
+                <Label htmlFor='status'>{t('vehicle.fields.status')}</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={value =>
+                    setFormData({ ...formData, status: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={t('vehicle.fields.statusPlaceholder')}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {VEHICLE_STATUS.map(status => (
+                      <SelectItem key={status.value} value={status.value}>
+                        {status.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
+            {/* Pricing Section */}
+            <div className='border-t pt-4'>
+              <h3 className='text-lg font-semibold mb-4'>
+                Pricing Information
+              </h3>
+              <div className='grid grid-cols-2 gap-4'>
+                <div className='space-y-2'>
+                  <Label htmlFor='baseRate'>Base Rate (Daily) *</Label>
+                  <Input
+                    id='baseRate'
+                    type='number'
+                    min='0'
+                    step='0.01'
+                    value={formData.baseRate}
+                    onChange={e =>
+                      setFormData({ ...formData, baseRate: e.target.value })
+                    }
+                    placeholder='200.00'
+                  />
+                </div>
+                <div className='space-y-2'>
+                  <Label htmlFor='hourlyRate'>Hourly Rate *</Label>
+                  <Input
+                    id='hourlyRate'
+                    type='number'
+                    min='0'
+                    step='0.01'
+                    value={formData.hourlyRate}
+                    onChange={e =>
+                      setFormData({ ...formData, hourlyRate: e.target.value })
+                    }
+                    placeholder='15.00'
+                  />
+                </div>
+                <div className='space-y-2'>
+                  <Label htmlFor='weeklyRate'>Weekly Rate</Label>
+                  <Input
+                    id='weeklyRate'
+                    type='number'
+                    min='0'
+                    step='0.01'
+                    value={formData.weeklyRate}
+                    onChange={e =>
+                      setFormData({ ...formData, weeklyRate: e.target.value })
+                    }
+                    placeholder='1200.00'
+                  />
+                </div>
+                <div className='space-y-2'>
+                  <Label htmlFor='monthlyRate'>Monthly Rate</Label>
+                  <Input
+                    id='monthlyRate'
+                    type='number'
+                    min='0'
+                    step='0.01'
+                    value={formData.monthlyRate}
+                    onChange={e =>
+                      setFormData({ ...formData, monthlyRate: e.target.value })
+                    }
+                    placeholder='4500.00'
+                  />
+                </div>
+                <div className='space-y-2'>
+                  <Label htmlFor='depositAmount'>Deposit Amount *</Label>
+                  <Input
+                    id='depositAmount'
+                    type='number'
+                    min='0'
+                    step='0.01'
+                    value={formData.depositAmount}
+                    onChange={e =>
+                      setFormData({
+                        ...formData,
+                        depositAmount: e.target.value,
+                      })
+                    }
+                    placeholder='500.00'
+                  />
+                </div>
+                <div className='space-y-2'>
+                  <Label htmlFor='insuranceRate'>Insurance Rate (%)</Label>
+                  <Input
+                    id='insuranceRate'
+                    type='number'
+                    min='0'
+                    max='1'
+                    step='0.01'
+                    value={formData.insuranceRate}
+                    onChange={e =>
+                      setFormData({
+                        ...formData,
+                        insuranceRate: e.target.value,
+                      })
+                    }
+                    placeholder='0.10 (10%)'
+                  />
+                </div>
+              </div>
             </div>
             <DialogFooter>
               <Button
@@ -671,7 +845,7 @@ export function CarManagement() {
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>{vehicles.length}</div>
           <div className='text-sm text-muted-foreground'>
-            {t('vehicle.stats.total')}{vehicles.length}
+            {t('vehicle.stats.total')}
           </div>
         </div>
         <div className='rounded-lg border p-4'>
