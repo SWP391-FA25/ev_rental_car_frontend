@@ -6,16 +6,11 @@ import {
   CardContent,
   CardDescription,
 } from '@/features/shared/components/ui/card';
-import {
-  formatCurrency,
-  formatDate,
-  formatTime,
-} from '@/features/shared/lib/utils';
+import { formatCurrency, formatDate } from '@/features/shared/lib/utils';
 import gsap from 'gsap';
 import {
   ArrowLeft,
   Calendar,
-  Clock,
   Fuel,
   MapPin,
   Settings,
@@ -82,6 +77,8 @@ export default function SearchResultsPage() {
   const { station, period, summary, availableVehicles, unavailableVehicles } =
     searchResults;
 
+  console.log(unavailableVehicles);
+
   return (
     <div className='min-h-screen bg-background text-foreground'>
       <Navbar />
@@ -101,12 +98,6 @@ export default function SearchResultsPage() {
               <div className='flex items-center gap-2'>
                 <Calendar className='w-4 h-4' />
                 <span>{formatDateRange(period.startTime, period.endTime)}</span>
-              </div>
-              <div className='flex items-center gap-2'>
-                <Clock className='w-4 h-4' />
-                <span>
-                  {formatTime(period.startTime)} - {formatTime(period.endTime)}
-                </span>
               </div>
             </div>
           </div>
@@ -230,7 +221,17 @@ export default function SearchResultsPage() {
                   key={vehicle.id}
                   className='overflow-hidden opacity-75 p-0'
                 >
-                  <div className='relative block h-48 overflow-hidden rounded-t-lg bg-muted'>
+                  <Link
+                    to={`/cars/${vehicle.id}`}
+                    className='relative block h-48 overflow-hidden rounded-t-lg'
+                  >
+                    <img
+                      src={vehicle.images?.[0]?.url || '/placeholder-car.jpg'}
+                      alt={`${vehicle.brand} ${vehicle.model}`}
+                      className='w-full h-full object-cover'
+                    />
+                  </Link>
+                  {/* <div className='relative block h-48 overflow-hidden rounded-t-lg bg-muted'>
                     <div className='absolute inset-0 flex items-center justify-center'>
                       <div className='text-center text-muted-foreground'>
                         <div className='text-sm font-medium'>Unavailable</div>
@@ -241,7 +242,7 @@ export default function SearchResultsPage() {
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </div> */}
                   <CardContent className='px-4 pb-4'>
                     <div className='mb-3'>
                       <CardDescription className='text-lg font-bold text-foreground'>
