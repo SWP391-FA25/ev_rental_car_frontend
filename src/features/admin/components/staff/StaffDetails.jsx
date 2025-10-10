@@ -123,7 +123,9 @@ export function StaffDetails({
         <div className='space-y-6'>
           {/* Basic Information */}
           <div className='space-y-4'>
-            <h3 className='text-lg font-semibold'>{t('staffDetails.basicInfo')}</h3>
+            <h3 className='text-lg font-semibold'>
+              {t('staffDetails.basicInfo')}
+            </h3>
 
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div className='space-y-2'>
@@ -180,13 +182,21 @@ export function StaffDetails({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value='STAFF'>{t('staffDetails.statusOptions.staff')}</SelectItem>
-                      <SelectItem value='ADMIN'>{t('staffDetails.statusOptions.admin')}</SelectItem>
+                      <SelectItem value='STAFF'>
+                        {t('staffDetails.statusOptions.staff')}
+                      </SelectItem>
+                      <SelectItem value='ADMIN'>
+                        {t('staffDetails.statusOptions.admin')}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 ) : (
                   <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
-                    <Badge variant='default'>{t(`staffDetails.statusOptions.${staff.role.toLowerCase()}`)}</Badge>
+                    <Badge variant='default'>
+                      {t(
+                        `staffDetails.statusOptions.${staff.role.toLowerCase()}`
+                      )}
+                    </Badge>
                   </div>
                 )}
               </div>
@@ -214,7 +224,9 @@ export function StaffDetails({
 
           {/* Account Status */}
           <div className='space-y-4'>
-            <h3 className='text-lg font-semibold'>{t('staffDetails.accountStatus')}</h3>
+            <h3 className='text-lg font-semibold'>
+              {t('staffDetails.accountStatus')}
+            </h3>
 
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div className='space-y-2'>
@@ -222,22 +234,32 @@ export function StaffDetails({
                 {isEditing ? (
                   <Select
                     value={formData.accountStatus}
-                    onValueChange={value => handleInputChange('accountStatus', value)}
+                    onValueChange={value =>
+                      handleInputChange('accountStatus', value)
+                    }
                     disabled={loading}
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value='ACTIVE'>{t('staffDetails.statusOptions.active')}</SelectItem>
-                      <SelectItem value='SUSPENDED'>{t('staffDetails.statusOptions.suspended')}</SelectItem>
-                      <SelectItem value='BANNED'>{t('staffDetails.statusOptions.banned')}</SelectItem>
+                      <SelectItem value='ACTIVE'>
+                        {t('staffDetails.statusOptions.active')}
+                      </SelectItem>
+                      <SelectItem value='SUSPENDED'>
+                        {t('staffDetails.statusOptions.suspended')}
+                      </SelectItem>
+                      <SelectItem value='BANNED'>
+                        {t('staffDetails.statusOptions.banned')}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 ) : (
                   <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                     <Badge variant={getStatusBadgeVariant(staff.accountStatus)}>
-                      {t(`staffDetails.statusOptions.${staff.accountStatus.toLowerCase()}`)}
+                      {t(
+                        `staffDetails.statusOptions.${staff.accountStatus.toLowerCase()}`
+                      )}
                     </Badge>
                   </div>
                 )}
@@ -247,7 +269,9 @@ export function StaffDetails({
 
           {/* Timestamps */}
           <div className='space-y-4'>
-            <h3 className='text-lg font-semibold'>{t('staffDetails.timeline')}</h3>
+            <h3 className='text-lg font-semibold'>
+              {t('staffDetails.timeline')}
+            </h3>
 
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div className='space-y-2'>
@@ -284,7 +308,9 @@ export function StaffDetails({
                 disabled={loading}
                 className='w-full sm:w-auto'
               >
-                {loading ? t('staffDetails.buttons.saving') : t('staffDetails.buttons.save')}
+                {loading
+                  ? t('staffDetails.buttons.saving')
+                  : t('staffDetails.buttons.save')}
               </Button>
             </>
           ) : (

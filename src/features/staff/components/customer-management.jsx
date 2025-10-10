@@ -1043,7 +1043,7 @@ function CustomerSupport() {
                   </TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
+              <TableBody className='overflow-y'>
                 {pagedCustomers.map(customer => (
                   <TableRow
                     key={customer.id}
