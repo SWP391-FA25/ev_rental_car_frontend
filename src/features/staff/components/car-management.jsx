@@ -18,7 +18,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -30,14 +29,6 @@ import {
   DropdownMenuTrigger,
 } from '../../shared/components/ui/dropdown-menu';
 import { Input } from '../../shared/components/ui/input';
-import { Label } from '../../shared/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../shared/components/ui/select';
 import {
   Table,
   TableBody,
@@ -49,6 +40,7 @@ import {
 import { apiClient } from '../../shared/lib/apiClient';
 import { endpoints } from '../../shared/lib/endpoints';
 import { VehicleDetails } from '../../admin/components/vehicle/VehicleDetails';
+import CarForm from './carManagement/carForm';
 
 export default function VehicleManagement() {
   const { t } = useTranslation();
@@ -89,28 +81,6 @@ export default function VehicleManagement() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [vehicleToDelete, setVehicleToDelete] = useState(null);
 
-  // Form state
-  const [formData, setFormData] = useState({
-    stationId: '',
-    type: '',
-    brand: '',
-    model: '',
-    year: '',
-    color: '',
-    seats: '',
-    licensePlate: '',
-    batteryLevel: '',
-    fuelType: '',
-    status: 'AVAILABLE',
-    // Pricing fields
-    baseRate: '',
-    hourlyRate: '',
-    weeklyRate: '',
-    monthlyRate: '',
-    depositAmount: '',
-    insuranceRate: '',
-  });
-
   // Load vehicles and stations
   useEffect(() => {
     loadVehicles();
@@ -120,9 +90,7 @@ export default function VehicleManagement() {
   const loadVehicles = async () => {
     try {
       setLoading(true);
-      console.debug('loadVehicles: requesting /api/vehicles');
-      const response = await apiClient.get('/api/vehicles');
-      console.debug('loadVehicles response:', response);
+      const response = await apiClient.get(endpoints.vehicles.getAll());
       if (response.success) {
         const vehiclesData = response.data.vehicles || [];
         setVehicles(vehiclesData);
@@ -131,7 +99,7 @@ export default function VehicleManagement() {
         const imagesPromises = vehiclesData.map(async vehicle => {
           try {
             const imageResponse = await apiClient.get(
-              `/api/vehicles/${vehicle.id}/images`
+              endpoints.vehicles.getImages(vehicle.id)
             );
             if (imageResponse.success) {
               return {
@@ -154,8 +122,6 @@ export default function VehicleManagement() {
           imagesMap[result.vehicleId] = result.images;
         });
         setVehicleImages(imagesMap);
-      } else {
-        console.warn('loadVehicles unexpected response shape:', response);
       }
     } catch (err) {
       console.error('loadVehicles error:', err);
@@ -167,9 +133,7 @@ export default function VehicleManagement() {
 
   const loadStations = async () => {
     try {
-      console.debug('loadStations: requesting /api/stations');
-      const response = await apiClient.get('/api/stations');
-      console.debug('loadStations response:', response);
+      const response = await apiClient.get(endpoints.stations.getAll());
       if (response.success) {
         setStations(response.data.stations || []);
       }
@@ -181,12 +145,10 @@ export default function VehicleManagement() {
   const handleUpdateVehicle = async (vehicleId, updateData) => {
     try {
       setUpdateLoading(true);
-      console.debug('handleUpdateVehicle called', { vehicleId, updateData });
       const response = await apiClient.put(
-        `/api/vehicles/${vehicleId}`,
+        endpoints.vehicles.update(vehicleId),
         updateData
       );
-      console.debug('handleUpdateVehicle response:', response);
       if (response.success) {
         toast.success(t('vehicle.messages.updateSuccess'));
 
@@ -215,7 +177,7 @@ export default function VehicleManagement() {
   const handleImageUpload = async vehicleId => {
     try {
       const imageResponse = await apiClient.get(
-        `/api/vehicles/${vehicleId}/images`
+        endpoints.vehicles.getImages(vehicleId)
       );
       if (imageResponse.success) {
         setVehicleImages(prev => ({
@@ -228,56 +190,9 @@ export default function VehicleManagement() {
     }
   };
 
-  const handleCreateVehicle = async () => {
-    try {
-      setLoading(true);
-      const payload = {
-        ...formData,
-        year: formData.year ? Number(formData.year) : undefined,
-        seats: formData.seats ? Number(formData.seats) : undefined,
-        batteryLevel: formData.batteryLevel ? Number(formData.batteryLevel) : undefined,
-        baseRate: formData.baseRate ? Number(formData.baseRate) : undefined,
-        hourlyRate: formData.hourlyRate ? Number(formData.hourlyRate) : undefined,
-        weeklyRate: formData.weeklyRate ? Number(formData.weeklyRate) : undefined,
-        monthlyRate: formData.monthlyRate ? Number(formData.monthlyRate) : undefined,
-        depositAmount: formData.depositAmount ? Number(formData.depositAmount) : undefined,
-        insuranceRate: formData.insuranceRate ? Number(formData.insuranceRate) : undefined,
-      };
-      // Stringified payload log so you can copy/paste into API client or inspect exact body
-      console.debug('admin createVehicle payload (object):', payload);
-      try { console.debug('admin createVehicle payload (string):', JSON.stringify(payload)); } catch (e) { console.debug('payload stringify failed', e); }
-
-      const response = await apiClient.post(endpoints.vehicles.create(), payload);
-      console.debug('admin createVehicle response:', response);
-      // If apiClient wraps errors, also inspect response.data
-      if (response && response.success) {
-        toast.success(t('vehicle.messages.createSuccess'));
-        setIsCreateDialogOpen(false);
-        resetForm();
-        if (response.data?.vehicle) {
-          setVehicles(prev => [response.data.vehicle, ...prev]);
-        }
-        loadVehicles();
-      } else {
-        const msg = response?.data || response?.message || response?.error || JSON.stringify(response);
-        console.warn('admin create failed', response);
-        toast.error(t('vehicle.messages.createFailed') + (msg ? ': ' + (typeof msg === 'string' ? msg : JSON.stringify(msg)) : ''));
-      }
-    } catch (err) {
-      // Log error response body (common with axios/fetch wrappers)
-      console.error('admin createVehicle error', err, 'response.data=', err?.response?.data);
-      const serverMsg = err?.response?.data?.message ?? err?.response?.data ?? err?.message ?? err;
-      toast.error((t('vehicle.messages.createFailed') || 'Create failed') + ': ' + (typeof serverMsg === 'string' ? serverMsg : JSON.stringify(serverMsg)));
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleHardDeleteVehicle = async vehicleId => {
     try {
-      console.debug('handleHardDeleteVehicle calling delete for', vehicleId);
-      const response = await apiClient.delete(`/api/vehicles/${vehicleId}`);
-      console.debug('handleHardDeleteVehicle response:', response);
+      const response = await apiClient.delete(endpoints.vehicles.delete(vehicleId));
       if (response && (response.success || response.status === 200)) {
         toast.success(t('vehicle.messages.deleteSuccess'));
         setVehicles(prev => prev.filter(vehicle => vehicle.id !== vehicleId));
@@ -296,32 +211,15 @@ export default function VehicleManagement() {
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      stationId: '',
-      type: '',
-      brand: '',
-      model: '',
-      year: '',
-      color: '',
-      seats: '',
-      licensePlate: '',
-      batteryLevel: '',
-      fuelType: '',
-      status: 'AVAILABLE',
-      // Pricing fields
-      baseRate: '',
-      hourlyRate: '',
-      weeklyRate: '',
-      monthlyRate: '',
-      depositAmount: '',
-      insuranceRate: '',
-    });
-    setSelectedVehicle(null);
+  const onVehicleCreated = (vehicle) => {
+    if (vehicle) {
+      setVehicles(prev => [vehicle, ...prev]);
+    }
+    setIsCreateDialogOpen(false);
+    loadVehicles();
   };
 
   const openViewDialog = vehicle => {
-    console.debug('openViewDialog vehicle:', vehicle?.id);
     setSelectedVehicle(vehicle);
     setIsViewDialogOpen(true);
   };
@@ -401,297 +299,12 @@ export default function VehicleManagement() {
                 {t('vehicle.dialogs.create.description')}
               </DialogDescription>
             </DialogHeader>
-            <div className='grid grid-cols-2 gap-4 py-4'>
-              <div className='space-y-2'>
-                <Label htmlFor='stationId'>
-                  {t('vehicle.fields.station')} *
-                </Label>
-                <Select
-                  value={formData.stationId}
-                  onValueChange={value =>
-                    setFormData({ ...formData, stationId: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={t('vehicle.fields.stationPlaceholder')}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {stations.map(station => (
-                      <SelectItem key={station.id} value={station.id}>
-                        {station.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className='space-y-2'>
-                <Label htmlFor='type'>{t('vehicle.fields.type')} *</Label>
-                <Select
-                  value={formData.type}
-                  onValueChange={value =>
-                    setFormData({ ...formData, type: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={t('vehicle.fields.typePlaceholder')}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {VEHICLE_TYPES.map(type => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className='space-y-2'>
-                <Label htmlFor='brand'>{t('vehicle.fields.brand')} *</Label>
-                <Input
-                  id='brand'
-                  value={formData.brand}
-                  onChange={e =>
-                    setFormData({ ...formData, brand: e.target.value })
-                  }
-                  placeholder={t('vehicle.fields.brandPlaceholder')}
-                />
-              </div>
-              <div className='space-y-2'>
-                <Label htmlFor='model'>{t('vehicle.fields.model')} *</Label>
-                <Input
-                  id='model'
-                  value={formData.model}
-                  onChange={e =>
-                    setFormData({ ...formData, model: e.target.value })
-                  }
-                  placeholder={t('vehicle.fields.modelPlaceholder')}
-                />
-              </div>
-              <div className='space-y-2'>
-                <Label htmlFor='year'>{t('vehicle.fields.year')} *</Label>
-                <Input
-                  id='year'
-                  type='number'
-                  value={formData.year}
-                  onChange={e =>
-                    setFormData({ ...formData, year: e.target.value })
-                  }
-                  placeholder={t('vehicle.fields.yearPlaceholder')}
-                />
-              </div>
-              <div className='space-y-2'>
-                <Label htmlFor='color'>{t('vehicle.fields.color')}</Label>
-                <Input
-                  id='color'
-                  value={formData.color}
-                  onChange={e =>
-                    setFormData({ ...formData, color: e.target.value })
-                  }
-                  placeholder={t('vehicle.fields.colorPlaceholder')}
-                />
-              </div>
-              <div className='space-y-2'>
-                <Label htmlFor='seats'>{t('vehicle.fields.seats')}</Label>
-                <Input
-                  id='seats'
-                  type='number'
-                  value={formData.seats}
-                  onChange={e =>
-                    setFormData({ ...formData, seats: e.target.value })
-                  }
-                  placeholder={t('vehicle.fields.seatsPlaceholder')}
-                />
-              </div>
-              <div className='space-y-2'>
-                <Label htmlFor='licensePlate'>
-                  {t('vehicle.fields.licensePlate')}
-                </Label>
-                <Input
-                  id='licensePlate'
-                  value={formData.licensePlate}
-                  onChange={e =>
-                    setFormData({ ...formData, licensePlate: e.target.value })
-                  }
-                  placeholder={t('vehicle.fields.licensePlatePlaceholder')}
-                />
-              </div>
-              <div className='space-y-2'>
-                <Label htmlFor='batteryLevel'>
-                  {t('vehicle.fields.batteryLevel')}
-                </Label>
-                <Input
-                  id='batteryLevel'
-                  type='number'
-                  min='0'
-                  max='100'
-                  value={formData.batteryLevel}
-                  onChange={e =>
-                    setFormData({ ...formData, batteryLevel: e.target.value })
-                  }
-                  placeholder={t('vehicle.fields.batteryLevelPlaceholder')}
-                />
-              </div>
-              <div className='space-y-2'>
-                <Label htmlFor='fuelType'>
-                  {t('vehicle.fields.fuelType')} *
-                </Label>
-                <Select
-                  value={formData.fuelType}
-                  onValueChange={value =>
-                    setFormData({ ...formData, fuelType: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={t('vehicle.fields.fuelTypePlaceholder')}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {FUEL_TYPES.map(fuel => (
-                      <SelectItem key={fuel.value} value={fuel.value}>
-                        {fuel.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className='space-y-2'>
-                <Label htmlFor='status'>{t('vehicle.fields.status')}</Label>
-                <Select
-                  value={formData.status}
-                  onValueChange={value =>
-                    setFormData({ ...formData, status: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={t('vehicle.fields.statusPlaceholder')}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {VEHICLE_STATUS.map(status => (
-                      <SelectItem key={status.value} value={status.value}>
-                        {status.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Pricing Section */}
-            <div className='border-t pt-4'>
-              <h3 className='text-lg font-semibold mb-4'>
-                Pricing Information
-              </h3>
-              <div className='grid grid-cols-2 gap-4'>
-                <div className='space-y-2'>
-                  <Label htmlFor='baseRate'>Base Rate (Daily) *</Label>
-                  <Input
-                    id='baseRate'
-                    type='number'
-                    min='0'
-                    step='0.01'
-                    value={formData.baseRate}
-                    onChange={e =>
-                      setFormData({ ...formData, baseRate: e.target.value })
-                    }
-                    placeholder='200.00'
-                  />
-                </div>
-                <div className='space-y-2'>
-                  <Label htmlFor='hourlyRate'>Hourly Rate *</Label>
-                  <Input
-                    id='hourlyRate'
-                    type='number'
-                    min='0'
-                    step='0.01'
-                    value={formData.hourlyRate}
-                    onChange={e =>
-                      setFormData({ ...formData, hourlyRate: e.target.value })
-                    }
-                    placeholder='15.00'
-                  />
-                </div>
-                <div className='space-y-2'>
-                  <Label htmlFor='weeklyRate'>Weekly Rate</Label>
-                  <Input
-                    id='weeklyRate'
-                    type='number'
-                    min='0'
-                    step='0.01'
-                    value={formData.weeklyRate}
-                    onChange={e =>
-                      setFormData({ ...formData, weeklyRate: e.target.value })
-                    }
-                    placeholder='1200.00'
-                  />
-                </div>
-                <div className='space-y-2'>
-                  <Label htmlFor='monthlyRate'>Monthly Rate</Label>
-                  <Input
-                    id='monthlyRate'
-                    type='number'
-                    min='0'
-                    step='0.01'
-                    value={formData.monthlyRate}
-                    onChange={e =>
-                      setFormData({ ...formData, monthlyRate: e.target.value })
-                    }
-                    placeholder='4500.00'
-                  />
-                </div>
-                <div className='space-y-2'>
-                  <Label htmlFor='depositAmount'>Deposit Amount *</Label>
-                  <Input
-                    id='depositAmount'
-                    type='number'
-                    min='0'
-                    step='0.01'
-                    value={formData.depositAmount}
-                    onChange={e =>
-                      setFormData({
-                        ...formData,
-                        depositAmount: e.target.value,
-                      })
-                    }
-                    placeholder='500.00'
-                  />
-                </div>
-                <div className='space-y-2'>
-                  <Label htmlFor='insuranceRate'>Insurance Rate (%)</Label>
-                  <Input
-                    id='insuranceRate'
-                    type='number'
-                    min='0'
-                    max='1'
-                    step='0.01'
-                    value={formData.insuranceRate}
-                    onChange={e =>
-                      setFormData({
-                        ...formData,
-                        insuranceRate: e.target.value,
-                      })
-                    }
-                    placeholder='0.10 (10%)'
-                  />
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                variant='outline'
-                onClick={() => setIsCreateDialogOpen(false)}
-              >
-                {t('vehicle.actions.cancel')}
-              </Button>
-              <Button onClick={handleCreateVehicle}>
-                {t('vehicle.actions.create')}
-              </Button>
-            </DialogFooter>
+            <CarForm
+              stations={stations}
+              onCreated={onVehicleCreated}
+              onCancel={() => setIsCreateDialogOpen(false)}
+              loading={loading}
+            />
           </DialogContent>
         </Dialog>
       </div>
@@ -841,6 +454,7 @@ export default function VehicleManagement() {
         </Table>
       </div>
 
+      {/* Summary Stats */}
       <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>{vehicles.length}</div>
@@ -874,6 +488,7 @@ export default function VehicleManagement() {
         </div>
       </div>
 
+      {/* Vehicle Details Dialog */}
       <VehicleDetails
         open={isViewDialogOpen}
         onOpenChange={setIsViewDialogOpen}
@@ -883,6 +498,7 @@ export default function VehicleManagement() {
         loading={updateLoading}
       />
 
+      {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}

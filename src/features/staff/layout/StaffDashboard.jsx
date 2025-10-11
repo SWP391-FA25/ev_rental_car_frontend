@@ -23,7 +23,7 @@ import {
 import { endpoints } from '../../shared/lib/endpoints';
 import { NotificationPreferences } from '../components/NotificationPreferences';
 import BookingManagement from '../components/booking-management';
-import CarManagement from '../components/car-management';
+import VehicleManagement from '../components/car-management';
 import { CustomerManagement } from '../components/customer-management';
 import DocumentVerification from '../components/document-verification';
 import { PaymentManagement } from '../components/payment-management';
@@ -465,7 +465,7 @@ export default function StaffDashboard() {
   );
 
   const renderCars = () => {
-    return <CarManagement />;
+    return <VehicleManagement />;
   };
 
   const renderStations = () => {
