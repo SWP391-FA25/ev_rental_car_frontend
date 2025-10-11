@@ -47,6 +47,7 @@ import {
   TableRow,
 } from '../../shared/components/ui/table';
 import { apiClient } from '../../shared/lib/apiClient';
+import { endpoints } from '../../shared/lib/endpoints';
 import { VehicleDetails } from '../components/vehicle/VehicleDetails';
 
 export default function VehicleManagement() {
@@ -56,6 +57,7 @@ export default function VehicleManagement() {
   const VEHICLE_STATUS = [
     { value: 'AVAILABLE', label: t('vehicle.status.available') },
     { value: 'RENTED', label: t('vehicle.status.rented') },
+    { value: 'PENDING', label: t('vehicle.status.pending') },
     { value: 'MAINTENANCE', label: t('vehicle.status.maintenance') },
     { value: 'OUT_OF_SERVICE', label: t('vehicle.status.outOfService') },
   ];
@@ -118,7 +120,7 @@ export default function VehicleManagement() {
   const loadVehicles = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get('/api/vehicles');
+      const response = await apiClient.get(endpoints.vehicles.getAll());
       if (response.success) {
         const vehiclesData = response.data.vehicles || [];
         setVehicles(vehiclesData);
@@ -127,7 +129,7 @@ export default function VehicleManagement() {
         const imagesPromises = vehiclesData.map(async vehicle => {
           try {
             const imageResponse = await apiClient.get(
-              `/api/vehicles/${vehicle.id}/images`
+              endpoints.vehicles.getImages(vehicle.id)
             );
             if (imageResponse.success) {
               return {
@@ -160,7 +162,7 @@ export default function VehicleManagement() {
 
   const loadStations = async () => {
     try {
-      const response = await apiClient.get('/api/stations');
+      const response = await apiClient.get(endpoints.stations.getAll());
       if (response.success) {
         setStations(response.data.stations || []);
       }
@@ -173,7 +175,7 @@ export default function VehicleManagement() {
     try {
       setUpdateLoading(true);
       const response = await apiClient.put(
-        `/api/vehicles/${vehicleId}`,
+        endpoints.vehicles.update(vehicleId),
         updateData
       );
       if (response.success) {
@@ -203,7 +205,7 @@ export default function VehicleManagement() {
   const handleImageUpload = async vehicleId => {
     try {
       const imageResponse = await apiClient.get(
-        `/api/vehicles/${vehicleId}/images`
+        endpoints.vehicles.getImages(vehicleId)
       );
       if (imageResponse.success) {
         setVehicleImages(prev => ({
@@ -218,7 +220,7 @@ export default function VehicleManagement() {
 
   const handleCreateVehicle = async () => {
     try {
-      const response = await apiClient.post('/api/vehicles', formData);
+      const response = await apiClient.post(endpoints.vehicles.create(), formData);
 
       if (response.success) {
         toast.success(t('vehicle.messages.createSuccess'));
@@ -238,7 +240,7 @@ export default function VehicleManagement() {
 
   const handleHardDeleteVehicle = async vehicleId => {
     try {
-      const response = await apiClient.delete(`/api/vehicles/${vehicleId}`);
+      const response = await apiClient.delete(endpoints.vehicles.delete(vehicleId));
 
       if (response.success) {
         toast.success(t('vehicle.messages.deleteSuccess'));
@@ -303,6 +305,8 @@ export default function VehicleManagement() {
       case 'AVAILABLE':
         return 'default';
       case 'RENTED':
+        return 'secondary';
+      case 'PENDING':
         return 'secondary';
       case 'MAINTENANCE':
         return 'outline';
@@ -756,7 +760,7 @@ export default function VehicleManagement() {
                   <TableCell>{getFuelTypeLabel(vehicle.fuelType)}</TableCell>
                   <TableCell>
                     {vehicle.fuelType === 'ELECTRIC' ||
-                    vehicle.fuelType === 'HYBRID'
+                      vehicle.fuelType === 'HYBRID'
                       ? `${vehicle.batteryLevel}%`
                       : t('vehicle.table.na')}
                   </TableCell>
