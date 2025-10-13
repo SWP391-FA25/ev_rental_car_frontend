@@ -1,6 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Bell, Check, Trash2, Eye, X } from 'lucide-react';
-import { useNotifications } from '../../../app/providers/NotificationProvider';
+import { formatDistanceToNow } from 'date-fns';
+import { enUS, vi } from 'date-fns/locale';
+import { Bell, Check, Eye, Trash2, X } from 'lucide-react';
+import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNotifications } from '../../../app/providers/useNotifications';
+import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import {
   DropdownMenu,
@@ -11,11 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { Badge } from './ui/badge';
 import { ScrollArea } from './ui/scroll-area';
-import { formatDistanceToNow } from 'date-fns';
-import { vi, enUS } from 'date-fns/locale';
-import { useTranslation } from 'react-i18next';
 
 export function NotificationBell() {
   const {

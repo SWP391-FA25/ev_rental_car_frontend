@@ -14,8 +14,8 @@ import {
 } from 'lucide-react';
 import * as React from 'react';
 
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import {
   Avatar,
@@ -55,7 +55,6 @@ import {
 } from '../../shared/components/ui/sidebar';
 import { apiClient } from '../../shared/lib/apiClient';
 import { endpoints } from '../../shared/lib/endpoints';
-import { useTranslation } from 'react-i18next';
 
 const data = {
   staff: {
@@ -360,10 +359,6 @@ function StaffUser({ staff }) {
       // ignore error; proceed to clear local state
     } finally {
       logout();
-      toast.success('Logged out successfully', {
-        position: 'top-right',
-        autoClose: 2000,
-      });
       navigate('/');
     }
   };
