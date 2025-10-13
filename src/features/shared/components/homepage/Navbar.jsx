@@ -3,9 +3,9 @@ import { Menu } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
 import { apiClient } from '../../lib/apiClient';
 import { endpoints } from '../../lib/endpoints';
+import { NotificationBell } from '../NotificationBell';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Button } from '../ui/button';
 import {
@@ -48,10 +48,6 @@ export default function Navbar() {
       // ignore error; proceed to clear local state
     } finally {
       logout();
-      toast.success('Logged out successfully', {
-        position: 'top-right',
-        autoClose: 2000,
-      });
       navigate('/');
     }
   };
@@ -262,6 +258,7 @@ export default function Navbar() {
         </div>
         <div className='hidden md:flex items-center gap-10'>
           <div className='flex items-center gap-2 ml-4'>
+            {user && <NotificationBell />}
             <LanguageToggle />
             <ThemeToggle />
             {!user ? (

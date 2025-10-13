@@ -1,45 +1,41 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { apiClient } from '../../features/shared/lib/apiClient';
+import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-
-const NotificationContext = createContext();
-
-export const useNotifications = () => {
-  const context = useContext(NotificationContext);
-  if (!context) {
-    throw new Error(
-      'useNotifications must be used within a NotificationProvider'
-    );
-  }
-  return context;
-};
+import { apiClient } from '../../features/shared/lib/apiClient';
+import { useAuth } from './AuthProvider';
+import { NotificationContext } from './NotificationContext';
 
 export const NotificationProvider = ({ children }) => {
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
   // Fetch notifications
-  const fetchNotifications = async (page = 1, limit = 10) => {
-    try {
-      setLoading(true);
-      const response = await apiClient.get(
-        `/api/notifications?page=${page}&limit=${limit}`
-      );
-      if (response.success) {
-        setNotifications(response.data.notifications);
-        return response.data;
+  const fetchNotifications = useCallback(
+    async (page = 1, limit = 10) => {
+      if (!user) return;
+      try {
+        setLoading(true);
+        const response = await apiClient.get(
+          `/api/notifications?page=${page}&limit=${limit}`
+        );
+        if (response.success) {
+          setNotifications(response.data.notifications);
+          return response.data;
+        }
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+        toast.error('Failed to fetch notifications');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-      toast.error('Failed to fetch notifications');
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [user]
+  );
 
   // Fetch unread count
-  const fetchUnreadCount = async () => {
+  const fetchUnreadCount = useCallback(async () => {
+    if (!user) return;
     try {
       const response = await apiClient.get('/api/notifications/unread-count');
       if (response.success) {
@@ -47,8 +43,9 @@ export const NotificationProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Error fetching unread count:', error);
+      // Silent error handling - no toasts, no redirects
     }
-  };
+  }, [user]);
 
   // Mark notification as read
   const markAsRead = async id => {
@@ -132,12 +129,25 @@ export const NotificationProvider = ({ children }) => {
     }
   };
 
-  // Poll for unread count periodically
+  // Poll for unread count and fetch notifications periodically
   useEffect(() => {
+    if (!user) {
+      setNotifications([]);
+      setUnreadCount(0);
+      return;
+    }
     fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 30000); // Every 30 seconds
+    fetchNotifications(1, 5); // Fetch first 5 notifications for bell dropdown
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    const interval = setInterval(() => {
+      fetchUnreadCount();
+      fetchNotifications(1, 5); // Refresh notifications every 30 seconds
+    }, 30000); // Every 30 seconds
     return () => clearInterval(interval);
-  }, []);
+  }, [user]);
 
   const value = {
     notifications,

@@ -8,7 +8,6 @@ import {
 
 import { useAuth } from '@/app/providers/AuthProvider';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
 import {
   Avatar,
   AvatarFallback,
@@ -44,10 +43,6 @@ export function NavUser({ user }) {
       // ignore error; proceed to clear local state
     } finally {
       logout();
-      toast.success('Logged out successfully', {
-        position: 'top-right',
-        autoClose: 2000,
-      });
       navigate('/');
     }
   };

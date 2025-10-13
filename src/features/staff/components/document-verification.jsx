@@ -1,38 +1,41 @@
-import React, { useState, useEffect } from 'react';
 import {
-  CheckCircle,
-  XCircle,
-  FileText,
   Calendar,
-  User,
-  Mail,
-  Phone,
-  Eye,
-  Download,
-  Search,
-  Filter,
-  RefreshCw,
+  Car,
+  CheckCircle,
   ChevronDown,
   ChevronRight,
+  Download,
+  Eye,
   File,
+  FileText,
+  Filter,
   IdCard,
-  Car,
+  RefreshCw,
+  Search,
+  User,
+  XCircle,
 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from '../../shared/components/ui/card';
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from '../../shared/components/ui/dialog';
+import { Input } from '../../shared/components/ui/input';
+import { Label } from '../../shared/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -40,13 +43,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../shared/components/ui/select';
-import { Input } from '../../shared/components/ui/input';
-import { Label } from '../../shared/components/ui/label';
-import { Badge } from '../../shared/components/ui/badge';
 import { Textarea } from '../../shared/components/ui/textarea';
-import { toast } from 'sonner';
 import documentService from '../../shared/services/documentService';
-import { useTranslation } from 'react-i18next';
 
 const DocumentVerification = ({ userId, onVerificationUpdated }) => {
   const { t } = useTranslation();

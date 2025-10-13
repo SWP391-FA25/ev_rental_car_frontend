@@ -1,5 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { useNotifications } from '../../../app/providers/NotificationProvider';
+import { format, formatDistanceToNow } from 'date-fns';
+import { enUS, vi } from 'date-fns/locale';
+import {
+  AlertTriangle,
+  Bell,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  Info,
+  Trash2,
+  X,
+} from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNotifications } from '../../../app/providers/useNotifications';
+import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import {
   Card,
@@ -8,23 +23,8 @@ import {
   CardHeader,
   CardTitle,
 } from './ui/card';
-import { Badge } from './ui/badge';
 import { Checkbox } from './ui/checkbox';
-import { formatDistanceToNow, format } from 'date-fns';
-import { vi, enUS } from 'date-fns/locale';
-import { useTranslation } from 'react-i18next';
-import {
-  Bell,
-  Check,
-  X,
-  AlertTriangle,
-  Info,
-  Trash2,
-  Eye,
-  Filter,
-  ChevronLeft,
-  ChevronRight,
-} from 'lucide-react';
+import { Input } from './ui/input';
 import {
   Select,
   SelectContent,
@@ -32,7 +32,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/select';
-import { Input } from './ui/input';
 
 export function NotificationPage() {
   const {
