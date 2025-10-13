@@ -168,12 +168,12 @@ export function NotificationBell() {
             </ScrollArea>
           )}
         </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
+        {/* <DropdownMenuSeparator /> */}
+        {/* <DropdownMenuItem asChild>
           <a href='/notifications' className='w-full text-center'>
             {t('notifications.viewAll')}
           </a>
-        </DropdownMenuItem>
+        </DropdownMenuItem> */}
       </DropdownMenuContent>
     </DropdownMenu>
   );
