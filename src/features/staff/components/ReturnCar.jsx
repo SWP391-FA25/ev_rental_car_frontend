@@ -2,8 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import { bookingService } from '../../booking/services/bookingService';
-import { apiClient } from '../../shared/lib/apiClient';
-import { endpoints } from '../../shared/lib/endpoints';
+import { useBooking } from '../../booking/hooks/useBooking';
 import { Button } from '../../shared/components/ui/button';
 import {
   Card,
@@ -30,6 +29,11 @@ import {
  */
 export default function ReturnCar() {
   const { t, i18n } = useTranslation();
+  const {
+    loading: bookingLoading,
+    getAllBookings,
+    getBookingById,
+  } = useBooking();
   const [bookingId, setBookingId] = useState('');
   const [booking, setBooking] = useState(null);
   const [eligibleBookings, setEligibleBookings] = useState([]);
@@ -77,17 +81,11 @@ export default function ReturnCar() {
     const fetchEligible = async () => {
       try {
         setLoadingBookings(true);
-        const params = new URLSearchParams({ limit: '100' });
-        const res = await apiClient.get(
-          endpoints.bookings.getAll() + `?${params.toString()}`
-        );
-        const list = (
-          res?.success ? res?.data?.bookings : res?.data || []
-        ).filter(b => {
+        const resData = await getAllBookings({ limit: 100 });
+        const list = (resData?.bookings || resData || []).filter(b => {
           const status = b.status || b.bookingStatus || '';
-          const end = b.endTime ? new Date(b.endTime) : null;
-          const due = end ? end.getTime() <= Date.now() : false;
-          return status === 'COMFIRMED' || (status === 'IN_PROGRESS' && due);
+          // Eligible for return: rentals currently in progress; allow confirmed if policy permits early return.
+          return status === 'IN_PROGRESS' || status === 'CONFIRMED';
         });
         setEligibleBookings(list);
       } catch (err) {
@@ -102,7 +100,7 @@ export default function ReturnCar() {
   const handleSelectBooking = async value => {
     setBookingId(value);
     try {
-      const res = await bookingService.getBookingById(value);
+      const res = await getBookingById(value);
       const b = res?.booking || res?.data?.booking || null;
       setBooking(b);
       const baseDeposit = b?.depositAmount ?? b?.amount?.deposit ?? 0;
@@ -124,7 +122,7 @@ export default function ReturnCar() {
       return;
     }
     try {
-      const res = await bookingService.getBookingById(bookingId);
+      const res = await getBookingById(bookingId);
       const b = res?.booking || res?.data?.booking || null;
       setBooking(b);
       const baseDeposit = b?.depositAmount ?? b?.amount?.deposit ?? 0;
@@ -244,7 +242,7 @@ export default function ReturnCar() {
                 )}
                 {eligibleBookings.map(b => (
                   <SelectItem key={b.id} value={b.id}>
-                    {b.id} • {b.user?.name || b.customer?.name || '—'} •{' '}
+                    {b.user?.name || b.customer?.name || '—'} •{' '}
                     {b.vehicle?.licensePlate || b.vehicle?.name || '—'}
                   </SelectItem>
                 ))}

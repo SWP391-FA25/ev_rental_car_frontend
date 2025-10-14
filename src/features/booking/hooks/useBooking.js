@@ -6,6 +6,22 @@ export const useBooking = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const getAllBookings = useCallback(async (params = {}) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await bookingService.getAllBookings(params);
+      return result;
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message || 'Failed to fetch bookings';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const createBooking = useCallback(async bookingData => {
     try {
       setLoading(true);
@@ -60,6 +76,7 @@ export const useBooking = () => {
   return {
     loading,
     error,
+    getAllBookings,
     createBooking,
     cancelBooking,
     getBookingById,
