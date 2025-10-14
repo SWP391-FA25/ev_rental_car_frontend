@@ -29,7 +29,7 @@ import DocumentVerification from '../components/document-verification';
 import { PaymentManagement } from '../components/payment-management';
 import { StaffHeader } from '../components/staff-header';
 import { StaffSidebar } from '../components/staff-sidebar';
-import { StationManagement } from '../components/station-management';
+import StationManagement from '../components/station-management';
 import ReturnCar from '../components/ReturnCar';
 
 // Removed QuickVerification import
