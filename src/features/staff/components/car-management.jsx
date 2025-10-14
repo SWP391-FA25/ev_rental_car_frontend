@@ -1,30 +1,23 @@
 import {
-  Battery,
-  CheckCircle,
-  Clock,
-  Edit,
-  Eye,
-  MoreHorizontal,
-  RefreshCw,
-  User,
-  Wrench,
+  EyeIcon,
+  FilterIcon,
+  ImageIcon,
+  MoreVerticalIcon,
+  PlusIcon,
+  SearchIcon,
+  TrashIcon,
 } from 'lucide-react';
-import * as React from 'react';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '../../shared/components/ui/card';
+import { ConfirmDialog } from '../../shared/components/ui/confirm-dialog';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -33,19 +26,9 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../../shared/components/ui/dropdown-menu';
 import { Input } from '../../shared/components/ui/input';
-import { Label } from '../../shared/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../shared/components/ui/select';
 import {
   Table,
   TableBody,
@@ -54,605 +37,485 @@ import {
   TableHeader,
   TableRow,
 } from '../../shared/components/ui/table';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '../../shared/components/ui/tabs';
-import { Textarea } from '../../shared/components/ui/textarea';
-import { useTranslation } from 'react-i18next';
+import { apiClient } from '../../shared/lib/apiClient';
+import { endpoints } from '../../shared/lib/endpoints';
+import { VehicleDetails } from '../../admin/components/vehicle/VehicleDetails';
+import CarForm from './carManagement/carForm';
 
-const mockBookings = [
-  {
-    id: 'BOOK001',
-    car: {
-      model: 'Tesla Model 3',
-      licensePlate: 'EV-123-ABC',
-      batteryLevel: 85,
-    },
-    customer: {
-      name: 'Alice Johnson',
-      email: 'alice.johnson@email.com',
-      phone: '+1-555-0123',
-    },
-    startTime: '2024-01-20T09:00:00Z',
-    endTime: '2024-01-22T18:00:00Z',
-    pickupLocation: 'Downtown Station',
-    dropoffLocation: 'Airport Station',
-    status: 'Active',
-    totalAmount: 245.5,
-  },
-  {
-    id: 'BOOK002',
-    car: {
-      model: 'Nissan Leaf',
-      licensePlate: 'EV-456-DEF',
-      batteryLevel: 62,
-    },
-    customer: {
-      name: 'Bob Wilson',
-      email: 'bob.wilson@email.com',
-      phone: '+1-555-0456',
-    },
-    startTime: '2024-01-21T14:00:00Z',
-    endTime: '2024-01-23T12:00:00Z',
-    pickupLocation: 'Mall Station',
-    dropoffLocation: 'Downtown Station',
-    status: 'Upcoming',
-    totalAmount: 180.75,
-  },
-  {
-    id: 'BOOK003',
-    car: {
-      model: 'BMW i3',
-      licensePlate: 'EV-789-GHI',
-      batteryLevel: 45,
-    },
-    customer: {
-      name: 'Carol Davis',
-      email: 'carol.davis@email.com',
-      phone: '+1-555-0789',
-    },
-    startTime: '2024-01-19T10:00:00Z',
-    endTime: '2024-01-21T16:00:00Z',
-    pickupLocation: 'Airport Station',
-    dropoffLocation: 'Mall Station',
-    status: 'Completed',
-    totalAmount: 320.25,
-  },
-];
-
-const mockCars = [
-  {
-    id: 'CAR001',
-    model: 'Tesla Model 3',
-    licensePlate: 'EV-123-ABC',
-    station: 'Downtown Station',
-    status: 'Available',
-    batteryLevel: 85,
-    mileage: 25430,
-    lastService: '2024-01-15',
-    nextService: '2024-04-15',
-    location: 'Parking Spot A-12',
-  },
-  {
-    id: 'CAR002',
-    model: 'Nissan Leaf',
-    licensePlate: 'EV-456-DEF',
-    station: 'Airport Station',
-    status: 'Rented',
-    batteryLevel: 62,
-    mileage: 18750,
-    lastService: '2024-01-10',
-    nextService: '2024-04-10',
-    location: 'On Route',
-  },
-  {
-    id: 'CAR003',
-    model: 'BMW i3',
-    licensePlate: 'EV-789-GHI',
-    station: 'Mall Station',
-    status: 'Maintenance',
-    batteryLevel: 0,
-    mileage: 32100,
-    lastService: '2024-01-18',
-    nextService: '2024-02-01',
-    location: 'Service Bay 2',
-  },
-  {
-    id: 'CAR004',
-    model: 'Hyundai Kona Electric',
-    licensePlate: 'EV-321-XYZ',
-    station: 'Downtown Station',
-    status: 'Charging',
-    batteryLevel: 45,
-    mileage: 15200,
-    lastService: '2023-12-20',
-    nextService: '2024-03-20',
-    location: 'Charging Port 5',
-  },
-];
-
-function BookingStatusBadge({ status }) {
+export default function VehicleManagement() {
   const { t } = useTranslation();
-  const variants = {
-    Active: 'default',
-    Upcoming: 'secondary',
-    Completed: 'outline',
-    Cancelled: 'destructive',
+
+  // Vehicle status options
+  const VEHICLE_STATUS = [
+    { value: 'AVAILABLE', label: t('vehicle.status.available') },
+    { value: 'RENTED', label: t('vehicle.status.rented') },
+    { value: 'PENDING', label: t('vehicle.status.pending') },
+    { value: 'MAINTENANCE', label: t('vehicle.status.maintenance') },
+    { value: 'OUT_OF_SERVICE', label: t('vehicle.status.outOfService') },
+  ];
+
+  // Vehicle types
+  const VEHICLE_TYPES = [
+    { value: 'SEDAN', label: t('vehicle.types.sedan') },
+    { value: 'SUV', label: t('vehicle.types.suv') },
+    { value: 'HATCHBACK', label: t('vehicle.types.hatchback') },
+    { value: 'COUPE', label: t('vehicle.types.coupe') },
+  ];
+
+  // Fuel types
+  const FUEL_TYPES = [
+    { value: 'ELECTRIC', label: t('vehicle.fuel.electric') },
+    { value: 'HYBRID', label: t('vehicle.fuel.hybrid') },
+  ];
+
+  const [vehicles, setVehicles] = useState([]);
+  const [stations, setStations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [updateLoading, setUpdateLoading] = useState(false);
+  const [vehicleImages, setVehicleImages] = useState({});
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [vehicleToDelete, setVehicleToDelete] = useState(null);
+
+  // Load vehicles and stations
+  useEffect(() => {
+    loadVehicles();
+    loadStations();
+  }, []);
+
+  const loadVehicles = async () => {
+    try {
+      setLoading(true);
+      const response = await apiClient.get(endpoints.vehicles.getAll());
+      if (response.success) {
+        const vehiclesData = response.data.vehicles || [];
+        setVehicles(vehiclesData);
+
+        // Load images for each vehicle
+        const imagesPromises = vehiclesData.map(async vehicle => {
+          try {
+            const imageResponse = await apiClient.get(
+              endpoints.vehicles.getImages(vehicle.id)
+            );
+            if (imageResponse.success) {
+              return {
+                vehicleId: vehicle.id,
+                images: imageResponse.data.images || [],
+              };
+            }
+          } catch (error) {
+            console.error(
+              `Failed to load images for vehicle ${vehicle.id}:`,
+              error
+            );
+          }
+          return { vehicleId: vehicle.id, images: [] };
+        });
+
+        const imagesResults = await Promise.all(imagesPromises);
+        const imagesMap = {};
+        imagesResults.forEach(result => {
+          imagesMap[result.vehicleId] = result.images;
+        });
+        setVehicleImages(imagesMap);
+      }
+    } catch (err) {
+      console.error('loadVehicles error:', err);
+      toast.error(t('vehicle.messages.loadFailed'));
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const labelMap = {
-    Active: t('staffCars.bookingStatus.active'),
-    Upcoming: t('staffCars.bookingStatus.upcoming'),
-    Completed: t('staffCars.bookingStatus.completed'),
-    Cancelled: t('staffCars.bookingStatus.cancelled'),
+  const loadStations = async () => {
+    try {
+      const response = await apiClient.get(endpoints.stations.getAll());
+      if (response.success) {
+        setStations(response.data.stations || []);
+      }
+    } catch (err) {
+      console.error('Failed to load stations:', err);
+    }
   };
 
-  return (
-    <Badge variant={variants[status] || 'secondary'}>
-      {labelMap[status] || status}
-    </Badge>
-  );
-}
+  const handleUpdateVehicle = async (vehicleId, updateData) => {
+    try {
+      setUpdateLoading(true);
+      const response = await apiClient.put(
+        endpoints.vehicles.update(vehicleId),
+        updateData
+      );
+      if (response.success) {
+        toast.success(t('vehicle.messages.updateSuccess'));
 
-function CarStatusBadge({ status }) {
-  const { t } = useTranslation();
-  const config = {
-    Available: {
-      variant: 'default',
-      icon: CheckCircle,
-      color: 'text-green-600',
-    },
-    Rented: { variant: 'secondary', icon: Clock, color: 'text-blue-600' },
-    Maintenance: {
-      variant: 'destructive',
-      icon: Wrench,
-      color: 'text-orange-600',
-    },
-    Charging: { variant: 'outline', icon: Battery, color: 'text-yellow-600' },
+        if (selectedVehicle && selectedVehicle.id === vehicleId) {
+          setSelectedVehicle(response.data.vehicle);
+        }
+
+        setVehicles(prev =>
+          prev.map(vehicle =>
+            vehicle.id === vehicleId ? response.data.vehicle : vehicle
+          )
+        );
+
+        loadVehicles();
+        return response.data.vehicle;
+      }
+    } catch (err) {
+      console.error('Update error', err);
+      toast.error(t('vehicle.messages.updateFailed'));
+      throw err;
+    } finally {
+      setUpdateLoading(false);
+    }
   };
 
-  const { variant, icon: Icon, color } = config[status] || config['Available'];
+  const handleImageUpload = async vehicleId => {
+    try {
+      const imageResponse = await apiClient.get(
+        endpoints.vehicles.getImages(vehicleId)
+      );
+      if (imageResponse.success) {
+        setVehicleImages(prev => ({
+          ...prev,
+          [vehicleId]: imageResponse.data.images || [],
+        }));
+      }
+    } catch (error) {
+      console.error(`Failed to reload images for vehicle ${vehicleId}:`, error);
+    }
+  };
 
-  return (
-    <Badge variant={variant} className='gap-1'>
-      <Icon className={`h-3 w-3 ${color}`} />
-      {{
-        Available: t('staffCars.carStatus.available'),
-        Rented: t('staffCars.carStatus.rented'),
-        Maintenance: t('staffCars.carStatus.maintenance'),
-        Charging: t('staffCars.carStatus.charging'),
-      }[status] || status}
-    </Badge>
-  );
-}
+  const handleHardDeleteVehicle = async vehicleId => {
+    try {
+      const response = await apiClient.delete(
+        endpoints.vehicles.delete(vehicleId)
+      );
+      if (response && (response.success || response.status === 200)) {
+        toast.success(t('vehicle.messages.deleteSuccess'));
+        setVehicles(prev => prev.filter(vehicle => vehicle.id !== vehicleId));
+        setVehicleImages(prev => {
+          const newImages = { ...prev };
+          delete newImages[vehicleId];
+          return newImages;
+        });
+        loadVehicles();
+      } else {
+        console.warn('delete returned unexpected:', response);
+        toast.error(t('vehicle.messages.deleteFailed'));
+      }
+    } catch {
+      toast.error(t('vehicle.messages.deleteFailed'));
+    }
+  };
 
-function ViewBookings() {
-  const { t } = useTranslation();
-  const [statusFilter, setStatusFilter] = React.useState('all');
-  const [searchTerm, setSearchTerm] = React.useState('');
+  const onVehicleCreated = vehicle => {
+    if (vehicle) {
+      setVehicles(prev => [vehicle, ...prev]);
+    }
+    setIsCreateDialogOpen(false);
+    loadVehicles();
+  };
 
-  const filteredBookings = mockBookings.filter(booking => {
-    const matchesStatus =
-      statusFilter === 'all' || booking.status.toLowerCase() === statusFilter;
+  const openViewDialog = vehicle => {
+    setSelectedVehicle(vehicle);
+    setIsViewDialogOpen(true);
+  };
+
+  const filteredVehicles = vehicles.filter(vehicle => {
     const matchesSearch =
-      searchTerm === '' ||
-      booking.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.car.licensePlate
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      booking.id.toLowerCase().includes(searchTerm.toLowerCase());
-
-    return matchesStatus && matchesSearch;
+      vehicle.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vehicle.model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vehicle.licensePlate?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vehicle.station?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      filterStatus === 'all' ||
+      vehicle.status?.toLowerCase() === filterStatus.toLowerCase();
+    return matchesSearch && matchesStatus;
   });
 
+  const getStatusBadgeVariant = status => {
+    switch (status) {
+      case 'AVAILABLE':
+        return 'default';
+      case 'RENTED':
+        return 'secondary';
+      case 'PENDING':
+        return 'secondary';
+      case 'MAINTENANCE':
+        return 'outline';
+      case 'OUT_OF_SERVICE':
+        return 'destructive';
+      default:
+        return 'outline';
+    }
+  };
+
+  const getStatusLabel = status => {
+    const statusObj = VEHICLE_STATUS.find(s => s.value === status);
+    return statusObj ? statusObj.label : status;
+  };
+
+  const getTypeLabel = type => {
+    const typeObj = VEHICLE_TYPES.find(t => t.value === type);
+    return typeObj ? typeObj.label : type;
+  };
+
+  const getFuelTypeLabel = fuelType => {
+    const fuelObj = FUEL_TYPES.find(f => f.value === fuelType);
+    return fuelObj ? fuelObj.label : fuelType;
+  };
+
+  if (loading) {
+    return (
+      <div className='flex items-center justify-center h-64'>
+        <div className='text-lg'>{t('vehicle.messages.loading')}</div>
+      </div>
+    );
+  }
+
   return (
-    <div className='space-y-4'>
-      <div className='flex flex-col sm:flex-row gap-4'>
-        <div className='flex-1'>
+    <div className='space-y-6'>
+      <div className='flex items-center justify-between'>
+        <div>
+          <h1 className='text-3xl font-bold tracking-tight'>
+            {t('vehicle.title')}
+          </h1>
+          <p className='text-muted-foreground'>{t('vehicle.subtitle')}</p>
+        </div>
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <PlusIcon className='mr-2 h-4 w-4' />
+              {t('vehicle.actions.add')}
+            </Button>
+          </DialogTrigger>
+          <DialogContent className='max-w-2xl max-h-[90vh] overflow-y-auto'>
+            <DialogHeader>
+              <DialogTitle>{t('vehicle.dialogs.create.title')}</DialogTitle>
+              <DialogDescription>
+                {t('vehicle.dialogs.create.description')}
+              </DialogDescription>
+            </DialogHeader>
+            <CarForm
+              stations={stations}
+              onCreated={onVehicleCreated}
+              onCancel={() => setIsCreateDialogOpen(false)}
+              loading={loading}
+            />
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className='flex items-center space-x-4'>
+        <div className='relative flex-1 max-w-sm'>
+          <SearchIcon className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
           <Input
-            placeholder={t('staffCars.bookings.searchPlaceholder')}
+            placeholder={t('vehicle.filters.searchPlaceholder')}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className='max-w-sm'
+            className='pl-10'
           />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className='w-[180px]'>
-            <SelectValue placeholder={t('staffCars.common.filterByStatus')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value='all'>
-              {t('staffCars.bookings.filters.all')}
-            </SelectItem>
-            <SelectItem value='active'>
-              {t('staffCars.bookingStatus.active')}
-            </SelectItem>
-            <SelectItem value='upcoming'>
-              {t('staffCars.bookingStatus.upcoming')}
-            </SelectItem>
-            <SelectItem value='completed'>
-              {t('staffCars.bookingStatus.completed')}
-            </SelectItem>
-          </SelectContent>
-        </Select>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant='outline'>
+              <FilterIcon className='mr-2 h-4 w-4' />
+              {t('vehicle.filters.status')}:{' '}
+              {filterStatus === 'all'
+                ? t('vehicle.status.all')
+                : getStatusLabel(filterStatus)}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => setFilterStatus('all')}>
+              {t('vehicle.status.all')}
+            </DropdownMenuItem>
+            {VEHICLE_STATUS.map(status => (
+              <DropdownMenuItem
+                key={status.value}
+                onClick={() => setFilterStatus(status.value.toLowerCase())}
+              >
+                {status.label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div className='rounded-md border'>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t('staffCars.bookings.table.bookingId')}</TableHead>
-              <TableHead>{t('staffCars.common.customer')}</TableHead>
-              <TableHead>{t('staffCars.common.vehicle')}</TableHead>
-              <TableHead>{t('staffCars.common.duration')}</TableHead>
-              <TableHead>{t('staffCars.common.status')}</TableHead>
-              <TableHead>{t('staffCars.common.amount')}</TableHead>
-              <TableHead className='text-right'>
-                {t('staffCars.common.actions')}
+              <TableHead>{t('vehicle.table.image')}</TableHead>
+              <TableHead>{t('vehicle.table.brandModel')}</TableHead>
+              <TableHead>{t('vehicle.table.type')}</TableHead>
+              <TableHead>{t('vehicle.table.licensePlate')}</TableHead>
+              <TableHead>{t('vehicle.table.station')}</TableHead>
+              <TableHead>{t('vehicle.table.year')}</TableHead>
+              <TableHead>{t('vehicle.table.fuelType')}</TableHead>
+              <TableHead>{t('vehicle.table.battery')}</TableHead>
+              <TableHead>{t('vehicle.table.status')}</TableHead>
+              <TableHead className='w-[70px]'>
+                {t('vehicle.table.actions')}
               </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredBookings.map(booking => (
-              <TableRow key={booking.id}>
-                <TableCell className='font-medium'>{booking.id}</TableCell>
-                <TableCell>
-                  <div>
-                    <div className='font-medium'>{booking.customer.name}</div>
-                    <div className='text-sm text-muted-foreground'>
-                      {booking.customer.email}
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div>
-                    <div className='font-medium'>{booking.car.model}</div>
-                    <div className='text-sm text-muted-foreground'>
-                      {booking.car.licensePlate}
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className='text-sm'>
+            {filteredVehicles.map(vehicle => {
+              const images = vehicleImages[vehicle.id] || [];
+              const firstImage = images[0];
+
+              return (
+                <TableRow key={vehicle.id}>
+                  <TableCell>
+                    {firstImage ? (
+                      <div className='relative w-16 h-12'>
+                        <img
+                          src={firstImage.thumbnailUrl || firstImage.url}
+                          alt={vehicle.brand + ' ' + vehicle.model}
+                          className='w-full h-full object-cover rounded border'
+                        />
+                        {images.length > 1 && (
+                          <div className='absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center'>
+                            +{images.length - 1}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className='w-16 h-12 bg-muted rounded border flex items-center justify-center'>
+                        <ImageIcon className='h-6 w-6 text-muted-foreground' />
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell>
                     <div>
-                      {new Date(booking.startTime).toLocaleDateString()}
+                      <div className='font-medium'>
+                        {vehicle.brand} {vehicle.model}
+                      </div>
+                      <div className='text-sm text-muted-foreground'>
+                        {vehicle.color}
+                      </div>
                     </div>
-                    <div className='text-muted-foreground'>
-                      {new Date(booking.startTime).toLocaleTimeString()} -{' '}
-                      {new Date(booking.endTime).toLocaleTimeString()}
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <BookingStatusBadge status={booking.status} />
-                </TableCell>
-                <TableCell>${booking.totalAmount}</TableCell>
-                <TableCell className='text-right'>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant='ghost' className='h-8 w-8 p-0'>
-                        <MoreHorizontal className='h-4 w-4' />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align='end' className='z-50'>
-                      <DropdownMenuLabel>
-                        {t('staffCars.common.actions')}
-                      </DropdownMenuLabel>
-                      <DropdownMenuItem>
-                        <Eye className='mr-2 h-4 w-4' />
-                        {t('staffCars.actions.viewDetails')}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <User className='mr-2 h-4 w-4' />
-                        {t('staffCars.actions.contactCustomer')}
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem>
-                        <Edit className='mr-2 h-4 w-4' />
-                        {t('staffCars.actions.modifyBooking')}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
+                  </TableCell>
+                  <TableCell>{getTypeLabel(vehicle.type)}</TableCell>
+                  <TableCell>
+                    {vehicle.licensePlate || t('vehicle.table.na')}
+                  </TableCell>
+                  <TableCell>
+                    {vehicle.station?.name || t('vehicle.table.na')}
+                  </TableCell>
+                  <TableCell>{vehicle.year}</TableCell>
+                  <TableCell>{getFuelTypeLabel(vehicle.fuelType)}</TableCell>
+                  <TableCell>
+                    {vehicle.fuelType === 'ELECTRIC' ||
+                    vehicle.fuelType === 'HYBRID'
+                      ? `${vehicle.batteryLevel}%`
+                      : t('vehicle.table.na')}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={getStatusBadgeVariant(vehicle.status)}>
+                      {getStatusLabel(vehicle.status)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant='ghost' className='h-8 w-8 p-0'>
+                          <MoreVerticalIcon className='h-4 w-4' />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align='end'>
+                        <DropdownMenuItem
+                          onClick={() => openViewDialog(vehicle)}
+                        >
+                          <EyeIcon className='mr-2 h-4 w-4' />
+                          {t('vehicle.actions.viewDetails')}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className='text-red-600'
+                          onClick={() => {
+                            setVehicleToDelete(vehicle.id);
+                            setDeleteDialogOpen(true);
+                          }}
+                        >
+                          <TrashIcon className='mr-2 h-4 w-4' />
+                          {t('vehicle.actions.delete')}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
-    </div>
-  );
-}
 
-function CarDropoff() {
-  const [selectedBooking, setSelectedBooking] = React.useState('');
-  const [inspectionNotes, setInspectionNotes] = React.useState('');
-  const [fuelLevel, setFuelLevel] = React.useState('');
-  const [mileage, setMileage] = React.useState('');
-  const [damages, setDamages] = React.useState('');
-
-  const activeBookings = mockBookings.filter(
-    booking => booking.status === 'Active'
-  );
-
-  const handleDropoff = () => {
-    // Handle dropoff logic
-    console.log('Processing dropoff for booking:', selectedBooking);
-  };
-  const { t } = useTranslation();
-  return (
-    <div className='space-y-6'>
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('staffCars.dropoff.title')}</CardTitle>
-          <CardDescription>{t('staffCars.dropoff.subtitle')}</CardDescription>
-        </CardHeader>
-        <CardContent className='space-y-4'>
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-            <div className='space-y-2'>
-              <Label htmlFor='booking-select'>
-                {t('staffCars.dropoff.selectActive')}
-              </Label>
-              <Select
-                value={selectedBooking}
-                onValueChange={setSelectedBooking}
-              >
-                <SelectTrigger>
-                  <SelectValue
-                    placeholder={t('staffCars.dropoff.bookingPlaceholder')}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {activeBookings.map(booking => (
-                    <SelectItem key={booking.id} value={booking.id}>
-                      {booking.id} - {booking.car.model} (
-                      {booking.customer.name})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='mileage'>
-                {t('staffCars.dropoff.finalMileage')}
-              </Label>
-              <Input
-                id='mileage'
-                type='number'
-                placeholder={t('staffCars.placeholders.enterMileage')}
-                value={mileage}
-                onChange={e => setMileage(e.target.value)}
-              />
-            </div>
+      {/* Summary Stats */}
+      <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold'>{vehicles.length}</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('vehicle.stats.total')}
           </div>
-
-          <div className='space-y-2'>
-            <Label htmlFor='fuel-level'>
-              {t('staffCars.dropoff.batteryLevel')}
-            </Label>
-            <Select value={fuelLevel} onValueChange={setFuelLevel}>
-              <SelectTrigger>
-                <SelectValue
-                  placeholder={t('staffCars.placeholders.selectBattery')}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='90-100'>
-                  {t('staffCars.batteryRanges.90_100')}
-                </SelectItem>
-                <SelectItem value='80-89'>
-                  {t('staffCars.batteryRanges.80_89')}
-                </SelectItem>
-                <SelectItem value='70-79'>
-                  {t('staffCars.batteryRanges.70_79')}
-                </SelectItem>
-                <SelectItem value='60-69'>
-                  {t('staffCars.batteryRanges.60_69')}
-                </SelectItem>
-                <SelectItem value='50-59'>
-                  {t('staffCars.batteryRanges.50_59')}
-                </SelectItem>
-                <SelectItem value='below-50'>
-                  {t('staffCars.batteryRanges.below50')}
-                </SelectItem>
-              </SelectContent>
-            </Select>
+        </div>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold'>
+            {vehicles.filter(v => v.status === 'AVAILABLE').length}
           </div>
-
-          <div className='space-y-2'>
-            <Label htmlFor='damages'>
-              {t('staffCars.dropoff.damageAssessment')}
-            </Label>
-            <Textarea
-              id='damages'
-              placeholder={t('staffCars.placeholders.damageAssessment')}
-              value={damages}
-              onChange={e => setDamages(e.target.value)}
-              rows={3}
-            />
+          <div className='text-sm text-muted-foreground'>
+            {t('vehicle.stats.available')}
           </div>
-
-          <div className='space-y-2'>
-            <Label htmlFor='inspection-notes'>
-              {t('staffCars.dropoff.inspectionNotes')}
-            </Label>
-            <Textarea
-              id='inspection-notes'
-              placeholder={t('staffCars.placeholders.inspectionNotes')}
-              value={inspectionNotes}
-              onChange={e => setInspectionNotes(e.target.value)}
-              rows={3}
-            />
+        </div>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold'>
+            {vehicles.filter(v => v.status === 'RENTED').length}
           </div>
-
-          <Button
-            onClick={handleDropoff}
-            className='w-full'
-            disabled={!selectedBooking}
-          >
-            <CheckCircle className='mr-2 h-4 w-4' />
-            {t('staffCars.dropoff.completeDropoff')}
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-function UpdateCarStatus() {
-  const { t } = useTranslation();
-  const [selectedCar, setSelectedCar] = React.useState('');
-  const [newStatus, setNewStatus] = React.useState('');
-  const [notes, setNotes] = React.useState('');
-
-  const handleStatusUpdate = () => {
-    // Handle status update logic
-    console.log('Updating car status:', { selectedCar, newStatus, notes });
-  };
-
-  return (
-    <div className='space-y-6'>
-      <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
-        {mockCars.map(car => (
-          <Card key={car.id}>
-            <CardHeader className='pb-3'>
-              <div className='flex items-center justify-between'>
-                <CardTitle className='text-sm font-medium'>
-                  {car.model}
-                </CardTitle>
-                <CarStatusBadge status={car.status} />
-              </div>
-              <CardDescription>{car.licensePlate}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className='space-y-2 text-sm'>
-                <div className='flex items-center justify-between'>
-                  <span className='text-muted-foreground'>
-                    {t('staffCars.update.battery')}
-                  </span>
-                  <span className='flex items-center gap-1'>
-                    <Battery className='h-3 w-3' />
-                    {car.batteryLevel}%
-                  </span>
-                </div>
-                <div className='flex items-center justify-between'>
-                  <span className='text-muted-foreground'>
-                    {t('staffCars.update.mileage')}
-                  </span>
-                  <span>{car.mileage.toLocaleString()} mi</span>
-                </div>
-                <div className='flex items-center justify-between'>
-                  <span className='text-muted-foreground'>
-                    {t('staffCars.update.location')}
-                  </span>
-                  <span className='text-right'>{car.location}</span>
-                </div>
-              </div>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant='outline' size='sm' className='w-full mt-3'>
-                    <Edit className='mr-2 h-4 w-4' />
-                    {t('staffCars.update.updateStatus')}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className='sm:max-w-[425px]'>
-                  <DialogHeader>
-                    <DialogTitle>
-                      {t('staffCars.update.dialogTitle')}
-                    </DialogTitle>
-                    <DialogDescription>
-                      {t('staffCars.update.dialogSubtitle', {
-                        model: car.model,
-                        plate: car.licensePlate,
-                      })}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className='grid gap-4 py-4'>
-                    <div className='space-y-2'>
-                      <Label htmlFor='status'>
-                        {t('staffCars.update.newStatus')}
-                      </Label>
-                      <Select value={newStatus} onValueChange={setNewStatus}>
-                        <SelectTrigger>
-                          <SelectValue
-                            placeholder={t(
-                              'staffCars.placeholders.selectNewStatus'
-                            )}
-                          />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value='Available'>
-                            {t('staffCars.carStatus.available')}
-                          </SelectItem>
-                          <SelectItem value='Maintenance'>
-                            {t('staffCars.carStatus.maintenance')}
-                          </SelectItem>
-                          <SelectItem value='Charging'>
-                            {t('staffCars.carStatus.charging')}
-                          </SelectItem>
-                          <SelectItem value='Out of Service'>
-                            {t('staffCars.carStatus.outOfService')}
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className='space-y-2'>
-                      <Label htmlFor='notes'>
-                        {t('staffCars.update.notes')}
-                      </Label>
-                      <Textarea
-                        id='notes'
-                        placeholder={t('staffCars.placeholders.statusNotes')}
-                        value={notes}
-                        onChange={e => setNotes(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button onClick={handleStatusUpdate} disabled={!newStatus}>
-                      <RefreshCw className='mr-2 h-4 w-4' />
-                      {t('staffCars.update.updateStatus')}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export function CarManagement() {
-  const { t } = useTranslation();
-  return (
-    <div className='space-y-6'>
-      <div>
-        <h2 className='text-2xl font-bold tracking-tight'>
-          {t('staffCars.title')}
-        </h2>
-        <p className='text-muted-foreground'>{t('staffCars.subtitle')}</p>
+          <div className='text-sm text-muted-foreground'>
+            {t('vehicle.stats.rented')}
+          </div>
+        </div>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold'>
+            {vehicles.filter(v => v.fuelType === 'ELECTRIC').length}
+          </div>
+          <div className='text-sm text-muted-foreground'>
+            {t('vehicle.stats.electric')}
+          </div>
+        </div>
       </div>
 
-      <Tabs defaultValue='bookings' className='space-y-4'>
-        <TabsList>
-          <TabsTrigger value='bookings'>
-            {t('staffCars.tabs.bookings')}
-          </TabsTrigger>
-          <TabsTrigger value='status'>{t('staffCars.tabs.status')}</TabsTrigger>
-        </TabsList>
+      {/* Vehicle Details Dialog */}
+      <VehicleDetails
+        open={isViewDialogOpen}
+        onOpenChange={setIsViewDialogOpen}
+        vehicle={selectedVehicle}
+        onUpdate={handleUpdateVehicle}
+        onImageUpload={handleImageUpload}
+        loading={updateLoading}
+      />
 
-        <TabsContent value='bookings' className='space-y-4'>
-          <ViewBookings />
-        </TabsContent>
-
-        <TabsContent value='status' className='space-y-4'>
-          <UpdateCarStatus />
-        </TabsContent>
-      </Tabs>
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title={t('vehicle.dialogs.delete.title')}
+        description={t('vehicle.dialogs.delete.description')}
+        onConfirm={() => {
+          if (vehicleToDelete) {
+            handleHardDeleteVehicle(vehicleToDelete);
+            setVehicleToDelete(null);
+          }
+        }}
+        confirmText={t('vehicle.actions.delete')}
+        cancelText={t('vehicle.actions.cancel')}
+        confirmVariant='destructive'
+      />
     </div>
   );
 }

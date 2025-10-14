@@ -1428,7 +1428,7 @@
       "reportIssue": "Report Issue"
     }
   },
-  "admin": {
+  "admins": {
     "notifications": {
       "title": "Notification Management",
       "description": "Manage and monitor all system notifications",

@@ -9,6 +9,7 @@ import FavoriteCars from '../components/FavoriteCars';
 import ProfileContent from '../components/ProfileContent';
 import UserSidebar from '../components/UserSidebar';
 import UserDocumentsPage from '../pages/UserDocumentsPage';
+import CarRentalContract from '../components/CarRentalContract';
 
 export default function UserProfileLayout() {
   const { user } = useAuth();
@@ -37,6 +38,7 @@ export default function UserProfileLayout() {
           <div className='p-8'>
             {activeTab === 'profile' && <ProfileContent user={user} />}
             {activeTab === 'documents' && <UserDocumentsPage />}
+            {activeTab === 'contracts' && <CarRentalContract />}
             {activeTab === 'favorites' && <FavoriteCars />}
             {activeTab === 'trips' && <BookingsContent />}
             {activeTab === 'longterm' && (
