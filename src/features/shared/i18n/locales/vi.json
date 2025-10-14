@@ -127,6 +127,7 @@
     "dashboard": "Bảng điều khiển",
     "cars": "Quản lý xe",
     "bookings": "Đặt lịch",
+    "returnCar": "Trả xe",
     "stations": "Trạm",
     "customers": "Khách hàng",
     "payments": "Thanh toán",
@@ -152,6 +153,73 @@
     "support": "Hỗ trợ",
     "alerts": "Thông báo"
   },
+  "staffReturnCar": {
+    "title": "Trả xe (Nhân viên)",
+    "subtitle": "Kiểm tra xe, xử lý sự cố và hoàn tiền cọc",
+    "toast": {
+      "enterBookingId": "Vui lòng nhập mã đơn thuê",
+      "loadBookingSuccess": "Tải thông tin đơn thuê thành công",
+      "loadBookingFail": "Không tìm thấy đơn thuê",
+      "selectBooking": "Vui lòng chọn hoặc nhập đơn thuê",
+      "completeSuccess": "Hoàn tất trả xe và cập nhật đơn thành công",
+      "completeQueued": "Đã gửi yêu cầu hoàn tất",
+      "completeFail": "Không thể hoàn tất trả xe"
+    },
+    "booking": {
+      "title": "1. Chọn đơn đang cần xử lý",
+      "idLabel": "Mã đơn thuê",
+      "idPlaceholder": "VD: BOOK001",
+      "loadButton": "Tải đơn",
+      "depositLabel": "Tiền cọc (VNĐ)",
+      "customer": "Khách hàng",
+      "vehicle": "Xe",
+      "time": "Thời gian"
+    },
+    "inspection": {
+      "title": "2. Kiểm tra xe",
+      "resultLabel": "Kết quả kiểm tra",
+      "resultPlaceholder": "Chọn kết quả",
+      "pass": "Hoàn cọc (Không vấn đề)",
+      "issue": "Có sự cố",
+      "checklist": {
+        "exterior": "Ngoại thất",
+        "interior": "Nội thất",
+        "battery": "Mức pin",
+        "mileageRecorded": "Ghi nhận số km",
+        "cleaningNeeded": "Cần vệ sinh",
+        "accessories": "Phụ kiện/bộ sạc"
+      }
+    },
+    "incident": {
+      "title": "Upload sự cố (ảnh/video)",
+      "notesLabel": "Ghi chú sự cố",
+      "notesPlaceholder": "Mô tả thiệt hại, vị trí, mức độ..."
+    },
+    "returnDetails": {
+      "title": "Thông tin trả xe",
+      "odometer": "Số km lúc trả",
+      "odometerPlaceholder": "Nhập số km tại thời điểm trả",
+      "location": "Vị trí trả thực tế",
+      "notes": "Ghi chú",
+      "notesPlaceholder": "Thêm ghi chú về việc trả xe..."
+    },
+    "deposit": {
+      "title": "3. Tính toán cọc & hoàn tiền",
+      "damage": "Khấu trừ hư hỏng",
+      "cleaning": "Khấu trừ vệ sinh",
+      "late": "Phí trả trễ",
+      "other": "Khác",
+      "baseDeposit": "Tiền cọc",
+      "deductions": "Khấu trừ",
+      "refund": "Hoàn trả"
+    },
+    "complete": {
+      "title": "4. Cập nhật đơn và trạng thái xe",
+      "description": "Xác nhận sẽ đánh dấu đơn Hoàn tất và cập nhật trạng thái xe phù hợp.",
+      "reset": "Làm mới",
+      "confirm": "Xác nhận hoàn tất"
+    }
+  },
   "staff": {
     "notifications": {
       "title": "Tùy chọn thông báo",
@@ -174,6 +242,9 @@
       "documentDesc": "Thông báo khi cần xác minh tài liệu",
       "save": "Lưu tùy chọn",
       "preferencesSaved": "Đã lưu tùy chọn thông báo thành công"
+    },
+    "returnCar": {
+      "quickAction": "Xử lý trả xe"
     }
   },
   "admin": {

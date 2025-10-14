@@ -127,6 +127,7 @@
     "dashboard": "Dashboard",
     "cars": "Manage Cars",
     "bookings": "Bookings",
+    "returnCar": "Return Car",
     "stations": "Stations",
     "customers": "Customers",
     "payments": "Payments",
@@ -174,6 +175,78 @@
       "documentDesc": "Notify when documents need verification",
       "save": "Save Preferences",
       "preferencesSaved": "Notification preferences saved successfully"
+    },
+    "returnCar": {
+      "quickAction": "Process car return"
+    }
+  },
+  "staffReturnCar": {
+    "title": "Return Car (Staff)",
+    "subtitle": "Inspect vehicle, handle incidents and refund deposit",
+    "toast": {
+      "enterBookingId": "Please enter a booking ID",
+      "loadBookingSuccess": "Loaded booking successfully",
+      "loadBookingFail": "Booking not found",
+      "selectBooking": "Please select or enter a booking",
+      "completeSuccess": "Car return completed and booking updated",
+      "completeQueued": "Completion request sent",
+      "completeFail": "Unable to complete return"
+    },
+    "booking": {
+      "title": "1. Select booking to process",
+      "idLabel": "Booking ID",
+      "idPlaceholder": "e.g. BOOK001",
+      "loadButton": "Load booking",
+      "selectLabel": "Select booking",
+      "selectPlaceholder": "Choose an eligible booking",
+      "depositLabel": "Deposit (VND)",
+      "customer": "Customer",
+      "vehicle": "Vehicle",
+      "time": "Time"
+    },
+    "inspection": {
+      "title": "2. Vehicle inspection",
+      "resultLabel": "Inspection result",
+      "resultPlaceholder": "Select result",
+      "pass": "Refund deposit (No issues)",
+      "issue": "Has incident",
+      "checklist": {
+        "exterior": "Exterior",
+        "interior": "Interior",
+        "battery": "Battery level",
+        "mileageRecorded": "Mileage recorded",
+        "cleaningNeeded": "Needs cleaning",
+        "accessories": "Accessories/charger"
+      }
+    },
+    "incident": {
+      "title": "Upload incident (images/videos)",
+      "notesLabel": "Incident notes",
+      "notesPlaceholder": "Describe damages, location, severity..."
+    },
+    "returnDetails": {
+      "title": "Return details",
+      "odometer": "Return odometer",
+      "odometerPlaceholder": "Enter odometer at return",
+      "location": "Actual return location",
+      "notes": "Notes",
+      "notesPlaceholder": "Add any notes about the return..."
+    },
+    "deposit": {
+      "title": "3. Deposit & refund calculation",
+      "damage": "Damage deduction",
+      "cleaning": "Cleaning deduction",
+      "late": "Late return fee",
+      "other": "Other",
+      "baseDeposit": "Deposit",
+      "deductions": "Deductions",
+      "refund": "Refund"
+    },
+    "complete": {
+      "title": "4. Update booking and vehicle status",
+      "description": "Confirmation marks the booking as Completed and updates vehicle status accordingly.",
+      "reset": "Reset",
+      "confirm": "Confirm completion"
     }
   },
   "admin": {

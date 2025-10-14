@@ -642,18 +642,11 @@ export function CarManagement() {
           <TabsTrigger value='bookings'>
             {t('staffCars.tabs.bookings')}
           </TabsTrigger>
-          <TabsTrigger value='dropoff'>
-            {t('staffCars.tabs.dropoff')}
-          </TabsTrigger>
           <TabsTrigger value='status'>{t('staffCars.tabs.status')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value='bookings' className='space-y-4'>
           <ViewBookings />
-        </TabsContent>
-
-        <TabsContent value='dropoff' className='space-y-4'>
-          <CarDropoff />
         </TabsContent>
 
         <TabsContent value='status' className='space-y-4'>
