@@ -23,13 +23,13 @@ import {
 import { endpoints } from '../../shared/lib/endpoints';
 import { NotificationPreferences } from '../components/NotificationPreferences';
 import BookingManagement from '../components/booking-management';
-import { CarManagement } from '../components/car-management';
+import VehicleManagement from '../components/car-management';
 import { CustomerManagement } from '../components/customer-management';
 import DocumentVerification from '../components/document-verification';
 import { PaymentManagement } from '../components/payment-management';
 import { StaffHeader } from '../components/staff-header';
 import { StaffSidebar } from '../components/staff-sidebar';
-import { StationManagement } from '../components/station-management';
+import StationManagement from '../components/station-management';
 
 // Removed QuickVerification import
 
@@ -465,7 +465,7 @@ export default function StaffDashboard() {
   );
 
   const renderCars = () => {
-    return <CarManagement />;
+    return <VehicleManagement />;
   };
 
   const renderStations = () => {
