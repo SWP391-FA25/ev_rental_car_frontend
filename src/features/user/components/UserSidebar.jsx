@@ -14,6 +14,7 @@ import {
 const menuItems = [
   { id: 'profile', label: 'Tài khoản của tôi', icon: User },
   { id: 'documents', label: 'Giấy tờ cá nhân', icon: FileText },
+  { id: 'contracts', label: 'Hợp đồng thuê xe', icon: FileText },
   { id: 'favorites', label: 'Xe yêu thích', icon: Heart },
   { id: 'trips', label: 'Chuyến của tôi', icon: Briefcase },
   { id: 'longterm', label: 'Đơn hàng Thuê xe dài hạn', icon: CheckSquare },
@@ -44,16 +45,14 @@ export default function UserSidebar({ activeTab, setActiveTab }) {
               <li key={item.id}>
                 <button
                   onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                    isActive
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${isActive
                       ? 'bg-primary/10 text-primary border-l-4 border-primary'
                       : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                  }`}
+                    }`}
                 >
                   <Icon
-                    className={`h-5 w-5 ${
-                      isActive ? 'text-primary' : 'text-muted-foreground'
-                    }`}
+                    className={`h-5 w-5 ${isActive ? 'text-primary' : 'text-muted-foreground'
+                      }`}
                   />
                   <span className='font-medium'>{item.label}</span>
                 </button>
