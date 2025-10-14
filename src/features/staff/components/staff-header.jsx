@@ -1,9 +1,8 @@
-import { Bell, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import LanguageToggle from '../../shared/components/homepage/LanguageToggle';
 import { ThemeToggle } from '../../shared/components/homepage/ThemeToggle';
-import { Badge } from '../../shared/components/ui/badge';
-import { Button } from '../../shared/components/ui/button';
+import { NotificationBell } from '../../shared/components/NotificationBell';
 import { Input } from '../../shared/components/ui/input';
 import { Separator } from '../../shared/components/ui/separator';
 import { SidebarTrigger } from '../../shared/components/ui/sidebar';
@@ -43,16 +42,7 @@ export function StaffHeader() {
           </Badge>
         </Button> */}
 
-        <Button variant='ghost' size='sm' className='gap-2'>
-          <Bell className='h-4 w-4' />
-          <span className='hidden sm:inline'>{t('staffHeader.alerts')}</span>
-          <Badge
-            variant='destructive'
-            className='h-5 w-5 rounded-full p-0 text-xs'
-          >
-            5
-          </Badge>
-        </Button>
+        <NotificationBell />
         {/* Language Toggle */}
         <LanguageToggle />
       </div>

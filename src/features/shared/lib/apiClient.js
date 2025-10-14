@@ -3,7 +3,7 @@ import { env } from './env';
 
 export const apiClient = axios.create({
   baseURL: env.apiBaseUrl,
-  timeout: 10000, // Giảm từ 20s xuống 10s
+  timeout: 20000,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
@@ -11,7 +11,13 @@ export const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use(
-  config => config,
+  config => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
   error => Promise.reject(error)
 );
 

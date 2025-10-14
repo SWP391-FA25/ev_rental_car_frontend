@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { formatCurrency } from '../../shared/lib/utils';
 import { useLocation } from '../hooks/useLocation';
 import { useNearbyStations } from '../hooks/useNearbyStations';
 import { useVehicles } from '../hooks/useVehicles';
@@ -391,13 +392,14 @@ export default function CarsPage() {
                       <div className='flex justify-between items-center'>
                         <div>
                           <div className='text-lg font-semibold'>
-                            ${vehicle.pricing.hourlyRate}
+                            {formatCurrency(`${vehicle.pricing.hourlyRate}`)}
                             <span className='text-sm text-muted-foreground'>
                               /hour
                             </span>
                           </div>
                           <div className='text-xs text-muted-foreground'>
-                            +${vehicle.pricing.depositAmount} deposit
+                            +{formatCurrency(vehicle.pricing.depositAmount)}{' '}
+                            deposit
                           </div>
                         </div>
                         <Button

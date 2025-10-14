@@ -84,6 +84,8 @@ const BookingManagement = () => {
         );
 
         if (response.success) {
+          console.log(response.data.bookings);
+
           setBookings(response.data.bookings);
           setPagination(response.data.pagination);
         }

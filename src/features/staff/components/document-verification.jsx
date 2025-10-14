@@ -1,38 +1,41 @@
-import React, { useState, useEffect } from 'react';
 import {
-  CheckCircle,
-  XCircle,
-  FileText,
   Calendar,
-  User,
-  Mail,
-  Phone,
-  Eye,
-  Download,
-  Search,
-  Filter,
-  RefreshCw,
+  Car,
+  CheckCircle,
   ChevronDown,
   ChevronRight,
+  Download,
+  Eye,
   File,
+  FileText,
+  Filter,
   IdCard,
-  Car,
+  RefreshCw,
+  Search,
+  User,
+  XCircle,
 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from '../../shared/components/ui/card';
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from '../../shared/components/ui/dialog';
+import { Input } from '../../shared/components/ui/input';
+import { Label } from '../../shared/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -40,13 +43,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../shared/components/ui/select';
-import { Input } from '../../shared/components/ui/input';
-import { Label } from '../../shared/components/ui/label';
-import { Badge } from '../../shared/components/ui/badge';
 import { Textarea } from '../../shared/components/ui/textarea';
-import { toast } from 'sonner';
 import documentService from '../../shared/services/documentService';
-import { useTranslation } from 'react-i18next';
 
 const DocumentVerification = ({ userId, onVerificationUpdated }) => {
   const { t } = useTranslation();
@@ -401,7 +399,9 @@ const DocumentVerification = ({ userId, onVerificationUpdated }) => {
         </CardHeader>
         <CardContent className='flex flex-col md:flex-row gap-4'>
           <div className='flex-1'>
-            <Label htmlFor='search'>{t('staffDocuments.filters.search')}</Label>
+            <Label htmlFor='search' className='mb-2 block'>
+              {t('staffDocuments.filters.search')}
+            </Label>
             <div className='relative'>
               <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
               <Input
@@ -415,7 +415,9 @@ const DocumentVerification = ({ userId, onVerificationUpdated }) => {
           </div>
 
           <div>
-            <Label htmlFor='status'>{t('staffDocuments.filters.status')}</Label>
+            <Label htmlFor='status' className='mb-2 block'>
+              {t('staffDocuments.filters.status')}
+            </Label>
             <Select
               value={filters.status}
               onValueChange={value =>
@@ -445,7 +447,7 @@ const DocumentVerification = ({ userId, onVerificationUpdated }) => {
           </div>
 
           <div>
-            <Label htmlFor='documentType'>
+            <Label htmlFor='documentType' className='mb-2 block'>
               {t('staffDocuments.filters.type')}
             </Label>
             <Select
@@ -777,7 +779,7 @@ const DocumentVerification = ({ userId, onVerificationUpdated }) => {
 
       {/* Reject Document Dialog */}
       <Dialog open={isRejectOpen} onOpenChange={setIsRejectOpen}>
-        <DialogContent>
+        <DialogContent className='max-h-[90vh] overflow-y-auto'>
           <DialogHeader>
             <DialogTitle>{t('staffDocuments.reject.title')}</DialogTitle>
           </DialogHeader>
@@ -829,7 +831,7 @@ const DocumentVerification = ({ userId, onVerificationUpdated }) => {
       </Dialog>
       {/* Batch Reject Dialog */}
       <Dialog open={isBatchRejectOpen} onOpenChange={setIsBatchRejectOpen}>
-        <DialogContent>
+        <DialogContent className='max-h-[90vh] overflow-y-auto'>
           <DialogHeader>
             <DialogTitle>{t('staffDocuments.batchReject.title')}</DialogTitle>
           </DialogHeader>
