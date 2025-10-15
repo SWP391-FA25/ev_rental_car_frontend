@@ -1,4 +1,5 @@
 import { Calendar, Car, CreditCard, User } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Badge } from '../../../shared/components/ui/badge';
 import { Button } from '../../../shared/components/ui/button';
 import {
@@ -12,16 +13,23 @@ import { Label } from '../../../shared/components/ui/label';
 import { formatCurrency, formatDate } from '../../../shared/lib/utils';
 
 export function BookingDetails({ open, onOpenChange, booking }) {
+  const { t } = useTranslation();
   if (!booking) return null;
 
   // Get status badge
   const getStatusBadge = status => {
     const statusConfig = {
-      PENDING: { variant: 'secondary', label: 'Pending' },
-      CONFIRMED: { variant: 'default', label: 'Confirmed' },
-      IN_PROGRESS: { variant: 'default', label: 'In Progress' },
-      COMPLETED: { variant: 'default', label: 'Completed' },
-      CANCELLED: { variant: 'destructive', label: 'Cancelled' },
+      PENDING: { variant: 'secondary', label: t('booking.status.pending') },
+      CONFIRMED: { variant: 'default', label: t('booking.status.confirmed') },
+      IN_PROGRESS: {
+        variant: 'default',
+        label: t('booking.status.inProgress'),
+      },
+      COMPLETED: { variant: 'default', label: t('booking.status.completed') },
+      CANCELLED: {
+        variant: 'destructive',
+        label: t('booking.status.cancelled'),
+      },
     };
 
     const config = statusConfig[status] || statusConfig.PENDING;
@@ -42,9 +50,9 @@ export function BookingDetails({ open, onOpenChange, booking }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='w-[95vw] max-w-[800px] max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
-          <DialogTitle>Booking Details</DialogTitle>
+          <DialogTitle>{t('booking.details.title')}</DialogTitle>
           <DialogDescription>
-            Complete information about this booking
+            {t('booking.details.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -53,28 +61,28 @@ export function BookingDetails({ open, onOpenChange, booking }) {
           <div className='space-y-4'>
             <h3 className='text-lg font-semibold flex items-center gap-2'>
               <User className='h-5 w-5' />
-              Customer Information
+              {t('booking.details.customerInfo.title')}
             </h3>
 
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div className='space-y-2'>
-                <Label>Name</Label>
+                <Label>{t('booking.details.customerInfo.name')}</Label>
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                   {booking.user.name}
                 </div>
               </div>
 
               <div className='space-y-2'>
-                <Label>Email</Label>
+                <Label>{t('booking.details.customerInfo.email')}</Label>
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                   {booking.user.email}
                 </div>
               </div>
 
               <div className='space-y-2'>
-                <Label>Phone</Label>
+                <Label>{t('booking.details.customerInfo.phone')}</Label>
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
-                  {booking.user.phone || 'N/A'}
+                  {booking.user.phone || t('booking.details.na')}
                 </div>
               </div>
             </div>
@@ -84,33 +92,33 @@ export function BookingDetails({ open, onOpenChange, booking }) {
           <div className='space-y-4'>
             <h3 className='text-lg font-semibold flex items-center gap-2'>
               <Car className='h-5 w-5' />
-              Vehicle Information
+              {t('booking.details.vehicleInfo.title')}
             </h3>
 
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div className='space-y-2'>
-                <Label>Vehicle</Label>
+                <Label>{t('booking.details.vehicleInfo.vehicle')}</Label>
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                   {booking.vehicle.brand} {booking.vehicle.model}
                 </div>
               </div>
 
               <div className='space-y-2'>
-                <Label>License Plate</Label>
+                <Label>{t('booking.details.vehicleInfo.licensePlate')}</Label>
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
-                  {booking.vehicle.licensePlate}
+                  {booking.vehicle.licensePlate || t('booking.details.na')}
                 </div>
               </div>
 
               <div className='space-y-2'>
-                <Label>Type</Label>
+                <Label>{t('booking.details.vehicleInfo.type')}</Label>
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
-                  {booking.vehicle.type}
+                  {booking.vehicle.type || t('booking.details.na')}
                 </div>
               </div>
 
               <div className='space-y-2'>
-                <Label>Status</Label>
+                <Label>{t('booking.details.vehicleInfo.status')}</Label>
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                   <Badge variant='outline'>{booking.vehicle.status}</Badge>
                 </div>
@@ -122,47 +130,49 @@ export function BookingDetails({ open, onOpenChange, booking }) {
           <div className='space-y-4'>
             <h3 className='text-lg font-semibold flex items-center gap-2'>
               <Calendar className='h-5 w-5' />
-              Booking Details
+              {t('booking.details.bookingInfo.title')}
             </h3>
 
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div className='space-y-2'>
-                <Label>Booking ID</Label>
+                <Label>{t('booking.details.bookingInfo.bookingId')}</Label>
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center font-mono text-sm'>
                   {booking.id}
                 </div>
               </div>
 
               <div className='space-y-2'>
-                <Label>Status</Label>
+                <Label>{t('booking.details.status')}</Label>
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                   {getStatusBadge(booking.status)}
                 </div>
               </div>
 
               <div className='space-y-2'>
-                <Label>Start Time</Label>
+                <Label>{t('booking.details.bookingInfo.startTime')}</Label>
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                   {formatDate(booking.startTime)}
                 </div>
               </div>
 
               <div className='space-y-2'>
-                <Label>End Time</Label>
+                <Label>{t('booking.details.bookingInfo.endTime')}</Label>
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
-                  {booking.endTime ? formatDate(booking.endTime) : 'Not set'}
+                  {booking.endTime
+                    ? formatDate(booking.endTime)
+                    : t('booking.details.notSet')}
                 </div>
               </div>
 
               <div className='space-y-2'>
-                <Label>Station</Label>
+                <Label>{t('booking.details.bookingInfo.station')}</Label>
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                   {booking.station.name}
                 </div>
               </div>
 
               <div className='space-y-2'>
-                <Label>Created</Label>
+                <Label>{t('booking.details.bookingInfo.created')}</Label>
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                   {formatDate(booking.createdAt)}
                 </div>
@@ -173,7 +183,7 @@ export function BookingDetails({ open, onOpenChange, booking }) {
           {/* Booking Notes */}
           {booking.notes && (
             <div className='space-y-4'>
-              <h3 className='text-lg font-semibold'>Notes</h3>
+              <h3 className='text-lg font-semibold'>{t('booking.details.notes.title')}</h3>
               <div className='p-3 border rounded-md bg-muted/50'>
                 {booking.notes}
               </div>
@@ -184,40 +194,40 @@ export function BookingDetails({ open, onOpenChange, booking }) {
           <div className='space-y-4'>
             <h3 className='text-lg font-semibold flex items-center gap-2'>
               <CreditCard className='h-5 w-5' />
-              Pricing Breakdown
+              {t('booking.details.pricing.title')}
             </h3>
 
             <div className='space-y-2'>
               <div className='flex justify-between p-2 border rounded-md'>
-                <span>Base Price:</span>
+                <span>{t('booking.details.pricing.basePrice')}:</span>
                 <span className='font-medium'>
                   {formatPrice(booking.basePrice)}
                 </span>
               </div>
               <div className='flex justify-between p-2 border rounded-md'>
-                <span>Insurance:</span>
+                <span>{t('booking.details.pricing.insurance')}:</span>
                 <span className='font-medium'>
                   {formatPrice(booking.insuranceAmount)}
                 </span>
               </div>
               <div className='flex justify-between p-2 border rounded-md'>
-                <span>Tax:</span>
+                <span>{t('booking.details.pricing.tax')}:</span>
                 <span className='font-medium'>
                   {formatPrice(booking.taxAmount)}
                 </span>
               </div>
               <div className='flex justify-between p-2 border rounded-md'>
-                <span>Discount:</span>
+                <span>{t('booking.details.pricing.discount')}:</span>
                 <span className='font-medium text-green-600'>
                   -{formatPrice(booking.discountAmount)}
                 </span>
               </div>
               <div className='flex justify-between p-2 border rounded-md bg-muted/50 font-bold'>
-                <span>Total Amount:</span>
+                <span>{t('booking.details.pricing.totalAmount')}:</span>
                 <span>{formatPrice(booking.totalAmount)}</span>
               </div>
               <div className='flex justify-between p-2 border rounded-md'>
-                <span>Deposit:</span>
+                <span>{t('booking.details.pricing.deposit')}:</span>
                 <span className='font-medium'>
                   {formatPrice(booking.depositAmount)}
                 </span>
@@ -228,7 +238,7 @@ export function BookingDetails({ open, onOpenChange, booking }) {
           {/* Payments */}
           {booking.payments && booking.payments.length > 0 && (
             <div className='space-y-4'>
-              <h3 className='text-lg font-semibold'>Payment History</h3>
+              <h3 className='text-lg font-semibold'>{t('booking.details.paymentHistory')}</h3>
               <div className='space-y-2'>
                 {booking.payments.map(payment => (
                   <div
@@ -237,10 +247,11 @@ export function BookingDetails({ open, onOpenChange, booking }) {
                   >
                     <div>
                       <p className='font-medium'>
-                        Payment #{payment.id.substring(0, 8)}
+                        {t('booking.details.payment')} #
+                        {payment.id.substring(0, 8)}
                       </p>
                       <p className='text-sm text-muted-foreground'>
-                        {payment.status}
+                        {t('booking.details.status')}: {payment.status}
                       </p>
                     </div>
                     <p className='font-medium'>{formatPrice(payment.amount)}</p>
@@ -258,7 +269,7 @@ export function BookingDetails({ open, onOpenChange, booking }) {
             onClick={() => onOpenChange(false)}
             className='w-full sm:w-auto'
           >
-            Close
+            {t('booking.details.close')}
           </Button>
         </div>
       </DialogContent>

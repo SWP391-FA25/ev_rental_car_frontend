@@ -11,6 +11,127 @@
     "logout": "Đăng xuất",
     "language": "Ngôn ngữ"
   },
+  "station": {
+    "management": {
+      "title": "Quản lý trạm",
+      "subtitle": "Quản lý trạm sạc và thông tin liên quan",
+      "add": "Thêm trạm",
+      "addNew": "Thêm trạm mới",
+      "addDescription": "Tạo trạm sạc mới",
+      "noContact": "Không có liên hệ",
+      "slots": "Chỗ đỗ",
+      "filters": {
+        "search": "Tìm kiếm trạm...",
+        "status": "Trạng thái",
+        "all": "Tất cả"
+      },
+      "table": {
+        "name": "Tên",
+        "location": "Vị trí",
+        "address": "Địa chỉ",
+        "capacity": "Sức chứa",
+        "vehicles": "Xe",
+        "staff": "Nhân viên",
+        "status": "Trạng thái",
+        "actions": "Hành động"
+      },
+      "actions": {
+        "view": "Xem chi tiết",
+        "assign": "Phân công nhân viên",
+        "delete": "Xóa"
+      },
+      "confirmDelete": {
+        "title": "Vô hiệu hóa trạm",
+        "description": "Bạn có chắc muốn xóa/vô hiệu trạm này? Trạm sẽ không khả dụng cho các đơn mới.",
+        "confirm": "Xóa",
+        "cancel": "Hủy"
+      },
+      "summary": {
+        "totalStations": "Tổng số trạm",
+        "active": "Đang hoạt động",
+        "maintenance": "Bảo trì",
+        "capacity": "Tổng sức chứa"
+      },
+      "assignDialog": {
+        "title": "Phân công nhân viên vào trạm",
+        "description": "Phân công nhân viên cho {{stationName}}"
+      },
+      "messages": {
+        "loading": "Đang tải danh sách trạm...",
+        "loadFailed": "Không thể tải danh sách trạm",
+        "createSuccess": "Tạo trạm thành công",
+        "createFailed": "Không thể tạo trạm",
+        "updateSuccess": "Cập nhật trạm thành công",
+        "updateFailed": "Không thể cập nhật trạm",
+        "deleteSuccess": "Vô hiệu trạm thành công",
+        "deleteFailed": "Không thể vô hiệu trạm"
+      }
+    },
+    "form": {
+      "name": "Tên trạm",
+      "location": "Vị trí",
+      "address": "Địa chỉ đầy đủ",
+      "status": {
+        "label": "Trạng thái",
+        "active": "Đang hoạt động",
+        "inactive": "Ngừng hoạt động",
+        "maintenance": "Bảo trì",
+        "pending": "Đang chờ"
+      },
+      "capacity": "Sức chứa",
+      "contact": "Thông tin liên hệ",
+      "cancel": "Hủy",
+      "create": "Tạo trạm",
+      "update": "Cập nhật trạm",
+      "saving": "Đang lưu...",
+      "placeholders": {
+        "name": "vd: Trạm Trung tâm",
+        "status": "Chọn trạng thái",
+        "capacity": "vd: 10",
+        "contact": "vd: +84 123 456 789 hoặc email@example.com",
+        "address": "Nhập địa chỉ đầy đủ của trạm"
+      },
+      "errors": {
+        "nameRequired": "Vui lòng nhập tên trạm",
+        "locationRequired": "Vui lòng chọn vị trí",
+        "addressRequired": "Vui lòng nhập địa chỉ",
+        "capacityInvalid": "Sức chứa phải là số dương",
+        "statusRequired": "Vui lòng chọn trạng thái"
+      }
+    },
+    "details": {
+      "title": "Chi tiết trạm",
+      "description": "Xem và quản lý thông tin trạm",
+      "edit": "Sửa trạm",
+      "info": "Thông tin",
+      "vehicles": "Xe",
+      "staff": "Nhân viên được phân công",
+      "emptyVehicles": "Chưa có xe tại trạm này",
+      "emptyStaff": "Chưa có nhân viên được phân công",
+      "close": "Đóng",
+      "statistics": "Thống kê",
+      "vehiclesAtStation": "Xe tại trạm",
+      "staffAtStation": "Nhân viên tại trạm",
+      "vehicleTable": {
+        "brandModel": "Thương hiệu/Mẫu",
+        "type": "Loại",
+        "licensePlate": "Biển số",
+        "status": "Trạng thái"
+      },
+      "staffTable": {
+        "name": "Tên",
+        "email": "Email",
+        "phone": "Số điện thoại",
+        "role": "Vai trò"
+      },
+      "unknownStaff": "Không rõ nhân viên"
+    },
+    "timeline": {
+      "title": "Mốc thời gian trạm",
+      "createdAt": "Tạo lúc",
+      "updatedAt": "Cập nhật lúc"
+    }
+  },
   "hero": {
     "title1": "EV Rental - Cùng Bạn",
     "title2": "Trên Mọi Hành Trình",
@@ -163,7 +284,11 @@
       "selectBooking": "Vui lòng chọn hoặc nhập đơn thuê",
       "completeSuccess": "Hoàn tất trả xe và cập nhật đơn thành công",
       "completeQueued": "Đã gửi yêu cầu hoàn tất",
-      "completeFail": "Không thể hoàn tất trả xe"
+      "completeFail": "Không thể hoàn tất trả xe",
+      "overdueProceed": "Đơn thuê đã quá hạn, vẫn tiến hành trả xe",
+      "loadStationsFail": "Không thể tải danh sách trạm",
+      "invalidReturnLocation": "Vui lòng chọn trạm trả hợp lệ (3-200 ký tự)",
+      "invalidReturnOdometer": "Vui lòng nhập công tơ mét trả hợp lệ (>= 0)"
     },
     "booking": {
       "title": "1. Chọn đơn đang cần xử lý",
@@ -173,7 +298,8 @@
       "depositLabel": "Tiền cọc (VNĐ)",
       "customer": "Khách hàng",
       "vehicle": "Xe",
-      "time": "Thời gian"
+      "time": "Thời gian",
+      "overdue": "Quá hạn"
     },
     "inspection": {
       "title": "2. Kiểm tra xe",
@@ -201,7 +327,8 @@
       "odometerPlaceholder": "Nhập số km tại thời điểm trả",
       "location": "Vị trí trả thực tế",
       "notes": "Ghi chú",
-      "notesPlaceholder": "Thêm ghi chú về việc trả xe..."
+      "notesPlaceholder": "Thêm ghi chú về việc trả xe...",
+      "locationPlaceholder": "Nhập vị trí trả thực tế"
     },
     "deposit": {
       "title": "3. Tính toán cọc & hoàn tiền",
@@ -758,6 +885,309 @@
       "maintenance": "Bảo trì",
       "charging": "Đang sạc",
       "outOfService": "Ngừng phục vụ"
+    }
+  },
+  "vehicle": {
+    "title": "Quản lý xe",
+    "subtitle": "Quản lý đội xe và thông tin của chúng",
+    "actions": {
+      "add": "Thêm xe",
+      "create": "Tạo xe",
+      "creating": "Đang tạo...",
+      "update": "Cập nhật xe",
+      "saving": "Đang lưu...",
+      "cancel": "Hủy",
+      "delete": "Xóa",
+      "viewDetails": "Xem chi tiết",
+      "edit": "Sửa",
+      "close": "Đóng",
+      "saveChanges": "Lưu thay đổi"
+    },
+    "dialogs": {
+      "create": {
+        "title": "Thêm xe mới",
+        "description": "Tạo một xe mới trong đội xe"
+      },
+      "edit": {
+        "title": "Sửa",
+        "description": "Cập nhật thông tin xe"
+      },
+      "delete": {
+        "title": "Xóa xe",
+        "description": "Bạn có chắc muốn xóa vĩnh viễn xe này? Hành động này không thể hoàn tác và sẽ xóa toàn bộ ảnh liên quan."
+      }
+    },
+    "details": {
+      "title": "Chi tiết xe",
+      "description": "Xem và quản lý thông tin, hình ảnh xe"
+    },
+    "fields": {
+      "station": "Trạm",
+      "stationPlaceholder": "Chọn trạm",
+      "type": "Loại",
+      "typePlaceholder": "Chọn loại",
+      "brand": "Thương hiệu",
+      "brandPlaceholder": "vd: Tesla",
+      "model": "Mẫu",
+      "modelPlaceholder": "vd: Model 3",
+      "year": "Năm",
+      "yearPlaceholder": "2024",
+      "color": "Màu",
+      "colorPlaceholder": "vd: Trắng",
+      "seats": "Ghế",
+      "seatsPlaceholder": "5",
+      "licensePlate": "Biển số",
+      "licensePlatePlaceholder": "ABC-123",
+      "batteryLevel": "Mức pin (%)",
+      "batteryLevelPlaceholder": "85",
+      "fuelType": "Nhiên liệu",
+      "fuelTypePlaceholder": "Chọn loại nhiên liệu",
+      "status": "Trạng thái",
+      "statusPlaceholder": "Chọn trạng thái",
+      "vehicleId": "Mã xe"
+    },
+    "validation": {
+      "required": "Bắt buộc",
+      "invalidYear": "Năm không hợp lệ",
+      "invalidBattery": "Mức pin phải từ 0 đến 100",
+      "wholeNumber": "Phải là số nguyên",
+      "minSeats": "Tối thiểu là 1",
+      "minZero": "Phải >= 0",
+      "maxOne": "Phải <= 1",
+      "positive": "Phải là số dương"
+    },
+    "sections": {
+      "basicInfo": "Thông tin cơ bản",
+      "technicalDetails": "Chi tiết kỹ thuật"
+    },
+    "pricing": {
+      "title": "Thông tin giá",
+      "baseRate": "Giá cơ bản (ngày) *",
+      "hourlyRate": "Giá theo giờ *",
+      "weeklyRate": "Giá theo tuần",
+      "monthlyRate": "Giá theo tháng",
+      "depositAmount": "Tiền cọc *",
+      "insuranceRate": "Tỷ lệ bảo hiểm (%)",
+      "placeholders": {
+        "baseRate": "200.00",
+        "hourlyRate": "15.00",
+        "weeklyRate": "1200.00",
+        "monthlyRate": "4500.00",
+        "depositAmount": "500.00",
+        "insuranceRate": "0.10 (10%)"
+      }
+    },
+    "images": {
+      "title": "Ảnh xe",
+      "selectImages": "Chọn ảnh",
+      "uploading": "Đang tải lên...",
+      "uploadImage": "Tải ảnh",
+      "noImagesSelected": "Chưa chọn ảnh nào",
+      "clickToAdd": "Nhấn \"Chọn ảnh\" để thêm ảnh (tối đa 5MB mỗi ảnh)",
+      "noImagesAvailable": "Không có ảnh cho xe này",
+      "clickToUpload": "Nhấn \"Tải ảnh\" để thêm ảnh",
+      "willUploadCount": "{{count}} ảnh sẽ được tải lên sau khi tạo xe",
+      "removed": "Đã xóa ảnh",
+      "uploadSuccessAll": "Đã tải lên {{count}} ảnh",
+      "uploadSuccess": "Tải ảnh thành công",
+      "uploadSuccessPartial": "Đã tải lên {{success}}/{{count}} ảnh",
+      "uploadFailedSome": "Một số ảnh tải lên thất bại",
+      "uploadFailed": "Không thể tải ảnh",
+      "deleteSuccess": "Xóa ảnh thành công",
+      "deleteFailed": "Không thể xóa ảnh",
+      "confirmDelete": "Bạn có chắc muốn xóa ảnh này?",
+      "notImage": "{{name}} không phải là ảnh",
+      "exceedsLimit": "{{name}} vượt quá giới hạn 5MB",
+      "added": "Đã thêm {{count}} ảnh"
+    },
+    "timeline": {
+      "title": "Mốc thời gian xe",
+      "createdAt": "Tạo lúc",
+      "updatedAt": "Cập nhật lần cuối"
+    },
+    "table": {
+      "image": "Ảnh",
+      "brandModel": "Hãng/Mẫu",
+      "type": "Loại",
+      "licensePlate": "Biển số",
+      "station": "Trạm",
+      "year": "Năm",
+      "fuelType": "Nhiên liệu",
+      "battery": "Pin",
+      "status": "Trạng thái",
+      "actions": "Thao tác",
+      "na": "Không có"
+    },
+    "status": {
+      "all": "Tất cả",
+      "available": "Sẵn sàng",
+      "pending": "Đang chờ",
+      "rented": "Đang thuê",
+      "maintenance": "Bảo trì",
+      "outOfService": "Ngừng phục vụ"
+    },
+    "fuel": {
+      "electric": "Điện",
+      "hybrid": "Lai"
+    },
+    "types": {
+      "sedan": "Sedan",
+      "suv": "SUV",
+      "hatchback": "Hatchback",
+      "coupe": "Coupe"
+    },
+    "stats": {
+      "total": "Tổng số xe",
+      "available": "Sẵn sàng",
+      "rented": "Đang thuê",
+      "electric": "Xe điện"
+    },
+    "messages": {
+      "loading": "Đang tải danh sách xe...",
+      "createSuccess": "Tạo xe thành công",
+      "createFailed": "Không thể tạo xe",
+      "updateSuccess": "Cập nhật xe thành công",
+      "updateFailed": "Không thể cập nhật xe",
+      "deleteSuccess": "Xóa xe vĩnh viễn thành công",
+      "deleteFailed": "Không thể xóa xe",
+      "loadFailed": "Không thể tải danh sách xe",
+      "invalidDate": "Ngày không hợp lệ"
+    },
+    "filters": {
+      "searchPlaceholder": "Tìm kiếm xe...",
+      "status": "Trạng thái"
+    }
+  },
+  "booking": {
+    "title": "Quản lý đơn thuê",
+    "subtitle": "Quản lý và theo dõi tất cả đơn thuê xe",
+    "actions": {
+      "refresh": "Làm mới",
+      "viewDetails": "Xem chi tiết",
+      "confirmBooking": "Xác nhận đơn",
+      "waitingForDeposit": "Chờ tiền cọc",
+      "startRental": "Bắt đầu cho thuê",
+      "completeRental": "Hoàn tất thuê",
+      "cancelBooking": "Hủy đơn"
+    },
+    "filters": {
+      "searchPlaceholder": "Tìm theo tên khách, mẫu xe hoặc mã đơn...",
+      "status": "Trạng thái",
+      "statusAll": "Tất cả trạng thái",
+      "depositLabel": "Cọc",
+      "depositAll": "Tất cả cọc",
+      "deposit": {
+        "pendingPayment": "Chờ thanh toán",
+        "paid": "Đã thanh toán",
+        "failed": "Thất bại",
+        "refunded": "Đã hoàn"
+      }
+    },
+    "status": {
+      "pending": "Đang chờ",
+      "confirmed": "Đã xác nhận",
+      "inProgress": "Đang diễn ra",
+      "completed": "Hoàn tất",
+      "cancelled": "Đã hủy"
+    },
+    "depositStatus": {
+      "pending": "Đang chờ",
+      "paid": "Đã thanh toán",
+      "failed": "Thất bại",
+      "refunded": "Đã hoàn"
+    },
+    "stats": {
+      "bookingAmount": "Số lượng đơn",
+      "pendingDeposits": "Cọc đang chờ",
+      "paidDeposits": "Cọc đã thanh toán",
+      "inProgress": "Đang diễn ra",
+      "completed": "Hoàn tất",
+      "refunded": "Đã hoàn"
+    },
+    "table": {
+      "customer": "Khách hàng",
+      "vehicle": "Xe",
+      "station": "Trạm",
+      "dateTime": "Ngày & Giờ",
+      "status": "Trạng thái",
+      "depositStatus": "Trạng thái cọc",
+      "actions": "Thao tác",
+      "noBookings": "Không có đơn thuê nào",
+      "noEndTime": "Không có thời gian kết thúc"
+    },
+    "dialogs": {
+      "complete": {
+        "title": "Hoàn tất đơn",
+        "description": "Hoàn tất thuê và cập nhật trạng thái xe"
+      },
+      "cancel": {
+        "title": "Hủy đơn",
+        "description": "Bạn có chắc muốn hủy đơn này? Hành động này không thể hoàn tác.",
+        "confirm": "Hủy đơn",
+        "keep": "Giữ đơn"
+      }
+    },
+    "pagination": {
+      "page": "Trang {{current}} của {{total}}",
+      "previous": "Trước",
+      "next": "Sau"
+    },
+    "messages": {
+      "loading": "Đang tải đơn thuê...",
+      "loadFailed": "Không thể tải đơn thuê",
+      "detailsFailed": "Không thể tải chi tiết đơn thuê",
+      "confirmSuccess": "Xác nhận đơn thành công",
+      "confirmFailed": "Không thể xác nhận đơn",
+      "startSuccess": "Bắt đầu cho thuê thành công",
+      "startFailed": "Không thể bắt đầu cho thuê",
+      "completeSuccess": "Hoàn tất đơn thành công",
+      "completeFailed": "Không thể hoàn tất đơn",
+      "cancelSuccess": "Hủy đơn thành công",
+      "cancelFailed": "Không thể hủy đơn"
+    },
+    "details": {
+      "title": "Chi tiết đơn thuê",
+      "description": "Thông tin đầy đủ về đơn thuê này",
+      "customerInfo": {
+        "title": "Thông tin khách hàng",
+        "name": "Tên",
+        "email": "Email",
+        "phone": "Điện thoại"
+      },
+      "vehicleInfo": {
+        "title": "Thông tin xe",
+        "vehicle": "Xe",
+        "licensePlate": "Biển số",
+        "type": "Loại",
+        "status": "Trạng thái"
+      },
+      "bookingInfo": {
+        "title": "Chi tiết đơn",
+        "bookingId": "Mã đơn",
+        "status": "Trạng thái",
+        "startTime": "Thời gian bắt đầu",
+        "endTime": "Thời gian kết thúc",
+        "station": "Trạm",
+        "created": "Tạo lúc"
+      },
+      "notes": {
+        "title": "Ghi chú"
+      },
+      "pricing": {
+        "title": "Chi tiết giá",
+        "basePrice": "Giá cơ bản",
+        "insurance": "Bảo hiểm",
+        "tax": "Thuế",
+        "discount": "Giảm giá",
+        "totalAmount": "Tổng cộng",
+        "deposit": "Cọc"
+      },
+      "paymentHistory": "Lịch sử thanh toán",
+      "payment": "Thanh toán",
+      "status": "Trạng thái",
+      "close": "Đóng",
+      "na": "Không có",
+      "notSet": "Chưa đặt"
     }
   },
   "notifications": {

@@ -50,7 +50,7 @@ export default function CarForm({ stations = [], onCreated, onCancel, loading = 
         year: Yup.number()
             .typeError(t('vehicle.validation.invalidYear') || 'Must be a valid year')
             .required(t('vehicle.validation.required'))
-            .integer('Must be a whole number')
+            .integer(t('vehicle.validation.wholeNumber'))
             .min(1990, t('vehicle.validation.invalidYear'))
             .max(new Date().getFullYear(), t('vehicle.validation.invalidYear') || `Maximum year is ${new Date().getFullYear()}`),
         fuelType: Yup.string().required(t('vehicle.validation.required')),
@@ -65,20 +65,20 @@ export default function CarForm({ stations = [], onCreated, onCancel, loading = 
         seats: Yup.number()
             .nullable()
             .transform((v, o) => (o === '' ? null : v))
-            .min(1, 'Must be at least 1'),
+            .min(1, t('vehicle.validation.minSeats')),
         weeklyRate: Yup.number()
             .nullable()
             .transform((v, o) => (o === '' ? null : v))
-            .min(0, 'Must be >= 0'),
+            .min(0, t('vehicle.validation.minZero')),
         monthlyRate: Yup.number()
             .nullable()
             .transform((v, o) => (o === '' ? null : v))
-            .min(0, 'Must be >= 0'),
+            .min(0, t('vehicle.validation.minZero')),
         insuranceRate: Yup.number()
             .nullable()
             .transform((v, o) => (o === '' ? null : v))
-            .min(0, 'Must be >= 0')
-            .max(1, 'Must be <= 1'),
+            .min(0, t('vehicle.validation.minZero'))
+            .max(1, t('vehicle.validation.maxOne')),
     });
 
     const formik = useFormik({
@@ -193,13 +193,13 @@ export default function CarForm({ stations = [], onCreated, onCancel, loading = 
             const failedCount = results.filter(r => r.status === 'rejected').length;
 
             if (failedCount > 0) {
-                toast.warning(`${tempImages.length - failedCount}/${tempImages.length} images uploaded successfully`);
+                toast.warning(t('vehicle.images.uploadSuccessPartial', { success: tempImages.length - failedCount, count: tempImages.length }));
             } else {
-                toast.success(`All ${tempImages.length} images uploaded successfully`);
+                toast.success(t('vehicle.images.uploadSuccessAll', { count: tempImages.length }));
             }
         } catch (error) {
             console.error('Failed to upload images:', error);
-            toast.error('Some images failed to upload');
+            toast.error(t('vehicle.images.uploadFailedSome'));
         } finally {
             setImageLoading(false);
         }
@@ -211,11 +211,11 @@ export default function CarForm({ stations = [], onCreated, onCancel, loading = 
 
         const validFiles = files.filter(file => {
             if (!file.type.startsWith('image/')) {
-                toast.error(`${file.name} is not an image`);
+                toast.error(t('vehicle.images.notImage', { name: file.name }));
                 return false;
             }
             if (file.size > 5 * 1024 * 1024) {
-                toast.error(`${file.name} exceeds 5MB limit`);
+                toast.error(t('vehicle.images.exceedsLimit', { name: file.name }));
                 return false;
             }
             return true;
@@ -223,7 +223,7 @@ export default function CarForm({ stations = [], onCreated, onCancel, loading = 
 
         if (validFiles.length > 0) {
             setTempImages(prev => [...prev, ...validFiles]);
-            toast.success(`${validFiles.length} image(s) added`);
+            toast.success(t('vehicle.images.added', { count: validFiles.length }));
         }
 
         // Reset input
@@ -232,7 +232,7 @@ export default function CarForm({ stations = [], onCreated, onCancel, loading = 
 
     const handleRemoveTempImage = (index) => {
         setTempImages(prev => prev.filter((_, i) => i !== index));
-        toast.success('Image removed');
+        toast.success(t('vehicle.images.removed'));
     };
 
     const renderError = (field) =>
@@ -245,7 +245,7 @@ export default function CarForm({ stations = [], onCreated, onCancel, loading = 
             <div className='space-y-6'>
                 {/* Basic Information */}
                 <div className='space-y-4'>
-                    <h3 className='text-lg font-semibold'>Basic Information</h3>
+                    <h3 className='text-lg font-semibold'>{t('vehicle.sections.basicInfo')}</h3>
                     <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                         <div className='space-y-2'>
                             <Label htmlFor='brand'>{t('vehicle.fields.brand')} *</Label>
@@ -373,10 +373,10 @@ export default function CarForm({ stations = [], onCreated, onCancel, loading = 
 
                 {/* Technical Details */}
                 <div className='space-y-4'>
-                    <h3 className='text-lg font-semibold'>Technical Details</h3>
+                    <h3 className='text-lg font-semibold'>{t('vehicle.sections.technicalDetails')}</h3>
                     <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                         <div className='space-y-2'>
-                            <Label htmlFor='batteryLevel'>{t('vehicle.fields.batteryLevel')} (%)</Label>
+                            <Label htmlFor='batteryLevel'>{t('vehicle.fields.batteryLevel')}</Label>
                             <Input
                                 id='batteryLevel'
                                 type='number'
@@ -433,10 +433,10 @@ export default function CarForm({ stations = [], onCreated, onCancel, loading = 
 
                 {/* Pricing Information */}
                 <div className='space-y-4'>
-                    <h3 className='text-lg font-semibold'>Pricing Information</h3>
+                    <h3 className='text-lg font-semibold'>{t('vehicle.pricing.title')}</h3>
                     <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                         <div className='space-y-2'>
-                            <Label htmlFor='baseRate'>Base Rate (Daily) *</Label>
+                            <Label htmlFor='baseRate'>{t('vehicle.pricing.baseRate')}</Label>
                             <Input
                                 id='baseRate'
                                 type='number'
@@ -446,14 +446,14 @@ export default function CarForm({ stations = [], onCreated, onCancel, loading = 
                                 value={formik.values.baseRate}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                placeholder='200.00'
+                                placeholder={t('vehicle.pricing.placeholders.baseRate')}
                                 className={formik.errors.baseRate && formik.touched.baseRate ? 'border-red-500' : ''}
                             />
                             {renderError('baseRate')}
                         </div>
 
                         <div className='space-y-2'>
-                            <Label htmlFor='hourlyRate'>Hourly Rate *</Label>
+                            <Label htmlFor='hourlyRate'>{t('vehicle.pricing.hourlyRate')}</Label>
                             <Input
                                 id='hourlyRate'
                                 type='number'
@@ -463,14 +463,14 @@ export default function CarForm({ stations = [], onCreated, onCancel, loading = 
                                 value={formik.values.hourlyRate}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                placeholder='15.00'
+                                placeholder={t('vehicle.pricing.placeholders.hourlyRate')}
                                 className={formik.errors.hourlyRate && formik.touched.hourlyRate ? 'border-red-500' : ''}
                             />
                             {renderError('hourlyRate')}
                         </div>
 
                         <div className='space-y-2'>
-                            <Label htmlFor='weeklyRate'>Weekly Rate</Label>
+                            <Label htmlFor='weeklyRate'>{t('vehicle.pricing.weeklyRate')}</Label>
                             <Input
                                 id='weeklyRate'
                                 type='number'
@@ -480,14 +480,14 @@ export default function CarForm({ stations = [], onCreated, onCancel, loading = 
                                 value={formik.values.weeklyRate}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                placeholder='1200.00'
+                                placeholder={t('vehicle.pricing.placeholders.weeklyRate')}
                                 className={formik.errors.weeklyRate && formik.touched.weeklyRate ? 'border-red-500' : ''}
                             />
                             {renderError('weeklyRate')}
                         </div>
 
                         <div className='space-y-2'>
-                            <Label htmlFor='monthlyRate'>Monthly Rate</Label>
+                            <Label htmlFor='monthlyRate'>{t('vehicle.pricing.monthlyRate')}</Label>
                             <Input
                                 id='monthlyRate'
                                 type='number'
@@ -497,14 +497,14 @@ export default function CarForm({ stations = [], onCreated, onCancel, loading = 
                                 value={formik.values.monthlyRate}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                placeholder='4500.00'
+                                placeholder={t('vehicle.pricing.placeholders.monthlyRate')}
                                 className={formik.errors.monthlyRate && formik.touched.monthlyRate ? 'border-red-500' : ''}
                             />
                             {renderError('monthlyRate')}
                         </div>
 
                         <div className='space-y-2'>
-                            <Label htmlFor='depositAmount'>Deposit Amount *</Label>
+                            <Label htmlFor='depositAmount'>{t('vehicle.pricing.depositAmount')}</Label>
                             <Input
                                 id='depositAmount'
                                 type='number'
@@ -514,14 +514,14 @@ export default function CarForm({ stations = [], onCreated, onCancel, loading = 
                                 value={formik.values.depositAmount}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                placeholder='500.00'
+                                placeholder={t('vehicle.pricing.placeholders.depositAmount')}
                                 className={formik.errors.depositAmount && formik.touched.depositAmount ? 'border-red-500' : ''}
                             />
                             {renderError('depositAmount')}
                         </div>
 
                         <div className='space-y-2'>
-                            <Label htmlFor='insuranceRate'>Insurance Rate (%)</Label>
+                            <Label htmlFor='insuranceRate'>{t('vehicle.pricing.insuranceRate')}</Label>
                             <Input
                                 id='insuranceRate'
                                 type='number'
@@ -532,7 +532,7 @@ export default function CarForm({ stations = [], onCreated, onCancel, loading = 
                                 value={formik.values.insuranceRate}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                placeholder='0.10 (10%)'
+                                placeholder={t('vehicle.pricing.placeholders.insuranceRate')}
                                 className={formik.errors.insuranceRate && formik.touched.insuranceRate ? 'border-red-500' : ''}
                             />
                             {renderError('insuranceRate')}
@@ -543,7 +543,7 @@ export default function CarForm({ stations = [], onCreated, onCancel, loading = 
                 {/* Vehicle Images */}
                 <div className='space-y-4'>
                     <div className='flex items-center justify-between'>
-                        <h3 className='text-lg font-semibold'>Vehicle Images</h3>
+                        <h3 className='text-lg font-semibold'>{t('vehicle.images.title')}</h3>
                         <div className='flex items-center gap-2'>
                             <input
                                 type='file'
@@ -562,7 +562,7 @@ export default function CarForm({ stations = [], onCreated, onCancel, loading = 
                                 disabled={imageLoading || formik.isSubmitting}
                             >
                                 <UploadIcon className='mr-2 h-4 w-4' />
-                                {imageLoading ? 'Uploading...' : 'Select Images'}
+                                {imageLoading ? t('vehicle.images.uploading') : t('vehicle.images.selectImages')}
                             </Button>
                         </div>
                     </div>
@@ -597,15 +597,15 @@ export default function CarForm({ stations = [], onCreated, onCancel, loading = 
                         ) : (
                             <div className='col-span-full text-center text-muted-foreground py-8 border-2 border-dashed rounded-lg'>
                                 <ImageIcon className='mx-auto h-12 w-12 mb-2 opacity-50' />
-                                <p className='text-sm'>No images selected</p>
-                                <p className='text-xs mt-1'>Click "Select Images" to add photos (max 5MB each)</p>
+                                <p className='text-sm'>{t('vehicle.images.noImagesSelected')}</p>
+                                <p className='text-xs mt-1'>{t('vehicle.images.clickToAdd')}</p>
                             </div>
                         )}
                     </div>
 
                     {tempImages.length > 0 && (
                         <p className='text-sm text-muted-foreground'>
-                            {tempImages.length} image(s) will be uploaded after vehicle creation
+                            {t('vehicle.images.willUploadCount', { count: tempImages.length })}
                         </p>
                     )}
                 </div>
@@ -625,7 +625,7 @@ export default function CarForm({ stations = [], onCreated, onCancel, loading = 
                 </Button>
                 <Button type='submit' disabled={loading || formik.isSubmitting || imageLoading} className='w-full sm:w-auto'>
                     {formik.isSubmitting
-                        ? t('vehicle.actions.creating') || 'Creating...'
+                        ? t('vehicle.actions.creating')
                         : t('vehicle.actions.create')}
                 </Button>
             </div>

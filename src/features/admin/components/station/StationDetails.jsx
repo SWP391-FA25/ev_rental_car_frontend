@@ -36,12 +36,13 @@ import {
   TableRow,
 } from '../../../shared/components/ui/table';
 import { Textarea } from '../../../shared/components/ui/textarea';
+import { useTranslation } from 'react-i18next';
 
-// Station status options
+// Station status options (label resolved via i18n inside component)
 const STATION_STATUS = [
-  { value: 'ACTIVE', label: 'Active' },
-  { value: 'INACTIVE', label: 'Inactive' },
-  { value: 'MAINTENANCE', label: 'Maintenance' },
+  { value: 'ACTIVE', labelKey: 'station.form.status.active' },
+  { value: 'INACTIVE', labelKey: 'station.form.status.inactive' },
+  { value: 'MAINTENANCE', labelKey: 'station.form.status.maintenance' },
 ];
 
 export function StationDetails({
@@ -51,6 +52,7 @@ export function StationDetails({
   onUpdate,
   loading = false,
 }) {
+  const { t, i18n } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -88,7 +90,7 @@ export function StationDetails({
     const newErrors = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Station name is required';
+      newErrors.name = t('station.form.errors.nameRequired');
     }
 
     if (
@@ -96,19 +98,19 @@ export function StationDetails({
       (typeof formData.location === 'string' && !formData.location.trim()) ||
       (typeof formData.location === 'object' && !formData.location.coordinates)
     ) {
-      newErrors.location = 'Location is required';
+      newErrors.location = t('station.form.errors.locationRequired');
     }
 
     if (!formData.address.trim()) {
-      newErrors.address = 'Address is required';
+      newErrors.address = t('station.form.errors.addressRequired');
     }
 
     if (!formData.capacity || formData.capacity <= 0) {
-      newErrors.capacity = 'Capacity must be a positive number';
+      newErrors.capacity = t('station.form.errors.capacityInvalid');
     }
 
     if (!formData.status) {
-      newErrors.status = 'Status is required';
+      newErrors.status = t('station.form.errors.statusRequired');
     }
 
     setErrors(newErrors);
@@ -181,20 +183,24 @@ export function StationDetails({
 
   const getStatusLabel = status => {
     const statusObj = STATION_STATUS.find(s => s.value === status);
-    return statusObj ? statusObj.label : status;
+    return statusObj ? t(statusObj.labelKey) : status;
   };
 
   const formatDate = dateString => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return t('vehicle.table.na');
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'Invalid Date';
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    if (isNaN(date.getTime())) return t('vehicle.table.na');
+    try {
+      return new Intl.DateTimeFormat(i18n.language || 'en', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }).format(date);
+    } catch (_) {
+      return date.toLocaleString();
+    }
   };
 
   if (!station) return null;
@@ -203,20 +209,20 @@ export function StationDetails({
     <Dialog open={open} onOpenChange={loading ? undefined : onOpenChange}>
       <DialogContent className='w-[95vw] max-w-[800px] max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
-          <DialogTitle>Station Details</DialogTitle>
+          <DialogTitle>{t('station.details.title')}</DialogTitle>
           <DialogDescription>
-            View and manage station information
+            {t('station.details.description', { defaultValue: t('station.management.subtitle') })}
           </DialogDescription>
         </DialogHeader>
 
         <div className='space-y-6'>
           {/* Basic Information */}
           <div className='space-y-4'>
-            <h3 className='text-lg font-semibold'>Basic Information</h3>
+            <h3 className='text-lg font-semibold'>{t('station.details.info')}</h3>
 
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div className='space-y-2'>
-                <Label htmlFor='name'>Station Name</Label>
+                <Label htmlFor='name'>{t('station.form.name')}</Label>
                 {isEditing ? (
                   <Input
                     id='name'
@@ -236,7 +242,7 @@ export function StationDetails({
               </div>
 
               <div className='space-y-2'>
-                <Label htmlFor='status'>Status</Label>
+                <Label htmlFor='status'>{t('station.form.status.label')}</Label>
                 {isEditing ? (
                   <Select
                     value={formData.status}
@@ -251,7 +257,7 @@ export function StationDetails({
                     <SelectContent>
                       {STATION_STATUS.map(status => (
                         <SelectItem key={status.value} value={status.value}>
-                          {status.label}
+                          {t(status.labelKey)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -269,7 +275,7 @@ export function StationDetails({
               </div>
 
               <div className='space-y-2'>
-                <Label htmlFor='capacity'>Capacity</Label>
+                <Label htmlFor='capacity'>{t('station.form.capacity')}</Label>
                 {isEditing ? (
                   <Input
                     id='capacity'
@@ -286,7 +292,7 @@ export function StationDetails({
                   />
                 ) : (
                   <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
-                    <Badge variant='outline'>{station.capacity} slots</Badge>
+                    <Badge variant='outline'>{station.capacity} {t('station.management.slots')}</Badge>
                   </div>
                 )}
                 {errors.capacity && (
@@ -295,13 +301,13 @@ export function StationDetails({
               </div>
 
               <div className='space-y-2'>
-                <Label htmlFor='contact'>Contact Information</Label>
+                <Label htmlFor='contact'>{t('station.form.contact')}</Label>
                 {isEditing ? (
                   <Input
                     id='contact'
                     value={formData.contact}
                     onChange={e => handleInputChange('contact', e.target.value)}
-                    placeholder='Phone number or email'
+                    placeholder={t('station.form.placeholders.contact')}
                     className='w-full'
                     disabled={loading}
                   />
@@ -314,7 +320,7 @@ export function StationDetails({
                         <PhoneIcon className='mr-2 h-4 w-4 text-muted-foreground' />
                       )}
                       <span className='text-sm'>
-                        {station.contact || 'No contact information'}
+                        {station.contact || t('station.management.noContact')}
                       </span>
                     </div>
                   </div>
@@ -323,7 +329,7 @@ export function StationDetails({
             </div>
 
             <div className='space-y-2'>
-              <Label htmlFor='location'>Location</Label>
+              <Label htmlFor='location'>{t('station.form.location')}</Label>
               {isEditing ? (
                 <>
                   <LocationPicker
@@ -348,13 +354,13 @@ export function StationDetails({
             </div>
 
             <div className='space-y-2'>
-              <Label htmlFor='address'>Full Address</Label>
+              <Label htmlFor='address'>{t('station.form.address')}</Label>
               {isEditing ? (
                 <Textarea
                   id='address'
                   value={formData.address}
                   onChange={e => handleInputChange('address', e.target.value)}
-                  placeholder='Enter full address'
+                  placeholder={t('station.form.placeholders.address')}
                   rows={3}
                   className={`w-full resize-none ${
                     errors.address ? 'border-red-500' : ''
@@ -363,7 +369,7 @@ export function StationDetails({
                 />
               ) : (
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[80px] flex items-start'>
-                  {station.address || 'N/A'}
+                  {station.address || t('vehicle.table.na')}
                 </div>
               )}
               {errors.address && (
@@ -374,7 +380,7 @@ export function StationDetails({
 
           {/* Statistics */}
           <div className='space-y-4'>
-            <h3 className='text-lg font-semibold'>Statistics</h3>
+            <h3 className='text-lg font-semibold'>{t('station.details.statistics')}</h3>
             <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
               <div className='rounded-lg border p-4'>
                 <div className='flex items-center'>
@@ -384,7 +390,7 @@ export function StationDetails({
                       {station.vehicles?.length || 0}
                     </div>
                     <div className='text-sm text-muted-foreground'>
-                      Vehicles
+                      {t('station.details.vehicles')}
                     </div>
                   </div>
                 </div>
@@ -397,7 +403,7 @@ export function StationDetails({
                       {station.stationStaff?.length || 0}
                     </div>
                     <div className='text-sm text-muted-foreground'>
-                      Staff Members
+                      {t('station.details.staff')}
                     </div>
                   </div>
                 </div>
@@ -410,7 +416,7 @@ export function StationDetails({
                       {station.capacity || 0}
                     </div>
                     <div className='text-sm text-muted-foreground'>
-                      Total Capacity
+                      {t('station.management.summary.capacity')}
                     </div>
                   </div>
                 </div>
@@ -421,15 +427,15 @@ export function StationDetails({
           {/* Vehicles at Station */}
           {station.vehicles && station.vehicles.length > 0 && (
             <div className='space-y-4'>
-              <h3 className='text-lg font-semibold'>Vehicles at Station</h3>
+              <h3 className='text-lg font-semibold'>{t('station.details.vehiclesAtStation')}</h3>
               <div className='rounded-md border'>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Brand/Model</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>License Plate</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead>{t('station.details.vehicleTable.brandModel')}</TableHead>
+                      <TableHead>{t('station.details.vehicleTable.type')}</TableHead>
+                      <TableHead>{t('station.details.vehicleTable.licensePlate')}</TableHead>
+                      <TableHead>{t('station.details.vehicleTable.status')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -446,7 +452,7 @@ export function StationDetails({
                           </div>
                         </TableCell>
                         <TableCell>{vehicle.type}</TableCell>
-                        <TableCell>{vehicle.licensePlate || 'N/A'}</TableCell>
+                        <TableCell>{vehicle.licensePlate || t('vehicle.table.na')}</TableCell>
                         <TableCell>
                           <Badge variant='outline'>{vehicle.status}</Badge>
                         </TableCell>
@@ -461,15 +467,15 @@ export function StationDetails({
           {/* Staff at Station */}
           {station.stationStaff && station.stationStaff.length > 0 && (
             <div className='space-y-4'>
-              <h3 className='text-lg font-semibold'>Staff at Station</h3>
+              <h3 className='text-lg font-semibold'>{t('station.details.staffAtStation')}</h3>
               <div className='rounded-md border'>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Phone</TableHead>
-                      <TableHead>Role</TableHead>
+                      <TableHead>{t('station.details.staffTable.name')}</TableHead>
+                      <TableHead>{t('station.details.staffTable.email')}</TableHead>
+                      <TableHead>{t('station.details.staffTable.phone')}</TableHead>
+                      <TableHead>{t('station.details.staffTable.role')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -478,15 +484,15 @@ export function StationDetails({
                         <TableCell>
                           <div>
                             <div className='font-medium'>
-                              {staff.user?.name || 'Unknown Staff'}
+                              {staff.user?.name || t('station.details.unknownStaff')}
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>{staff.user?.email || 'N/A'}</TableCell>
-                        <TableCell>{staff.user?.phone || 'N/A'}</TableCell>
+                        <TableCell>{staff.user?.email || t('vehicle.table.na')}</TableCell>
+                        <TableCell>{staff.user?.phone || t('vehicle.table.na')}</TableCell>
                         <TableCell>
                           <Badge variant='outline'>
-                            {staff.user?.role || 'N/A'}
+                            {staff.user?.role || t('vehicle.table.na')}
                           </Badge>
                         </TableCell>
                       </TableRow>
@@ -499,18 +505,18 @@ export function StationDetails({
 
           {/* Station Timeline */}
           <div className='space-y-4'>
-            <h3 className='text-lg font-semibold'>Station Timeline</h3>
+            <h3 className='text-lg font-semibold'>{t('station.timeline.title')}</h3>
 
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div className='space-y-2'>
-                <Label>Created At</Label>
+                <Label>{t('station.timeline.createdAt')}</Label>
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                   {formatDate(station.createdAt)}
                 </div>
               </div>
 
               <div className='space-y-2'>
-                <Label>Last Updated</Label>
+                <Label>{t('station.timeline.updatedAt')}</Label>
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                   {formatDate(station.updatedAt)}
                 </div>
@@ -529,14 +535,14 @@ export function StationDetails({
                 disabled={loading}
                 className='w-full sm:w-auto'
               >
-                Cancel
+                {t('station.form.cancel')}
               </Button>
               <Button
                 onClick={handleSave}
                 disabled={loading}
                 className='w-full sm:w-auto'
               >
-                {loading ? 'Saving...' : 'Save Changes'}
+                {loading ? t('station.form.saving') : t('vehicle.actions.saveChanges')}
               </Button>
             </>
           ) : (
@@ -546,13 +552,13 @@ export function StationDetails({
                 onClick={() => onOpenChange(false)}
                 className='w-full sm:w-auto'
               >
-                Close
+                {t('station.details.close')}
               </Button>
               <Button
                 onClick={() => setIsEditing(true)}
                 className='w-full sm:w-auto'
               >
-                Edit Station
+                {t('station.details.edit')}
               </Button>
             </>
           )}

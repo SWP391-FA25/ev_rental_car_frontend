@@ -57,7 +57,7 @@ export function VehicleDetails({
   onImageUpload,
   loading = false,
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [vehicleImages, setVehicleImages] = useState([]);
   const [imageLoading, setImageLoading] = useState(false);
@@ -74,51 +74,48 @@ export function VehicleDetails({
       t('vehicle.validation.required') || 'Required'
     ),
     year: Yup.number()
-      .typeError('Must be a valid year')
+      .typeError(t('vehicle.validation.invalidYear'))
       .required(t('vehicle.validation.required') || 'Required')
-      .integer('Must be a whole number')
-      .min(1990, 'Year must be >= 1990')
-      .max(
-        new Date().getFullYear(),
-        `Maximum year is ${new Date().getFullYear()}`
-      ),
+      .integer(t('vehicle.validation.wholeNumber'))
+      .min(1990, t('vehicle.validation.invalidYear'))
+      .max(new Date().getFullYear(), t('vehicle.validation.invalidYear')),
     fuelType: Yup.string().required(
       t('vehicle.validation.required') || 'Required'
     ),
     batteryLevel: Yup.number()
       .nullable()
       .transform((v, o) => (o === '' ? null : v))
-      .min(0, 'Battery must be 0-100')
-      .max(100, 'Battery must be 0-100'),
+      .min(0, t('vehicle.validation.invalidBattery'))
+      .max(100, t('vehicle.validation.invalidBattery')),
     seats: Yup.number()
       .nullable()
       .transform((v, o) => (o === '' ? null : v))
-      .min(1, 'Seats must be >= 1'),
+      .min(1, t('vehicle.validation.minSeats')),
     baseRate: Yup.number()
       .nullable()
       .transform((v, o) => (o === '' ? null : v))
-      .positive('Must be positive'),
+      .positive(t('vehicle.validation.positive')),
     hourlyRate: Yup.number()
       .nullable()
       .transform((v, o) => (o === '' ? null : v))
-      .positive('Must be positive'),
+      .positive(t('vehicle.validation.positive')),
     weeklyRate: Yup.number()
       .nullable()
       .transform((v, o) => (o === '' ? null : v))
-      .min(0, 'Must be >= 0'),
+      .min(0, t('vehicle.validation.minZero')),
     monthlyRate: Yup.number()
       .nullable()
       .transform((v, o) => (o === '' ? null : v))
-      .min(0, 'Must be >= 0'),
+      .min(0, t('vehicle.validation.minZero')),
     depositAmount: Yup.number()
       .nullable()
       .transform((v, o) => (o === '' ? null : v))
-      .min(0, 'Must be >= 0'),
+      .min(0, t('vehicle.validation.minZero')),
     insuranceRate: Yup.number()
       .nullable()
       .transform((v, o) => (o === '' ? null : v))
-      .min(0, 'Must be >= 0')
-      .max(1, 'Must be <= 1'),
+      .min(0, t('vehicle.validation.minZero'))
+      .max(1, t('vehicle.validation.maxOne')),
   });
 
   const formik = useFormik({
@@ -261,12 +258,12 @@ export function VehicleDetails({
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file');
+      toast.error(t('vehicle.images.notImage'));
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('File size must be less than 5MB');
+      toast.error(t('vehicle.images.exceedsLimit'));
       return;
     }
 
@@ -286,7 +283,7 @@ export function VehicleDetails({
       );
 
       if (response.success) {
-        toast.success('Image uploaded successfully');
+        toast.success(t('vehicle.images.uploadSuccess'));
         loadVehicleImages(vehicle.id);
         // Notify parent component to refresh images
         if (onImageUpload) {
@@ -294,7 +291,7 @@ export function VehicleDetails({
         }
       }
     } catch (error) {
-      toast.error('Failed to upload image: ' + error.message);
+      toast.error(t('vehicle.images.uploadFailed') + ': ' + error.message);
       console.log(error.message);
     } finally {
       setImageLoading(false);
@@ -302,7 +299,7 @@ export function VehicleDetails({
   };
 
   const handleDeleteImage = async imageId => {
-    if (!confirm('Are you sure you want to delete this image?')) {
+    if (!confirm(t('vehicle.images.confirmDelete'))) {
       return;
     }
 
@@ -311,7 +308,7 @@ export function VehicleDetails({
         endpoints.vehicles.deleteImage(vehicle.id, imageId)
       );
       if (response.success) {
-        toast.success('Image deleted successfully');
+        toast.success(t('vehicle.images.deleteSuccess'));
         loadVehicleImages(vehicle.id);
         // Notify parent component to refresh images
         if (onImageUpload) {
@@ -319,7 +316,7 @@ export function VehicleDetails({
         }
       }
     } catch (error) {
-      toast.error('Failed to delete image: ' + error.message);
+      toast.error(t('vehicle.images.deleteFailed') + ': ' + error.message);
     }
   };
 
@@ -339,25 +336,52 @@ export function VehicleDetails({
   };
 
   const getStatusLabel = status => {
-    const statusObj = VEHICLE_STATUS.find(s => s.value === status);
-    return statusObj ? statusObj.label : status;
+    switch (status) {
+      case 'AVAILABLE':
+        return t('vehicle.status.available');
+      case 'RENTED':
+        return t('vehicle.status.rented');
+      case 'MAINTENANCE':
+        return t('vehicle.status.maintenance');
+      case 'OUT_OF_SERVICE':
+        return t('vehicle.status.outOfService');
+      default:
+        return status;
+    }
   };
 
   const getTypeLabel = type => {
-    const typeObj = VEHICLE_TYPES.find(t => t.value === type);
-    return typeObj ? typeObj.label : type;
+    switch (type) {
+      case 'SEDAN':
+        return t('vehicle.types.sedan');
+      case 'SUV':
+        return t('vehicle.types.suv');
+      case 'HATCHBACK':
+        return t('vehicle.types.hatchback');
+      case 'COUPE':
+        return t('vehicle.types.coupe');
+      default:
+        return type;
+    }
   };
 
   const getFuelTypeLabel = fuelType => {
-    const fuelObj = FUEL_TYPES.find(f => f.value === fuelType);
-    return fuelObj ? fuelObj.label : fuelType;
+    switch (fuelType) {
+      case 'ELECTRIC':
+        return t('vehicle.fuel.electric');
+      case 'HYBRID':
+        return t('vehicle.fuel.hybrid');
+      default:
+        return fuelType;
+    }
   };
 
   const formatDate = dateString => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return t('vehicle.table.na');
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'Invalid Date';
-    return date.toLocaleDateString('en-US', {
+    if (isNaN(date.getTime())) return t('vehicle.messages.invalidDate');
+    const locale = i18n?.language === 'vi' ? 'vi-VN' : 'en-US';
+    return date.toLocaleString(locale, {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -381,21 +405,19 @@ export function VehicleDetails({
     <Dialog open={open} onOpenChange={loading ? undefined : onOpenChange}>
       <DialogContent className='w-[95vw] max-w-[1000px] max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
-          <DialogTitle>Vehicle Details</DialogTitle>
-          <DialogDescription>
-            View and manage vehicle information and images
-          </DialogDescription>
+          <DialogTitle>{t('vehicle.details.title')}</DialogTitle>
+          <DialogDescription>{t('vehicle.details.description')}</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={formik.handleSubmit}>
           <div className='space-y-6'>
             {/* Basic Information */}
             <div className='space-y-4'>
-              <h3 className='text-lg font-semibold'>Basic Information</h3>
+              <h3 className='text-lg font-semibold'>{t('vehicle.sections.basicInfo')}</h3>
 
               <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                 <div className='space-y-2'>
-                  <Label htmlFor='brand'>Brand</Label>
+                  <Label htmlFor='brand'>{t('vehicle.fields.brand')}</Label>
                   {isEditing ? (
                     <Input
                       id='brand'
@@ -415,7 +437,7 @@ export function VehicleDetails({
                 </div>
 
                 <div className='space-y-2'>
-                  <Label htmlFor='model'>Model</Label>
+                  <Label htmlFor='model'>{t('vehicle.fields.model')}</Label>
                   {isEditing ? (
                     <Input
                       id='model'
@@ -435,7 +457,7 @@ export function VehicleDetails({
                 </div>
 
                 <div className='space-y-2'>
-                  <Label htmlFor='type'>Type</Label>
+                  <Label htmlFor='type'>{t('vehicle.fields.type')}</Label>
                   {isEditing ? (
                     <Select
                       value={formik.values.type}
@@ -448,7 +470,7 @@ export function VehicleDetails({
                       <SelectContent>
                         {VEHICLE_TYPES.map(type => (
                           <SelectItem key={type.value} value={type.value}>
-                            {type.label}
+                            {getTypeLabel(type.value)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -464,7 +486,7 @@ export function VehicleDetails({
                 </div>
 
                 <div className='space-y-2'>
-                  <Label htmlFor='year'>Year</Label>
+                  <Label htmlFor='year'>{t('vehicle.fields.year')}</Label>
                   {isEditing ? (
                     <Input
                       id='year'
@@ -485,7 +507,7 @@ export function VehicleDetails({
                 </div>
 
                 <div className='space-y-2'>
-                  <Label htmlFor='color'>Color</Label>
+                  <Label htmlFor='color'>{t('vehicle.fields.color')}</Label>
                   {isEditing ? (
                     <Input
                       id='color'
@@ -498,13 +520,13 @@ export function VehicleDetails({
                     />
                   ) : (
                     <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
-                      {vehicle.color || 'N/A'}
+                      {vehicle.color || t('vehicle.table.na')}
                     </div>
                   )}
                 </div>
 
                 <div className='space-y-2'>
-                  <Label htmlFor='seats'>Seats</Label>
+                  <Label htmlFor='seats'>{t('vehicle.fields.seats')}</Label>
                   {isEditing ? (
                     <Input
                       id='seats'
@@ -525,7 +547,7 @@ export function VehicleDetails({
                 </div>
 
                 <div className='space-y-2'>
-                  <Label htmlFor='licensePlate'>License Plate</Label>
+                  <Label htmlFor='licensePlate'>{t('vehicle.fields.licensePlate')}</Label>
                   {isEditing ? (
                     <Input
                       id='licensePlate'
@@ -538,14 +560,14 @@ export function VehicleDetails({
                     />
                   ) : (
                     <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
-                      {vehicle.licensePlate || 'N/A'}
+                      {vehicle.licensePlate || t('vehicle.table.na')}
                     </div>
                   )}
                   {isEditing && renderError('licensePlate')}
                 </div>
 
                 <div className='space-y-2'>
-                  <Label htmlFor='fuelType'>Fuel Type</Label>
+                  <Label htmlFor='fuelType'>{t('vehicle.fields.fuelType')}</Label>
                   {isEditing ? (
                     <Select
                       value={formik.values.fuelType}
@@ -558,7 +580,7 @@ export function VehicleDetails({
                       <SelectContent>
                         {FUEL_TYPES.map(fuel => (
                           <SelectItem key={fuel.value} value={fuel.value}>
-                            {fuel.label}
+                            {getFuelTypeLabel(fuel.value)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -577,11 +599,11 @@ export function VehicleDetails({
 
             {/* Technical Details */}
             <div className='space-y-4'>
-              <h3 className='text-lg font-semibold'>Technical Details</h3>
+              <h3 className='text-lg font-semibold'>{t('vehicle.sections.technicalDetails')}</h3>
 
               <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                 <div className='space-y-2'>
-                  <Label htmlFor='batteryLevel'>Battery Level (%)</Label>
+                  <Label htmlFor='batteryLevel'>{t('vehicle.fields.batteryLevel')}</Label>
                   {isEditing ? (
                     <Input
                       id='batteryLevel'
@@ -600,14 +622,14 @@ export function VehicleDetails({
                       {vehicle.fuelType === 'ELECTRIC' ||
                         vehicle.fuelType === 'HYBRID'
                         ? `${vehicle.batteryLevel}%`
-                        : 'N/A'}
+                        : t('vehicle.table.na')}
                     </div>
                   )}
                   {isEditing && renderError('batteryLevel')}
                 </div>
 
                 <div className='space-y-2'>
-                  <Label htmlFor='status'>Status</Label>
+                  <Label htmlFor='status'>{t('vehicle.fields.status')}</Label>
                   {isEditing ? (
                     <Select
                       value={formik.values.status}
@@ -620,7 +642,7 @@ export function VehicleDetails({
                       <SelectContent>
                         {VEHICLE_STATUS.map(status => (
                           <SelectItem key={status.value} value={status.value}>
-                            {status.label}
+                            {getStatusLabel(status.value)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -636,14 +658,14 @@ export function VehicleDetails({
                 </div>
 
                 <div className='space-y-2'>
-                  <Label>Station</Label>
+                  <Label>{t('vehicle.fields.station')}</Label>
                   <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
-                    {vehicle.station?.name || 'N/A'}
+                    {vehicle.station?.name || t('vehicle.table.na')}
                   </div>
                 </div>
 
                 <div className='space-y-2'>
-                  <Label>Vehicle ID</Label>
+                  <Label>{t('vehicle.fields.vehicleId')}</Label>
                   <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center font-mono text-sm'>
                     {vehicle.id}
                   </div>
@@ -653,11 +675,11 @@ export function VehicleDetails({
 
             {/* Pricing Information */}
             <div className='space-y-4'>
-              <h3 className='text-lg font-semibold'>Pricing Information</h3>
+              <h3 className='text-lg font-semibold'>{t('vehicle.pricing.title')}</h3>
 
               <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                 <div className='space-y-2'>
-                  <Label htmlFor='baseRate'>Base Rate (Daily)</Label>
+                  <Label htmlFor='baseRate'>{t('vehicle.pricing.baseRate')}</Label>
                   {isEditing ? (
                     <Input
                       id='baseRate'
@@ -675,14 +697,14 @@ export function VehicleDetails({
                     <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                       {vehicle.pricing?.baseRate
                         ? formatCurrency(vehicle.pricing.baseRate, 'VND')
-                        : 'N/A'}
+                        : t('vehicle.table.na')}
                     </div>
                   )}
                   {isEditing && renderError('baseRate')}
                 </div>
 
                 <div className='space-y-2'>
-                  <Label htmlFor='hourlyRate'>Hourly Rate</Label>
+                  <Label htmlFor='hourlyRate'>{t('vehicle.pricing.hourlyRate')}</Label>
                   {isEditing ? (
                     <Input
                       id='hourlyRate'
@@ -700,14 +722,14 @@ export function VehicleDetails({
                     <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                       {vehicle.pricing?.hourlyRate
                         ? formatCurrency(vehicle.pricing.hourlyRate, 'VND')
-                        : 'N/A'}
+                        : t('vehicle.table.na')}
                     </div>
                   )}
                   {isEditing && renderError('hourlyRate')}
                 </div>
 
                 <div className='space-y-2'>
-                  <Label htmlFor='weeklyRate'>Weekly Rate</Label>
+                  <Label htmlFor='weeklyRate'>{t('vehicle.pricing.weeklyRate')}</Label>
                   {isEditing ? (
                     <Input
                       id='weeklyRate'
@@ -725,14 +747,14 @@ export function VehicleDetails({
                     <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                       {vehicle.pricing?.weeklyRate
                         ? formatCurrency(vehicle.pricing.weeklyRate, 'VND')
-                        : 'N/A'}
+                        : t('vehicle.table.na')}
                     </div>
                   )}
                   {isEditing && renderError('weeklyRate')}
                 </div>
 
                 <div className='space-y-2'>
-                  <Label htmlFor='monthlyRate'>Monthly Rate</Label>
+                  <Label htmlFor='monthlyRate'>{t('vehicle.pricing.monthlyRate')}</Label>
                   {isEditing ? (
                     <Input
                       id='monthlyRate'
@@ -750,14 +772,14 @@ export function VehicleDetails({
                     <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                       {vehicle.pricing?.monthlyRate
                         ? formatCurrency(vehicle.pricing.monthlyRate, 'VND')
-                        : 'N/A'}
+                        : t('vehicle.table.na')}
                     </div>
                   )}
                   {isEditing && renderError('monthlyRate')}
                 </div>
 
                 <div className='space-y-2'>
-                  <Label htmlFor='depositAmount'>Deposit Amount</Label>
+                  <Label htmlFor='depositAmount'>{t('vehicle.pricing.depositAmount')}</Label>
                   {isEditing ? (
                     <Input
                       id='depositAmount'
@@ -775,14 +797,14 @@ export function VehicleDetails({
                     <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                       {vehicle.pricing?.depositAmount
                         ? formatCurrency(vehicle.pricing.depositAmount, 'VND')
-                        : 'N/A'}
+                        : t('vehicle.table.na')}
                     </div>
                   )}
                   {isEditing && renderError('depositAmount')}
                 </div>
 
                 <div className='space-y-2'>
-                  <Label htmlFor='insuranceRate'>Insurance Rate (%)</Label>
+                  <Label htmlFor='insuranceRate'>{t('vehicle.pricing.insuranceRate')}</Label>
                   {isEditing ? (
                     <Input
                       id='insuranceRate'
@@ -801,7 +823,7 @@ export function VehicleDetails({
                     <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                       {vehicle.pricing?.insuranceRate
                         ? `${(vehicle.pricing.insuranceRate * 100).toFixed(1)}%`
-                        : 'N/A'}
+                        : t('vehicle.table.na')}
                     </div>
                   )}
                   {isEditing && renderError('insuranceRate')}
@@ -812,7 +834,7 @@ export function VehicleDetails({
             {/* Vehicle Images */}
             <div className='space-y-4'>
               <div className='flex items-center justify-between'>
-                <h3 className='text-lg font-semibold'>Vehicle Images</h3>
+                <h3 className='text-lg font-semibold'>{t('vehicle.images.title')}</h3>
                 {isEditing && (
                   <div className='flex items-center gap-2'>
                     <input
@@ -832,7 +854,7 @@ export function VehicleDetails({
                       disabled={imageLoading}
                     >
                       <UploadIcon className='mr-2 h-4 w-4' />
-                      {imageLoading ? 'Uploading...' : 'Upload Image'}
+                      {imageLoading ? t('vehicle.images.uploading') : t('vehicle.images.uploadImage')}
                     </Button>
                   </div>
                 )}
@@ -868,10 +890,10 @@ export function VehicleDetails({
                 ) : (
                   <div className='col-span-full text-center text-muted-foreground py-8 border-2 border-dashed rounded-lg'>
                     <ImageIcon className='mx-auto h-12 w-12 mb-2' />
-                    <p>No images available for this vehicle</p>
+                    <p>{t('vehicle.images.noImagesAvailable')}</p>
                     {!isEditing && (
                       <p className='text-sm'>
-                        Click "Upload Image" to add photos
+                        {t('vehicle.images.clickToUpload')}
                       </p>
                     )}
                   </div>
@@ -881,18 +903,18 @@ export function VehicleDetails({
 
             {/* Timestamps */}
             <div className='space-y-4'>
-              <h3 className='text-lg font-semibold'>Vehicle Timeline</h3>
+              <h3 className='text-lg font-semibold'>{t('vehicle.timeline.title')}</h3>
 
               <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                 <div className='space-y-2'>
-                  <Label>Created At</Label>
+                  <Label>{t('vehicle.timeline.createdAt')}</Label>
                   <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                     {formatDate(vehicle.createdAt)}
                   </div>
                 </div>
 
                 <div className='space-y-2'>
-                  <Label>Last Updated</Label>
+                  <Label>{t('vehicle.timeline.updatedAt')}</Label>
                   <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                     {formatDate(vehicle.updatedAt)}
                   </div>
@@ -920,14 +942,14 @@ export function VehicleDetails({
                   disabled={loading}
                   className='w-full sm:w-auto'
                 >
-                  Cancel
+                  {t('vehicle.actions.cancel')}
                 </Button>
                 <Button
                   type='submit'
                   disabled={loading || formik.isSubmitting}
                   className='w-full sm:w-auto'
                 >
-                  {formik.isSubmitting ? 'Saving...' : 'Save Changes'}
+                  {formik.isSubmitting ? t('vehicle.actions.saving') : t('vehicle.actions.saveChanges')}
                 </Button>
               </>
             ) : (
@@ -938,10 +960,10 @@ export function VehicleDetails({
                   onClick={() => onOpenChange(false)}
                   className='w-full sm:w-auto'
                 >
-                  Close
+                  {t('vehicle.actions.close')}
                 </Button>
                 <Button onClick={() => setIsEditing(true)} className='w-full sm:w-auto'>
-                  Edit Vehicle
+                  {t('vehicle.actions.edit')}
                 </Button>
               </>
             )}

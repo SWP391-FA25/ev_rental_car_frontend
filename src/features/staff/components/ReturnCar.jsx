@@ -12,6 +12,7 @@ import {
 } from '../../shared/components/ui/card';
 import { Input } from '../../shared/components/ui/input';
 import { Label } from '../../shared/components/ui/label';
+import { Badge } from '../../shared/components/ui/badge';
 import { Textarea } from '../../shared/components/ui/textarea';
 import {
   Select,
@@ -20,11 +21,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/features/shared/components/ui/select';
-// Location selection removed per requirement: return at pickup location
+import { stationService } from '../../cars/services/stationService';
 
 /**
  * Staff Return Car UI
- * Implements the swimlane: Inspect car → (Upload incident | Refund deposit) → Calculate deposit/refund → Update booking & car
+ * Implements the swimlane: Inspect car  (Upload incident | Refund deposit)  Calculate deposit/refund  Update booking & car
  * This is UI-focused with mock-friendly API calls.
  */
 export default function ReturnCar() {
@@ -52,31 +53,20 @@ export default function ReturnCar() {
   const [incidentNotes, setIncidentNotes] = useState('');
 
   const [deposit, setDeposit] = useState(0);
-  const [fees, setFees] = useState({
-    damage: 0,
-    cleaning: 0,
-    late: 0,
-    other: 0,
-  });
   // Return details per schema
   const [returnOdometer, setReturnOdometer] = useState('');
-  const [actualReturnLocation, setActualReturnLocation] = useState(null);
+  // Actual return station selection
+  const [stations, setStations] = useState([]);
+  const [loadingStations, setLoadingStations] = useState(false);
+  const [selectedReturnStationId, setSelectedReturnStationId] = useState('');
   const [notes, setNotes] = useState('');
+  const isOverdue = useMemo(() => {
+    const deadline = booking?.endTime ? new Date(booking.endTime) : null;
+    if (!deadline) return false;
+    return new Date() > deadline;
+  }, [booking]);
 
-  const totalDeductions = useMemo(
-    () =>
-      Number(fees.damage) +
-      Number(fees.cleaning) +
-      Number(fees.late) +
-      Number(fees.other),
-    [fees]
-  );
-  const refundAmount = useMemo(
-    () => Math.max(Number(deposit) - totalDeductions, 0),
-    [deposit, totalDeductions]
-  );
-
-  // Fetch eligible bookings: COMPLETED or IN_PROGRESS with endTime due
+  // Fetch eligible bookings: rentals currently in progress or confirmed
   useEffect(() => {
     const fetchEligible = async () => {
       try {
@@ -84,8 +74,7 @@ export default function ReturnCar() {
         const resData = await getAllBookings({ limit: 100 });
         const list = (resData?.bookings || resData || []).filter(b => {
           const status = b.status || b.bookingStatus || '';
-          // Eligible for return: rentals currently in progress; allow confirmed if policy permits early return.
-          return status === 'IN_PROGRESS' || status === 'CONFIRMED';
+          return status === 'IN_PROGRESS';
         });
         setEligibleBookings(list);
       } catch (err) {
@@ -105,12 +94,11 @@ export default function ReturnCar() {
       setBooking(b);
       const baseDeposit = b?.depositAmount ?? b?.amount?.deposit ?? 0;
       setDeposit(baseDeposit || 0);
-      const defaultLocation =
-        b?.pickupLocation ||
-        b?.pickupStation?.address ||
-        b?.pickupStation?.name ||
-        '';
-      setActualReturnLocation(defaultLocation);
+      // Default to pickup station if present
+      const defaultStationId = b?.pickupStation?.id
+        ? String(b.pickupStation.id)
+        : '';
+      setSelectedReturnStationId(defaultStationId);
     } catch (e) {
       toast.error(e?.message || t('staffReturnCar.toast.loadBookingFail'));
     }
@@ -127,12 +115,10 @@ export default function ReturnCar() {
       setBooking(b);
       const baseDeposit = b?.depositAmount ?? b?.amount?.deposit ?? 0;
       setDeposit(baseDeposit || 0);
-      const defaultLocation =
-        b?.pickupLocation ||
-        b?.pickupStation?.address ||
-        b?.pickupStation?.name ||
-        '';
-      setActualReturnLocation(defaultLocation);
+      const defaultStationId = b?.pickupStation?.id
+        ? String(b.pickupStation.id)
+        : '';
+      setSelectedReturnStationId(defaultStationId);
       toast.success(t('staffReturnCar.toast.loadBookingSuccess'));
     } catch (e) {
       toast.error(e?.message || t('staffReturnCar.toast.loadBookingFail'));
@@ -163,48 +149,105 @@ export default function ReturnCar() {
     };
   }, [incidentFiles]);
 
+  // Load stations for dropdown
+  useEffect(() => {
+    const loadStations = async () => {
+      try {
+        setLoadingStations(true);
+        const response = await stationService.getAllStations();
+        const list = response?.data?.stations || response?.data || [];
+        setStations(Array.isArray(list) ? list : []);
+      } catch (err) {
+        console.error('Failed to load stations:', err);
+        toast.error(
+          t('staffReturnCar.toast.loadStationsFail') ||
+            'Failed to load stations'
+        );
+      } finally {
+        setLoadingStations(false);
+      }
+    };
+    loadStations();
+  }, [t]);
+
   const handleCompleteReturn = async () => {
     if (!booking && !bookingId) {
       toast.warning(t('staffReturnCar.toast.selectBooking'));
       return;
     }
 
-    const actualEndTime = new Date().toISOString();
-    const normalizedLocation =
-      typeof actualReturnLocation === 'string'
-        ? actualReturnLocation
-        : actualReturnLocation?.address || actualReturnLocation?.label || '';
+    if (isOverdue) {
+      toast.info(
+        t('staffReturnCar.toast.overdueProceed') ||
+          'Đơn thuê đã quá hạn, vẫn tiến hành trả xe'
+      );
+    }
 
+    const actualEndTime = new Date().toISOString();
+    // Derive location string from selected station
+    const selectedStation = stations.find(
+      s => String(s.id) === String(selectedReturnStationId)
+    );
+    const normalizedLocation = selectedStation
+      ? (
+          selectedStation.address ||
+          selectedStation.name ||
+          String(selectedStation.id)
+        ).trim()
+      : '';
+
+    // Frontend validation to match backend requirements
+    const odo = Number(returnOdometer);
+    if (!normalizedLocation || normalizedLocation.length < 3) {
+      toast.error(
+        t('staffReturnCar.toast.invalidReturnLocation') ||
+          'Vui lòng chọn trạm trả hợp lệ (3-200 ký tự)'
+      );
+      return;
+    }
+    if (!returnOdometer || Number.isNaN(odo) || odo < 0) {
+      toast.error(
+        t('staffReturnCar.toast.invalidReturnOdometer') ||
+          'Vui lòng nhập công tơ mét trả hợp lệ (>= 0)'
+      );
+      return;
+    }
+
+    // Flatten payload per backend completeBooking schema
     const payload = {
-      returnDetails: {
-        actualEndTime,
-        actualReturnLocation: normalizedLocation,
-        returnOdometer: returnOdometer ? Number(returnOdometer) : undefined,
-        notes,
-      },
-      inspection: {
-        result: inspectionResult,
-        checklist,
-        notes: incidentNotes,
-        attachments: incidentFiles.map(f => ({ name: f.name, size: f.size })), // metadata only
-      },
-      settlement: {
-        deposit: Number(deposit),
-        deductions: { ...fees },
-        refund: refundAmount,
-      },
+      actualEndTime,
+      actualReturnLocation: normalizedLocation,
+      returnOdometer: odo,
+      notes,
+      damageReport: incidentNotes || undefined,
+      // Optional fields such as batteryLevel or rating can be added here if needed
     };
 
     try {
       const id = booking?.id || bookingId;
       const res = await bookingService.completeBooking(id, payload);
-      if (res?.success || res?.message === 'Booking completed') {
+      if (res?.success) {
         toast.success(t('staffReturnCar.toast.completeSuccess'));
       } else {
         toast.info(res?.message || t('staffReturnCar.toast.completeQueued'));
       }
     } catch (e) {
-      toast.error(e?.message || t('staffReturnCar.toast.completeFail'));
+      // Surface backend validation messages if available
+      const serverMsg = e?.response?.data?.message;
+      const serverErrors = e?.response?.data?.errors;
+      if (serverErrors) {
+        const locErr = serverErrors.actualReturnLocation?.msg;
+        const odoErr = serverErrors.returnOdometer?.msg;
+        const timeErr = serverErrors.actualEndTime?.msg;
+        const msgs = [locErr, odoErr, timeErr].filter(Boolean);
+        if (msgs.length) {
+          msgs.forEach(m => toast.error(m));
+          return;
+        }
+      }
+      toast.error(
+        serverMsg || e?.message || t('staffReturnCar.toast.completeFail')
+      );
     }
   };
 
@@ -218,7 +261,7 @@ export default function ReturnCar() {
         </p>
       </div>
 
-      {/* Step 1: Chọn đơn thuê / xe */}
+      {/* Step 1: Ch?n don thu� / xe */}
       <Card>
         <CardHeader>
           <CardTitle>{t('staffReturnCar.booking.title')}</CardTitle>
@@ -242,8 +285,8 @@ export default function ReturnCar() {
                 )}
                 {eligibleBookings.map(b => (
                   <SelectItem key={b.id} value={b.id}>
-                    {b.user?.name || b.customer?.name || '—'} •{' '}
-                    {b.vehicle?.licensePlate || b.vehicle?.name || '—'}
+                    {b.user?.name || b.customer?.name || ''}{' '}
+                    {b.vehicle?.licensePlate || b.vehicle?.name || ''}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -267,7 +310,7 @@ export default function ReturnCar() {
                   {t('staffReturnCar.booking.customer')}
                 </p>
                 <p className='font-medium'>
-                  {booking.user?.name || booking.renter?.name || '—'}
+                  {booking.user?.name || booking.renter?.name || ''}
                 </p>
               </div>
               <div>
@@ -275,9 +318,7 @@ export default function ReturnCar() {
                   {t('staffReturnCar.booking.vehicle')}
                 </p>
                 <p className='font-medium'>
-                  {booking.vehicle?.name ||
-                    booking.vehicle?.licensePlate ||
-                    '—'}
+                  {booking.vehicle?.name || booking.vehicle?.licensePlate || ''}
                 </p>
               </div>
               <div>
@@ -287,11 +328,15 @@ export default function ReturnCar() {
                 <p className='font-medium'>
                   {booking.startTime
                     ? new Date(booking.startTime).toLocaleString()
-                    : '—'}{' '}
-                  →
+                    : ''}{' '}
                   {booking.endTime
                     ? ' ' + new Date(booking.endTime).toLocaleString()
                     : ''}
+                  {isOverdue && (
+                    <Badge variant='destructive' className='ml-2'>
+                      {t('staffReturnCar.booking.overdue') || 'Quá hạn'}
+                    </Badge>
+                  )}
                 </p>
               </div>
             </div>
@@ -299,7 +344,7 @@ export default function ReturnCar() {
         </CardContent>
       </Card>
 
-      {/* Step 2b: Thông tin trả xe theo schema */}
+      {/* Step 2b: Th�ng tin tr? xe theo schema */}
       <Card>
         <CardHeader>
           <CardTitle>{t('staffReturnCar.returnDetails.title')}</CardTitle>
@@ -322,17 +367,31 @@ export default function ReturnCar() {
             <Label className='block mb-2'>
               {t('staffReturnCar.returnDetails.location')}
             </Label>
-            <Input
-              value={
-                typeof actualReturnLocation === 'string'
-                  ? actualReturnLocation || ''
-                  : actualReturnLocation?.address ||
-                    actualReturnLocation?.label ||
-                    ''
-              }
-              readOnly
-              disabled
-            />
+            <Select
+              value={selectedReturnStationId}
+              onValueChange={setSelectedReturnStationId}
+            >
+              <SelectTrigger>
+                <SelectValue
+                  placeholder={
+                    t('staffReturnCar.returnDetails.locationPlaceholder') ||
+                    'Ch?n tr?m tr?'
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {loadingStations && (
+                  <div className='px-2 py-1 text-sm text-muted-foreground'>
+                    Loading stations...
+                  </div>
+                )}
+                {stations.map(station => (
+                  <SelectItem key={station.id} value={String(station.id)}>
+                    {station.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className='md:col-span-3'>
             <Label className='block mb-2'>
@@ -348,7 +407,7 @@ export default function ReturnCar() {
         </CardContent>
       </Card>
 
-      {/* Step 2: Kiểm tra xe */}
+      {/* Step 2: Ki?m tra xe */}
       <Card>
         <CardHeader>
           <CardTitle>{t('staffReturnCar.inspection.title')}</CardTitle>
@@ -456,89 +515,9 @@ export default function ReturnCar() {
         </CardContent>
       </Card>
 
-      {/* Step 3: Tính toán cọc và hoàn tiền */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('staffReturnCar.deposit.title')}</CardTitle>
-        </CardHeader>
-        <CardContent className='grid grid-cols-1 md:grid-cols-4 gap-4'>
-          <div>
-            <Label className='block mb-2'>
-              {t('staffReturnCar.deposit.damage')}
-            </Label>
-            <Input
-              type='number'
-              value={fees.damage}
-              onChange={e => setFees({ ...fees, damage: e.target.value })}
-            />
-          </div>
-          <div>
-            <Label className='block mb-2'>
-              {t('staffReturnCar.deposit.cleaning')}
-            </Label>
-            <Input
-              type='number'
-              value={fees.cleaning}
-              onChange={e => setFees({ ...fees, cleaning: e.target.value })}
-            />
-          </div>
-          <div>
-            <Label className='block mb-2'>
-              {t('staffReturnCar.deposit.late')}
-            </Label>
-            <Input
-              type='number'
-              value={fees.late}
-              onChange={e => setFees({ ...fees, late: e.target.value })}
-            />
-          </div>
-          <div>
-            <Label className='block mb-2'>
-              {t('staffReturnCar.deposit.other')}
-            </Label>
-            <Input
-              type='number'
-              value={fees.other}
-              onChange={e => setFees({ ...fees, other: e.target.value })}
-            />
-          </div>
+      {/* Step 3 removed per request: b? t�nh to�n c?c v� ho�n ti?n */}
 
-          <div className='md:col-span-4 grid grid-cols-1 md:grid-cols-3 gap-4 mt-2'>
-            <div className='border rounded p-3'>
-              <p className='text-xs text-muted-foreground'>
-                {t('staffReturnCar.deposit.baseDeposit')}
-              </p>
-              <p className='text-lg font-semibold'>
-                {Number(deposit).toLocaleString(
-                  i18n.language === 'vi' ? 'vi-VN' : 'en-US'
-                )}
-              </p>
-            </div>
-            <div className='border rounded p-3'>
-              <p className='text-xs text-muted-foreground'>
-                {t('staffReturnCar.deposit.deductions')}
-              </p>
-              <p className='text-lg font-semibold'>
-                {Number(totalDeductions).toLocaleString(
-                  i18n.language === 'vi' ? 'vi-VN' : 'en-US'
-                )}
-              </p>
-            </div>
-            <div className='border rounded p-3'>
-              <p className='text-xs text-muted-foreground'>
-                {t('staffReturnCar.deposit.refund')}
-              </p>
-              <p className='text-lg font-semibold text-emerald-600'>
-                {Number(refundAmount).toLocaleString(
-                  i18n.language === 'vi' ? 'vi-VN' : 'en-US'
-                )}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Step 4: Cập nhật booking và xe */}
+      {/* Step 4: C?p nh?t booking v� xe */}
       <Card>
         <CardHeader>
           <CardTitle>{t('staffReturnCar.complete.title')}</CardTitle>
@@ -551,10 +530,16 @@ export default function ReturnCar() {
             <Button
               variant='outline'
               onClick={() => {
-                setFees({ damage: 0, cleaning: 0, late: 0, other: 0 });
                 setIncidentFiles([]);
                 setIncidentNotes('');
                 setInspectionResult('PASS');
+                setReturnOdometer('');
+                // Reset station selection to pickup station if available
+                setSelectedReturnStationId(
+                  booking?.pickupStation?.id
+                    ? String(booking.pickupStation.id)
+                    : ''
+                );
               }}
             >
               {t('staffReturnCar.complete.reset')}

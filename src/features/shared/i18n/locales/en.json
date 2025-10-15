@@ -190,7 +190,11 @@
       "selectBooking": "Please select or enter a booking",
       "completeSuccess": "Car return completed and booking updated",
       "completeQueued": "Completion request sent",
-      "completeFail": "Unable to complete return"
+      "completeFail": "Unable to complete return",
+      "overdueProceed": "Booking is overdue, proceeding with return",
+      "loadStationsFail": "Failed to load stations",
+      "invalidReturnLocation": "Please select a valid return station (3-200 chars)",
+      "invalidReturnOdometer": "Please enter a valid return odometer (>= 0)"
     },
     "booking": {
       "title": "1. Select booking to process",
@@ -202,7 +206,8 @@
       "depositLabel": "Deposit (VND)",
       "customer": "Customer",
       "vehicle": "Vehicle",
-      "time": "Time"
+      "time": "Time",
+      "overdue": "Overdue"
     },
     "inspection": {
       "title": "2. Vehicle inspection",
@@ -230,7 +235,8 @@
       "odometerPlaceholder": "Enter odometer at return",
       "location": "Actual return location",
       "notes": "Notes",
-      "notesPlaceholder": "Add any notes about the return..."
+      "notesPlaceholder": "Add any notes about the return...",
+      "locationPlaceholder": "Enter actual return location"
     },
     "deposit": {
       "title": "3. Deposit & refund calculation",
@@ -669,7 +675,8 @@
         "label": "Status",
         "active": "Active",
         "inactive": "Inactive",
-        "maintenance": "Maintenance"
+        "maintenance": "Maintenance",
+        "pending": "Pending"
       },
       "capacity": "Capacity",
       "contact": "Contact Information",
@@ -694,13 +701,36 @@
     },
     "details": {
       "title": "Station Details",
+      "description": "View and manage station information",
       "edit": "Edit Station",
       "info": "Information",
       "vehicles": "Vehicles",
       "staff": "Assigned Staff",
       "emptyVehicles": "No vehicles assigned to this station",
       "emptyStaff": "No staff assigned to this station",
-      "close": "Close"
+      "close": "Close",
+      "statistics": "Statistics",
+      "vehiclesAtStation": "Vehicles at Station",
+      "staffAtStation": "Staff at Station",
+      "vehicleTable": {
+        "brandModel": "Brand/Model",
+        "type": "Type",
+        "licensePlate": "License Plate",
+        "status": "Status"
+      },
+      "staffTable": {
+        "name": "Name",
+        "email": "Email",
+        "phone": "Phone",
+        "role": "Role"
+      },
+      "unknownStaff": "Unknown Staff"
+    }
+    ,
+    "timeline": {
+      "title": "Station Timeline",
+      "createdAt": "Created At",
+      "updatedAt": "Last Updated"
     }
   },
   "vehicle": {
@@ -709,10 +739,15 @@
     "actions": {
       "add": "Add Vehicle",
       "create": "Create Vehicle",
+      "creating": "Creating...",
       "update": "Update Vehicle",
+      "saving": "Saving...",
       "cancel": "Cancel",
       "delete": "Delete",
-      "viewDetails": "View Details"
+      "viewDetails": "View Details",
+      "edit": "Edit Vehicle",
+      "close": "Close",
+      "saveChanges": "Save Changes"
     },
     "dialogs": {
       "create": {
@@ -727,6 +762,10 @@
         "title": "Delete Vehicle",
         "description": "Are you sure you want to permanently delete this vehicle? This action cannot be undone and will delete all associated images."
       }
+    },
+    "details": {
+      "title": "Vehicle Details",
+      "description": "View and manage vehicle information and images"
     },
     "fields": {
       "station": "Station",
@@ -750,7 +789,67 @@
       "fuelType": "Fuel Type",
       "fuelTypePlaceholder": "Select fuel type",
       "status": "Status",
-      "statusPlaceholder": "Select status"
+      "statusPlaceholder": "Select status",
+      "vehicleId": "Vehicle ID"
+    },
+    "validation": {
+      "required": "This field is required",
+      "invalidYear": "Must be a valid year",
+      "invalidBattery": "Battery must be between 0 and 100",
+      "wholeNumber": "Must be a whole number",
+      "minSeats": "Must be at least 1",
+      "minZero": "Must be >= 0",
+      "maxOne": "Must be <= 1",
+      "positive": "Must be positive"
+    },
+    "sections": {
+      "basicInfo": "Basic Information",
+      "technicalDetails": "Technical Details"
+    },
+    "pricing": {
+      "title": "Pricing Information",
+      "baseRate": "Base Rate (Daily) *",
+      "hourlyRate": "Hourly Rate *",
+      "weeklyRate": "Weekly Rate",
+      "monthlyRate": "Monthly Rate",
+      "depositAmount": "Deposit Amount *",
+      "insuranceRate": "Insurance Rate (%)",
+      "placeholders": {
+        "baseRate": "200.00",
+        "hourlyRate": "15.00",
+        "weeklyRate": "1200.00",
+        "monthlyRate": "4500.00",
+        "depositAmount": "500.00",
+        "insuranceRate": "0.10 (10%)"
+      }
+    },
+    "images": {
+      "title": "Vehicle Images",
+      "selectImages": "Select Images",
+      "uploading": "Uploading...",
+      "uploadImage": "Upload Image",
+      "noImagesSelected": "No images selected",
+      "clickToAdd": "Click \"Select Images\" to add photos (max 5MB each)",
+      "noImagesAvailable": "No images available for this vehicle",
+      "clickToUpload": "Click \"Upload Image\" to add photos",
+      "willUploadCount": "{{count}} image(s) will be uploaded after vehicle creation",
+      "removed": "Image removed",
+      "uploadSuccessAll": "All {{count}} images uploaded successfully",
+      "uploadSuccess": "Image uploaded successfully",
+      "uploadSuccessPartial": "{{success}}/{{count}} images uploaded successfully",
+      "uploadFailedSome": "Some images failed to upload",
+      "uploadFailed": "Failed to upload image",
+      "deleteSuccess": "Image deleted successfully",
+      "deleteFailed": "Failed to delete image",
+      "confirmDelete": "Are you sure you want to delete this image?",
+      "notImage": "{{name}} is not an image",
+      "exceedsLimit": "{{name}} exceeds 5MB limit",
+      "added": "{{count}} image(s) added"
+    },
+    "timeline": {
+      "title": "Vehicle Timeline",
+      "createdAt": "Created At",
+      "updatedAt": "Last Updated"
     },
     "table": {
       "image": "Image",
@@ -768,6 +867,7 @@
     "status": {
       "all": "All",
       "available": "Available",
+      "pending": "Pending",
       "rented": "Rented",
       "maintenance": "Maintenance",
       "outOfService": "Out of Service"
@@ -796,11 +896,144 @@
       "updateFailed": "Failed to update vehicle",
       "deleteSuccess": "Vehicle permanently deleted",
       "deleteFailed": "Failed to delete vehicle",
-      "loadFailed": "Failed to load vehicles"
+      "loadFailed": "Failed to load vehicles",
+      "invalidDate": "Invalid Date"
     },
     "filters": {
       "searchPlaceholder": "Search vehicles...",
       "status": "Status"
+    }
+  },
+  "booking": {
+    "title": "Booking Management",
+    "subtitle": "Manage and track all vehicle bookings",
+    "actions": {
+      "refresh": "Refresh",
+      "viewDetails": "View Details",
+      "confirmBooking": "Confirm Booking",
+      "waitingForDeposit": "Waiting for Deposit",
+      "startRental": "Start Rental",
+      "completeRental": "Complete Rental",
+      "cancelBooking": "Cancel Booking"
+    },
+    "filters": {
+      "searchPlaceholder": "Search by customer name, vehicle model, or booking ID...",
+      "status": "Status",
+      "statusAll": "All Status",
+      "depositLabel": "Deposit",
+      "depositAll": "All Deposits",
+      "deposit": {
+        "pendingPayment": "Pending Payment",
+        "paid": "Paid",
+        "failed": "Failed",
+        "refunded": "Refunded"
+      }
+    },
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "inProgress": "In Progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "depositStatus": {
+      "pending": "Pending",
+      "paid": "Paid",
+      "failed": "Failed",
+      "refunded": "Refunded"
+    },
+    "stats": {
+      "bookingAmount": "Booking Amount",
+      "pendingDeposits": "Pending Deposits",
+      "paidDeposits": "Paid Deposits",
+      "inProgress": "In Progress",
+      "completed": "Completed",
+      "refunded": "Refunded"
+    },
+    "table": {
+      "customer": "Customer",
+      "vehicle": "Vehicle",
+      "station": "Station",
+      "dateTime": "Date & Time",
+      "status": "Status",
+      "depositStatus": "Deposit Status",
+      "actions": "Actions",
+      "noBookings": "No bookings found",
+      "noEndTime": "No end time"
+    },
+    "dialogs": {
+      "complete": {
+        "title": "Complete Booking",
+        "description": "Complete this rental and update vehicle status"
+      },
+      "cancel": {
+        "title": "Cancel Booking",
+        "description": "Are you sure you want to cancel this booking? This action cannot be undone.",
+        "confirm": "Cancel Booking",
+        "keep": "Keep Booking"
+      }
+    },
+    "pagination": {
+      "page": "Page {{current}} of {{total}}",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "messages": {
+      "loading": "Loading bookings...",
+      "loadFailed": "Failed to fetch bookings",
+      "detailsFailed": "Failed to fetch booking details",
+      "confirmSuccess": "Booking confirmed successfully",
+      "confirmFailed": "Failed to confirm booking",
+      "startSuccess": "Rental started successfully",
+      "startFailed": "Failed to start rental",
+      "completeSuccess": "Booking completed successfully",
+      "completeFailed": "Failed to complete booking",
+      "cancelSuccess": "Booking cancelled successfully",
+      "cancelFailed": "Failed to cancel booking"
+    },
+    "details": {
+      "title": "Booking Details",
+      "description": "Complete information about this booking",
+      "customerInfo": {
+        "title": "Customer Information",
+        "name": "Name",
+        "email": "Email",
+        "phone": "Phone"
+      },
+      "vehicleInfo": {
+        "title": "Vehicle Information",
+        "vehicle": "Vehicle",
+        "licensePlate": "License Plate",
+        "type": "Type",
+        "status": "Status"
+      },
+      "bookingInfo": {
+        "title": "Booking Details",
+        "bookingId": "Booking ID",
+        "status": "Status",
+        "startTime": "Start Time",
+        "endTime": "End Time",
+        "station": "Station",
+        "created": "Created"
+      },
+      "notes": {
+        "title": "Notes"
+      },
+      "pricing": {
+        "title": "Pricing Breakdown",
+        "basePrice": "Base Price",
+        "insurance": "Insurance",
+        "tax": "Tax",
+        "discount": "Discount",
+        "totalAmount": "Total Amount",
+        "deposit": "Deposit"
+      },
+      "paymentHistory": "Payment History",
+      "payment": "Payment",
+      "status": "Status",
+      "close": "Close",
+      "na": "N/A",
+      "notSet": "Not set"
     }
   },
   "promotion": {

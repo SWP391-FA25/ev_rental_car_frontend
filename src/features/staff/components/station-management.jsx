@@ -390,7 +390,7 @@ export default function StationManagement() {
       <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>{stations.length}</div>
-          <div className='text-sm text-muted-foreground'>{t('station.management.slots')}</div>
+          <div className='text-sm text-muted-foreground'>{t('station.management.summary.totalStations')}</div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>
