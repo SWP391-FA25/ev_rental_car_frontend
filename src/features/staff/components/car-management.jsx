@@ -9,8 +9,9 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
+import { toast } from 'react-toastify';
 
+import { VehicleDetails } from '../../admin/components/vehicle/VehicleDetails';
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
 import { ConfirmDialog } from '../../shared/components/ui/confirm-dialog';
@@ -39,7 +40,6 @@ import {
 } from '../../shared/components/ui/table';
 import { apiClient } from '../../shared/lib/apiClient';
 import { endpoints } from '../../shared/lib/endpoints';
-import { VehicleDetails } from '../../admin/components/vehicle/VehicleDetails';
 import CarForm from './carManagement/carForm';
 
 export default function VehicleManagement() {
@@ -192,7 +192,9 @@ export default function VehicleManagement() {
 
   const handleHardDeleteVehicle = async vehicleId => {
     try {
-      const response = await apiClient.delete(endpoints.vehicles.delete(vehicleId));
+      const response = await apiClient.delete(
+        endpoints.vehicles.delete(vehicleId)
+      );
       if (response && (response.success || response.status === 200)) {
         toast.success(t('vehicle.messages.deleteSuccess'));
         setVehicles(prev => prev.filter(vehicle => vehicle.id !== vehicleId));
@@ -211,7 +213,7 @@ export default function VehicleManagement() {
     }
   };
 
-  const onVehicleCreated = (vehicle) => {
+  const onVehicleCreated = vehicle => {
     if (vehicle) {
       setVehicles(prev => [vehicle, ...prev]);
     }
@@ -411,7 +413,7 @@ export default function VehicleManagement() {
                   <TableCell>{getFuelTypeLabel(vehicle.fuelType)}</TableCell>
                   <TableCell>
                     {vehicle.fuelType === 'ELECTRIC' ||
-                      vehicle.fuelType === 'HYBRID'
+                    vehicle.fuelType === 'HYBRID'
                       ? `${vehicle.batteryLevel}%`
                       : t('vehicle.table.na')}
                   </TableCell>

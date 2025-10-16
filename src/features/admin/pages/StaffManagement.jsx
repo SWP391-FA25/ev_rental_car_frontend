@@ -6,9 +6,10 @@ import {
   SearchIcon,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from 'react-toastify';
 
 import { MoreVerticalIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
 import { ConfirmDialog } from '../../shared/components/ui/confirm-dialog';
@@ -32,7 +33,6 @@ import { endpoints } from '../../shared/lib/endpoints';
 import { StaffDetails } from '../components/staff/StaffDetails';
 import { StaffForm } from '../components/staff/StaffForm';
 import { useStaff } from '../hooks/useStaff';
-import { useTranslation } from 'react-i18next';
 
 export default function StaffManagement() {
   const { t } = useTranslation();
@@ -226,28 +226,50 @@ export default function StaffManagement() {
           <DropdownMenuTrigger asChild>
             <Button variant='outline'>
               <FilterIcon className='mr-2 h-4 w-4' />
-              {t('staffManagement.filters.status')}: {filterStatus === 'all' ? t('staffManagement.filters.all') : filterStatus}
+              {t('staffManagement.filters.status')}:{' '}
+              {filterStatus === 'all'
+                ? t('staffManagement.filters.all')
+                : filterStatus}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => setFilterStatus('all')}>{t('staffManagement.filters.all')}</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFilterStatus('active')}>{t('staffManagement.table.active')}</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFilterStatus('banned')}>{t('staffManagement.table.banned')}</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFilterStatus('suspended')}>{t('staffManagement.table.suspended')}</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFilterStatus('admin')}>Admin</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilterStatus('all')}>
+              {t('staffManagement.filters.all')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilterStatus('active')}>
+              {t('staffManagement.table.active')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilterStatus('banned')}>
+              {t('staffManagement.table.banned')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilterStatus('suspended')}>
+              {t('staffManagement.table.suspended')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilterStatus('admin')}>
+              Admin
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant='outline'>
               <FilterIcon className='mr-2 h-4 w-4' />
-              {t('staffManagement.filters.role')}: {filterRole === 'all' ? t('staffManagement.filters.all') : filterRole}
+              {t('staffManagement.filters.role')}:{' '}
+              {filterRole === 'all'
+                ? t('staffManagement.filters.all')
+                : filterRole}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => setFilterRole('all')}>{t('staffManagement.filters.all')}</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFilterRole('staff')}>Staff</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFilterRole('admin')}>Admin</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilterRole('all')}>
+              {t('staffManagement.filters.all')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilterRole('staff')}>
+              Staff
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilterRole('admin')}>
+              Admin
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -261,11 +283,15 @@ export default function StaffManagement() {
               <TableHead>{t('staffManagement.table.email')}</TableHead>
               <TableHead>{t('staffManagement.table.phone')}</TableHead>
               <TableHead>{t('staffManagement.table.role')}</TableHead>
-              <TableHead>{t('staffManagement.table.stationAssignment')}</TableHead>
+              <TableHead>
+                {t('staffManagement.table.stationAssignment')}
+              </TableHead>
               <TableHead>{t('staffManagement.table.address')}</TableHead>
               <TableHead>{t('staffManagement.table.status')}</TableHead>
               <TableHead>{t('staffManagement.table.joinDate')}</TableHead>
-              <TableHead className='w-[70px]'>{t('staffManagement.table.actions')}</TableHead>
+              <TableHead className='w-[70px]'>
+                {t('staffManagement.table.actions')}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -280,20 +306,28 @@ export default function StaffManagement() {
               </TableRow>
             ) : error ? (
               <TableRow>
-                <TableCell colSpan={9} className='text-center py-8 text-red-500'>
+                <TableCell
+                  colSpan={9}
+                  className='text-center py-8 text-red-500'
+                >
                   {t('staffManagement.messages.errorGeneric')}: {error}
                 </TableCell>
               </TableRow>
             ) : filteredStaff.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className='text-center py-8 text-muted-foreground'>
+                <TableCell
+                  colSpan={9}
+                  className='text-center py-8 text-muted-foreground'
+                >
                   {t('staffManagement.messages.noStaff')}
                 </TableCell>
               </TableRow>
             ) : (
               filteredStaff.map(staffItem => (
                 <TableRow key={staffItem.id}>
-                  <TableCell className='font-medium'>{staffItem.name}</TableCell>
+                  <TableCell className='font-medium'>
+                    {staffItem.name}
+                  </TableCell>
                   <TableCell>{staffItem.email}</TableCell>
                   <TableCell>{staffItem.phone || 'N/A'}</TableCell>
                   <TableCell>
@@ -308,7 +342,8 @@ export default function StaffManagement() {
                         <div className='flex items-center gap-2'>
                           <MapPinIcon className='h-4 w-4 text-gray-500' />
                           <span className='text-sm'>
-                            {assignment.station?.name || t('staffManagement.table.unknownStation')}
+                            {assignment.station?.name ||
+                              t('staffManagement.table.unknownStation')}
                           </span>
                         </div>
                       ) : (
@@ -320,7 +355,9 @@ export default function StaffManagement() {
                   </TableCell>
                   <TableCell>{staffItem.address || 'N/A'}</TableCell>
                   <TableCell>
-                    <Badge variant={getStatusBadgeVariant(staffItem.accountStatus)}>
+                    <Badge
+                      variant={getStatusBadgeVariant(staffItem.accountStatus)}
+                    >
                       {staffItem.accountStatus}
                     </Badge>
                   </TableCell>
@@ -333,13 +370,17 @@ export default function StaffManagement() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align='end'>
-                        <DropdownMenuItem onClick={() => handleViewDetails(staffItem)}>
+                        <DropdownMenuItem
+                          onClick={() => handleViewDetails(staffItem)}
+                        >
                           {t('staffManagement.actions.viewDetails')}
                         </DropdownMenuItem>
                         {getStaffAssignment(staffItem.id) && (
                           <DropdownMenuItem
                             onClick={() => {
-                              setStaffToUnassign(getStaffAssignment(staffItem.id).id);
+                              setStaffToUnassign(
+                                getStaffAssignment(staffItem.id).id
+                              );
                               setUnassignDialogOpen(true);
                             }}
                             className='text-blue-600'
@@ -379,25 +420,33 @@ export default function StaffManagement() {
       <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>{staff.length}</div>
-          <div className='text-sm text-muted-foreground'>{t('staffManagement.stats.total')}</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('staffManagement.stats.total')}
+          </div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>
             {staff.filter(s => s.accountStatus === 'ACTIVE').length}
           </div>
-          <div className='text-sm text-muted-foreground'>{t('staffManagement.stats.active')}</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('staffManagement.stats.active')}
+          </div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>
             {staff.filter(s => s.role === 'STAFF').length}
           </div>
-          <div className='text-sm text-muted-foreground'>{t('staffManagement.stats.staff')}</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('staffManagement.stats.staff')}
+          </div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>
             {staff.filter(s => s.role === 'ADMIN').length}
           </div>
-          <div className='text-sm text-muted-foreground'>{t('staffManagement.stats.admins')}</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('staffManagement.stats.admins')}
+          </div>
         </div>
       </div>
 
