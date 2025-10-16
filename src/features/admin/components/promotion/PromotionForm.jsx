@@ -2,6 +2,11 @@ import { format } from 'date-fns';
 import { CalendarIcon, LoaderIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useFormValidation } from '../../../shared/hooks/useFormValidation.js';
+import {
+  promotionCreateSchema,
+  promotionUpdateSchema,
+} from '../../../shared/validations/promotionValidation.js';
 
 import { Button } from '../../../shared/components/ui/button';
 import { Calendar } from '../../../shared/components/ui/calendar';
@@ -38,9 +43,11 @@ export function PromotionForm({
     validFrom: null,
     validUntil: null,
   });
-  const [errors, setErrors] = useState({});
-
   const isEdit = !!promotion;
+
+  // Initialize form validation
+  const { validate, validateField, clearError, hasError, getError } =
+    useFormValidation(isEdit ? promotionUpdateSchema : promotionCreateSchema);
 
   useEffect(() => {
     if (promotion) {
@@ -62,55 +69,31 @@ export function PromotionForm({
         validUntil: null,
       });
     }
-    setErrors({});
+    // Clear validation errors when dialog opens/closes
   }, [promotion, open]);
 
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!formData.code.trim()) {
-      newErrors.code = t('promotionForm.codeRequired');
-    } else if (formData.code.length < 3) {
-      newErrors.code = t('promotionForm.codeMin');
-    }
-
-    if (!formData.discount) {
-      newErrors.discount = t('promotionForm.discountRequired');
-    } else if (isNaN(formData.discount) || parseFloat(formData.discount) <= 0) {
-      newErrors.discount = t('promotionForm.discountPositive');
-    }
-
-    if (!formData.validFrom) {
-      newErrors.validFrom = t('promotionForm.validFromRequired');
-    }
-
-    if (!formData.validUntil) {
-      newErrors.validUntil = t('promotionForm.validUntilRequired');
-    }
-
-    if (
-      formData.validFrom &&
-      formData.validUntil &&
-      formData.validFrom >= formData.validUntil
-    ) {
-      newErrors.validUntil = t('promotionForm.validUntilAfter');
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const handleBlur = field => {
+    // Validate field on blur
+    validateField(field, formData[field]);
   };
 
   const handleSubmit = async e => {
     e.preventDefault();
-    if (!validateForm()) return;
+
+    // Validate form data using Zod schema
+    const validation = validate(formData);
+
+    if (!validation.success) {
+      return;
+    }
 
     try {
       const submitData = {
-        code: formData.code.trim(),
-        description: formData.description.trim() || null,
-        discount: parseFloat(formData.discount),
-        validFrom: formData.validFrom.toISOString(),
-        validUntil: formData.validUntil.toISOString(),
+        code: validation.data.code,
+        description: validation.data.description || null,
+        discount: validation.data.discount,
+        validFrom: validation.data.validFrom.toISOString(),
+        validUntil: validation.data.validUntil.toISOString(),
       };
       await onSubmit(submitData);
       onOpenChange(false);
@@ -121,8 +104,10 @@ export function PromotionForm({
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: null }));
+
+    // Clear error for this field when user starts typing
+    if (hasError(field)) {
+      clearError(field);
     }
   };
 
@@ -131,7 +116,9 @@ export function PromotionForm({
       <DialogContent className='sm:max-w-[500px]'>
         <DialogHeader>
           <DialogTitle>
-            {isEdit ? t('promotionForm.titleEdit') : t('promotionForm.titleAdd')}
+            {isEdit
+              ? t('promotionForm.titleEdit')
+              : t('promotionForm.titleAdd')}
           </DialogTitle>
           <DialogDescription>
             {isEdit ? t('promotionForm.descEdit') : t('promotionForm.descAdd')}
@@ -147,11 +134,12 @@ export function PromotionForm({
               onChange={e =>
                 handleInputChange('code', e.target.value.toUpperCase())
               }
+              onBlur={() => handleBlur('code')}
               placeholder={t('promotionForm.codePlaceholder')}
-              className={errors.code ? 'border-red-500' : ''}
+              className={hasError('code') ? 'border-red-500' : ''}
             />
-            {errors.code && (
-              <p className='text-sm text-red-500'>{errors.code}</p>
+            {hasError('code') && (
+              <p className='text-sm text-red-500'>{getError('code')}</p>
             )}
           </div>
 
@@ -163,9 +151,14 @@ export function PromotionForm({
               id='description'
               value={formData.description}
               onChange={e => handleInputChange('description', e.target.value)}
+              onBlur={() => handleBlur('description')}
               placeholder={t('promotionForm.descriptionPlaceholder')}
               rows={3}
+              className={hasError('description') ? 'border-red-500' : ''}
             />
+            {hasError('description') && (
+              <p className='text-sm text-red-500'>{getError('description')}</p>
+            )}
           </div>
 
           <div className='space-y-2'>
@@ -178,13 +171,14 @@ export function PromotionForm({
                 min='0'
                 value={formData.discount}
                 onChange={e => handleInputChange('discount', e.target.value)}
+                onBlur={() => handleBlur('discount')}
                 placeholder={t('promotionForm.discountPlaceholder')}
-                className={errors.discount ? 'border-red-500' : ''}
+                className={hasError('discount') ? 'border-red-500' : ''}
               />
               <span className='text-sm text-muted-foreground'>%</span>
             </div>
-            {errors.discount && (
-              <p className='text-sm text-red-500'>{errors.discount}</p>
+            {hasError('discount') && (
+              <p className='text-sm text-red-500'>{getError('discount')}</p>
             )}
           </div>
 
@@ -198,7 +192,7 @@ export function PromotionForm({
                     className={cn(
                       'w-full justify-start text-left font-normal',
                       !formData.validFrom && 'text-muted-foreground',
-                      errors.validFrom && 'border-red-500'
+                      hasError('validFrom') && 'border-red-500'
                     )}
                   >
                     <CalendarIcon className='mr-2 h-4 w-4' />
@@ -219,8 +213,8 @@ export function PromotionForm({
                   />
                 </PopoverContent>
               </Popover>
-              {errors.validFrom && (
-                <p className='text-sm text-red-500'>{errors.validFrom}</p>
+              {hasError('validFrom') && (
+                <p className='text-sm text-red-500'>{getError('validFrom')}</p>
               )}
             </div>
 
@@ -233,7 +227,7 @@ export function PromotionForm({
                     className={cn(
                       'w-full justify-start text-left font-normal',
                       !formData.validUntil && 'text-muted-foreground',
-                      errors.validUntil && 'border-red-500'
+                      hasError('validUntil') && 'border-red-500'
                     )}
                   >
                     <CalendarIcon className='mr-2 h-4 w-4' />
@@ -257,8 +251,8 @@ export function PromotionForm({
                   />
                 </PopoverContent>
               </Popover>
-              {errors.validUntil && (
-                <p className='text-sm text-red-500'>{errors.validUntil}</p>
+              {hasError('validUntil') && (
+                <p className='text-sm text-red-500'>{getError('validUntil')}</p>
               )}
             </div>
           </div>
