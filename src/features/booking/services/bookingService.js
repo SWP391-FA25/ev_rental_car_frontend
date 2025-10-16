@@ -4,11 +4,25 @@ import { endpoints } from '@/features/shared/lib/endpoints';
 export const bookingService = {
   // Tạo booking mới
   async createBooking(bookingData) {
-    const response = await apiClient.post(
-      endpoints.bookings.create(),
-      bookingData
-    );
-    return response.data;
+    try {
+      const response = await apiClient.post(
+        endpoints.bookings.create(),
+        bookingData
+      );
+      return response.data;
+    } catch (error) {
+      // Enhanced error handling with specific error codes
+      const errorResponse = {
+        message: error.response?.data?.message || 'Failed to create booking',
+        code: error.response?.data?.code || 'UNKNOWN_ERROR',
+        details: error.response?.data?.details || null,
+        status: error.response?.status || 500,
+      };
+
+      // Attach the enhanced error info to the error object
+      error.enhancedError = errorResponse;
+      throw error;
+    }
   },
 
   // Lấy booking theo ID
