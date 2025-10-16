@@ -22,6 +22,10 @@ import {
   SelectValue,
 } from '@/features/shared/components/ui/select';
 import { stationService } from '../../cars/services/stationService';
+import { formatCurrency } from '@/features/shared/lib/utils';
+import { useAuth } from '@/app/providers/AuthProvider';
+import { apiClient } from '../../shared/lib/apiClient';
+import { endpoints } from '../../shared/lib/endpoints';
 
 /**
  * Staff Return Car UI
@@ -29,30 +33,26 @@ import { stationService } from '../../cars/services/stationService';
  * This is UI-focused with mock-friendly API calls.
  */
 export default function ReturnCar() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const {
     loading: bookingLoading,
     getAllBookings,
     getBookingById,
   } = useBooking();
+  const { user } = useAuth();
   const [bookingId, setBookingId] = useState('');
   const [booking, setBooking] = useState(null);
   const [eligibleBookings, setEligibleBookings] = useState([]);
   const [loadingBookings, setLoadingBookings] = useState(false);
-  const [inspectionResult, setInspectionResult] = useState('PASS'); // PASS | ISSUE
   const [checklist, setChecklist] = useState({
     exterior: false,
     interior: false,
-    battery: false,
-    mileageRecorded: false,
-    cleaningNeeded: false,
     accessories: false,
   });
   const [incidentFiles, setIncidentFiles] = useState([]);
   const [incidentPreviews, setIncidentPreviews] = useState([]);
   const [incidentNotes, setIncidentNotes] = useState('');
-
-  const [deposit, setDeposit] = useState(0);
+  const [totalAmount, setTotalAmount] = useState(null);
   // Return details per schema
   const [returnOdometer, setReturnOdometer] = useState('');
   // Actual return station selection
@@ -92,8 +92,10 @@ export default function ReturnCar() {
       const res = await getBookingById(value);
       const b = res?.booking || res?.data?.booking || null;
       setBooking(b);
-      const baseDeposit = b?.depositAmount ?? b?.amount?.deposit ?? 0;
-      setDeposit(baseDeposit || 0);
+      // Initialize totalAmount from booking if available
+      setTotalAmount(
+        typeof b?.totalAmount !== 'undefined' ? b.totalAmount : null
+      );
       // Default to pickup station if present
       const defaultStationId = b?.pickupStation?.id
         ? String(b.pickupStation.id)
@@ -113,8 +115,10 @@ export default function ReturnCar() {
       const res = await getBookingById(bookingId);
       const b = res?.booking || res?.data?.booking || null;
       setBooking(b);
-      const baseDeposit = b?.depositAmount ?? b?.amount?.deposit ?? 0;
-      setDeposit(baseDeposit || 0);
+      // Initialize totalAmount from booking if available
+      setTotalAmount(
+        typeof b?.totalAmount !== 'undefined' ? b.totalAmount : null
+      );
       const defaultStationId = b?.pickupStation?.id
         ? String(b.pickupStation.id)
         : '';
@@ -170,6 +174,87 @@ export default function ReturnCar() {
     loadStations();
   }, [t]);
 
+  // Helper: reset all fields to initial state
+  const resetAllFields = () => {
+    setBookingId('');
+    setBooking(null);
+    setEligibleBookings(prev => prev.filter(b => b.status === 'IN_PROGRESS'));
+    setChecklist({
+      exterior: false,
+      interior: false,
+      accessories: false,
+    });
+    setIncidentFiles([]);
+    setIncidentNotes('');
+    setReturnOdometer('');
+    setSelectedReturnStationId('');
+    setNotes('');
+    setTotalAmount(null);
+  };
+
+  // Convert selected image files to base64 strings for API payload
+  const filesToBase64 = async files => {
+    const imageFiles = (files || []).filter(
+      f => f && f.type && f.type.startsWith('image/')
+    );
+    if (!imageFiles.length) return [];
+    const toBase64 = file =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    return Promise.all(imageFiles.map(f => toBase64(f)));
+  };
+
+  // Upload incident images to vehicle image endpoint to obtain URLs
+  const uploadIncidentImages = async vehicleId => {
+    try {
+      const imageFiles = (incidentFiles || []).filter(
+        f => f && f.type && f.type.startsWith('image/')
+      );
+      if (!vehicleId || !imageFiles.length) return [];
+
+      // Warn for oversize to reduce server errors (backend caps ~5MB/file)
+      const MAX_SIZE = 5 * 1024 * 1024;
+      const validFiles = imageFiles.filter(f => {
+        if (f.size > MAX_SIZE) {
+          toast.warning(`${f.name} vượt quá 5MB, sẽ bỏ qua ảnh này.`);
+          return false;
+        }
+        return true;
+      });
+
+      const uploadPromises = validFiles.map(async file => {
+        const formData = new FormData();
+        formData.append('images', file);
+        const res = await apiClient.post(
+          endpoints.vehicles.uploadImage(vehicleId),
+          formData,
+          { headers: { 'Content-Type': 'multipart/form-data' } }
+        );
+        const images = res?.data?.images || [];
+        return images.map(img => img.url).filter(Boolean);
+      });
+
+      const settled = await Promise.allSettled(uploadPromises);
+      const urls = [];
+      settled.forEach(r => {
+        if (r.status === 'fulfilled') {
+          const list = Array.isArray(r.value) ? r.value : [];
+          urls.push(...list);
+        } else {
+          console.warn('Upload image failed:', r.reason);
+        }
+      });
+      return urls;
+    } catch (err) {
+      console.warn('Upload incident images error:', err?.message || err);
+      return [];
+    }
+  };
+
   const handleCompleteReturn = async () => {
     if (!booking && !bookingId) {
       toast.warning(t('staffReturnCar.toast.selectBooking'));
@@ -219,15 +304,90 @@ export default function ReturnCar() {
       actualReturnLocation: normalizedLocation,
       returnOdometer: odo,
       notes,
-      damageReport: incidentNotes || undefined,
       // Optional fields such as batteryLevel or rating can be added here if needed
     };
 
     try {
       const id = booking?.id || bookingId;
+      // Tạo inspection (CHECK_OUT) trước khi hoàn tất đơn thuê
+      try {
+        if (!user?.id) {
+          toast.error(
+            t('staffReturnCar.toast.completeFail') ||
+              'Thiếu thông tin nhân viên'
+          );
+          return;
+        }
+
+        // Upload files to get URLs, avoid large JSON payload (base64)
+        const vehicleIdForUpload = booking?.vehicle?.id || booking?.vehicleId;
+        const incidentImageUrls = incidentFiles.length
+          ? await uploadIncidentImages(vehicleIdForUpload)
+          : [];
+
+        const inspectionPayload = {
+          vehicleId: booking?.vehicle?.id || booking?.vehicleId,
+          staffId: user?.id,
+          bookingId: id,
+          inspectionType: 'CHECK_OUT',
+          mileage: odo,
+          // batteryLevel is REQUIRED by Prisma schema (0-100)
+          batteryLevel:
+            typeof (booking?.vehicle?.batteryLevel ?? booking?.batteryLevel) ===
+            'number'
+              ? Math.min(
+                  100,
+                  Math.max(
+                    0,
+                    booking?.vehicle?.batteryLevel ?? booking?.batteryLevel
+                  )
+                )
+              : 50, // fallback to 50% if unknown
+          // Prisma enum ConditionStatus requires one of: GOOD | FAIR | POOR
+          exteriorCondition: checklist.exterior ? 'GOOD' : 'POOR',
+          interiorCondition: checklist.interior ? 'GOOD' : 'POOR',
+          // accessories is JSON; send a minimal array to reflect presence/missing
+          accessories: checklist.accessories
+            ? ['ALL_PRESENT']
+            : ['MISSING_ITEMS'],
+          damageNotes: incidentNotes || undefined,
+          notes: notes || undefined,
+          images: incidentImageUrls.length ? incidentImageUrls : undefined,
+          documentVerified: false,
+        };
+
+        await apiClient.post(endpoints.inspections.create(), inspectionPayload);
+      } catch (err) {
+        console.warn('Create inspection error:', err?.message || err);
+        // Không chặn luồng; vẫn tiến hành hoàn tất đơn thuê
+      }
+
       const res = await bookingService.completeBooking(id, payload);
+      // Update booking and pick totalAmount from summary.pricing
+      const updatedBooking = res?.data?.booking;
+      const pricing = res?.data?.summary?.pricing;
+      if (updatedBooking) setBooking(updatedBooking);
+      if (pricing && typeof pricing.totalAmount !== 'undefined') {
+        setTotalAmount(pricing.totalAmount);
+      } else if (typeof updatedBooking?.totalAmount !== 'undefined') {
+        setTotalAmount(updatedBooking.totalAmount);
+      }
       if (res?.success) {
         toast.success(t('staffReturnCar.toast.completeSuccess'));
+        // Refresh eligible bookings list to remove completed booking
+        try {
+          setLoadingBookings(true);
+          const resData = await getAllBookings({ limit: 100 });
+          const list = (resData?.bookings || resData || []).filter(b => {
+            const status = b.status || b.bookingStatus || '';
+            return status === 'IN_PROGRESS';
+          });
+          setEligibleBookings(list);
+        } catch (err) {
+          console.error('Refresh eligible bookings error', err);
+        } finally {
+          setLoadingBookings(false);
+        }
       } else {
         toast.info(res?.message || t('staffReturnCar.toast.completeQueued'));
       }
@@ -248,6 +408,9 @@ export default function ReturnCar() {
       toast.error(
         serverMsg || e?.message || t('staffReturnCar.toast.completeFail')
       );
+    } finally {
+      // Luôn reset form sau khi người dùng confirm, bất kể kết quả API
+      resetAllFields();
     }
   };
 
@@ -292,19 +455,24 @@ export default function ReturnCar() {
               </SelectContent>
             </Select>
           </div>
-          <div>
-            <Label className='block mb-2'>
-              {t('staffReturnCar.booking.depositLabel')}
-            </Label>
-            <Input
-              type='number'
-              value={deposit}
-              onChange={e => setDeposit(e.target.value)}
-            />
-          </div>
+          {booking && (
+            <div>
+              <Label className='block mb-2'>
+                {t('staffReturnCar.booking.depositLabel')}
+              </Label>
+              <Input
+                type='text'
+                value={formatCurrency(
+                  booking?.depositAmount ?? booking?.amount?.deposit ?? 0
+                )}
+                readOnly
+                disabled
+              />
+            </div>
+          )}
 
           {booking && (
-            <div className='md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4 border rounded p-4'>
+            <div className='md:col-span-3 grid grid-cols-1 md:grid-cols-4 gap-4 border rounded p-4'>
               <div>
                 <p className='text-sm text-muted-foreground'>
                   {t('staffReturnCar.booking.customer')}
@@ -339,6 +507,16 @@ export default function ReturnCar() {
                   )}
                 </p>
               </div>
+              {(totalAmount ?? booking?.totalAmount) != null && (
+                <div>
+                  <p className='text-sm text-muted-foreground'>
+                    {t('staffReturnCar.booking.totalLabel') || 'Tổng tiền'}
+                  </p>
+                  <p className='font-medium'>
+                    {formatCurrency(totalAmount ?? booking?.totalAmount ?? 0)}
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
@@ -414,32 +592,7 @@ export default function ReturnCar() {
         </CardHeader>
         <CardContent className='space-y-4'>
           <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-            <div>
-              <Label className='block mb-2'>
-                {t('staffReturnCar.inspection.resultLabel')}
-              </Label>
-              <Select
-                value={inspectionResult}
-                onValueChange={setInspectionResult}
-              >
-                <SelectTrigger>
-                  <SelectValue
-                    placeholder={t(
-                      'staffReturnCar.inspection.resultPlaceholder'
-                    )}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='PASS'>
-                    {t('staffReturnCar.inspection.pass')}
-                  </SelectItem>
-                  <SelectItem value='ISSUE'>
-                    {t('staffReturnCar.inspection.issue')}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className='md:col-span-2 grid grid-cols-2 gap-3'>
+            <div className='md:col-span-3 grid grid-cols-2 gap-3'>
               {Object.entries(checklist).map(([key, val]) => {
                 const id = `chk_${key}`;
                 return (
@@ -455,14 +608,6 @@ export default function ReturnCar() {
                         t('staffReturnCar.inspection.checklist.exterior')}
                       {key === 'interior' &&
                         t('staffReturnCar.inspection.checklist.interior')}
-                      {key === 'battery' &&
-                        t('staffReturnCar.inspection.checklist.battery')}
-                      {key === 'mileageRecorded' &&
-                        t(
-                          'staffReturnCar.inspection.checklist.mileageRecorded'
-                        )}
-                      {key === 'cleaningNeeded' &&
-                        t('staffReturnCar.inspection.checklist.cleaningNeeded')}
                       {key === 'accessories' &&
                         t('staffReturnCar.inspection.checklist.accessories')}
                     </Label>
@@ -471,47 +616,44 @@ export default function ReturnCar() {
               })}
             </div>
           </div>
-
-          {inspectionResult === 'ISSUE' && (
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-              <div>
-                <Label className='block mb-2'>
-                  {t('staffReturnCar.incident.title')}
-                </Label>
-                <Input
-                  type='file'
-                  multiple
-                  accept='image/*'
-                  onChange={handleFiles}
-                />
-                {!!incidentPreviews.length && (
-                  <div className='mt-3 grid grid-cols-2 md:grid-cols-3 gap-2'>
-                    {incidentPreviews.map((p, idx) => (
-                      <div key={idx} className='border rounded overflow-hidden'>
-                        <img
-                          src={p.url}
-                          alt={p.name}
-                          className='w-full h-24 object-cover'
-                        />
-                        <div className='p-2 text-xs truncate'>{p.name}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div>
-                <Label className='block mb-2'>
-                  {t('staffReturnCar.incident.notesLabel')}
-                </Label>
-                <Textarea
-                  rows={4}
-                  value={incidentNotes}
-                  onChange={e => setIncidentNotes(e.target.value)}
-                  placeholder={t('staffReturnCar.incident.notesPlaceholder')}
-                />
-              </div>
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+            <div>
+              <Label className='block mb-2'>
+                {t('staffReturnCar.incident.title')}
+              </Label>
+              <Input
+                type='file'
+                multiple
+                accept='image/*'
+                onChange={handleFiles}
+              />
+              {!!incidentPreviews.length && (
+                <div className='mt-3 grid grid-cols-2 md:grid-cols-3 gap-2'>
+                  {incidentPreviews.map((p, idx) => (
+                    <div key={idx} className='border rounded overflow-hidden'>
+                      <img
+                        src={p.url}
+                        alt={p.name}
+                        className='w-full h-24 object-cover'
+                      />
+                      <div className='p-2 text-xs truncate'>{p.name}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
+            <div>
+              <Label className='block mb-2'>
+                {t('staffReturnCar.incident.notesLabel')}
+              </Label>
+              <Textarea
+                rows={4}
+                value={incidentNotes}
+                onChange={e => setIncidentNotes(e.target.value)}
+                placeholder={t('staffReturnCar.incident.notesPlaceholder')}
+              />
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -530,16 +672,7 @@ export default function ReturnCar() {
             <Button
               variant='outline'
               onClick={() => {
-                setIncidentFiles([]);
-                setIncidentNotes('');
-                setInspectionResult('PASS');
-                setReturnOdometer('');
-                // Reset station selection to pickup station if available
-                setSelectedReturnStationId(
-                  booking?.pickupStation?.id
-                    ? String(booking.pickupStation.id)
-                    : ''
-                );
+                resetAllFields();
               }}
             >
               {t('staffReturnCar.complete.reset')}

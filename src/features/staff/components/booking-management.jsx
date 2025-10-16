@@ -53,6 +53,9 @@ const BookingManagement = () => {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
+  const [isCompletionSummaryOpen, setIsCompletionSummaryOpen] = useState(false);
+  const [completionSummaryBookingId, setCompletionSummaryBookingId] =
+    useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [depositFilter, setDepositFilter] = useState('ALL');
@@ -262,25 +265,25 @@ const BookingManagement = () => {
         variant: 'outline',
         icon: Clock,
         label: t('booking.depositStatus.pending'),
-        color: 'text-orange-600',
+        color: 'text-orange-700 border-orange-300 bg-orange-50',
       },
       PAID: {
-        variant: 'default',
+        variant: 'outline',
         icon: CheckCircle,
         label: t('booking.depositStatus.paid'),
-        color: 'text-green-600',
+        color: 'text-white bg-emerald-600 border-emerald-600',
       },
       FAILED: {
-        variant: 'destructive',
+        variant: 'outline',
         icon: XCircle,
         label: t('booking.depositStatus.failed'),
-        color: 'text-red-600',
+        color: 'text-white bg-rose-600 border-rose-600',
       },
       REFUNDED: {
-        variant: 'secondary',
+        variant: 'outline',
         icon: CreditCard,
         label: t('booking.depositStatus.refunded'),
-        color: 'text-blue-600',
+        color: 'text-white bg-blue-600 border-blue-600',
       },
     };
 
@@ -290,7 +293,7 @@ const BookingManagement = () => {
     return (
       <Badge
         variant={config.variant}
-        className={`flex items-center gap-1 ${config.color}`}
+        className={`flex items-center gap-1 rounded-full px-3 py-1 ${config.color}`}
       >
         <Icon className='h-3 w-3' />
         {config.label}
@@ -615,7 +618,7 @@ const BookingManagement = () => {
                           <Eye className='mr-2 h-4 w-4' />
                           {t('booking.actions.viewDetails')}
                         </DropdownMenuItem>
-                        {booking.status === 'PENDING' && (
+                        {/* {booking.status === 'PENDING' && (
                           <DropdownMenuItem
                             onClick={() => confirmBooking(booking.id)}
                             className='text-green-600'
@@ -623,7 +626,7 @@ const BookingManagement = () => {
                             <CheckCircle className='mr-2 h-4 w-4' />
                             Confirm Booking
                           </DropdownMenuItem>
-                        )}
+                        )} */}
                         {/* {booking.status === 'PENDING' &&
                           booking.depositStatus !== 'PAID' && (
                             <DropdownMenuItem
@@ -715,7 +718,6 @@ const BookingManagement = () => {
         onOpenChange={setIsDetailsOpen}
         booking={selectedBooking}
       />
-
       {/* Complete Booking Dialog */}
       <Dialog
         open={isCompleteDialogOpen}

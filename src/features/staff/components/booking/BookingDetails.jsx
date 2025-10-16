@@ -1,4 +1,4 @@
-import { Calendar, Car, CreditCard, User } from 'lucide-react';
+import { Calendar, Car, CreditCard, User, ClipboardList } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '../../../shared/components/ui/badge';
 import { Button } from '../../../shared/components/ui/button';
@@ -11,9 +11,48 @@ import {
 } from '../../../shared/components/ui/dialog';
 import { Label } from '../../../shared/components/ui/label';
 import { formatCurrency, formatDate } from '../../../shared/lib/utils';
+import { useEffect, useState } from 'react';
+import { apiClient } from '../../../shared/lib/apiClient';
+import { endpoints } from '../../../shared/lib/endpoints';
 
 export function BookingDetails({ open, onOpenChange, booking }) {
   const { t } = useTranslation();
+  // State for inspections (hooks must be unconditional)
+  const [inspections, setInspections] = useState([]);
+  const [loadingInspections, setLoadingInspections] = useState(false);
+  const [inspectionsError, setInspectionsError] = useState('');
+
+  useEffect(() => {
+    const fetchInspections = async () => {
+      if (!booking?.id || !open) return;
+      setLoadingInspections(true);
+      setInspectionsError('');
+      try {
+        const res = await apiClient.get(
+          endpoints.inspections.getByBooking(booking.id)
+        );
+        const data = res?.data;
+        // Backend returns: { success: true, data: { inspections: [...] } }
+        const list = Array.isArray(data?.inspections)
+          ? data.inspections
+          : Array.isArray(data)
+          ? data
+          : Array.isArray(data?.items)
+          ? data.items
+          : [];
+        setInspections(list);
+      } catch (err) {
+        setInspectionsError(
+          err?.message || t('booking.messages.detailsFailed')
+        );
+      } finally {
+        setLoadingInspections(false);
+      }
+    };
+
+    fetchInspections();
+  }, [booking?.id, open, t]);
+
   if (!booking) return null;
 
   // Get status badge
@@ -39,6 +78,40 @@ export function BookingDetails({ open, onOpenChange, booking }) {
         {config.label}
       </Badge>
     );
+  };
+
+  // Badge color helpers for inspection summary
+  const getBatteryBadgeClass = val => {
+    if (val === null || val === undefined) {
+      return 'bg-gray-100 text-gray-600 border-gray-200';
+    }
+    const n = Number(val);
+    if (Number.isNaN(n)) return 'bg-gray-100 text-gray-600 border-gray-200';
+    if (n >= 70) return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+    if (n >= 30) return 'bg-amber-100 text-amber-800 border-amber-200';
+    return 'bg-rose-100 text-rose-700 border-rose-200';
+  };
+
+  const getConditionBadgeClass = value => {
+    const v = (value || '').toString().toUpperCase();
+    if (!v) return 'bg-gray-100 text-gray-600 border-gray-200';
+    if (v === 'GOOD' || v === 'EXCELLENT')
+      return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+    if (v === 'FAIR' || v === 'AVERAGE')
+      return 'bg-amber-100 text-amber-800 border-amber-200';
+    if (v === 'POOR' || v === 'BAD')
+      return 'bg-rose-100 text-rose-700 border-rose-200';
+    if (v === 'N/A' || v === 'NA')
+      return 'bg-gray-100 text-gray-600 border-gray-200';
+    return 'bg-blue-100 text-blue-700 border-blue-200';
+  };
+
+  const getDocBadgeClass = val => {
+    if (typeof val !== 'boolean')
+      return 'bg-gray-100 text-gray-600 border-gray-200';
+    return val
+      ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+      : 'bg-rose-100 text-rose-700 border-rose-200';
   };
 
   // Format currency
@@ -189,6 +262,177 @@ export function BookingDetails({ open, onOpenChange, booking }) {
               </div>
             </div>
           )}
+
+          {/* Vehicle Inspections */}
+          <div className='space-y-4'>
+            <h3 className='text-lg font-semibold flex items-center gap-2'>
+              <ClipboardList className='h-5 w-5' />
+              {t('booking.details.inspections.title')}
+            </h3>
+
+            {loadingInspections && (
+              <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
+                {t('booking.details.inspections.loading')}
+              </div>
+            )}
+
+            {!loadingInspections && inspectionsError && (
+              <div className='p-2 border rounded-md bg-red-50 text-red-600 min-h-[40px] flex items-center'>
+                {t('booking.details.inspections.loadFailed')}: {inspectionsError}
+              </div>
+            )}
+
+            {!loadingInspections && !inspectionsError && inspections.length === 0 && (
+              <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
+                {t('booking.details.inspections.empty')}
+              </div>
+            )}
+
+            {!loadingInspections && !inspectionsError && inspections.length > 0 && (
+              <div className='space-y-3'>
+                {inspections.map(item => {
+                  const type = item?.inspectionType || item?.type || '';
+                  const statusText = item?.isCompleted
+                    ? t('booking.details.inspections.status.completed')
+                    : t('booking.details.inspections.status.pending');
+                  const odometer = item?.mileage ?? item?.odometer ?? null;
+                  const stationName =
+                    item?.station?.name || item?.stationName || booking?.station?.name || '';
+                  const staffName = item?.staff?.name || item?.staffName || '';
+                  const time = item?.createdAt || item?.time || item?.updatedAt || '';
+                  const damageNotes =
+                    item?.damageNotes || item?.incidentNotes || item?.notes || '';
+                  const battery = item?.batteryLevel ?? null;
+                  const exteriorCondition = item?.exteriorCondition || '';
+                  const interiorCondition = item?.interiorCondition || '';
+                  const rawImages = item?.images;
+                  const imageUrls = Array.isArray(rawImages)
+                    ? rawImages
+                        .map(img =>
+                          typeof img === 'string'
+                            ? img
+                            : img?.url || img?.thumbnailUrl || null
+                        )
+                        .filter(Boolean)
+                    : [];
+
+                  return (
+                    <div
+                      key={item?.id || `${type}-${time}`}
+                      className='p-3 border rounded-md bg-muted/30'
+                    >
+                      <div className='flex flex-wrap justify-between gap-2'>
+                        <div className='flex items-center gap-2'>
+                          <Badge variant='outline'>
+                            {t('booking.details.inspections.item.id')}#{
+                              (item?.id || '')
+                                .toString()
+                                .substring(0, 8)
+                            }
+                          </Badge>
+                          <Badge variant='secondary'>
+                            {t('booking.details.inspections.item.type')}:&nbsp;
+                            {type === 'CHECK_OUT'
+                              ? t('booking.details.inspections.type.checkout')
+                              : type === 'CHECK_IN'
+                              ? t('booking.details.inspections.type.checkin')
+                              : type || t('booking.details.na')}
+                          </Badge>
+                        </div>
+                        <Badge variant='default'>
+                          {t('booking.details.inspections.item.status')}: {statusText}
+                        </Badge>
+                      </div>
+
+                      <div className='grid grid-cols-1 md:grid-cols-2 gap-3 mt-3'>
+                        <div className='space-y-1'>
+                          <Label>{t('booking.details.inspections.item.odometer')}</Label>
+                          <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
+                            {typeof odometer === 'number' ? odometer : t('booking.details.na')}
+                          </div>
+                        </div>
+                        <div className='space-y-1'>
+                          <Label>{t('booking.details.inspections.item.station')}</Label>
+                          <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
+                            {stationName || t('booking.details.na')}
+                          </div>
+                        </div>
+                        <div className='space-y-1'>
+                          <Label>{t('booking.details.inspections.item.staff')}</Label>
+                          <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
+                            {staffName || t('booking.details.na')}
+                          </div>
+                        </div>
+                        <div className='space-y-1'>
+                          <Label>{t('booking.details.inspections.item.time')}</Label>
+                          <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
+                            {time ? formatDate(time) : t('booking.details.na')}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className='space-y-2 mt-3'>
+                        <Label>{t('booking.details.inspections.item.damageNotes')}</Label>
+                        <div className='p-2 border rounded-md bg-muted/50 min-h-[36px]'>
+                          {damageNotes || t('booking.details.na')}
+                        </div>
+                      </div>
+
+                      {/* Inspection summary */}
+                      {(battery !== null || exteriorCondition || interiorCondition) && (
+                        <div className='space-y-2 mt-3'>
+                          <Label>{t('booking.details.inspections.item.checklist')}</Label>
+                          <div className='grid grid-cols-1 md:grid-cols-2 gap-2'>
+                            <div className='p-2 border rounded-md bg-muted/40 flex items-center justify-between'>
+                              <span>{t('booking.details.inspections.item.battery')}</span>
+                              <Badge variant='outline' className={getBatteryBadgeClass(battery)}>
+                                {battery !== null ? `${battery}%` : t('booking.details.na')}
+                              </Badge>
+                            </div>
+                            <div className='p-2 border rounded-md bg-muted/40 flex items-center justify-between'>
+                              <span>{t('booking.details.inspections.item.exteriorCondition')}</span>
+                              <Badge variant='outline' className={getConditionBadgeClass(exteriorCondition)}>
+                                {exteriorCondition || t('booking.details.na')}
+                              </Badge>
+                            </div>
+                            <div className='p-2 border rounded-md bg-muted/40 flex items-center justify-between'>
+                              <span>{t('booking.details.inspections.item.interiorCondition')}</span>
+                              <Badge variant='outline' className={getConditionBadgeClass(interiorCondition)}>
+                                {interiorCondition || t('booking.details.na')}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Inspection images */}
+                      <div className='space-y-2 mt-3'>
+                        <Label>{t('booking.details.inspections.item.images') || 'Inspection Images'}</Label>
+                        {imageUrls.length > 0 ? (
+                          <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2'>
+                            {imageUrls.map((url, idx) => (
+                              <div key={`${item?.id || 'img'}-${idx}`} className='rounded-md overflow-hidden border bg-muted/40'>
+                                <img
+                                  src={url}
+                                  alt={`inspection-${idx + 1}`}
+                                  className='w-full h-24 object-cover'
+                                  loading='lazy'
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
+                            {t('booking.details.na')}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
           {/* Pricing */}
           <div className='space-y-4'>

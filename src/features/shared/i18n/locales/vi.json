@@ -299,7 +299,8 @@
       "customer": "Khách hàng",
       "vehicle": "Xe",
       "time": "Thời gian",
-      "overdue": "Quá hạn"
+      "overdue": "Quá hạn",
+      "totalLabel": "Số tiền cần phải thanh toán (VNĐ)"
     },
     "inspection": {
       "title": "2. Kiểm tra xe",
@@ -1169,6 +1170,40 @@
         "endTime": "Thời gian kết thúc",
         "station": "Trạm",
         "created": "Tạo lúc"
+      },
+      "inspections": {
+        "title": "Kiểm tra xe",
+        "loading": "Đang tải kiểm tra xe...",
+        "loadFailed": "Không thể tải kiểm tra xe",
+        "empty": "Không có kiểm tra cho đơn này",
+        "type": {
+          "checkout": "Check-out",
+          "return": "Return",
+          "checkin": "Check-in"
+        },
+        "item": {
+          "id": "Kiểm tra",
+          "type": "Loại",
+          "status": "Trạng thái",
+          "odometer": "Số km",
+          "station": "Trạm",
+          "staff": "Nhân viên",
+          "time": "Thời gian",
+          "damageNotes": "Ghi chú hư hỏng",
+          "checklist": "Tóm tắt kiểm tra",
+          "battery": "Pin",
+          "exteriorCondition": "Tình trạng ngoại thất",
+          "interiorCondition": "Tình trạng nội thất",
+          "tireCondition": "Tình trạng lốp",
+          "documentVerified": "Đã xác minh giấy tờ",
+          "images": "Tải ảnh"
+        },
+        "status": {
+          "completed": "Hoàn tất",
+          "pending": "Đang xử lý"
+        },
+        "yes": "Có",
+        "no": "Không"
       },
       "notes": {
         "title": "Ghi chú"

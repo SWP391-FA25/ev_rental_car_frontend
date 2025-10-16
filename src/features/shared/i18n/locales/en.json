@@ -207,7 +207,8 @@
       "customer": "Customer",
       "vehicle": "Vehicle",
       "time": "Time",
-      "overdue": "Overdue"
+      "overdue": "Overdue",
+      "totalLabel": "Total amount (VND)"
     },
     "inspection": {
       "title": "2. Vehicle inspection",
@@ -725,8 +726,7 @@
         "role": "Role"
       },
       "unknownStaff": "Unknown Staff"
-    }
-    ,
+    },
     "timeline": {
       "title": "Station Timeline",
       "createdAt": "Created At",
@@ -1015,6 +1015,40 @@
         "endTime": "End Time",
         "station": "Station",
         "created": "Created"
+      },
+      "inspections": {
+        "title": "Vehicle Inspections",
+        "loading": "Loading inspections...",
+        "loadFailed": "Failed to load inspections",
+        "empty": "No inspections for this booking",
+        "type": {
+          "checkout": "Check-out",
+          "return": "Return",
+          "checkin": "Check-in"
+        },
+        "item": {
+          "id": "Inspection",
+          "type": "Type",
+          "status": "Status",
+          "odometer": "Odometer",
+          "station": "Station",
+          "staff": "Staff",
+          "time": "Time",
+          "damageNotes": "Damage Notes",
+          "checklist": "Inspection Summary",
+          "battery": "Battery",
+          "exteriorCondition": "Exterior Condition",
+          "interiorCondition": "Interior Condition",
+          "tireCondition": "Tire Condition",
+          "documentVerified": "Document Verified",
+          "images": "Image Upload"
+        },
+        "status": {
+          "completed": "Completed",
+          "pending": "Pending"
+        },
+        "yes": "Yes",
+        "no": "No"
       },
       "notes": {
         "title": "Notes"
