@@ -1,4 +1,8 @@
+import { SaveIcon } from 'lucide-react';
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'react-toastify';
+import { Button } from '../../shared/components/ui/button';
 import {
   Card,
   CardContent,
@@ -8,10 +12,6 @@ import {
 } from '../../shared/components/ui/card';
 import { Label } from '../../shared/components/ui/label';
 import { Switch } from '../../shared/components/ui/switch';
-import { Button } from '../../shared/components/ui/button';
-import { SaveIcon } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
 
 export function NotificationPreferences() {
   const { t } = useTranslation();

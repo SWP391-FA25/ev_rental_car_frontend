@@ -2,16 +2,19 @@ import {
   CarIcon,
   EyeIcon,
   FilterIcon,
+  MoreVerticalIcon,
   PlusIcon,
   SearchIcon,
   TrashIcon,
   UsersIcon,
-  MoreVerticalIcon,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'react-toastify';
 
+import { SimpleAssignmentForm } from '../../admin/components/assignment/SimpleAssignmentForm';
+import { StationDetails } from '../../admin/components/station/StationDetails';
+import { StationForm } from '../../admin/components/station/StationForm';
 import { LocationDisplay } from '../../shared/components/LocationDisplay';
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
@@ -41,9 +44,6 @@ import {
 } from '../../shared/components/ui/table';
 import { apiClient } from '../../shared/lib/apiClient';
 import { endpoints } from '../../shared/lib/endpoints';
-import { SimpleAssignmentForm } from '../../admin/components/assignment/SimpleAssignmentForm';
-import { StationDetails } from '../../admin/components/station/StationDetails';
-import { StationForm } from '../../admin/components/station/StationForm';
 
 // Station status options
 const STATION_STATUS = [
@@ -81,11 +81,18 @@ export default function StationManagement() {
       if (response && response.success) {
         setStations(response.data.stations || []);
       } else {
-        console.warn('[staff] loadStations: unexpected response shape', response);
+        console.warn(
+          '[staff] loadStations: unexpected response shape',
+          response
+        );
       }
     } catch (error) {
       console.error('[staff] loadStations error:', error);
-      toast.error(t('station.management.messages.loadFailed') + ': ' + (error?.message || error));
+      toast.error(
+        t('station.management.messages.loadFailed') +
+          ': ' +
+          (error?.message || error)
+      );
     } finally {
       setLoading(false);
     }
@@ -106,7 +113,11 @@ export default function StationManagement() {
       }
     } catch (error) {
       console.error('[staff] createStation error:', error);
-      toast.error(t('station.management.messages.createFailed') + ': ' + (error?.message || error));
+      toast.error(
+        t('station.management.messages.createFailed') +
+          ': ' +
+          (error?.message || error)
+      );
       throw error;
     }
   };
@@ -136,7 +147,11 @@ export default function StationManagement() {
       }
     } catch (error) {
       console.error('[staff] updateStation error:', error);
-      toast.error(t('station.management.messages.updateFailed') + ': ' + (error?.message || error));
+      toast.error(
+        t('station.management.messages.updateFailed') +
+          ': ' +
+          (error?.message || error)
+      );
       throw error;
     }
   };
@@ -154,7 +169,11 @@ export default function StationManagement() {
       }
     } catch (error) {
       console.error('[staff] deleteStation error:', error);
-      toast.error(t('station.management.messages.deleteFailed') + ': ' + (error?.message || error));
+      toast.error(
+        t('station.management.messages.deleteFailed') +
+          ': ' +
+          (error?.message || error)
+      );
     }
   };
 
@@ -173,7 +192,11 @@ export default function StationManagement() {
       }
     } catch (error) {
       console.error('[staff] getStationById error:', error);
-      toast.error(t('station.management.messages.loadFailed') + ': ' + (error?.message || error));
+      toast.error(
+        t('station.management.messages.loadFailed') +
+          ': ' +
+          (error?.message || error)
+      );
     }
   };
 
@@ -221,7 +244,9 @@ export default function StationManagement() {
   if (loading) {
     return (
       <div className='flex items-center justify-center h-64'>
-        <div className='text-lg'>{t('station.management.messages.loading')}</div>
+        <div className='text-lg'>
+          {t('station.management.messages.loading')}
+        </div>
       </div>
     );
   }
@@ -275,7 +300,10 @@ export default function StationManagement() {
           <DropdownMenuTrigger asChild>
             <Button variant='outline'>
               <FilterIcon className='mr-2 h-4 w-4' />
-              {t('station.management.filters.status')}: {filterStatus === 'all' ? t('station.management.filters.all') : getStatusLabel(filterStatus)}
+              {t('station.management.filters.status')}:{' '}
+              {filterStatus === 'all'
+                ? t('station.management.filters.all')
+                : getStatusLabel(filterStatus)}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
@@ -306,7 +334,9 @@ export default function StationManagement() {
               <TableHead>{t('station.management.table.vehicles')}</TableHead>
               <TableHead>{t('station.management.table.staff')}</TableHead>
               <TableHead>{t('station.management.table.status')}</TableHead>
-              <TableHead className='w-[70px]'>{t('station.management.table.actions')}</TableHead>
+              <TableHead className='w-[70px]'>
+                {t('station.management.table.actions')}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -330,7 +360,9 @@ export default function StationManagement() {
                   {station.address}
                 </TableCell>
                 <TableCell>
-                  <Badge variant='outline'>{station.capacity} {t('station.management.slots')}</Badge>
+                  <Badge variant='outline'>
+                    {station.capacity} {t('station.management.slots')}
+                  </Badge>
                 </TableCell>
                 <TableCell>
                   <div className='flex items-center'>
@@ -390,19 +422,25 @@ export default function StationManagement() {
       <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>{stations.length}</div>
-          <div className='text-sm text-muted-foreground'>{t('station.management.slots')}</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('station.management.slots')}
+          </div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>
             {stations.filter(s => s.status === 'ACTIVE').length}
           </div>
-          <div className='text-sm text-muted-foreground'>{t('station.form.status.active')}</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('station.form.status.active')}
+          </div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>
             {stations.filter(s => s.status === 'MAINTENANCE').length}
           </div>
-          <div className='text-sm text-muted-foreground'>{t('station.form.status.maintenance')}</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('station.form.status.maintenance')}
+          </div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>
@@ -411,7 +449,9 @@ export default function StationManagement() {
               0
             )}
           </div>
-          <div className='text-sm text-muted-foreground'>{t('station.management.summary.capacity')}</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('station.management.summary.capacity')}
+          </div>
         </div>
       </div>
 
@@ -443,9 +483,13 @@ export default function StationManagement() {
       <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
         <DialogContent className='max-w-md'>
           <DialogHeader>
-            <DialogTitle>{t('station.management.assignDialog.title')}</DialogTitle>
+            <DialogTitle>
+              {t('station.management.assignDialog.title')}
+            </DialogTitle>
             <DialogDescription>
-              {t('station.management.assignDialog.description', { stationName: stationToAssign?.name })}
+              {t('station.management.assignDialog.description', {
+                stationName: stationToAssign?.name,
+              })}
             </DialogDescription>
           </DialogHeader>
           <SimpleAssignmentForm

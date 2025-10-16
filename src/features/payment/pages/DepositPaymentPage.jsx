@@ -6,7 +6,7 @@ import { formatCurrency } from '@/features/shared/lib/utils';
 import { ArrowLeft, Calendar, CreditCard, MapPin } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { toast } from 'sonner';
+import { toast } from 'react-toastify';
 import { paymentService } from '../services/paymentService';
 
 export default function DepositPaymentPage() {

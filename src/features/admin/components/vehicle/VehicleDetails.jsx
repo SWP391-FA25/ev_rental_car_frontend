@@ -1,9 +1,9 @@
+import { useFormik } from 'formik';
 import { ImageIcon, TrashIcon, UploadIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
-import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'react-toastify';
+import * as Yup from 'yup';
 
 import { Button } from '../../../shared/components/ui/button';
 import {
@@ -70,9 +70,7 @@ export function VehicleDetails({
     model: Yup.string().required(
       t('vehicle.validation.required') || 'Required'
     ),
-    type: Yup.string().required(
-      t('vehicle.validation.required') || 'Required'
-    ),
+    type: Yup.string().required(t('vehicle.validation.required') || 'Required'),
     year: Yup.number()
       .typeError('Must be a valid year')
       .required(t('vehicle.validation.required') || 'Required')
@@ -188,8 +186,10 @@ export function VehicleDetails({
             hourlyRate: updatedVehicle.pricing?.hourlyRate?.toString() || '',
             weeklyRate: updatedVehicle.pricing?.weeklyRate?.toString() || '',
             monthlyRate: updatedVehicle.pricing?.monthlyRate?.toString() || '',
-            depositAmount: updatedVehicle.pricing?.depositAmount?.toString() || '',
-            insuranceRate: updatedVehicle.pricing?.insuranceRate?.toString() || '',
+            depositAmount:
+              updatedVehicle.pricing?.depositAmount?.toString() || '',
+            insuranceRate:
+              updatedVehicle.pricing?.insuranceRate?.toString() || '',
           });
         }
       } catch (err) {
@@ -247,7 +247,9 @@ export function VehicleDetails({
 
   const loadVehicleImages = async vehicleId => {
     try {
-      const response = await apiClient.get(endpoints.vehicles.getImages(vehicleId));
+      const response = await apiClient.get(
+        endpoints.vehicles.getImages(vehicleId)
+      );
       if (response.success) {
         setVehicleImages(response.data.images || []);
       }
@@ -368,8 +370,8 @@ export function VehicleDetails({
 
   // renderError helper used by the JSX to show Formik or server errors under fields
   const renderError = field =>
-    ((formik && formik.touched?.[field] && formik.errors?.[field]) ||
-      serverErrors?.[field]) ? (
+    (formik && formik.touched?.[field] && formik.errors?.[field]) ||
+    serverErrors?.[field] ? (
       <p className='text-red-500 text-sm mt-1'>
         {(formik && formik.errors?.[field]) || serverErrors[field]}
       </p>
@@ -439,7 +441,9 @@ export function VehicleDetails({
                   {isEditing ? (
                     <Select
                       value={formik.values.type}
-                      onValueChange={value => formik.setFieldValue('type', value)}
+                      onValueChange={value =>
+                        formik.setFieldValue('type', value)
+                      }
                       disabled={loading}
                     >
                       <SelectTrigger>
@@ -549,7 +553,9 @@ export function VehicleDetails({
                   {isEditing ? (
                     <Select
                       value={formik.values.fuelType}
-                      onValueChange={value => formik.setFieldValue('fuelType', value)}
+                      onValueChange={value =>
+                        formik.setFieldValue('fuelType', value)
+                      }
                       disabled={loading}
                     >
                       <SelectTrigger>
@@ -598,7 +604,7 @@ export function VehicleDetails({
                   ) : (
                     <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                       {vehicle.fuelType === 'ELECTRIC' ||
-                        vehicle.fuelType === 'HYBRID'
+                      vehicle.fuelType === 'HYBRID'
                         ? `${vehicle.batteryLevel}%`
                         : 'N/A'}
                     </div>
@@ -611,7 +617,9 @@ export function VehicleDetails({
                   {isEditing ? (
                     <Select
                       value={formik.values.status}
-                      onValueChange={value => formik.setFieldValue('status', value)}
+                      onValueChange={value =>
+                        formik.setFieldValue('status', value)
+                      }
                       disabled={loading}
                     >
                       <SelectTrigger>
@@ -902,7 +910,9 @@ export function VehicleDetails({
           </div>
 
           {serverErrors._form && (
-            <div className='text-red-600 text-sm mt-3'>{serverErrors._form}</div>
+            <div className='text-red-600 text-sm mt-3'>
+              {serverErrors._form}
+            </div>
           )}
 
           {/* Action Buttons */}
@@ -940,7 +950,10 @@ export function VehicleDetails({
                 >
                   Close
                 </Button>
-                <Button onClick={() => setIsEditing(true)} className='w-full sm:w-auto'>
+                <Button
+                  onClick={() => setIsEditing(true)}
+                  className='w-full sm:w-auto'
+                >
                   Edit Vehicle
                 </Button>
               </>

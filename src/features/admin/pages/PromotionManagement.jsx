@@ -1,7 +1,13 @@
-import { FilterIcon, LoaderIcon, PlusIcon, SearchIcon, MoreVerticalIcon } from 'lucide-react';
+import {
+  FilterIcon,
+  LoaderIcon,
+  MoreVerticalIcon,
+  PlusIcon,
+  SearchIcon,
+} from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'react-toastify';
 
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
@@ -72,11 +78,21 @@ export default function PromotionManagement() {
     const validUntil = new Date(promotion.validUntil);
 
     if (now < validFrom) {
-      return <Badge variant='outline' className='text-blue-600'>{t("promotion.badge.upcoming")}</Badge>;
+      return (
+        <Badge variant='outline' className='text-blue-600'>
+          {t('promotion.badge.upcoming')}
+        </Badge>
+      );
     } else if (now > validUntil) {
-      return <Badge variant='destructive'>{t("promotion.badge.expired")}</Badge>;
+      return (
+        <Badge variant='destructive'>{t('promotion.badge.expired')}</Badge>
+      );
     } else {
-      return <Badge variant='default' className='bg-green-600'>{t("promotion.badge.active")}</Badge>;
+      return (
+        <Badge variant='default' className='bg-green-600'>
+          {t('promotion.badge.active')}
+        </Badge>
+      );
     }
   };
 
@@ -94,9 +110,9 @@ export default function PromotionManagement() {
   const handleCreatePromotion = async promotionData => {
     try {
       await createPromotion(promotionData);
-      toast.success(t("promotion.toast.createSuccess"));
+      toast.success(t('promotion.toast.createSuccess'));
     } catch {
-      toast.error(t("promotion.toast.createError"));
+      toast.error(t('promotion.toast.createError'));
     }
   };
 
@@ -106,24 +122,24 @@ export default function PromotionManagement() {
       if (selectedPromotion && selectedPromotion.id === id) {
         setSelectedPromotion(updatedPromotion);
       }
-      toast.success(t("promotion.toast.updateSuccess"));
+      toast.success(t('promotion.toast.updateSuccess'));
     } catch {
-      toast.error(t("promotion.toast.updateError"));
+      toast.error(t('promotion.toast.updateError'));
     }
   };
 
   const handleDeletePromotion = async id => {
     try {
       await deletePromotion(id);
-      toast.success(t("promotion.toast.deleteSuccess"));
+      toast.success(t('promotion.toast.deleteSuccess'));
     } catch {
-      toast.error(t("promotion.toast.deleteError"));
+      toast.error(t('promotion.toast.deleteError'));
     }
   };
 
   const handleDeleteFromTable = async promotion => {
     if (promotion.promotionBookings?.length > 0) {
-      toast.error(t("promotion.toast.deleteBlocked"));
+      toast.error(t('promotion.toast.deleteBlocked'));
       return;
     }
     setPromotionToDelete(promotion);
@@ -145,12 +161,14 @@ export default function PromotionManagement() {
       {/* Header */}
       <div className='flex items-center justify-between'>
         <div>
-          <h1 className='text-3xl font-bold tracking-tight'>{t("promotion.title")}</h1>
-          <p className='text-muted-foreground'>{t("promotion.subtitle")}</p>
+          <h1 className='text-3xl font-bold tracking-tight'>
+            {t('promotion.title')}
+          </h1>
+          <p className='text-muted-foreground'>{t('promotion.subtitle')}</p>
         </div>
         <Button onClick={() => setShowPromotionForm(true)} disabled={loading}>
           <PlusIcon className='mr-2 h-4 w-4' />
-          {t("promotion.add")}
+          {t('promotion.add')}
         </Button>
       </div>
 
@@ -159,7 +177,7 @@ export default function PromotionManagement() {
         <div className='relative flex-1 max-w-sm'>
           <SearchIcon className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
           <Input
-            placeholder={t("promotion.searchPlaceholder")}
+            placeholder={t('promotion.searchPlaceholder')}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             className='pl-10'
@@ -169,14 +187,22 @@ export default function PromotionManagement() {
           <DropdownMenuTrigger asChild>
             <Button variant='outline'>
               <FilterIcon className='mr-2 h-4 w-4' />
-              {t("promotion.status." + filterStatus)}
+              {t('promotion.status.' + filterStatus)}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => setFilterStatus('all')}>{t("promotion.status.all")}</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFilterStatus('active')}>{t("promotion.status.active")}</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFilterStatus('upcoming')}>{t("promotion.status.upcoming")}</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFilterStatus('expired')}>{t("promotion.status.expired")}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilterStatus('all')}>
+              {t('promotion.status.all')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilterStatus('active')}>
+              {t('promotion.status.active')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilterStatus('upcoming')}>
+              {t('promotion.status.upcoming')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilterStatus('expired')}>
+              {t('promotion.status.expired')}
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -186,14 +212,14 @@ export default function PromotionManagement() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t("promotion.table.code")}</TableHead>
-              <TableHead>{t("promotion.table.description")}</TableHead>
-              <TableHead>{t("promotion.table.discount")}</TableHead>
-              <TableHead>{t("promotion.table.validFrom")}</TableHead>
-              <TableHead>{t("promotion.table.validUntil")}</TableHead>
-              <TableHead>{t("promotion.table.status")}</TableHead>
-              <TableHead>{t("promotion.table.uses")}</TableHead>
-              <TableHead>{t("promotion.table.actions")}</TableHead>
+              <TableHead>{t('promotion.table.code')}</TableHead>
+              <TableHead>{t('promotion.table.description')}</TableHead>
+              <TableHead>{t('promotion.table.discount')}</TableHead>
+              <TableHead>{t('promotion.table.validFrom')}</TableHead>
+              <TableHead>{t('promotion.table.validUntil')}</TableHead>
+              <TableHead>{t('promotion.table.status')}</TableHead>
+              <TableHead>{t('promotion.table.uses')}</TableHead>
+              <TableHead>{t('promotion.table.actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -201,33 +227,49 @@ export default function PromotionManagement() {
               <TableRow>
                 <TableCell colSpan={8} className='text-center py-8'>
                   <LoaderIcon className='h-4 w-4 animate-spin inline mr-2' />
-                  {t("promotion.table.loading")}
+                  {t('promotion.table.loading')}
                 </TableCell>
               </TableRow>
             ) : error ? (
               <TableRow>
-                <TableCell colSpan={8} className='text-center py-8 text-red-500'>
-                  {t("promotion.table.error")}: {error}
+                <TableCell
+                  colSpan={8}
+                  className='text-center py-8 text-red-500'
+                >
+                  {t('promotion.table.error')}: {error}
                 </TableCell>
               </TableRow>
             ) : filteredPromotions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className='text-center py-8 text-muted-foreground'>
-                  {t("promotion.table.empty")}
+                <TableCell
+                  colSpan={8}
+                  className='text-center py-8 text-muted-foreground'
+                >
+                  {t('promotion.table.empty')}
                 </TableCell>
               </TableRow>
             ) : (
               filteredPromotions.map(promotion => (
                 <TableRow key={promotion.id}>
-                  <TableCell className='font-mono font-semibold'>{promotion.code}</TableCell>
-                  <TableCell>
-                    {promotion.description || <span className='italic text-muted-foreground'>{t("promotion.table.noDescription")}</span>}
+                  <TableCell className='font-mono font-semibold'>
+                    {promotion.code}
                   </TableCell>
-                  <TableCell className='font-semibold text-green-600'>{promotion.discount}%</TableCell>
+                  <TableCell>
+                    {promotion.description || (
+                      <span className='italic text-muted-foreground'>
+                        {t('promotion.table.noDescription')}
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className='font-semibold text-green-600'>
+                    {promotion.discount}%
+                  </TableCell>
                   <TableCell>{formatDate(promotion.validFrom)}</TableCell>
                   <TableCell>{formatDate(promotion.validUntil)}</TableCell>
                   <TableCell>{getStatusBadge(promotion)}</TableCell>
-                  <TableCell>{promotion.promotionBookings?.length || 0}</TableCell>
+                  <TableCell>
+                    {promotion.promotionBookings?.length || 0}
+                  </TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -236,15 +278,20 @@ export default function PromotionManagement() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align='end'>
-                        <DropdownMenuItem onClick={() => setSelectedPromotion(promotion) || setShowPromotionDetails(true)}>
-                          {t("promotion.actions.viewDetails")}
+                        <DropdownMenuItem
+                          onClick={() =>
+                            setSelectedPromotion(promotion) ||
+                            setShowPromotionDetails(true)
+                          }
+                        >
+                          {t('promotion.actions.viewDetails')}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleDeleteFromTable(promotion)}
                           disabled={promotion.promotionBookings?.length > 0}
                           className='text-red-600'
                         >
-                          {t("promotion.actions.delete")}
+                          {t('promotion.actions.delete')}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -260,35 +307,63 @@ export default function PromotionManagement() {
       <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>{stats.total}</div>
-          <div className='text-sm text-muted-foreground'>{t("promotion.stats.total")}</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('promotion.stats.total')}
+          </div>
         </div>
         <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold text-green-600'>{stats.active}</div>
-          <div className='text-sm text-muted-foreground'>{t("promotion.stats.active")}</div>
+          <div className='text-2xl font-bold text-green-600'>
+            {stats.active}
+          </div>
+          <div className='text-sm text-muted-foreground'>
+            {t('promotion.stats.active')}
+          </div>
         </div>
         <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold text-blue-600'>{stats.upcoming}</div>
-          <div className='text-sm text-muted-foreground'>{t("promotion.stats.upcoming")}</div>
+          <div className='text-2xl font-bold text-blue-600'>
+            {stats.upcoming}
+          </div>
+          <div className='text-sm text-muted-foreground'>
+            {t('promotion.stats.upcoming')}
+          </div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold text-red-600'>{stats.expired}</div>
-          <div className='text-sm text-muted-foreground'>{t("promotion.stats.expired")}</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('promotion.stats.expired')}
+          </div>
         </div>
       </div>
 
       {/* Form & Details */}
-      <PromotionForm open={showPromotionForm} onOpenChange={setShowPromotionForm} onSubmit={handleCreatePromotion} loading={loading} />
-      <PromotionDetails open={showPromotionDetails} onOpenChange={setShowPromotionDetails} promotion={selectedPromotion} onUpdate={handleUpdatePromotion} onDelete={handleDeletePromotion} loading={loading} />
+      <PromotionForm
+        open={showPromotionForm}
+        onOpenChange={setShowPromotionForm}
+        onSubmit={handleCreatePromotion}
+        loading={loading}
+      />
+      <PromotionDetails
+        open={showPromotionDetails}
+        onOpenChange={setShowPromotionDetails}
+        promotion={selectedPromotion}
+        onUpdate={handleUpdatePromotion}
+        onDelete={handleDeletePromotion}
+        loading={loading}
+      />
 
       {/* Delete Dialog */}
       <ConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        title={t("promotion.dialog.deleteTitle")}
-        description={t("promotion.dialog.deleteDesc", { code: promotionToDelete?.code })}
-        onConfirm={() => promotionToDelete && handleDeletePromotion(promotionToDelete.id)}
-        confirmText={t("promotion.dialog.deleteConfirm")}
-        cancelText={t("promotion.dialog.deleteCancel")}
+        title={t('promotion.dialog.deleteTitle')}
+        description={t('promotion.dialog.deleteDesc', {
+          code: promotionToDelete?.code,
+        })}
+        onConfirm={() =>
+          promotionToDelete && handleDeletePromotion(promotionToDelete.id)
+        }
+        confirmText={t('promotion.dialog.deleteConfirm')}
+        cancelText={t('promotion.dialog.deleteCancel')}
         confirmVariant='destructive'
       />
     </div>

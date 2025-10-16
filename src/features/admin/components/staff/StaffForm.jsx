@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
+import { toast } from 'react-toastify';
 
 import {
   Dialog,
@@ -150,15 +150,25 @@ export function StaffForm({ open, onOpenChange, onSubmit, loading = false }) {
               </Label>
               <Select
                 value={formData.accountStatus}
-                onValueChange={value => handleInputChange('accountStatus', value)}
+                onValueChange={value =>
+                  handleInputChange('accountStatus', value)
+                }
               >
                 <SelectTrigger className='col-span-3'>
-                  <SelectValue placeholder={t('staffForm.placeholders.status')} />
+                  <SelectValue
+                    placeholder={t('staffForm.placeholders.status')}
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value='ACTIVE'>{t('staffForm.statusOptions.active')}</SelectItem>
-                  <SelectItem value='SUSPENDED'>{t('staffForm.statusOptions.suspended')}</SelectItem>
-                  <SelectItem value='BANNED'>{t('staffForm.statusOptions.banned')}</SelectItem>
+                  <SelectItem value='ACTIVE'>
+                    {t('staffForm.statusOptions.active')}
+                  </SelectItem>
+                  <SelectItem value='SUSPENDED'>
+                    {t('staffForm.statusOptions.suspended')}
+                  </SelectItem>
+                  <SelectItem value='BANNED'>
+                    {t('staffForm.statusOptions.banned')}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -173,7 +183,9 @@ export function StaffForm({ open, onOpenChange, onSubmit, loading = false }) {
               {t('staffForm.buttons.cancel')}
             </Button>
             <Button type='submit' disabled={loading}>
-              {loading ? t('staffForm.buttons.creating') : t('staffForm.buttons.create')}
+              {loading
+                ? t('staffForm.buttons.creating')
+                : t('staffForm.buttons.create')}
             </Button>
           </DialogFooter>
         </form>

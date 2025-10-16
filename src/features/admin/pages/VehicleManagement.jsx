@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
+import { toast } from 'react-toastify';
 
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
@@ -220,7 +220,10 @@ export default function VehicleManagement() {
 
   const handleCreateVehicle = async () => {
     try {
-      const response = await apiClient.post(endpoints.vehicles.create(), formData);
+      const response = await apiClient.post(
+        endpoints.vehicles.create(),
+        formData
+      );
 
       if (response.success) {
         toast.success(t('vehicle.messages.createSuccess'));
@@ -240,7 +243,9 @@ export default function VehicleManagement() {
 
   const handleHardDeleteVehicle = async vehicleId => {
     try {
-      const response = await apiClient.delete(endpoints.vehicles.delete(vehicleId));
+      const response = await apiClient.delete(
+        endpoints.vehicles.delete(vehicleId)
+      );
 
       if (response.success) {
         toast.success(t('vehicle.messages.deleteSuccess'));
@@ -760,7 +765,7 @@ export default function VehicleManagement() {
                   <TableCell>{getFuelTypeLabel(vehicle.fuelType)}</TableCell>
                   <TableCell>
                     {vehicle.fuelType === 'ELECTRIC' ||
-                      vehicle.fuelType === 'HYBRID'
+                    vehicle.fuelType === 'HYBRID'
                       ? `${vehicle.batteryLevel}%`
                       : t('vehicle.table.na')}
                   </TableCell>

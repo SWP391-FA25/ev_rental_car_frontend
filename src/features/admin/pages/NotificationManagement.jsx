@@ -1,17 +1,41 @@
-import React, { useState, useEffect } from 'react';
+import { format, formatDistanceToNow } from 'date-fns';
+import { enUS, vi } from 'date-fns/locale';
+import {
+  AlertCircle,
+  AlertTriangle,
+  Bell,
+  CheckCircle,
+  Eye,
+  Info,
+  Plus,
+  Search,
+  Send,
+  Trash2,
+  User,
+} from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'react-toastify';
 import { useAuth } from '../../../app/providers/AuthProvider';
-import { apiClient } from '../../shared/lib/apiClient';
+import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '../../shared/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '../../shared/components/ui/dialog';
 import { Input } from '../../shared/components/ui/input';
 import { Label } from '../../shared/components/ui/label';
-import { Textarea } from '../../shared/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -27,35 +51,8 @@ import {
   TableHeader,
   TableRow,
 } from '../../shared/components/ui/table';
-import { Badge } from '../../shared/components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '../../shared/components/ui/dialog';
-import { format, formatDistanceToNow } from 'date-fns';
-import { enUS, vi } from 'date-fns/locale';
-import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
-import {
-  Bell,
-  Plus,
-  Search,
-  Filter,
-  Eye,
-  Trash2,
-  Send,
-  User,
-  Calendar,
-  AlertCircle,
-  CheckCircle,
-  AlertTriangle,
-  Info,
-} from 'lucide-react';
+import { Textarea } from '../../shared/components/ui/textarea';
+import { apiClient } from '../../shared/lib/apiClient';
 
 export default function NotificationManagement() {
   const { user } = useAuth();
@@ -100,7 +97,7 @@ export default function NotificationManagement() {
       }
     } catch (error) {
       console.error('Error fetching notifications:', error);
-      toast.error(t('admin.notifications.fetchError'));
+      toast.error(t('admins.notifications.fetchError'));
     } finally {
       setLoading(false);
     }
@@ -131,7 +128,7 @@ export default function NotificationManagement() {
         newNotification
       );
       if (response.success) {
-        toast.success(t('admin.notifications.createSuccess'));
+        toast.success(t('admins.notifications.createSuccess'));
         setIsCreateDialogOpen(false);
         setNewNotification({
           userId: '',
@@ -144,7 +141,7 @@ export default function NotificationManagement() {
       }
     } catch (error) {
       console.error('Error creating notification:', error);
-      toast.error(t('admin.notifications.createError'));
+      toast.error(t('admins.notifications.createError'));
     }
   };
 
@@ -158,7 +155,7 @@ export default function NotificationManagement() {
         userIds,
       });
       if (response.success) {
-        toast.success(t('admin.notifications.broadcastSuccess'));
+        toast.success(t('admins.notifications.broadcastSuccess'));
         setIsBroadcastDialogOpen(false);
         setBroadcastNotification({
           userIds: [],
@@ -171,7 +168,7 @@ export default function NotificationManagement() {
       }
     } catch (error) {
       console.error('Error broadcasting notification:', error);
-      toast.error(t('admin.notifications.broadcastError'));
+      toast.error(t('admins.notifications.broadcastError'));
     }
   };
 
@@ -180,12 +177,12 @@ export default function NotificationManagement() {
     try {
       const response = await apiClient.delete(`/api/notifications/${id}/admin`);
       if (response.success) {
-        toast.success(t('admin.notifications.deleteSuccess'));
+        toast.success(t('admins.notifications.deleteSuccess'));
         fetchNotifications();
       }
     } catch (error) {
       console.error('Error deleting notification:', error);
-      toast.error(t('admin.notifications.deleteError'));
+      toast.error(t('admins.notifications.deleteError'));
     }
   };
 
@@ -272,10 +269,10 @@ export default function NotificationManagement() {
       <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
         <div>
           <h1 className='text-3xl font-bold tracking-tight'>
-            {t('admin.notifications.title')}
+            {t('admins.notifications.title')}
           </h1>
           <p className='text-muted-foreground'>
-            {t('admin.notifications.description')}
+            {t('admins.notifications.description')}
           </p>
         </div>
         <div className='flex gap-2'>
@@ -286,22 +283,22 @@ export default function NotificationManagement() {
             <DialogTrigger asChild>
               <Button onClick={() => setIsBroadcastDialogOpen(true)}>
                 <Send className='mr-2 h-4 w-4' />
-                {t('admin.notifications.broadcast')}
+                {t('admins.notifications.broadcast')}
               </Button>
             </DialogTrigger>
             <DialogContent className='sm:max-w-[425px]'>
               <DialogHeader>
                 <DialogTitle>
-                  {t('admin.notifications.broadcastTitle')}
+                  {t('admins.notifications.broadcastTitle')}
                 </DialogTitle>
                 <DialogDescription>
-                  {t('admin.notifications.broadcastDescription')}
+                  {t('admins.notifications.broadcastDescription')}
                 </DialogDescription>
               </DialogHeader>
               <div className='grid gap-4 py-4'>
                 <div className='space-y-2'>
                   <Label htmlFor='broadcastTitle'>
-                    {t('admin.notifications.titleField')}
+                    {t('admins.notifications.titleField')}
                   </Label>
                   <Input
                     id='broadcastTitle'
@@ -316,7 +313,7 @@ export default function NotificationManagement() {
                 </div>
                 <div className='space-y-2'>
                   <Label htmlFor='broadcastMessage'>
-                    {t('admin.notifications.messageField')}
+                    {t('admins.notifications.messageField')}
                   </Label>
                   <Textarea
                     id='broadcastMessage'
@@ -332,7 +329,7 @@ export default function NotificationManagement() {
                 <div className='grid grid-cols-2 gap-4'>
                   <div className='space-y-2'>
                     <Label htmlFor='broadcastType'>
-                      {t('admin.notifications.type')}
+                      {t('admins.notifications.type')}
                     </Label>
                     <Select
                       value={broadcastNotification.type}
@@ -356,7 +353,7 @@ export default function NotificationManagement() {
                   </div>
                   <div className='space-y-2'>
                     <Label htmlFor='broadcastPriority'>
-                      {t('admin.notifications.priority')}
+                      {t('admins.notifications.priority')}
                     </Label>
                     <Select
                       value={broadcastNotification.priority.toString()}
@@ -393,7 +390,7 @@ export default function NotificationManagement() {
                   {t('common.cancel')}
                 </Button>
                 <Button onClick={handleBroadcastNotification}>
-                  {t('admin.notifications.send')}
+                  {t('admins.notifications.send')}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -406,22 +403,22 @@ export default function NotificationManagement() {
             <DialogTrigger asChild>
               <Button onClick={() => setIsCreateDialogOpen(true)}>
                 <Plus className='mr-2 h-4 w-4' />
-                {t('admin.notifications.create')}
+                {t('admins.notifications.create')}
               </Button>
             </DialogTrigger>
             <DialogContent className='sm:max-w-[425px]'>
               <DialogHeader>
                 <DialogTitle>
-                  {t('admin.notifications.createTitle')}
+                  {t('admins.notifications.createTitle')}
                 </DialogTitle>
                 <DialogDescription>
-                  {t('admin.notifications.createDescription')}
+                  {t('admins.notifications.createDescription')}
                 </DialogDescription>
               </DialogHeader>
               <div className='grid gap-4 py-4'>
                 <div className='space-y-2'>
                   <Label htmlFor='userId'>
-                    {t('admin.notifications.user')}
+                    {t('admins.notifications.user')}
                   </Label>
                   <Select
                     value={newNotification.userId}
@@ -431,7 +428,7 @@ export default function NotificationManagement() {
                   >
                     <SelectTrigger>
                       <SelectValue
-                        placeholder={t('admin.notifications.selectUser')}
+                        placeholder={t('admins.notifications.selectUser')}
                       />
                     </SelectTrigger>
                     <SelectContent>
@@ -445,7 +442,7 @@ export default function NotificationManagement() {
                 </div>
                 <div className='space-y-2'>
                   <Label htmlFor='notificationTitle'>
-                    {t('admin.notifications.titleField')}
+                    {t('admins.notifications.titleField')}
                   </Label>
                   <Input
                     id='notificationTitle'
@@ -460,7 +457,7 @@ export default function NotificationManagement() {
                 </div>
                 <div className='space-y-2'>
                   <Label htmlFor='notificationMessage'>
-                    {t('admin.notifications.messageField')}
+                    {t('admins.notifications.messageField')}
                   </Label>
                   <Textarea
                     id='notificationMessage'
@@ -476,7 +473,7 @@ export default function NotificationManagement() {
                 <div className='grid grid-cols-2 gap-4'>
                   <div className='space-y-2'>
                     <Label htmlFor='notificationType'>
-                      {t('admin.notifications.type')}
+                      {t('admins.notifications.type')}
                     </Label>
                     <Select
                       value={newNotification.type}
@@ -497,7 +494,7 @@ export default function NotificationManagement() {
                   </div>
                   <div className='space-y-2'>
                     <Label htmlFor='notificationPriority'>
-                      {t('admin.notifications.priority')}
+                      {t('admins.notifications.priority')}
                     </Label>
                     <Select
                       value={newNotification.priority.toString()}
@@ -534,7 +531,7 @@ export default function NotificationManagement() {
                   {t('common.cancel')}
                 </Button>
                 <Button onClick={handleCreateNotification}>
-                  {t('admin.notifications.create')}
+                  {t('admins.notifications.create')}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -547,13 +544,13 @@ export default function NotificationManagement() {
           <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
             <CardTitle className='flex items-center gap-2'>
               <Bell className='h-5 w-5' />
-              {t('admin.notifications.notificationsList')}
+              {t('admins.notifications.notificationsList')}
             </CardTitle>
             <div className='flex flex-col sm:flex-row gap-2'>
               <div className='relative'>
                 <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
                 <Input
-                  placeholder={t('admin.notifications.search')}
+                  placeholder={t('admins.notifications.search')}
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
                   className='pl-8 w-full sm:w-[200px]'
@@ -563,7 +560,7 @@ export default function NotificationManagement() {
                 <Select value={filterType} onValueChange={setFilterType}>
                   <SelectTrigger className='w-[120px]'>
                     <SelectValue
-                      placeholder={t('admin.notifications.filterType')}
+                      placeholder={t('admins.notifications.filterType')}
                     />
                   </SelectTrigger>
                   <SelectContent>
@@ -590,7 +587,7 @@ export default function NotificationManagement() {
                 >
                   <SelectTrigger className='w-[120px]'>
                     <SelectValue
-                      placeholder={t('admin.notifications.filterPriority')}
+                      placeholder={t('admins.notifications.filterPriority')}
                     />
                   </SelectTrigger>
                   <SelectContent>
@@ -621,12 +618,12 @@ export default function NotificationManagement() {
             <div className='text-center py-12'>
               <Bell className='mx-auto h-12 w-12 text-muted-foreground' />
               <h3 className='mt-4 text-lg font-medium'>
-                {t('admin.notifications.noNotifications')}
+                {t('admins.notifications.noNotifications')}
               </h3>
               <p className='mt-1 text-muted-foreground'>
                 {searchTerm || filterType !== 'all' || filterPriority !== 'all'
-                  ? t('admin.notifications.noFilteredNotifications')
-                  : t('admin.notifications.noNotificationsDefault')}
+                  ? t('admins.notifications.noFilteredNotifications')
+                  : t('admins.notifications.noNotificationsDefault')}
               </p>
             </div>
           ) : (
@@ -634,13 +631,13 @@ export default function NotificationManagement() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t('admin.notifications.user')}</TableHead>
-                    <TableHead>{t('admin.notifications.title')}</TableHead>
-                    <TableHead>{t('admin.notifications.type')}</TableHead>
-                    <TableHead>{t('admin.notifications.priority')}</TableHead>
-                    <TableHead>{t('admin.notifications.date')}</TableHead>
+                    <TableHead>{t('admins.notifications.user')}</TableHead>
+                    <TableHead>{t('admins.notifications.title')}</TableHead>
+                    <TableHead>{t('admins.notifications.type')}</TableHead>
+                    <TableHead>{t('admins.notifications.priority')}</TableHead>
+                    <TableHead>{t('admins.notifications.date')}</TableHead>
                     <TableHead className='text-right'>
-                      {t('admin.notifications.actions')}
+                      {t('admins.notifications.actions')}
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -716,7 +713,7 @@ export default function NotificationManagement() {
               {totalPages > 1 && (
                 <div className='flex items-center justify-between mt-4'>
                   <div className='text-sm text-muted-foreground'>
-                    {t('admin.notifications.pageInfo', {
+                    {t('admins.notifications.pageInfo', {
                       current: currentPage,
                       total: totalPages,
                     })}
@@ -728,7 +725,7 @@ export default function NotificationManagement() {
                       onClick={() => fetchNotifications(currentPage - 1)}
                       disabled={currentPage === 1}
                     >
-                      {t('admin.notifications.previous')}
+                      {t('admins.notifications.previous')}
                     </Button>
                     <Button
                       variant='outline'
@@ -736,7 +733,7 @@ export default function NotificationManagement() {
                       onClick={() => fetchNotifications(currentPage + 1)}
                       disabled={currentPage === totalPages}
                     >
-                      {t('admin.notifications.next')}
+                      {t('admins.notifications.next')}
                     </Button>
                   </div>
                 </div>

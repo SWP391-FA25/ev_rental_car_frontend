@@ -12,7 +12,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from 'react-toastify';
 
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
@@ -555,17 +555,16 @@ const BookingManagement = () => {
                           <Eye className='mr-2 h-4 w-4' />
                           View Details
                         </DropdownMenuItem>
-                        {booking.status === 'PENDING' &&
-                          booking.depositStatus === 'PAID' && (
-                            <DropdownMenuItem
-                              onClick={() => confirmBooking(booking.id)}
-                              className='text-green-600'
-                            >
-                              <CheckCircle className='mr-2 h-4 w-4' />
-                              Confirm Booking
-                            </DropdownMenuItem>
-                          )}
-                        {booking.status === 'PENDING' &&
+                        {booking.status === 'PENDING' && (
+                          <DropdownMenuItem
+                            onClick={() => confirmBooking(booking.id)}
+                            className='text-green-600'
+                          >
+                            <CheckCircle className='mr-2 h-4 w-4' />
+                            Confirm Booking
+                          </DropdownMenuItem>
+                        )}
+                        {/* {booking.status === 'PENDING' &&
                           booking.depositStatus !== 'PAID' && (
                             <DropdownMenuItem
                               disabled
@@ -574,7 +573,7 @@ const BookingManagement = () => {
                               <Clock className='mr-2 h-4 w-4' />
                               Waiting for Deposit
                             </DropdownMenuItem>
-                          )}
+                          )} */}
                         {booking.status === 'CONFIRMED' && (
                           <DropdownMenuItem
                             onClick={() => startRental(booking.id)}
