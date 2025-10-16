@@ -12,7 +12,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from 'react-toastify';
 
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
@@ -217,11 +217,31 @@ const BookingManagement = () => {
   // Get status badge
   const getStatusBadge = status => {
     const statusConfig = {
-      PENDING: { variant: 'secondary', icon: Clock, label: t('booking.status.pending') },
-      CONFIRMED: { variant: 'default', icon: CheckCircle, label: t('booking.status.confirmed') },
-      IN_PROGRESS: { variant: 'default', icon: Car, label: t('booking.status.inProgress') },
-      COMPLETED: { variant: 'default', icon: CheckCircle, label: t('booking.status.completed') },
-      CANCELLED: { variant: 'destructive', icon: XCircle, label: t('booking.status.cancelled') },
+      PENDING: {
+        variant: 'secondary',
+        icon: Clock,
+        label: t('booking.status.pending'),
+      },
+      CONFIRMED: {
+        variant: 'default',
+        icon: CheckCircle,
+        label: t('booking.status.confirmed'),
+      },
+      IN_PROGRESS: {
+        variant: 'default',
+        icon: Car,
+        label: t('booking.status.inProgress'),
+      },
+      COMPLETED: {
+        variant: 'default',
+        icon: CheckCircle,
+        label: t('booking.status.completed'),
+      },
+      CANCELLED: {
+        variant: 'destructive',
+        icon: XCircle,
+        label: t('booking.status.cancelled'),
+      },
     };
 
     const config = statusConfig[status] || statusConfig.PENDING;
@@ -304,9 +324,7 @@ const BookingManagement = () => {
           <h1 className='text-3xl font-bold tracking-tight'>
             {t('booking.title')}
           </h1>
-          <p className='text-muted-foreground'>
-            {t('booking.subtitle')}
-          </p>
+          <p className='text-muted-foreground'>{t('booking.subtitle')}</p>
         </div>
         <Button
           onClick={() => fetchBookings(pagination.currentPage)}
@@ -333,7 +351,20 @@ const BookingManagement = () => {
           <DropdownMenuTrigger asChild>
             <Button variant='outline'>
               <Filter className='mr-2 h-4 w-4' />
-              {t('booking.filters.status')}: {statusFilter === 'ALL' ? t('booking.filters.statusAll') : t(`booking.status.${{PENDING:'pending',CONFIRMED:'confirmed',IN_PROGRESS:'inProgress',COMPLETED:'completed',CANCELLED:'cancelled'}[statusFilter]}`)}
+              {t('booking.filters.status')}:{' '}
+              {statusFilter === 'ALL'
+                ? t('booking.filters.statusAll')
+                : t(
+                    `booking.status.${
+                      {
+                        PENDING: 'pending',
+                        CONFIRMED: 'confirmed',
+                        IN_PROGRESS: 'inProgress',
+                        COMPLETED: 'completed',
+                        CANCELLED: 'cancelled',
+                      }[statusFilter]
+                    }`
+                  )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
@@ -372,7 +403,18 @@ const BookingManagement = () => {
           <DropdownMenuTrigger asChild>
             <Button variant='outline'>
               <CreditCard className='mr-2 h-4 w-4' />
-              {t('booking.filters.depositLabel')}: {depositFilter === 'ALL' ? t('booking.filters.depositAll') : (depositFilter === 'PENDING' ? t('booking.filters.deposit.pendingPayment') : t(`booking.depositStatus.${{PAID:'paid',FAILED:'failed',REFUNDED:'refunded'}[depositFilter]}`))}
+              {t('booking.filters.depositLabel')}:{' '}
+              {depositFilter === 'ALL'
+                ? t('booking.filters.depositAll')
+                : depositFilter === 'PENDING'
+                ? t('booking.filters.deposit.pendingPayment')
+                : t(
+                    `booking.depositStatus.${
+                      { PAID: 'paid', FAILED: 'failed', REFUNDED: 'refunded' }[
+                        depositFilter
+                      ]
+                    }`
+                  )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
@@ -426,7 +468,9 @@ const BookingManagement = () => {
           <div className='text-2xl font-bold text-foreground'>
             {bookings.length}
           </div>
-          <div className='text-sm text-muted-foreground'>{t('booking.stats.bookingAmount')}</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('booking.stats.bookingAmount')}
+          </div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold text-orange-600'>
@@ -435,7 +479,9 @@ const BookingManagement = () => {
                 .length
             }
           </div>
-          <div className='text-sm text-muted-foreground'>{t('booking.stats.pendingDeposits')}</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('booking.stats.pendingDeposits')}
+          </div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold text-green-600'>
@@ -444,19 +490,25 @@ const BookingManagement = () => {
                 .length
             }
           </div>
-          <div className='text-sm text-muted-foreground'>{t('booking.stats.paidDeposits')}</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('booking.stats.paidDeposits')}
+          </div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold text-blue-600'>
             {bookings.filter(b => b.status === 'IN_PROGRESS').length}
           </div>
-          <div className='text-sm text-muted-foreground'>{t('booking.stats.inProgress')}</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('booking.stats.inProgress')}
+          </div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold text-green-600'>
             {bookings.filter(b => b.status === 'COMPLETED').length}
           </div>
-          <div className='text-sm text-muted-foreground'>{t('booking.stats.completed')}</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('booking.stats.completed')}
+          </div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold text-blue-600'>
@@ -466,7 +518,9 @@ const BookingManagement = () => {
               ).length
             }
           </div>
-          <div className='text-sm text-muted-foreground'>{t('booking.stats.refunded')}</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('booking.stats.refunded')}
+          </div>
         </div>
       </div>
 
@@ -481,14 +535,18 @@ const BookingManagement = () => {
               <TableHead>{t('booking.table.dateTime')}</TableHead>
               <TableHead>{t('booking.table.status')}</TableHead>
               <TableHead>{t('booking.table.depositStatus')}</TableHead>
-              <TableHead className='w-[70px]'>{t('booking.table.actions')}</TableHead>
+              <TableHead className='w-[70px]'>
+                {t('booking.table.actions')}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {bookings.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className='text-center py-8'>
-                  <p className='text-muted-foreground'>{t('booking.table.noBookings')}</p>
+                  <p className='text-muted-foreground'>
+                    {t('booking.table.noBookings')}
+                  </p>
                 </TableCell>
               </TableRow>
             ) : (
@@ -557,17 +615,16 @@ const BookingManagement = () => {
                           <Eye className='mr-2 h-4 w-4' />
                           {t('booking.actions.viewDetails')}
                         </DropdownMenuItem>
-                        {booking.status === 'PENDING' &&
-                          booking.depositStatus === 'PAID' && (
-                            <DropdownMenuItem
-                              onClick={() => confirmBooking(booking.id)}
-                              className='text-green-600'
-                            >
-                              <CheckCircle className='mr-2 h-4 w-4' />
-                              {t('booking.actions.confirmBooking')}
-                            </DropdownMenuItem>
-                          )}
-                        {booking.status === 'PENDING' &&
+                        {booking.status === 'PENDING' && (
+                          <DropdownMenuItem
+                            onClick={() => confirmBooking(booking.id)}
+                            className='text-green-600'
+                          >
+                            <CheckCircle className='mr-2 h-4 w-4' />
+                            Confirm Booking
+                          </DropdownMenuItem>
+                        )}
+                        {/* {booking.status === 'PENDING' &&
                           booking.depositStatus !== 'PAID' && (
                             <DropdownMenuItem
                               disabled
@@ -576,7 +633,7 @@ const BookingManagement = () => {
                               <Clock className='mr-2 h-4 w-4' />
                               {t('booking.actions.waitingForDeposit')}
                             </DropdownMenuItem>
-                          )}
+                          )} */}
                         {booking.status === 'CONFIRMED' && (
                           <DropdownMenuItem
                             onClick={() => startRental(booking.id)}
@@ -626,7 +683,10 @@ const BookingManagement = () => {
       {pagination.totalPages > 1 && (
         <div className='flex items-center justify-between'>
           <p className='text-sm text-muted-foreground'>
-            {t('booking.pagination.page', { current: pagination.currentPage, total: pagination.totalPages })}
+            {t('booking.pagination.page', {
+              current: pagination.currentPage,
+              total: pagination.totalPages,
+            })}
           </p>
           <div className='flex gap-2'>
             <Button

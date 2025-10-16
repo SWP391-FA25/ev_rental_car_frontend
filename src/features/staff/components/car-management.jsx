@@ -9,8 +9,9 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
+import { toast } from 'react-toastify';
 
+import { VehicleDetails } from '../../admin/components/vehicle/VehicleDetails';
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
 import { ConfirmDialog } from '../../shared/components/ui/confirm-dialog';
@@ -39,7 +40,6 @@ import {
 } from '../../shared/components/ui/table';
 import { apiClient } from '../../shared/lib/apiClient';
 import { endpoints } from '../../shared/lib/endpoints';
-import { VehicleDetails } from '../../admin/components/vehicle/VehicleDetails';
 import CarForm from './carManagement/carForm';
 
 export default function VehicleManagement() {

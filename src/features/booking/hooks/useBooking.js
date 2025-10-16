@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from 'react-toastify';
 import { bookingService } from '../services/bookingService';
 
 export const useBooking = () => {
@@ -32,10 +32,10 @@ export const useBooking = () => {
       toast.success('Booking created successfully!');
       return result;
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || 'Failed to create booking';
-      setError(errorMessage);
-      toast.error(errorMessage);
+      console.log(err.message);
+      setError(err.message);
+      toast.error(err.message);
+
       throw err;
     } finally {
       setLoading(false);

@@ -1,4 +1,8 @@
 import { useBooking } from '@/features/booking/hooks/useBooking';
+import {
+  calculateCompletePricing,
+  validateBookingData,
+} from '@/features/booking/utils/pricingUtils';
 import Footer from '@/features/shared/components/homepage/Footer';
 import Navbar from '@/features/shared/components/homepage/Navbar';
 import { Alert, AlertDescription } from '@/features/shared/components/ui/alert';
@@ -29,7 +33,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { toast } from 'sonner';
+import { toast } from 'react-toastify';
 import { useVehicles } from '../hooks/useVehicles';
 
 // Helper function to transform vehicle data for display
@@ -93,7 +97,14 @@ export default function CarDetailPage() {
         setLoadingCar(true);
         const vehicleData = await getVehicleById(id);
         if (vehicleData) {
-          setCar(transformVehicleData(vehicleData));
+          // Debug log to check vehicle data structure
+          console.log('Raw vehicle data from backend:', vehicleData);
+          console.log('Vehicle pricing:', vehicleData.pricing);
+          console.log('Vehicle pricingId:', vehicleData.pricingId);
+
+          const transformedCar = transformVehicleData(vehicleData);
+          console.log('Transformed car data:', transformedCar);
+          setCar(transformedCar);
         }
         setLoadingCar(false);
       }
@@ -149,7 +160,7 @@ export default function CarDetailPage() {
     }
   }, [car]);
 
-  // Calculate estimated price
+  // Calculate estimated price using intelligent pricing
   const calculateEstimatedPrice = () => {
     if (!selectedDates.startDate || !selectedDates.endDate || !car?.pricing)
       return null;
@@ -168,61 +179,49 @@ export default function CarDetailPage() {
 
     const durationHours = Math.ceil((end - start) / (1000 * 60 * 60));
 
-    const basePrice = car.pricing.hourlyRate * durationHours;
-    const insuranceAmount = basePrice * 0.1; // 10%
-    const taxAmount = basePrice * 0.08; // 8%
-    const subtotal = basePrice + insuranceAmount + taxAmount;
-
-    // Calculate discount if promotion is selected
-    let discountAmount = 0;
+    // Get selected promotions for calculation
+    const selectedPromotions = [];
     if (selectedPromotionId && selectedPromotionId !== 'none') {
       const promotion = promotions.find(p => p.id === selectedPromotionId);
       if (promotion) {
-        discountAmount = subtotal * promotion.discount;
+        selectedPromotions.push(promotion);
       }
     }
 
-    const finalTotal = subtotal - discountAmount;
+    // Use intelligent pricing calculation
+    const pricingBreakdown = calculateCompletePricing(
+      car.pricing,
+      durationHours,
+      selectedPromotions
+    );
 
     return {
-      basePrice,
-      insuranceAmount,
-      taxAmount,
-      subtotal,
-      discountAmount,
-      finalTotal,
-      depositAmount: car.pricing.depositAmount,
-      totalPayable: finalTotal + car.pricing.depositAmount,
+      ...pricingBreakdown,
       durationHours,
+      startDateTime: start,
+      endDateTime: end,
     };
   };
 
   const estimatedPrice = calculateEstimatedPrice();
 
   const handleBooking = async () => {
-    if (!selectedDates.startDate || !selectedDates.endDate) {
-      toast.error('Please select pickup and return dates');
+    // Validate booking data before proceeding
+    const validation = validateBookingData(selectedDates, car);
+
+    if (!validation.valid) {
+      validation.errors.forEach(error => {
+        toast.error(error);
+      });
       return;
     }
 
     try {
-      const startDateTime = new Date(selectedDates.startDate);
-      startDateTime.setHours(
-        parseInt(selectedDates.startTime.split(':')[0]),
-        parseInt(selectedDates.startTime.split(':')[1])
-      );
-
-      const endDateTime = new Date(selectedDates.endDate);
-      endDateTime.setHours(
-        parseInt(selectedDates.endTime.split(':')[0]),
-        parseInt(selectedDates.endTime.split(':')[1])
-      );
-
       const bookingData = {
         vehicleId: car.id,
         stationId: car.stationId,
-        startTime: startDateTime.toISOString(),
-        endTime: endDateTime.toISOString(),
+        startTime: validation.startDateTime.toISOString(),
+        endTime: validation.endDateTime.toISOString(),
         promotions:
           selectedPromotionId && selectedPromotionId !== 'none'
             ? [selectedPromotionId]
@@ -246,6 +245,7 @@ export default function CarDetailPage() {
         `/payment/deposit?bookingId=${booking.id}&amount=${booking.depositAmount}`
       );
     } catch (error) {
+      // Error handling is now done in useBooking hook with specific error codes
       console.error('Booking failed:', error);
     }
   };
@@ -504,7 +504,10 @@ export default function CarDetailPage() {
                 {estimatedPrice && (
                   <div className='border-t pt-4 space-y-2'>
                     <div className='flex justify-between text-sm'>
-                      <span>Base Price ({estimatedPrice.durationHours}h)</span>
+                      <span>
+                        Base Price ({estimatedPrice.durationHours}h) -{' '}
+                        {estimatedPrice.pricingType}
+                      </span>
                       <span>
                         {formatCurrency(estimatedPrice.basePrice, 'VND')}
                       </span>
@@ -549,6 +552,63 @@ export default function CarDetailPage() {
                         {formatCurrency(estimatedPrice.totalPayable, 'VND')}
                       </span>
                     </div>
+
+                    {/* Show pricing details for transparency */}
+                    {estimatedPrice.pricingDetails && (
+                      <div className='text-xs text-muted-foreground mt-2 p-2 bg-muted rounded'>
+                        <div className='font-medium mb-1'>Pricing Details:</div>
+                        {estimatedPrice.pricingType === 'monthly' && (
+                          <div>
+                            {estimatedPrice.pricingDetails.quantity} month(s) ×{' '}
+                            {formatCurrency(
+                              estimatedPrice.pricingDetails.rate,
+                              'VND'
+                            )}
+                          </div>
+                        )}
+                        {estimatedPrice.pricingType === 'weekly' && (
+                          <div>
+                            {estimatedPrice.pricingDetails.weeklyQuantity}{' '}
+                            week(s) ×{' '}
+                            {formatCurrency(
+                              estimatedPrice.pricingDetails.weeklyRate,
+                              'VND'
+                            )}{' '}
+                            +{estimatedPrice.pricingDetails.dailyQuantity}{' '}
+                            day(s) ×{' '}
+                            {formatCurrency(
+                              estimatedPrice.pricingDetails.dailyRate,
+                              'VND'
+                            )}
+                          </div>
+                        )}
+                        {estimatedPrice.pricingType === 'daily' && (
+                          <div>
+                            {estimatedPrice.pricingDetails.dailyQuantity} day(s)
+                            ×{' '}
+                            {formatCurrency(
+                              estimatedPrice.pricingDetails.dailyRate,
+                              'VND'
+                            )}{' '}
+                            +{estimatedPrice.pricingDetails.hourlyQuantity}{' '}
+                            hour(s) ×{' '}
+                            {formatCurrency(
+                              estimatedPrice.pricingDetails.hourlyRate,
+                              'VND'
+                            )}
+                          </div>
+                        )}
+                        {estimatedPrice.pricingType === 'hourly' && (
+                          <div>
+                            {estimatedPrice.pricingDetails.quantity} hour(s) ×{' '}
+                            {formatCurrency(
+                              estimatedPrice.pricingDetails.rate,
+                              'VND'
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 

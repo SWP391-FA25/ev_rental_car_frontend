@@ -12,7 +12,7 @@ import {
 import gsap from 'gsap';
 import { CalendarDays, MapPin, RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from 'react-toastify';
 
 // Helper function to get status badge variant
 const getStatusBadgeVariant = status => {

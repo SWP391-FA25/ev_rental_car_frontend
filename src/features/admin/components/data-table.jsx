@@ -41,7 +41,6 @@ import {
 } from 'lucide-react';
 import * as React from 'react';
 import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
-import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { Badge } from '../../shared/components/ui/badge';
@@ -173,12 +172,13 @@ const columns = [
       <div className='w-32'>
         <Badge
           variant='outline'
-          className={`px-1.5 ${row.original.type === 'Premium'
-            ? 'text-purple-600 border-purple-200 bg-purple-50'
-            : row.original.type === 'Standard'
+          className={`px-1.5 ${
+            row.original.type === 'Premium'
+              ? 'text-purple-600 border-purple-200 bg-purple-50'
+              : row.original.type === 'Standard'
               ? 'text-blue-600 border-blue-200 bg-blue-50'
               : 'text-gray-600 border-gray-200 bg-gray-50'
-            }`}
+          }`}
         >
           {row.original.type}
         </Badge>
@@ -191,12 +191,13 @@ const columns = [
     cell: ({ row }) => (
       <Badge
         variant='outline'
-        className={`flex gap-1 px-1.5 [&_svg]:size-3 ${row.original.status === 'Active'
-          ? 'text-green-600 border-green-200 bg-green-50'
-          : row.original.status === 'Suspended'
+        className={`flex gap-1 px-1.5 [&_svg]:size-3 ${
+          row.original.status === 'Active'
+            ? 'text-green-600 border-green-200 bg-green-50'
+            : row.original.status === 'Suspended'
             ? 'text-red-600 border-red-200 bg-red-50'
             : 'text-yellow-600 border-yellow-200 bg-yellow-50'
-          }`}
+        }`}
       >
         {row.original.status === 'Active' ? (
           <CheckCircle2Icon className='text-green-500 dark:text-green-400' />
@@ -456,9 +457,9 @@ export function DataTable({ data: initialData }) {
                           {header.isPlaceholder
                             ? null
                             : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
                         </TableHead>
                       );
                     })}
