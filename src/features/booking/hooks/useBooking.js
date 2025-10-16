@@ -33,9 +33,9 @@ export const useBooking = () => {
       toast.success('Booking cancelled successfully!');
       return result;
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || 'Failed to cancel booking';
-      toast.error(errorMessage);
+      console.log(err);
+
+      toast(err.message);
       throw err;
     } finally {
       setLoading(false);
