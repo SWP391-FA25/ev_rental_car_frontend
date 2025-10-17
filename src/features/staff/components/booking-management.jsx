@@ -335,7 +335,6 @@ const BookingManagement = () => {
             onBookingCreated={() => {
               // Refresh bookings list after creating new booking
               fetchBookings(pagination.currentPage);
-              toast.success('Booking list refreshed');
             }}
           />
           <Button
@@ -756,7 +755,7 @@ const BookingManagement = () => {
         description={t('booking.dialogs.cancel.description')}
         onConfirm={() => {
           if (bookingToCancel) {
-            cancelBooking(bookingToCancel);
+            cancelBooking(bookingToCancel, 'Cancelled by staff');
             setBookingToCancel(null);
           }
         }}

@@ -1,6 +1,7 @@
 import { Briefcase, Edit, Star } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import {
   Avatar,
   AvatarFallback,
@@ -9,15 +10,26 @@ import {
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
 import { Input } from '../../shared/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../shared/components/ui/select';
 import VerificationBanner from '../../shared/components/VerificationBanner';
+import { apiClient } from '../../shared/lib/apiClient';
+import { endpoints } from '../../shared/lib/endpoints';
 
 export default function ProfileContent({ user }) {
   const navigate = useNavigate();
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [profileData, setProfileData] = useState({
     fullName: user?.name || '',
     email: user?.email || '',
-    phone: '',
+    phone: user?.phone || '',
+    address: user?.address || '',
     gender: 'Nam',
     birthDate: '',
     facebook: '',
@@ -44,9 +56,53 @@ export default function ProfileContent({ user }) {
     }));
   };
 
-  const handleSaveProfile = () => {
-    setIsEditingProfile(false);
-    // Logic to save profile data
+  const handleSaveProfile = async () => {
+    if (!user?.id) {
+      toast.error('Không tìm thấy thông tin người dùng');
+      return;
+    }
+
+    // Validate phone number format (must start with 0 and have exactly 10 digits)
+    if (profileData.phone && !/^0\d{9}$/.test(profileData.phone)) {
+      toast.error('Số điện thoại phải bắt đầu bằng 0 và có đúng 10 chữ số');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+
+      // Prepare update data (only send fields that can be updated)
+      const updateData = {
+        name: profileData.fullName,
+        phone: profileData.phone,
+        address: profileData.address,
+        // Note: email cannot be updated via this endpoint
+      };
+
+      const response = await apiClient.put(
+        endpoints.renters.update(user.id),
+        updateData
+      );
+
+      if (response.success) {
+        toast.success('Cập nhật thông tin thành công');
+        setIsEditingProfile(false);
+
+        // Update local user data if parent component provides update function
+        if (user.onUpdate) {
+          user.onUpdate(response.data.renter);
+        }
+      } else {
+        toast.error(response.message || 'Cập nhật thất bại');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error(
+        error.response?.data?.message || 'Có lỗi xảy ra khi cập nhật thông tin'
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -63,6 +119,7 @@ export default function ProfileContent({ user }) {
             variant='outline'
             onClick={() => setIsEditingProfile(!isEditingProfile)}
             className='flex items-center gap-2'
+            disabled={isSaving}
           >
             <Edit className='h-4 w-4' />
             Chỉnh sửa
@@ -146,16 +203,20 @@ export default function ProfileContent({ user }) {
                   Giới tính
                 </span>
                 {isEditingProfile ? (
-                  <select
+                  <Select
                     value={profileData.gender}
-                    onChange={e =>
-                      handleProfileInputChange('gender', e.target.value)
+                    onValueChange={value =>
+                      handleProfileInputChange('gender', value)
                     }
-                    className='flex-1 ml-4 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-sm'
                   >
-                    <option value='Nam'>Nam</option>
-                    <option value='Nữ'>Nữ</option>
-                  </select>
+                    <SelectTrigger className='flex-1 ml-4'>
+                      <SelectValue placeholder='Chọn giới tính' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='Nam'>Nam</SelectItem>
+                      <SelectItem value='Nữ'>Nữ</SelectItem>
+                    </SelectContent>
+                  </Select>
                 ) : (
                   <div className='flex items-center gap-2 flex-1 ml-4'>
                     <span className='text-sm font-bold text-card-foreground'>
@@ -183,6 +244,29 @@ export default function ProfileContent({ user }) {
                   <div className='flex items-center gap-2 flex-1 ml-4'>
                     <span className='text-sm font-bold text-card-foreground'>
                       {profileData.phone || 'Chưa cập nhật'}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Address */}
+              <div className='flex items-center justify-between py-2'>
+                <span className='text-sm font-medium text-muted-foreground w-32 flex-shrink-0'>
+                  Địa chỉ
+                </span>
+                {isEditingProfile ? (
+                  <Input
+                    value={profileData.address}
+                    onChange={e =>
+                      handleProfileInputChange('address', e.target.value)
+                    }
+                    placeholder='Nhập địa chỉ'
+                    className='bg-gray-50 flex-1 ml-4'
+                  />
+                ) : (
+                  <div className='flex items-center gap-2 flex-1 ml-4'>
+                    <span className='text-sm font-bold text-card-foreground'>
+                      {profileData.address || 'Chưa cập nhật'}
                     </span>
                   </div>
                 )}
@@ -230,13 +314,18 @@ export default function ProfileContent({ user }) {
             {/* Action Buttons for Profile */}
             {isEditingProfile && (
               <div className='flex gap-3 pt-6 mt-6 border-t border-gray-200'>
-                <Button onClick={handleSaveProfile} className='flex-1'>
-                  Lưu thông tin
+                <Button
+                  onClick={handleSaveProfile}
+                  className='flex-1'
+                  disabled={isSaving}
+                >
+                  {isSaving ? 'Đang lưu...' : 'Lưu thông tin'}
                 </Button>
                 <Button
                   variant='outline'
                   onClick={() => setIsEditingProfile(false)}
                   className='flex-1'
+                  disabled={isSaving}
                 >
                   Hủy
                 </Button>

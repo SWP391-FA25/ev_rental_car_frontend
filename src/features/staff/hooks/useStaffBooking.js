@@ -3,9 +3,12 @@ import { calculateCompletePricing } from '@/features/booking/utils/pricingUtils'
 import { apiClient } from '@/features/shared/lib/apiClient';
 import { endpoints } from '@/features/shared/lib/endpoints';
 import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 export const useStaffBooking = () => {
+  const navigate = useNavigate();
+
   // Form state
   const [formData, setFormData] = useState({
     renterId: '',
@@ -122,22 +125,6 @@ export const useStaffBooking = () => {
           endDateTime
         );
 
-        console.log('🔍 VEHICLES API Response:', response);
-        console.log('🔍 VEHICLES Data:', response.data);
-        console.log('🔍 VEHICLES Array:', response.data?.availableVehicles);
-
-        // Debug: Log first vehicle structure to see all fields
-        if (response.data?.availableVehicles?.length > 0) {
-          console.log(
-            '🔍 FIRST VEHICLE STRUCTURE:',
-            response.data.availableVehicles[0]
-          );
-          console.log(
-            '🔍 FIRST VEHICLE KEYS:',
-            Object.keys(response.data.availableVehicles[0])
-          );
-        }
-
         // Get available vehicles from response
         const availableVehicles = response.data?.availableVehicles || [];
 
@@ -150,19 +137,12 @@ export const useStaffBooking = () => {
             vehicle.rates ||
             vehicle.vehiclePricing;
 
-          if (pricing) {
-            console.log('🔍 VEHICLE HAS PRICING:', vehicle.id, pricing);
-            return {
-              ...vehicle,
-              pricing: pricing,
-            };
-          } else {
-            console.log('🔍 VEHICLE NO PRICING:', vehicle.id);
-            return vehicle;
-          }
+          return {
+            ...vehicle,
+            pricing: pricing,
+          };
         });
 
-        console.log('🔍 VEHICLES WITH PRICING:', vehiclesWithPricing);
         setVehicles(vehiclesWithPricing);
 
         if (availableVehicles.length === 0) {
@@ -252,9 +232,6 @@ export const useStaffBooking = () => {
 
   // Calculate pricing breakdown
   const calculatePricing = useCallback(() => {
-    console.log('🔍 CALCULATING PRICING - Form Data:', formData);
-    console.log('🔍 CALCULATING PRICING - Vehicles:', vehicles);
-
     if (
       !formData.vehicleId ||
       !formData.startDate ||
@@ -262,20 +239,16 @@ export const useStaffBooking = () => {
       !formData.startTime ||
       !formData.endTime
     ) {
-      console.log('🔍 CALCULATING PRICING - Missing required fields');
       return null;
     }
 
     const selectedVehicle = vehicles.find(v => v.id === formData.vehicleId);
-    console.log('🔍 CALCULATING PRICING - Selected Vehicle:', selectedVehicle);
 
     if (!selectedVehicle) {
-      console.log('🔍 CALCULATING PRICING - Vehicle not found');
       return null;
     }
 
     if (!selectedVehicle.pricing) {
-      console.log('🔍 CALCULATING PRICING - Vehicle has no pricing data');
       return null;
     }
 
@@ -295,10 +268,7 @@ export const useStaffBooking = () => {
     const durationMs = endDateTime.getTime() - startDateTime.getTime();
     const durationHours = Math.ceil(durationMs / (1000 * 60 * 60));
 
-    console.log('🔍 CALCULATING PRICING - Duration Hours:', durationHours);
-
     if (durationHours <= 0) {
-      console.log('🔍 CALCULATING PRICING - Invalid duration');
       return null;
     }
 
@@ -311,21 +281,11 @@ export const useStaffBooking = () => {
       }
     }
 
-    console.log(
-      '🔍 CALCULATING PRICING - Selected Promotions:',
-      selectedPromotions
-    );
-
     // Calculate complete pricing using existing utility
     const pricingBreakdown = calculateCompletePricing(
       selectedVehicle.pricing,
       durationHours,
       selectedPromotions
-    );
-
-    console.log(
-      '🔍 CALCULATING PRICING - Pricing Breakdown:',
-      pricingBreakdown
     );
 
     return {
@@ -438,6 +398,13 @@ export const useStaffBooking = () => {
 
       toast.success('Booking created successfully!');
 
+      // Navigate to deposit payment page
+      if (result?.booking?.id && result?.booking?.depositAmount) {
+        navigate(
+          `/payment/deposit?bookingId=${result.booking.id}&amount=${result.booking.depositAmount}`
+        );
+      }
+
       // Reset form
       setFormData({
         renterId: '',
@@ -463,7 +430,7 @@ export const useStaffBooking = () => {
     } finally {
       setSubmitting(false);
     }
-  }, [formData, validateForm]);
+  }, [formData, validateForm, navigate]);
 
   // Reset form
   const resetForm = useCallback(() => {

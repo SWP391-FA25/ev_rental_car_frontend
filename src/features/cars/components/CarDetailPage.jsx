@@ -121,7 +121,6 @@ export default function CarDetailPage() {
         setPromotions(response.data.promotions || []);
       } catch (error) {
         console.error('Error fetching promotions:', error);
-        toast.error('Failed to load promotions');
       } finally {
         setLoadingPromotions(false);
       }

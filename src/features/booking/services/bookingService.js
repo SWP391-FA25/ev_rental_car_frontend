@@ -23,6 +23,7 @@ export const bookingService = {
         message: error.response?.data?.message || 'Failed to create booking',
         code: error.response?.data?.code || 'UNKNOWN_ERROR',
         details: error.response?.data?.details || null,
+        errors: error.response?.data?.errors || null,
         status: error.response?.status || 500,
       };
 
