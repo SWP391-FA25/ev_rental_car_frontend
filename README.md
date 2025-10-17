@@ -1,3 +1,4 @@
+# Mentor: Bùi Việt Hoàng
 # 🚗 EV Rental Car Frontend
 
 A modern React application for electric vehicle rental services, built with Vite, Tailwind CSS, and ShadCN UI components.

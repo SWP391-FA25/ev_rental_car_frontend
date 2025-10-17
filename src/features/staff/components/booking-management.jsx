@@ -14,6 +14,7 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
+import { useTranslation } from 'react-i18next';
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
 import { ConfirmDialog } from '../../shared/components/ui/confirm-dialog';
@@ -47,11 +48,15 @@ import { BookingDetails } from './booking/BookingDetails';
 import { CreateBookingDialog } from './booking/CreateBookingDialog';
 
 const BookingManagement = () => {
+  const { t } = useTranslation();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
+  const [isCompletionSummaryOpen, setIsCompletionSummaryOpen] = useState(false);
+  const [completionSummaryBookingId, setCompletionSummaryBookingId] =
+    useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [depositFilter, setDepositFilter] = useState('ALL');
@@ -92,7 +97,7 @@ const BookingManagement = () => {
         }
       } catch (error) {
         console.error('Error fetching bookings:', error);
-        toast.error('Failed to fetch bookings');
+        toast.error(t('booking.messages.loadFailed'));
       } finally {
         setLoading(false);
       }
@@ -112,7 +117,7 @@ const BookingManagement = () => {
       }
     } catch (error) {
       console.error('Error fetching booking details:', error);
-      toast.error('Failed to fetch booking details');
+      toast.error(t('booking.messages.detailsFailed'));
     }
   }, []);
 
@@ -125,7 +130,7 @@ const BookingManagement = () => {
       );
 
       if (response.success) {
-        toast.success('Booking confirmed successfully');
+        toast.success(t('booking.messages.confirmSuccess'));
         fetchBookings(pagination.currentPage);
         if (isDetailsOpen) {
           fetchBookingDetails(selectedBooking.id);
@@ -133,7 +138,7 @@ const BookingManagement = () => {
       }
     } catch (error) {
       console.error('Error confirming booking:', error);
-      toast.error('Failed to confirm booking');
+      toast.error(t('booking.messages.confirmFailed'));
     }
   };
 
@@ -145,7 +150,7 @@ const BookingManagement = () => {
       );
 
       if (response.success) {
-        toast.success('Rental started successfully');
+        toast.success(t('booking.messages.startSuccess'));
         fetchBookings(pagination.currentPage);
         if (isDetailsOpen) {
           fetchBookingDetails(selectedBooking.id);
@@ -153,7 +158,7 @@ const BookingManagement = () => {
       }
     } catch (error) {
       console.error('Error starting rental:', error);
-      toast.error('Failed to start rental');
+      toast.error(t('booking.messages.startFailed'));
     }
   };
 
@@ -168,7 +173,7 @@ const BookingManagement = () => {
       );
 
       if (response.success) {
-        toast.success('Booking completed successfully');
+        toast.success(t('booking.messages.completeSuccess'));
         setIsCompleteDialogOpen(false);
         fetchBookings(pagination.currentPage);
         if (isDetailsOpen) {
@@ -177,7 +182,7 @@ const BookingManagement = () => {
       }
     } catch (error) {
       console.error('Error completing booking:', error);
-      toast.error('Failed to complete booking');
+      toast.error(t('booking.messages.completeFailed'));
     }
   };
 
@@ -190,7 +195,7 @@ const BookingManagement = () => {
       );
 
       if (response.success) {
-        toast.success('Booking cancelled successfully');
+        toast.success(t('booking.messages.cancelSuccess'));
         fetchBookings(pagination.currentPage);
         if (isDetailsOpen) {
           setIsDetailsOpen(false);
@@ -198,7 +203,7 @@ const BookingManagement = () => {
       }
     } catch (error) {
       console.error('Error cancelling booking:', error);
-      toast.error('Failed to cancel booking');
+      toast.error(t('booking.messages.cancelFailed'));
     }
   };
 
@@ -216,11 +221,31 @@ const BookingManagement = () => {
   // Get status badge
   const getStatusBadge = status => {
     const statusConfig = {
-      PENDING: { variant: 'secondary', icon: Clock, label: 'Pending' },
-      CONFIRMED: { variant: 'default', icon: CheckCircle, label: 'Confirmed' },
-      IN_PROGRESS: { variant: 'default', icon: Car, label: 'In Progress' },
-      COMPLETED: { variant: 'default', icon: CheckCircle, label: 'Completed' },
-      CANCELLED: { variant: 'destructive', icon: XCircle, label: 'Cancelled' },
+      PENDING: {
+        variant: 'secondary',
+        icon: Clock,
+        label: t('booking.status.pending'),
+      },
+      CONFIRMED: {
+        variant: 'default',
+        icon: CheckCircle,
+        label: t('booking.status.confirmed'),
+      },
+      IN_PROGRESS: {
+        variant: 'default',
+        icon: Car,
+        label: t('booking.status.inProgress'),
+      },
+      COMPLETED: {
+        variant: 'default',
+        icon: CheckCircle,
+        label: t('booking.status.completed'),
+      },
+      CANCELLED: {
+        variant: 'destructive',
+        icon: XCircle,
+        label: t('booking.status.cancelled'),
+      },
     };
 
     const config = statusConfig[status] || statusConfig.PENDING;
@@ -240,26 +265,26 @@ const BookingManagement = () => {
       PENDING: {
         variant: 'outline',
         icon: Clock,
-        label: 'Pending',
-        color: 'text-orange-600',
+        label: t('booking.depositStatus.pending'),
+        color: 'text-orange-700 border-orange-300 bg-orange-50',
       },
       PAID: {
-        variant: 'default',
+        variant: 'outline',
         icon: CheckCircle,
-        label: 'Paid',
-        color: 'text-green-600',
+        label: t('booking.depositStatus.paid'),
+        color: 'text-white bg-emerald-600 border-emerald-600',
       },
       FAILED: {
-        variant: 'destructive',
+        variant: 'outline',
         icon: XCircle,
-        label: 'Failed',
-        color: 'text-red-600',
+        label: t('booking.depositStatus.failed'),
+        color: 'text-white bg-rose-600 border-rose-600',
       },
       REFUNDED: {
-        variant: 'secondary',
+        variant: 'outline',
         icon: CreditCard,
-        label: 'Refunded',
-        color: 'text-blue-600',
+        label: t('booking.depositStatus.refunded'),
+        color: 'text-white bg-blue-600 border-blue-600',
       },
     };
 
@@ -269,7 +294,7 @@ const BookingManagement = () => {
     return (
       <Badge
         variant={config.variant}
-        className={`flex items-center gap-1 ${config.color}`}
+        className={`flex items-center gap-1 rounded-full px-3 py-1 ${config.color}`}
       >
         <Icon className='h-3 w-3' />
         {config.label}
@@ -290,7 +315,7 @@ const BookingManagement = () => {
   if (loading) {
     return (
       <div className='flex items-center justify-center h-64'>
-        <div className='text-lg'>Loading bookings...</div>
+        <div className='text-lg'>{t('booking.messages.loading')}</div>
       </div>
     );
   }
@@ -301,11 +326,9 @@ const BookingManagement = () => {
       <div className='flex items-center justify-between'>
         <div>
           <h1 className='text-3xl font-bold tracking-tight'>
-            Booking Management
+            {t('booking.title')}
           </h1>
-          <p className='text-muted-foreground'>
-            Manage and track all vehicle bookings
-          </p>
+          <p className='text-muted-foreground'>{t('booking.subtitle')}</p>
         </div>
         <div className='flex items-center gap-3'>
           <CreateBookingDialog
@@ -330,7 +353,7 @@ const BookingManagement = () => {
         <div className='relative flex-1 max-w-sm'>
           <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
           <Input
-            placeholder='Search by customer name, vehicle model, or booking ID...'
+            placeholder={t('booking.filters.searchPlaceholder')}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             onKeyPress={e => e.key === 'Enter' && handleSearch()}
@@ -341,37 +364,50 @@ const BookingManagement = () => {
           <DropdownMenuTrigger asChild>
             <Button variant='outline'>
               <Filter className='mr-2 h-4 w-4' />
-              Status: {statusFilter === 'ALL' ? 'All Status' : statusFilter}
+              {t('booking.filters.status')}:{' '}
+              {statusFilter === 'ALL'
+                ? t('booking.filters.statusAll')
+                : t(
+                    `booking.status.${
+                      {
+                        PENDING: 'pending',
+                        CONFIRMED: 'confirmed',
+                        IN_PROGRESS: 'inProgress',
+                        COMPLETED: 'completed',
+                        CANCELLED: 'cancelled',
+                      }[statusFilter]
+                    }`
+                  )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuItem onClick={() => handleStatusFilterChange('ALL')}>
-              All Status
+              {t('booking.filters.statusAll')}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => handleStatusFilterChange('PENDING')}
             >
-              Pending
+              {t('booking.status.pending')}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => handleStatusFilterChange('CONFIRMED')}
             >
-              Confirmed
+              {t('booking.status.confirmed')}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => handleStatusFilterChange('IN_PROGRESS')}
             >
-              In Progress
+              {t('booking.status.inProgress')}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => handleStatusFilterChange('COMPLETED')}
             >
-              Completed
+              {t('booking.status.completed')}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => handleStatusFilterChange('CANCELLED')}
             >
-              Cancelled
+              {t('booking.status.cancelled')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -380,7 +416,18 @@ const BookingManagement = () => {
           <DropdownMenuTrigger asChild>
             <Button variant='outline'>
               <CreditCard className='mr-2 h-4 w-4' />
-              Deposit: {depositFilter === 'ALL' ? 'All' : depositFilter}
+              {t('booking.filters.depositLabel')}:{' '}
+              {depositFilter === 'ALL'
+                ? t('booking.filters.depositAll')
+                : depositFilter === 'PENDING'
+                ? t('booking.filters.deposit.pendingPayment')
+                : t(
+                    `booking.depositStatus.${
+                      { PAID: 'paid', FAILED: 'failed', REFUNDED: 'refunded' }[
+                        depositFilter
+                      ]
+                    }`
+                  )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
@@ -390,7 +437,7 @@ const BookingManagement = () => {
                 fetchBookings(1);
               }}
             >
-              All Deposits
+              {t('booking.filters.depositAll')}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
@@ -398,7 +445,7 @@ const BookingManagement = () => {
                 fetchBookings(1);
               }}
             >
-              Pending Payment
+              {t('booking.filters.deposit.pendingPayment')}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
@@ -406,7 +453,7 @@ const BookingManagement = () => {
                 fetchBookings(1);
               }}
             >
-              Paid
+              {t('booking.filters.deposit.paid')}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
@@ -414,7 +461,7 @@ const BookingManagement = () => {
                 fetchBookings(1);
               }}
             >
-              Failed
+              {t('booking.filters.deposit.failed')}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
@@ -422,7 +469,7 @@ const BookingManagement = () => {
                 fetchBookings(1);
               }}
             >
-              Refunded
+              {t('booking.filters.deposit.refunded')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -434,7 +481,9 @@ const BookingManagement = () => {
           <div className='text-2xl font-bold text-foreground'>
             {bookings.length}
           </div>
-          <div className='text-sm text-muted-foreground'>Booking Amount</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('booking.stats.bookingAmount')}
+          </div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold text-orange-600'>
@@ -443,7 +492,9 @@ const BookingManagement = () => {
                 .length
             }
           </div>
-          <div className='text-sm text-muted-foreground'>Pending Deposits</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('booking.stats.pendingDeposits')}
+          </div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold text-green-600'>
@@ -452,19 +503,25 @@ const BookingManagement = () => {
                 .length
             }
           </div>
-          <div className='text-sm text-muted-foreground'>Paid Deposits</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('booking.stats.paidDeposits')}
+          </div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold text-blue-600'>
             {bookings.filter(b => b.status === 'IN_PROGRESS').length}
           </div>
-          <div className='text-sm text-muted-foreground'>In Progress</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('booking.stats.inProgress')}
+          </div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold text-green-600'>
             {bookings.filter(b => b.status === 'COMPLETED').length}
           </div>
-          <div className='text-sm text-muted-foreground'>Completed</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('booking.stats.completed')}
+          </div>
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold text-blue-600'>
@@ -474,7 +531,9 @@ const BookingManagement = () => {
               ).length
             }
           </div>
-          <div className='text-sm text-muted-foreground'>Refunded</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('booking.stats.refunded')}
+          </div>
         </div>
       </div>
 
@@ -483,20 +542,24 @@ const BookingManagement = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Customer</TableHead>
-              <TableHead>Vehicle</TableHead>
-              <TableHead>Station</TableHead>
-              <TableHead>Date & Time</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Deposit Status</TableHead>
-              <TableHead className='w-[70px]'>Actions</TableHead>
+              <TableHead>{t('booking.table.customer')}</TableHead>
+              <TableHead>{t('booking.table.vehicle')}</TableHead>
+              <TableHead>{t('booking.table.station')}</TableHead>
+              <TableHead>{t('booking.table.dateTime')}</TableHead>
+              <TableHead>{t('booking.table.status')}</TableHead>
+              <TableHead>{t('booking.table.depositStatus')}</TableHead>
+              <TableHead className='w-[70px]'>
+                {t('booking.table.actions')}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {bookings.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className='text-center py-8'>
-                  <p className='text-muted-foreground'>No bookings found</p>
+                  <p className='text-muted-foreground'>
+                    {t('booking.table.noBookings')}
+                  </p>
                 </TableCell>
               </TableRow>
             ) : (
@@ -538,7 +601,7 @@ const BookingManagement = () => {
                       <p className='text-sm text-muted-foreground'>
                         {booking.endTime
                           ? formatDate(booking.endTime)
-                          : 'No end time'}
+                          : t('booking.table.noEndTime')}
                       </p>
                     </div>
                   </TableCell>
@@ -563,9 +626,9 @@ const BookingManagement = () => {
                           onClick={() => fetchBookingDetails(booking.id)}
                         >
                           <Eye className='mr-2 h-4 w-4' />
-                          View Details
+                          {t('booking.actions.viewDetails')}
                         </DropdownMenuItem>
-                        {booking.status === 'PENDING' && (
+                        {/* {booking.status === 'PENDING' && (
                           <DropdownMenuItem
                             onClick={() => confirmBooking(booking.id)}
                             className='text-green-600'
@@ -573,7 +636,7 @@ const BookingManagement = () => {
                             <CheckCircle className='mr-2 h-4 w-4' />
                             Confirm Booking
                           </DropdownMenuItem>
-                        )}
+                        )} */}
                         {/* {booking.status === 'PENDING' &&
                           booking.depositStatus !== 'PAID' && (
                             <DropdownMenuItem
@@ -581,7 +644,7 @@ const BookingManagement = () => {
                               className='text-muted-foreground'
                             >
                               <Clock className='mr-2 h-4 w-4' />
-                              Waiting for Deposit
+                              {t('booking.actions.waitingForDeposit')}
                             </DropdownMenuItem>
                           )} */}
                         {booking.status === 'CONFIRMED' && (
@@ -590,7 +653,7 @@ const BookingManagement = () => {
                             className='text-blue-600'
                           >
                             <Car className='mr-2 h-4 w-4' />
-                            Start Rental
+                            {t('booking.actions.startRental')}
                           </DropdownMenuItem>
                         )}
                         {booking.status === 'IN_PROGRESS' && (
@@ -602,7 +665,7 @@ const BookingManagement = () => {
                             className='text-green-600'
                           >
                             <CheckCircle className='mr-2 h-4 w-4' />
-                            Complete Rental
+                            {t('booking.actions.completeRental')}
                           </DropdownMenuItem>
                         )}
                         {!['COMPLETED', 'CANCELLED'].includes(
@@ -616,7 +679,7 @@ const BookingManagement = () => {
                             className='text-red-600'
                           >
                             <Ban className='mr-2 h-4 w-4' />
-                            Cancel Booking
+                            {t('booking.actions.cancelBooking')}
                           </DropdownMenuItem>
                         )}
                       </DropdownMenuContent>
@@ -633,7 +696,10 @@ const BookingManagement = () => {
       {pagination.totalPages > 1 && (
         <div className='flex items-center justify-between'>
           <p className='text-sm text-muted-foreground'>
-            Page {pagination.currentPage} of {pagination.totalPages}
+            {t('booking.pagination.page', {
+              current: pagination.currentPage,
+              total: pagination.totalPages,
+            })}
           </p>
           <div className='flex gap-2'>
             <Button
@@ -642,7 +708,7 @@ const BookingManagement = () => {
               onClick={() => fetchBookings(pagination.currentPage - 1)}
               disabled={pagination.currentPage <= 1}
             >
-              Previous
+              {t('booking.pagination.previous')}
             </Button>
             <Button
               variant='outline'
@@ -650,7 +716,7 @@ const BookingManagement = () => {
               onClick={() => fetchBookings(pagination.currentPage + 1)}
               disabled={pagination.currentPage >= pagination.totalPages}
             >
-              Next
+              {t('booking.pagination.next')}
             </Button>
           </div>
         </div>
@@ -662,7 +728,6 @@ const BookingManagement = () => {
         onOpenChange={setIsDetailsOpen}
         booking={selectedBooking}
       />
-
       {/* Complete Booking Dialog */}
       <Dialog
         open={isCompleteDialogOpen}
@@ -670,9 +735,9 @@ const BookingManagement = () => {
       >
         <DialogContent className='max-w-2xl'>
           <DialogHeader>
-            <DialogTitle>Complete Booking</DialogTitle>
+            <DialogTitle>{t('booking.dialogs.complete.title')}</DialogTitle>
             <DialogDescription>
-              Complete this rental and update vehicle status
+              {t('booking.dialogs.complete.description')}
             </DialogDescription>
           </DialogHeader>
           <BookingCompleteForm
@@ -687,16 +752,16 @@ const BookingManagement = () => {
       <ConfirmDialog
         open={cancelDialogOpen}
         onOpenChange={setCancelDialogOpen}
-        title='Cancel Booking'
-        description='Are you sure you want to cancel this booking? This action cannot be undone.'
+        title={t('booking.dialogs.cancel.title')}
+        description={t('booking.dialogs.cancel.description')}
         onConfirm={() => {
           if (bookingToCancel) {
             cancelBooking(bookingToCancel);
             setBookingToCancel(null);
           }
         }}
-        confirmText='Cancel Booking'
-        cancelText='Keep Booking'
+        confirmText={t('booking.dialogs.cancel.confirm')}
+        cancelText={t('booking.dialogs.cancel.keep')}
         confirmVariant='destructive'
       />
     </div>

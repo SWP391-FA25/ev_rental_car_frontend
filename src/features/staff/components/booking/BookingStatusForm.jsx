@@ -13,10 +13,10 @@ import { Textarea } from '../../../shared/components/ui/textarea';
 
 // Booking status options
 const BOOKING_STATUS = [
-  { value: 'CONFIRMED', label: 'Confirmed' },
-  { value: 'IN_PROGRESS', label: 'In Progress' },
-  { value: 'COMPLETED', label: 'Completed' },
-  { value: 'CANCELLED', label: 'Cancelled' },
+  { value: 'CONFIRMED', label: 'booking.status.confirmed' },
+  { value: 'IN_PROGRESS', label: 'booking.status.inProgress' },
+  { value: 'COMPLETED', label: 'booking.status.completed' },
+  { value: 'CANCELLED', label: 'booking.status.cancelled' },
 ];
 
 export function BookingStatusForm({
@@ -89,7 +89,7 @@ export function BookingStatusForm({
             <SelectContent>
               {BOOKING_STATUS.map(status => (
                 <SelectItem key={status.value} value={status.value}>
-                  {status.label}
+                  {t(status.label)}
                 </SelectItem>
               ))}
             </SelectContent>

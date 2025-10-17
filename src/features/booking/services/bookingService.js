@@ -2,6 +2,13 @@ import { apiClient } from '@/features/shared/lib/apiClient';
 import { endpoints } from '@/features/shared/lib/endpoints';
 
 export const bookingService = {
+  // Lấy tất cả bookings (với params lọc/phân trang)
+  async getAllBookings(params = {}) {
+    const response = await apiClient.get(endpoints.bookings.getAll(), {
+      params,
+    });
+    return response.data;
+  },
   // Tạo booking mới
   async createBooking(bookingData) {
     try {
