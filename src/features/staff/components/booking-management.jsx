@@ -44,6 +44,7 @@ import { endpoints } from '../../shared/lib/endpoints';
 import { formatCurrency, formatDate } from '../../shared/lib/utils';
 import { BookingCompleteForm } from './booking/BookingCompleteForm';
 import { BookingDetails } from './booking/BookingDetails';
+import { CreateBookingDialog } from './booking/CreateBookingDialog';
 
 const BookingManagement = () => {
   const [bookings, setBookings] = useState([]);
@@ -306,13 +307,22 @@ const BookingManagement = () => {
             Manage and track all vehicle bookings
           </p>
         </div>
-        <Button
-          onClick={() => fetchBookings(pagination.currentPage)}
-          variant='outline'
-        >
-          <RefreshCw className='h-4 w-4 mr-2' />
-          Refresh
-        </Button>
+        <div className='flex items-center gap-3'>
+          <CreateBookingDialog
+            onBookingCreated={() => {
+              // Refresh bookings list after creating new booking
+              fetchBookings(pagination.currentPage);
+              toast.success('Booking list refreshed');
+            }}
+          />
+          <Button
+            onClick={() => fetchBookings(pagination.currentPage)}
+            variant='outline'
+          >
+            <RefreshCw className='h-4 w-4 mr-2' />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
