@@ -24,12 +24,12 @@ export function BookingDetails({ open, onOpenChange, booking }) {
 
   useEffect(() => {
     const fetchInspections = async () => {
-      if (!booking?.id || !open) return;
+      if (!booking?.vehicle?.id || !open) return;
       setLoadingInspections(true);
       setInspectionsError('');
       try {
         const res = await apiClient.get(
-          endpoints.inspections.getByBooking(booking.id)
+          endpoints.inspections.getByVehicle(booking.vehicle.id)
         );
         const data = res?.data;
         // Backend returns: { success: true, data: { inspections: [...] } }
@@ -40,7 +40,11 @@ export function BookingDetails({ open, onOpenChange, booking }) {
           : Array.isArray(data?.items)
           ? data.items
           : [];
-        setInspections(list);
+        const sorted = [...list].sort(
+          (a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0)
+        );
+        const latest = sorted[0] || null;
+        setInspections(latest ? [latest] : []);
       } catch (err) {
         setInspectionsError(
           err?.message || t('booking.messages.detailsFailed')
@@ -51,7 +55,7 @@ export function BookingDetails({ open, onOpenChange, booking }) {
     };
 
     fetchInspections();
-  }, [booking?.id, open, t]);
+  }, [booking?.vehicle?.id, open, t]);
 
   if (!booking) return null;
 
