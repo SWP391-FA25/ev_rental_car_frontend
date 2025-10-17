@@ -14,6 +14,7 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
+import { useTranslation } from 'react-i18next';
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
 import { ConfirmDialog } from '../../shared/components/ui/confirm-dialog';
@@ -44,7 +45,7 @@ import { endpoints } from '../../shared/lib/endpoints';
 import { formatCurrency, formatDate } from '../../shared/lib/utils';
 import { BookingCompleteForm } from './booking/BookingCompleteForm';
 import { BookingDetails } from './booking/BookingDetails';
-import { useTranslation } from 'react-i18next';
+import { CreateBookingDialog } from './booking/CreateBookingDialog';
 
 const BookingManagement = () => {
   const { t } = useTranslation();
@@ -329,13 +330,21 @@ const BookingManagement = () => {
           </h1>
           <p className='text-muted-foreground'>{t('booking.subtitle')}</p>
         </div>
-        <Button
-          onClick={() => fetchBookings(pagination.currentPage)}
-          variant='outline'
-        >
-          <RefreshCw className='h-4 w-4 mr-2' />
-          {t('booking.actions.refresh')}
-        </Button>
+        <div className='flex items-center gap-3'>
+          <CreateBookingDialog
+            onBookingCreated={() => {
+              // Refresh bookings list after creating new booking
+              fetchBookings(pagination.currentPage);
+            }}
+          />
+          <Button
+            onClick={() => fetchBookings(pagination.currentPage)}
+            variant='outline'
+          >
+            <RefreshCw className='h-4 w-4 mr-2' />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -746,7 +755,7 @@ const BookingManagement = () => {
         description={t('booking.dialogs.cancel.description')}
         onConfirm={() => {
           if (bookingToCancel) {
-            cancelBooking(bookingToCancel);
+            cancelBooking(bookingToCancel, 'Cancelled by staff');
             setBookingToCancel(null);
           }
         }}

@@ -43,11 +43,13 @@ apiClient.interceptors.response.use(
     const status = error?.response?.status || 0;
     const message =
       error?.response?.data?.message || error?.message || 'Request error';
+    const errors = error?.response?.data?.errors || null;
 
     return Promise.reject({
       success: false,
       data: null,
       message,
+      errors,
       status,
       timestamp: new Date().toISOString(),
     });
