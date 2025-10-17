@@ -30,6 +30,7 @@ import { PaymentManagement } from '../components/payment-management';
 import { StaffHeader } from '../components/staff-header';
 import { StaffSidebar } from '../components/staff-sidebar';
 import StationManagement from '../components/station-management';
+import ReturnCar from '../components/ReturnCar';
 
 // Removed QuickVerification import
 
@@ -399,6 +400,9 @@ export default function StaffDashboard() {
             <Button variant='outline' onClick={() => setActiveTab('payments')}>
               {t('dashboard.processPayments')}
             </Button>
+            <Button variant='outline' onClick={() => setActiveTab('returnCar')}>
+              {t('staff.returnCar.quickAction')}
+            </Button>
           </CardContent>
         </Card>
 
@@ -483,6 +487,9 @@ export default function StaffDashboard() {
   const renderBookings = () => {
     return <BookingManagement />;
   };
+  const renderReturnCar = () => {
+    return <ReturnCar />;
+  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -498,6 +505,8 @@ export default function StaffDashboard() {
         return renderPayments();
       case 'bookings':
         return renderBookings();
+      case 'returnCar':
+        return renderReturnCar();
       case 'documents':
         return <DocumentVerification />;
       case 'notifications':
@@ -514,6 +523,11 @@ export default function StaffDashboard() {
       id: 'bookings',
       label: 'Booking Management',
       icon: <FileText className='h-4 w-4' />,
+    },
+    {
+      id: 'returnCar',
+      label: 'Return Car',
+      icon: <Wrench className='h-4 w-4' />,
     },
     { id: 'cars', label: 'Car Management', icon: <Car className='h-4 w-4' /> },
     { id: 'stations', label: 'Stations', icon: <MapPin className='h-4 w-4' /> },
