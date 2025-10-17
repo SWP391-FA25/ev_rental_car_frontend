@@ -194,8 +194,14 @@
       "overdueProceed": "Booking is overdue, proceeding with return",
       "loadStationsFail": "Failed to load stations",
       "invalidReturnLocation": "Please select a valid return station (3-200 chars)",
-      "invalidReturnOdometer": "Please enter a valid return odometer (>= 0)"
+      "invalidReturnOdometer": "Please enter a valid return odometer (>= 0)",
+      "imageTooLarge": "{{name}} exceeds 5MB, skipping this file.",
+      "missingStaff": "Missing staff information",
+      "invalidEndTime": "Return time must be after start or actual start. Try again in a few minutes.",
+      "validationFailed": "Validation failed. Please check the return information.",
+      "alreadyCompleted": "Booking was already completed; no need to confirm again."
     },
+    "loadingStations": "Loading stations...",
     "booking": {
       "title": "1. Select booking to process",
       "idLabel": "Booking ID",
@@ -254,6 +260,21 @@
       "description": "Confirmation marks the booking as Completed and updates vehicle status accordingly.",
       "reset": "Reset",
       "confirm": "Confirm completion"
+    },
+    "modal": {
+      "title": "Complete Return",
+      "description": "Payment details for this return",
+      "vehicle": "Vehicle",
+      "payableVND": "Amount payable (VND)",
+      "pricingTitle": "Vehicle pricing",
+      "pricing": {
+        "hourly": "Hourly rate",
+        "daily": "Daily rate",
+        "weekly": "Weekly rate",
+        "monthly": "Monthly rate",
+        "insurance": "Insurance fee",
+        "deposit": "Deposit"
+      }
     }
   },
   "admin": {
@@ -298,7 +319,8 @@
     "english": "English",
     "vietnamese": "Vietnamese",
     "close": "Close",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "loading": "Loading..."
   },
   "admin": {
     "header": {

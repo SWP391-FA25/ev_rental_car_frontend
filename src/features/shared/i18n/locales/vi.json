@@ -288,8 +288,14 @@
       "overdueProceed": "Đơn thuê đã quá hạn, vẫn tiến hành trả xe",
       "loadStationsFail": "Không thể tải danh sách trạm",
       "invalidReturnLocation": "Vui lòng chọn trạm trả hợp lệ (3-200 ký tự)",
-      "invalidReturnOdometer": "Vui lòng nhập công tơ mét trả hợp lệ (>= 0)"
+      "invalidReturnOdometer": "Vui lòng nhập công tơ mét trả hợp lệ (>= 0)",
+      "imageTooLarge": "{{name}} vượt quá 5MB, sẽ bỏ qua ảnh này.",
+      "missingStaff": "Thiếu thông tin nhân viên",
+      "invalidEndTime": "Thời gian trả phải sau thời gian bắt đầu hoặc giờ nhận thực tế. Vui lòng thử lại sau vài phút.",
+      "validationFailed": "Xác thực thất bại. Vui lòng kiểm tra thông tin trả xe.",
+      "alreadyCompleted": "Đơn thuê đã được hoàn tất trước đó, không cần xác nhận lại."
     },
+    "loadingStations": "Đang tải trạm...",
     "booking": {
       "title": "1. Chọn đơn đang cần xử lý",
       "idLabel": "Mã đơn thuê",
@@ -346,7 +352,29 @@
       "description": "Xác nhận sẽ đánh dấu đơn Hoàn tất và cập nhật trạng thái xe phù hợp.",
       "reset": "Làm mới",
       "confirm": "Xác nhận hoàn tất"
+    },
+    "modal": {
+      "title": "Hoàn tất trả xe",
+      "description": "Thông tin thanh toán cho đơn trả xe",
+      "vehicle": "Xe",
+      "payableVND": "Số tiền cần thanh toán (VND)",
+      "pricingTitle": "Giá xe",
+      "pricing": {
+        "hourly": "Giá theo giờ",
+        "daily": "Giá theo ngày",
+        "weekly": "Giá theo tuần",
+        "monthly": "Giá theo tháng",
+        "insurance": "Phí bảo hiểm",
+        "deposit": "Tiền cọc"
+      }
     }
+  },
+  "common": {
+    "english": "Tiếng Anh",
+    "vietnamese": "Tiếng Việt",
+    "close": "Đóng",
+    "cancel": "Hủy",
+    "loading": "Đang tải..."
   },
   "staff": {
     "notifications": {

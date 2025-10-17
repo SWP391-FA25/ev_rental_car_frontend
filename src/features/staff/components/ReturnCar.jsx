@@ -15,6 +15,14 @@ import { Label } from '../../shared/components/ui/label';
 import { Badge } from '../../shared/components/ui/badge';
 import { Textarea } from '../../shared/components/ui/textarea';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../../shared/components/ui/dialog';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -53,6 +61,9 @@ export default function ReturnCar() {
   const [incidentPreviews, setIncidentPreviews] = useState([]);
   const [incidentNotes, setIncidentNotes] = useState('');
   const [totalAmount, setTotalAmount] = useState(null);
+  // Modal hiển thị tổng tiền và pricing của xe sau khi hoàn tất
+  const [returnSummaryOpen, setReturnSummaryOpen] = useState(false);
+  const [returnSummary, setReturnSummary] = useState(null);
   // Return details per schema
   const [returnOdometer, setReturnOdometer] = useState('');
   // Actual return station selection
@@ -163,10 +174,7 @@ export default function ReturnCar() {
         setStations(Array.isArray(list) ? list : []);
       } catch (err) {
         console.error('Failed to load stations:', err);
-        toast.error(
-          t('staffReturnCar.toast.loadStationsFail') ||
-            'Failed to load stations'
-        );
+        toast.error(t('staffReturnCar.toast.loadStationsFail'));
       } finally {
         setLoadingStations(false);
       }
@@ -220,7 +228,9 @@ export default function ReturnCar() {
       const MAX_SIZE = 5 * 1024 * 1024;
       const validFiles = imageFiles.filter(f => {
         if (f.size > MAX_SIZE) {
-          toast.warning(`${f.name} vượt quá 5MB, sẽ bỏ qua ảnh này.`);
+          toast.warning(
+            t('staffReturnCar.toast.imageTooLarge', { name: f.name })
+          );
           return false;
         }
         return true;
@@ -262,10 +272,7 @@ export default function ReturnCar() {
     }
 
     if (isOverdue) {
-      toast.info(
-        t('staffReturnCar.toast.overdueProceed') ||
-          'Đơn thuê đã quá hạn, vẫn tiến hành trả xe'
-      );
+      toast.info(t('staffReturnCar.toast.overdueProceed'));
     }
 
     const actualEndTime = new Date().toISOString();
@@ -284,17 +291,11 @@ export default function ReturnCar() {
     // Frontend validation to match backend requirements
     const odo = Number(returnOdometer);
     if (!normalizedLocation || normalizedLocation.length < 3) {
-      toast.error(
-        t('staffReturnCar.toast.invalidReturnLocation') ||
-          'Vui lòng chọn trạm trả hợp lệ (3-200 ký tự)'
-      );
+      toast.error(t('staffReturnCar.toast.invalidReturnLocation'));
       return;
     }
     if (!returnOdometer || Number.isNaN(odo) || odo < 0) {
-      toast.error(
-        t('staffReturnCar.toast.invalidReturnOdometer') ||
-          'Vui lòng nhập công tơ mét trả hợp lệ (>= 0)'
-      );
+      toast.error(t('staffReturnCar.toast.invalidReturnOdometer'));
       return;
     }
 
@@ -312,10 +313,7 @@ export default function ReturnCar() {
       // Tạo inspection (CHECK_OUT) trước khi hoàn tất đơn thuê
       try {
         if (!user?.id) {
-          toast.error(
-            t('staffReturnCar.toast.completeFail') ||
-              'Thiếu thông tin nhân viên'
-          );
+          toast.error(t('staffReturnCar.toast.missingStaff'));
           return;
         }
 
@@ -363,38 +361,65 @@ export default function ReturnCar() {
       }
 
       const res = await bookingService.completeBooking(id, payload);
-      // Update booking and pick totalAmount from summary.pricing
-      const updatedBooking = res?.data?.booking;
-      const pricing = res?.data?.summary?.pricing;
+      // bookingService.completeBooking trả về response.data từ API:
+      // { booking: ..., summary: { pricing: ... } }
+      const updatedBooking = res?.booking;
+      const pricing = res?.summary?.pricing;
+
+      // Cập nhật booking và totalAmount
       if (updatedBooking) setBooking(updatedBooking);
       if (pricing && typeof pricing.totalAmount !== 'undefined') {
         setTotalAmount(pricing.totalAmount);
       } else if (typeof updatedBooking?.totalAmount !== 'undefined') {
         setTotalAmount(updatedBooking.totalAmount);
       }
-      if (res?.success) {
-        toast.success(t('staffReturnCar.toast.completeSuccess'));
-        // Refresh eligible bookings list to remove completed booking
-        try {
-          setLoadingBookings(true);
-          const resData = await getAllBookings({ limit: 100 });
-          const list = (resData?.bookings || resData || []).filter(b => {
-            const status = b.status || b.bookingStatus || '';
-            return status === 'IN_PROGRESS';
-          });
-          setEligibleBookings(list);
-        } catch (err) {
-          console.error('Refresh eligible bookings error', err);
-        } finally {
-          setLoadingBookings(false);
-        }
-      } else {
-        toast.info(res?.message || t('staffReturnCar.toast.completeQueued'));
+
+      // Chuẩn bị dữ liệu cho modal hiển thị sau khi hoàn tất
+      const vehiclePricing =
+        updatedBooking?.vehicle?.pricing || booking?.vehicle?.pricing || null;
+      const vehicleLabel =
+        updatedBooking?.vehicle?.name ||
+        updatedBooking?.vehicle?.licensePlate ||
+        booking?.vehicle?.name ||
+        booking?.vehicle?.licensePlate ||
+        '';
+      const payable =
+        (pricing && typeof pricing.totalAmount !== 'undefined'
+          ? pricing.totalAmount
+          : updatedBooking?.totalAmount) ?? 0;
+      setReturnSummary({
+        bookingId: id,
+        vehicleLabel,
+        totalAmount: payable,
+        vehiclePricing,
+      });
+      setReturnSummaryOpen(true);
+
+      toast.success(t('staffReturnCar.toast.completeSuccess'));
+      // Refresh eligible bookings list to remove completed booking
+      try {
+        setLoadingBookings(true);
+        const resData = await getAllBookings({ limit: 100 });
+        const list = (resData?.bookings || resData || []).filter(b => {
+          const status = b.status || b.bookingStatus || '';
+          return status === 'IN_PROGRESS';
+        });
+        setEligibleBookings(list);
+      } catch (err) {
+        console.error('Refresh eligible bookings error', err);
+      } finally {
+        setLoadingBookings(false);
       }
+
+      // Reset form chỉ khi hoàn tất thành công
+      resetAllFields();
     } catch (e) {
-      // Surface backend validation messages if available
-      const serverMsg = e?.response?.data?.message;
+      // Hiển thị thông báo lỗi rõ ràng cho các trường hợp 400 (Validation) và 409 (Idempotent)
+      const status = e?.status ?? e?.response?.status;
+      const serverMsg = e?.response?.data?.message || e?.message;
       const serverErrors = e?.response?.data?.errors;
+
+      // Nếu backend trả về chi tiết lỗi theo từng trường, hiển thị cụ thể
       if (serverErrors) {
         const locErr = serverErrors.actualReturnLocation?.msg;
         const odoErr = serverErrors.returnOdometer?.msg;
@@ -405,12 +430,38 @@ export default function ReturnCar() {
           return;
         }
       }
-      toast.error(
-        serverMsg || e?.message || t('staffReturnCar.toast.completeFail')
-      );
-    } finally {
-      // Luôn reset form sau khi người dùng confirm, bất kể kết quả API
-      resetAllFields();
+
+      // Trường hợp 400 nhưng không có errors chi tiết: suy luận và hiển thị thông báo thân thiện
+      if (status === 400) {
+        try {
+          const refStart = new Date(
+            booking?.actualStartTime || booking?.startTime || 0
+          );
+          const end = new Date(actualEndTime);
+          if (
+            refStart instanceof Date &&
+            !Number.isNaN(refStart.getTime()) &&
+            end instanceof Date &&
+            !Number.isNaN(end.getTime()) &&
+            end <= refStart
+          ) {
+            toast.error(t('staffReturnCar.toast.invalidEndTime'));
+            return;
+          }
+        } catch {}
+        // Fallback chung cho lỗi 400
+        toast.error(serverMsg || t('staffReturnCar.toast.validationFailed'));
+        return;
+      }
+
+      // Trường hợp 409: thao tác đã được thực hiện trước đó (idempotent)
+      if (status === 409) {
+        toast.info(t('staffReturnCar.toast.alreadyCompleted'));
+        return;
+      }
+
+      // Mặc định
+      toast.error(serverMsg || t('staffReturnCar.toast.completeFail'));
     }
   };
 
@@ -443,7 +494,7 @@ export default function ReturnCar() {
               <SelectContent>
                 {loadingBookings && (
                   <div className='px-2 py-1 text-sm text-muted-foreground'>
-                    Loading...
+                    {t('common.loading')}
                   </div>
                 )}
                 {eligibleBookings.map(b => (
@@ -502,7 +553,7 @@ export default function ReturnCar() {
                     : ''}
                   {isOverdue && (
                     <Badge variant='destructive' className='ml-2'>
-                      {t('staffReturnCar.booking.overdue') || 'Quá hạn'}
+                      {t('staffReturnCar.booking.overdue')}
                     </Badge>
                   )}
                 </p>
@@ -510,7 +561,7 @@ export default function ReturnCar() {
               {(totalAmount ?? booking?.totalAmount) != null && (
                 <div>
                   <p className='text-sm text-muted-foreground'>
-                    {t('staffReturnCar.booking.totalLabel') || 'Tổng tiền'}
+                    {t('staffReturnCar.booking.totalLabel')}
                   </p>
                   <p className='font-medium'>
                     {formatCurrency(totalAmount ?? booking?.totalAmount ?? 0)}
@@ -551,16 +602,13 @@ export default function ReturnCar() {
             >
               <SelectTrigger>
                 <SelectValue
-                  placeholder={
-                    t('staffReturnCar.returnDetails.locationPlaceholder') ||
-                    'Ch?n tr?m tr?'
-                  }
+                  placeholder={t('staffReturnCar.returnDetails.locationPlaceholder')}
                 />
               </SelectTrigger>
               <SelectContent>
                 {loadingStations && (
                   <div className='px-2 py-1 text-sm text-muted-foreground'>
-                    Loading stations...
+                    {t('staffReturnCar.loadingStations')}
                   </div>
                 )}
                 {stations.map(station => (
@@ -683,6 +731,114 @@ export default function ReturnCar() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Modal hiển thị tổng tiền & pricing của xe sau khi hoàn tất trả xe */}
+      <Dialog open={returnSummaryOpen} onOpenChange={setReturnSummaryOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('staffReturnCar.modal.title')}</DialogTitle>
+            <DialogDescription>
+              {t('staffReturnCar.modal.description')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className='space-y-4'>
+            {returnSummary?.vehicleLabel && (
+              <div>
+                <p className='text-sm text-muted-foreground'>
+                  {t('staffReturnCar.modal.vehicle')}
+                </p>
+                <p className='font-medium'>{returnSummary.vehicleLabel}</p>
+              </div>
+            )}
+            <div>
+              <p className='text-sm text-muted-foreground'>
+                {t('staffReturnCar.modal.payableVND')}
+              </p>
+              <p className='text-2xl font-bold'>
+                {formatCurrency(returnSummary?.totalAmount ?? 0, 'VND')}
+              </p>
+            </div>
+            <div className='pt-2 border-t'>
+              <p className='text-sm font-medium'>
+                {t('staffReturnCar.modal.pricingTitle')}
+              </p>
+              <div className='mt-2 space-y-1 text-sm'>
+                {returnSummary?.vehiclePricing?.hourlyRate != null && (
+                  <div className='flex justify-between'>
+                    <span>{t('staffReturnCar.modal.pricing.hourly')}</span>
+                    <span className='font-medium'>
+                      {formatCurrency(
+                        returnSummary.vehiclePricing.hourlyRate,
+                        'VND'
+                      )}
+                    </span>
+                  </div>
+                )}
+                {returnSummary?.vehiclePricing?.baseRate != null && (
+                  <div className='flex justify-between'>
+                    <span>{t('staffReturnCar.modal.pricing.daily')}</span>
+                    <span className='font-medium'>
+                      {formatCurrency(
+                        returnSummary.vehiclePricing.baseRate,
+                        'VND'
+                      )}
+                    </span>
+                  </div>
+                )}
+                {returnSummary?.vehiclePricing?.weeklyRate != null && (
+                  <div className='flex justify-between'>
+                    <span>{t('staffReturnCar.modal.pricing.weekly')}</span>
+                    <span className='font-medium'>
+                      {formatCurrency(
+                        returnSummary.vehiclePricing.weeklyRate,
+                        'VND'
+                      )}
+                    </span>
+                  </div>
+                )}
+                {returnSummary?.vehiclePricing?.monthlyRate != null && (
+                  <div className='flex justify-between'>
+                    <span>{t('staffReturnCar.modal.pricing.monthly')}</span>
+                    <span className='font-medium'>
+                      {formatCurrency(
+                        returnSummary.vehiclePricing.monthlyRate,
+                        'VND'
+                      )}
+                    </span>
+                  </div>
+                )}
+                {returnSummary?.vehiclePricing?.insuranceRate != null && (
+                  <div className='flex justify-between'>
+                    <span>{t('staffReturnCar.modal.pricing.insurance')}</span>
+                    <span className='font-medium'>
+                      {formatCurrency(
+                        returnSummary.vehiclePricing.insuranceRate,
+                        'VND'
+                      )}
+                    </span>
+                  </div>
+                )}
+                {returnSummary?.vehiclePricing?.depositAmount != null && (
+                  <div className='flex justify-between'>
+                    <span>{t('staffReturnCar.modal.pricing.deposit')}</span>
+                    <span className='font-medium'>
+                      {formatCurrency(
+                        returnSummary.vehiclePricing.depositAmount,
+                        'VND'
+                      )}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setReturnSummaryOpen(false)}>
+              {t('common.close')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
