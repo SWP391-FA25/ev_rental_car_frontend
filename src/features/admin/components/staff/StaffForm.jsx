@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
+import { useFormValidation } from '../../../shared/hooks/useFormValidation.js';
+import { staffCreateSchema } from '../../../shared/validations/staffValidation.js';
 
 import {
   Dialog,
@@ -33,24 +35,28 @@ export function StaffForm({ open, onOpenChange, onSubmit, loading = false }) {
     accountStatus: 'ACTIVE',
   });
 
+  // Initialize form validation
+  const { validate, validateField, clearError, hasError, getError } =
+    useFormValidation(staffCreateSchema);
+
   const handleSubmit = async e => {
     e.preventDefault();
 
-    if (!formData.name.trim()) {
-      toast.error(t('staffForm.validation.nameRequired'));
-      return;
-    }
-    if (!formData.email.trim()) {
-      toast.error(t('staffForm.validation.emailRequired'));
-      return;
-    }
-    if (!formData.password.trim()) {
-      toast.error(t('staffForm.validation.passwordRequired'));
+    // Validate form data using Zod schema
+    const validation = validate(formData);
+
+    if (!validation.success) {
+      // Validation errors are already set in the errors state
+      toast.error(
+        t('staffForm.validation.formHasErrors', {
+          defaultValue: 'Please fix the errors below',
+        })
+      );
       return;
     }
 
     try {
-      await onSubmit(formData);
+      await onSubmit(validation.data);
       setFormData({
         name: '',
         email: '',
@@ -62,6 +68,11 @@ export function StaffForm({ open, onOpenChange, onSubmit, loading = false }) {
       onOpenChange(false);
     } catch (error) {
       console.log(error);
+      toast.error(
+        t('staffForm.validation.submissionError', {
+          defaultValue: 'Failed to create staff member',
+        })
+      );
     }
   };
 
@@ -70,6 +81,16 @@ export function StaffForm({ open, onOpenChange, onSubmit, loading = false }) {
       ...prev,
       [field]: value,
     }));
+
+    // Clear error for this field when user starts typing
+    if (hasError(field)) {
+      clearError(field);
+    }
+  };
+
+  const handleBlur = field => {
+    // Validate field on blur
+    validateField(field, formData[field]);
   };
 
   return (
@@ -85,92 +106,143 @@ export function StaffForm({ open, onOpenChange, onSubmit, loading = false }) {
               <Label htmlFor='name' className='text-right'>
                 {t('staffForm.fields.name')}
               </Label>
-              <Input
-                id='name'
-                value={formData.name}
-                onChange={e => handleInputChange('name', e.target.value)}
-                className='col-span-3'
-                placeholder={t('staffForm.placeholders.name')}
-              />
+              <div className='col-span-3'>
+                <Input
+                  id='name'
+                  value={formData.name}
+                  onChange={e => handleInputChange('name', e.target.value)}
+                  onBlur={() => handleBlur('name')}
+                  className={hasError('name') ? 'border-red-500' : ''}
+                  placeholder={t('staffForm.placeholders.name')}
+                />
+                {hasError('name') && (
+                  <p className='text-red-500 text-sm mt-1'>
+                    {getError('name')}
+                  </p>
+                )}
+              </div>
             </div>
             <div className='grid grid-cols-4 items-center gap-4'>
               <Label htmlFor='email' className='text-right'>
                 {t('staffForm.fields.email')}
               </Label>
-              <Input
-                id='email'
-                type='email'
-                value={formData.email}
-                onChange={e => handleInputChange('email', e.target.value)}
-                className='col-span-3'
-                placeholder={t('staffForm.placeholders.email')}
-              />
+              <div className='col-span-3'>
+                <Input
+                  id='email'
+                  type='email'
+                  value={formData.email}
+                  onChange={e => handleInputChange('email', e.target.value)}
+                  onBlur={() => handleBlur('email')}
+                  className={hasError('email') ? 'border-red-500' : ''}
+                  placeholder={t('staffForm.placeholders.email')}
+                />
+                {hasError('email') && (
+                  <p className='text-red-500 text-sm mt-1'>
+                    {getError('email')}
+                  </p>
+                )}
+              </div>
             </div>
             <div className='grid grid-cols-4 items-center gap-4'>
               <Label htmlFor='password' className='text-right'>
                 {t('staffForm.fields.password')}
               </Label>
-              <Input
-                id='password'
-                type='password'
-                value={formData.password}
-                onChange={e => handleInputChange('password', e.target.value)}
-                className='col-span-3'
-                placeholder={t('staffForm.placeholders.password')}
-              />
+              <div className='col-span-3'>
+                <Input
+                  id='password'
+                  type='password'
+                  value={formData.password}
+                  onChange={e => handleInputChange('password', e.target.value)}
+                  onBlur={() => handleBlur('password')}
+                  className={hasError('password') ? 'border-red-500' : ''}
+                  placeholder={t('staffForm.placeholders.password')}
+                />
+                {hasError('password') && (
+                  <p className='text-red-500 text-sm mt-1'>
+                    {getError('password')}
+                  </p>
+                )}
+              </div>
             </div>
             <div className='grid grid-cols-4 items-center gap-4'>
               <Label htmlFor='phone' className='text-right'>
                 {t('staffForm.fields.phone')}
               </Label>
-              <Input
-                id='phone'
-                value={formData.phone}
-                onChange={e => handleInputChange('phone', e.target.value)}
-                className='col-span-3'
-                placeholder={t('staffForm.placeholders.phone')}
-              />
+              <div className='col-span-3'>
+                <Input
+                  id='phone'
+                  value={formData.phone}
+                  onChange={e => handleInputChange('phone', e.target.value)}
+                  onBlur={() => handleBlur('phone')}
+                  className={hasError('phone') ? 'border-red-500' : ''}
+                  placeholder={t('staffForm.placeholders.phone')}
+                />
+                {hasError('phone') && (
+                  <p className='text-red-500 text-sm mt-1'>
+                    {getError('phone')}
+                  </p>
+                )}
+              </div>
             </div>
             <div className='grid grid-cols-4 items-center gap-4'>
               <Label htmlFor='address' className='text-right'>
                 {t('staffForm.fields.address')}
               </Label>
-              <Textarea
-                id='address'
-                value={formData.address}
-                onChange={e => handleInputChange('address', e.target.value)}
-                className='col-span-3'
-                placeholder={t('staffForm.placeholders.address')}
-                rows={3}
-              />
+              <div className='col-span-3'>
+                <Textarea
+                  id='address'
+                  value={formData.address}
+                  onChange={e => handleInputChange('address', e.target.value)}
+                  onBlur={() => handleBlur('address')}
+                  className={hasError('address') ? 'border-red-500' : ''}
+                  placeholder={t('staffForm.placeholders.address')}
+                  rows={3}
+                />
+                {hasError('address') && (
+                  <p className='text-red-500 text-sm mt-1'>
+                    {getError('address')}
+                  </p>
+                )}
+              </div>
             </div>
             <div className='grid grid-cols-4 items-center gap-4'>
               <Label htmlFor='status' className='text-right'>
                 {t('staffForm.fields.status')}
               </Label>
-              <Select
-                value={formData.accountStatus}
-                onValueChange={value =>
-                  handleInputChange('accountStatus', value)
-                }
-              >
-                <SelectTrigger className='col-span-3'>
-                  <SelectValue
-                    placeholder={t('staffForm.placeholders.status')}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='ACTIVE'>
-                    {t('staffForm.statusOptions.active')}
-                  </SelectItem>
-                  <SelectItem value='SUSPENDED'>
-                    {t('staffForm.statusOptions.suspended')}
-                  </SelectItem>
-                  <SelectItem value='BANNED'>
-                    {t('staffForm.statusOptions.banned')}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+              <div className='col-span-3'>
+                <Select
+                  value={formData.accountStatus}
+                  onValueChange={value =>
+                    handleInputChange('accountStatus', value)
+                  }
+                >
+                  <SelectTrigger
+                    className={
+                      hasError('accountStatus') ? 'border-red-500' : ''
+                    }
+                  >
+                    <SelectValue
+                      placeholder={t('staffForm.placeholders.status')}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='ACTIVE'>
+                      {t('staffForm.statusOptions.active')}
+                    </SelectItem>
+                    <SelectItem value='SUSPENDED'>
+                      {t('staffForm.statusOptions.suspended')}
+                    </SelectItem>
+                    <SelectItem value='BANNED'>
+                      {t('staffForm.statusOptions.banned')}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                {hasError('accountStatus') && (
+                  <p className='text-red-500 text-sm mt-1'>
+                    {getError('accountStatus')}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
           <DialogFooter>

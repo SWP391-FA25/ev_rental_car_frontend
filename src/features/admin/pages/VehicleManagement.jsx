@@ -7,9 +7,11 @@ import {
   SearchIcon,
   TrashIcon,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
+import { useFormValidation } from '../../shared/hooks/useFormValidation.js';
+import { vehicleCreateSchema } from '../../shared/validations/vehicleValidation.js';
 
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
@@ -89,6 +91,10 @@ export default function VehicleManagement() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [vehicleToDelete, setVehicleToDelete] = useState(null);
 
+  // Initialize form validation
+  const { validate, validateField, clearError, hasError, getError } =
+    useFormValidation(vehicleCreateSchema);
+
   // Form state
   const [formData, setFormData] = useState({
     stationId: '',
@@ -111,13 +117,7 @@ export default function VehicleManagement() {
     insuranceRate: '',
   });
 
-  // Load vehicles and stations
-  useEffect(() => {
-    loadVehicles();
-    loadStations();
-  }, []);
-
-  const loadVehicles = async () => {
+  const loadVehicles = useCallback(async () => {
     try {
       setLoading(true);
       const response = await apiClient.get(endpoints.vehicles.getAll());
@@ -158,7 +158,13 @@ export default function VehicleManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
+
+  // Load vehicles and stations
+  useEffect(() => {
+    loadVehicles();
+    loadStations();
+  }, [loadVehicles]);
 
   const loadStations = async () => {
     try {
@@ -219,10 +225,22 @@ export default function VehicleManagement() {
   };
 
   const handleCreateVehicle = async () => {
+    // Validate form data using Zod schema
+    const validation = validate(formData);
+
+    if (!validation.success) {
+      toast.error(
+        t('validation.formHasErrors', {
+          defaultValue: 'Please fix the errors below',
+        })
+      );
+      return;
+    }
+
     try {
       const response = await apiClient.post(
         endpoints.vehicles.create(),
-        formData
+        validation.data
       );
 
       if (response.success) {
@@ -286,6 +304,20 @@ export default function VehicleManagement() {
       insuranceRate: '',
     });
     setSelectedVehicle(null);
+  };
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+
+    // Clear error for this field when user starts typing
+    if (hasError(field)) {
+      clearError(field);
+    }
+  };
+
+  const handleBlur = field => {
+    // Validate field on blur
+    validateField(field, formData[field]);
   };
 
   const openViewDialog = vehicle => {
@@ -375,11 +407,11 @@ export default function VehicleManagement() {
                 </Label>
                 <Select
                   value={formData.stationId}
-                  onValueChange={value =>
-                    setFormData({ ...formData, stationId: value })
-                  }
+                  onValueChange={value => handleInputChange('stationId', value)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger
+                    className={hasError('stationId') ? 'border-red-500' : ''}
+                  >
                     <SelectValue
                       placeholder={t('vehicle.fields.stationPlaceholder')}
                     />
@@ -392,16 +424,21 @@ export default function VehicleManagement() {
                     ))}
                   </SelectContent>
                 </Select>
+                {hasError('stationId') && (
+                  <p className='text-sm text-red-500'>
+                    {getError('stationId')}
+                  </p>
+                )}
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='type'>{t('vehicle.fields.type')} *</Label>
                 <Select
                   value={formData.type}
-                  onValueChange={value =>
-                    setFormData({ ...formData, type: value })
-                  }
+                  onValueChange={value => handleInputChange('type', value)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger
+                    className={hasError('type') ? 'border-red-500' : ''}
+                  >
                     <SelectValue
                       placeholder={t('vehicle.fields.typePlaceholder')}
                     />
@@ -414,28 +451,37 @@ export default function VehicleManagement() {
                     ))}
                   </SelectContent>
                 </Select>
+                {hasError('type') && (
+                  <p className='text-sm text-red-500'>{getError('type')}</p>
+                )}
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='brand'>{t('vehicle.fields.brand')} *</Label>
                 <Input
                   id='brand'
                   value={formData.brand}
-                  onChange={e =>
-                    setFormData({ ...formData, brand: e.target.value })
-                  }
+                  onChange={e => handleInputChange('brand', e.target.value)}
+                  onBlur={() => handleBlur('brand')}
                   placeholder={t('vehicle.fields.brandPlaceholder')}
+                  className={hasError('brand') ? 'border-red-500' : ''}
                 />
+                {hasError('brand') && (
+                  <p className='text-sm text-red-500'>{getError('brand')}</p>
+                )}
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='model'>{t('vehicle.fields.model')} *</Label>
                 <Input
                   id='model'
                   value={formData.model}
-                  onChange={e =>
-                    setFormData({ ...formData, model: e.target.value })
-                  }
+                  onChange={e => handleInputChange('model', e.target.value)}
+                  onBlur={() => handleBlur('model')}
                   placeholder={t('vehicle.fields.modelPlaceholder')}
+                  className={hasError('model') ? 'border-red-500' : ''}
                 />
+                {hasError('model') && (
+                  <p className='text-sm text-red-500'>{getError('model')}</p>
+                )}
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='year'>{t('vehicle.fields.year')} *</Label>
@@ -443,11 +489,14 @@ export default function VehicleManagement() {
                   id='year'
                   type='number'
                   value={formData.year}
-                  onChange={e =>
-                    setFormData({ ...formData, year: e.target.value })
-                  }
+                  onChange={e => handleInputChange('year', e.target.value)}
+                  onBlur={() => handleBlur('year')}
                   placeholder={t('vehicle.fields.yearPlaceholder')}
+                  className={hasError('year') ? 'border-red-500' : ''}
                 />
+                {hasError('year') && (
+                  <p className='text-sm text-red-500'>{getError('year')}</p>
+                )}
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='color'>{t('vehicle.fields.color')}</Label>
@@ -507,11 +556,11 @@ export default function VehicleManagement() {
                 </Label>
                 <Select
                   value={formData.fuelType}
-                  onValueChange={value =>
-                    setFormData({ ...formData, fuelType: value })
-                  }
+                  onValueChange={value => handleInputChange('fuelType', value)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger
+                    className={hasError('fuelType') ? 'border-red-500' : ''}
+                  >
                     <SelectValue
                       placeholder={t('vehicle.fields.fuelTypePlaceholder')}
                     />
@@ -524,6 +573,9 @@ export default function VehicleManagement() {
                     ))}
                   </SelectContent>
                 </Select>
+                {hasError('fuelType') && (
+                  <p className='text-sm text-red-500'>{getError('fuelType')}</p>
+                )}
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='status'>{t('vehicle.fields.status')}</Label>
@@ -564,10 +616,17 @@ export default function VehicleManagement() {
                     step='0.01'
                     value={formData.baseRate}
                     onChange={e =>
-                      setFormData({ ...formData, baseRate: e.target.value })
+                      handleInputChange('baseRate', e.target.value)
                     }
+                    onBlur={() => handleBlur('baseRate')}
                     placeholder='200.00'
+                    className={hasError('baseRate') ? 'border-red-500' : ''}
                   />
+                  {hasError('baseRate') && (
+                    <p className='text-sm text-red-500'>
+                      {getError('baseRate')}
+                    </p>
+                  )}
                 </div>
                 <div className='space-y-2'>
                   <Label htmlFor='hourlyRate'>Hourly Rate *</Label>
@@ -578,10 +637,17 @@ export default function VehicleManagement() {
                     step='0.01'
                     value={formData.hourlyRate}
                     onChange={e =>
-                      setFormData({ ...formData, hourlyRate: e.target.value })
+                      handleInputChange('hourlyRate', e.target.value)
                     }
+                    onBlur={() => handleBlur('hourlyRate')}
                     placeholder='15.00'
+                    className={hasError('hourlyRate') ? 'border-red-500' : ''}
                   />
+                  {hasError('hourlyRate') && (
+                    <p className='text-sm text-red-500'>
+                      {getError('hourlyRate')}
+                    </p>
+                  )}
                 </div>
                 <div className='space-y-2'>
                   <Label htmlFor='weeklyRate'>Weekly Rate</Label>
@@ -620,13 +686,19 @@ export default function VehicleManagement() {
                     step='0.01'
                     value={formData.depositAmount}
                     onChange={e =>
-                      setFormData({
-                        ...formData,
-                        depositAmount: e.target.value,
-                      })
+                      handleInputChange('depositAmount', e.target.value)
                     }
+                    onBlur={() => handleBlur('depositAmount')}
                     placeholder='500.00'
+                    className={
+                      hasError('depositAmount') ? 'border-red-500' : ''
+                    }
                   />
+                  {hasError('depositAmount') && (
+                    <p className='text-sm text-red-500'>
+                      {getError('depositAmount')}
+                    </p>
+                  )}
                 </div>
                 <div className='space-y-2'>
                   <Label htmlFor='insuranceRate'>Insurance Rate (%)</Label>

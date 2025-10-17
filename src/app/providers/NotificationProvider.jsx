@@ -25,7 +25,6 @@ export const NotificationProvider = ({ children }) => {
         }
       } catch (error) {
         console.error('Error fetching notifications:', error);
-        toast.error('Failed to fetch notifications');
       } finally {
         setLoading(false);
       }

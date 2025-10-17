@@ -12,6 +12,8 @@ import {
   SelectValue,
 } from '../../../shared/components/ui/select';
 import { Textarea } from '../../../shared/components/ui/textarea';
+import { useFormValidation } from '../../../shared/hooks/useFormValidation.js';
+import { stationCreateSchema } from '../../../shared/validations/stationValidation.js';
 
 // Station status options
 const STATION_STATUS = [
@@ -32,7 +34,9 @@ export function StationForm({ station, onSubmit, onCancel, loading = false }) {
     contact: '',
   });
 
-  const [errors, setErrors] = useState({});
+  // Initialize form validation
+  const { validate, validateField, clearError, hasError, getError } =
+    useFormValidation(stationCreateSchema);
 
   // Initialize form data when station prop changes
   useEffect(() => {
@@ -48,48 +52,25 @@ export function StationForm({ station, onSubmit, onCancel, loading = false }) {
     }
   }, [station]);
 
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = t('station.form.errors.nameRequired');
-    }
-
-    if (
-      !formData.location ||
-      (typeof formData.location === 'string' && !formData.location.trim()) ||
-      (typeof formData.location === 'object' && !formData.location.coordinates)
-    ) {
-      newErrors.location = t('station.form.errors.locationRequired');
-    }
-
-    if (!formData.address.trim()) {
-      newErrors.address = t('station.form.errors.addressRequired');
-    }
-
-    if (!formData.capacity || formData.capacity <= 0) {
-      newErrors.capacity = t('station.form.errors.capacityInvalid');
-    }
-
-    if (!formData.status) {
-      newErrors.status = t('station.form.errors.statusRequired');
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const handleBlur = field => {
+    // Validate field on blur
+    validateField(field, formData[field]);
   };
 
   const handleSubmit = async e => {
     e.preventDefault();
 
-    if (!validateForm()) {
+    // Validate form data using Zod schema
+    const validation = validate(formData);
+
+    if (!validation.success) {
       return;
     }
 
     try {
       const submitData = {
-        ...formData,
-        capacity: parseInt(formData.capacity),
+        ...validation.data,
+        capacity: parseInt(validation.data.capacity),
       };
 
       await onSubmit(submitData);
@@ -104,11 +85,9 @@ export function StationForm({ station, onSubmit, onCancel, loading = false }) {
       [field]: value,
     }));
 
-    if (errors[field]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: '',
-      }));
+    // Clear error for this field when user starts typing
+    if (hasError(field)) {
+      clearError(field);
     }
   };
 
@@ -122,10 +101,13 @@ export function StationForm({ station, onSubmit, onCancel, loading = false }) {
             id='name'
             value={formData.name}
             onChange={e => handleInputChange('name', e.target.value)}
+            onBlur={() => handleBlur('name')}
             placeholder={t('station.form.placeholders.name')}
-            className={errors.name ? 'border-red-500' : ''}
+            className={hasError('name') ? 'border-red-500' : ''}
           />
-          {errors.name && <p className='text-sm text-red-500'>{errors.name}</p>}
+          {hasError('name') && (
+            <p className='text-sm text-red-500'>{getError('name')}</p>
+          )}
         </div>
 
         {/* Status */}
@@ -135,8 +117,12 @@ export function StationForm({ station, onSubmit, onCancel, loading = false }) {
             value={formData.status}
             onValueChange={value => handleInputChange('status', value)}
           >
-            <SelectTrigger className={errors.status ? 'border-red-500' : ''}>
-              <SelectValue placeholder={t('station.form.placeholders.status')} />
+            <SelectTrigger
+              className={hasError('status') ? 'border-red-500' : ''}
+            >
+              <SelectValue
+                placeholder={t('station.form.placeholders.status')}
+              />
             </SelectTrigger>
             <SelectContent>
               {STATION_STATUS.map(status => (
@@ -146,8 +132,8 @@ export function StationForm({ station, onSubmit, onCancel, loading = false }) {
               ))}
             </SelectContent>
           </Select>
-          {errors.status && (
-            <p className='text-sm text-red-500'>{errors.status}</p>
+          {hasError('status') && (
+            <p className='text-sm text-red-500'>{getError('status')}</p>
           )}
         </div>
 
@@ -156,10 +142,11 @@ export function StationForm({ station, onSubmit, onCancel, loading = false }) {
           <LocationPicker
             value={formData.location}
             onChange={location => handleInputChange('location', location)}
+            onBlur={() => handleBlur('location')}
             label={t('station.form.location') + ' *'}
           />
-          {errors.location && (
-            <p className='text-sm text-red-500'>{errors.location}</p>
+          {hasError('location') && (
+            <p className='text-sm text-red-500'>{getError('location')}</p>
           )}
         </div>
 
@@ -172,11 +159,12 @@ export function StationForm({ station, onSubmit, onCancel, loading = false }) {
             min='1'
             value={formData.capacity}
             onChange={e => handleInputChange('capacity', e.target.value)}
+            onBlur={() => handleBlur('capacity')}
             placeholder={t('station.form.placeholders.capacity')}
-            className={errors.capacity ? 'border-red-500' : ''}
+            className={hasError('capacity') ? 'border-red-500' : ''}
           />
-          {errors.capacity && (
-            <p className='text-sm text-red-500'>{errors.capacity}</p>
+          {hasError('capacity') && (
+            <p className='text-sm text-red-500'>{getError('capacity')}</p>
           )}
         </div>
 
@@ -187,8 +175,13 @@ export function StationForm({ station, onSubmit, onCancel, loading = false }) {
             id='contact'
             value={formData.contact}
             onChange={e => handleInputChange('contact', e.target.value)}
+            onBlur={() => handleBlur('contact')}
             placeholder={t('station.form.placeholders.contact')}
+            className={hasError('contact') ? 'border-red-500' : ''}
           />
+          {hasError('contact') && (
+            <p className='text-sm text-red-500'>{getError('contact')}</p>
+          )}
         </div>
 
         {/* Address */}
@@ -198,12 +191,13 @@ export function StationForm({ station, onSubmit, onCancel, loading = false }) {
             id='address'
             value={formData.address}
             onChange={e => handleInputChange('address', e.target.value)}
+            onBlur={() => handleBlur('address')}
             placeholder={t('station.form.placeholders.address')}
             rows={3}
-            className={errors.address ? 'border-red-500' : ''}
+            className={hasError('address') ? 'border-red-500' : ''}
           />
-          {errors.address && (
-            <p className='text-sm text-red-500'>{errors.address}</p>
+          {hasError('address') && (
+            <p className='text-sm text-red-500'>{getError('address')}</p>
           )}
         </div>
       </div>
@@ -222,8 +216,8 @@ export function StationForm({ station, onSubmit, onCancel, loading = false }) {
           {loading
             ? t('station.form.saving')
             : station
-              ? t('station.form.update')
-              : t('station.form.create')}
+            ? t('station.form.update')
+            : t('station.form.create')}
         </Button>
       </div>
     </form>

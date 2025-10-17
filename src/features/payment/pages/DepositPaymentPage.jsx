@@ -28,7 +28,12 @@ export default function DepositPaymentPage() {
   const fetchBookingDetails = async () => {
     try {
       const result = await getBookingById(bookingId);
-      setBooking(result.booking);
+      // Handle both possible response structures
+      const booking = result.data?.booking || result.booking;
+      if (!booking) {
+        throw new Error('Booking data not found in response');
+      }
+      setBooking(booking);
     } catch (error) {
       console.error('Failed to fetch booking:', error);
       toast.error('Failed to load booking details');
@@ -38,14 +43,16 @@ export default function DepositPaymentPage() {
   const handleCreatePayment = async () => {
     try {
       setLoading(true);
+      const depositAmount = amount ? parseFloat(amount) : booking.depositAmount;
+      console.log('Creating payment with:', { bookingId, depositAmount });
+
       const result = await paymentService.createDepositPayment(
         bookingId,
-        parseFloat(amount),
+        depositAmount,
         `Deposit ${bookingId.substring(0, 8)}`
       );
 
-      console.log('Payment result:', result); // ✅ Debug log
-      console.log('PaymentUrl:', result?.paymentUrl); // ✅ Debug paymentUrl
+      console.log('Payment service result:', result);
 
       if (!result?.paymentUrl) {
         console.error('Invalid payment response:', result);
@@ -57,7 +64,6 @@ export default function DepositPaymentPage() {
       window.location.href = result.paymentUrl;
     } catch (error) {
       console.error('Failed to create payment:', error);
-      console.error('Error details:', error.response?.data); // ✅ Debug error details
       toast.error('Failed to create payment link');
     } finally {
       setLoading(false);

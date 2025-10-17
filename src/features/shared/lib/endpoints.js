@@ -91,6 +91,7 @@ export const endpoints = {
     updateStatus: id => `/api/bookings/${id}/status`,
     cancel: id => `/api/bookings/${id}/cancel`,
     complete: id => `/api/bookings/${id}/complete`,
+    checkDeposit: id => `/api/bookings/${id}/deposit-status`,
   },
   rentalHistory: {
     getByBookingId: bookingId => `/api/rental-history/booking/${bookingId}`,
