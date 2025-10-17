@@ -37,6 +37,7 @@ export const router = createBrowserRouter([
   { path: '/payment/deposit', element: <DepositPaymentPage /> },
   { path: '/payment/success', element: <PaymentSuccessPage /> },
   { path: '/payment/cancel', element: <PaymentCancelPage /> },
+  { path: '/payment/failure', element: <PaymentCancelPage /> },
   { path: '/login', element: <Login /> },
   { path: '/signup', element: <SignUp /> },
   { path: '/verify-email', element: <VerifyEmail /> },

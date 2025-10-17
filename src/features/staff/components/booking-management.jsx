@@ -536,7 +536,7 @@ const BookingManagement = () => {
                   <TableCell>
                     <div className='space-y-1 flex flex-col items-center'>
                       {getDepositBadge(booking.depositStatus || 'PENDING')}
-                      <p className='text-xs text-muted-foreground'>
+                      <p className='text-xs text-muted-foreground font-bold'>
                         {formatPrice(booking.depositAmount)}
                       </p>
                     </div>

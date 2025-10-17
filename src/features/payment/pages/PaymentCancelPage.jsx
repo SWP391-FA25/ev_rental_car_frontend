@@ -16,7 +16,8 @@ export default function PaymentCancelPage() {
             <XCircle className='h-16 w-16 text-red-500 mx-auto mb-4' />
             <h1 className='text-2xl font-bold mb-2'>Payment Cancelled</h1>
             <p className='text-muted-foreground'>
-              Your payment was cancelled. Your booking is still pending.
+              Your payment was cancelled. Complete payment to confirm your
+              booking.
             </p>
           </div>
 
@@ -30,9 +31,9 @@ export default function PaymentCancelPage() {
                   </p>
                 </div>
                 <p className='text-sm text-yellow-700'>
-                  Your booking is still active but requires payment to be
-                  confirmed. You can complete the payment anytime before your
-                  pickup date.
+                  Your booking is in PENDING status. Complete the deposit
+                  payment to automatically confirm your booking and reserve the
+                  vehicle.
                 </p>
               </div>
 
@@ -58,7 +59,7 @@ export default function PaymentCancelPage() {
             </Button>
             <Button
               variant='outline'
-              onClick={() => navigate('/bookings')}
+              onClick={() => navigate('/user/profile?tab=trips')}
               className='w-full'
             >
               View My Bookings

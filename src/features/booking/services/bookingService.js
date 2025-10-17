@@ -70,4 +70,10 @@ export const bookingService = {
     );
     return response.data;
   },
+
+  // Check deposit status
+  async checkDepositStatus(id) {
+    const response = await apiClient.get(endpoints.bookings.checkDeposit(id));
+    return response.data;
+  },
 };
