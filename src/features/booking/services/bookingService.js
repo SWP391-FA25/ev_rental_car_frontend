@@ -51,10 +51,15 @@ export const bookingService = {
 
   // Hủy booking
   async cancelBooking(id, reason) {
-    const response = await apiClient.patch(endpoints.bookings.cancel(id), {
-      reason,
-    });
-    return response.data;
+    try {
+      const response = await apiClient.patch(endpoints.bookings.cancel(id), {
+        reason,
+      });
+      return response.data;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
   },
 
   // Hoàn thành booking
@@ -63,6 +68,12 @@ export const bookingService = {
       endpoints.bookings.complete(id),
       completionData
     );
+    return response.data;
+  },
+
+  // Check deposit status
+  async checkDepositStatus(id) {
+    const response = await apiClient.get(endpoints.bookings.checkDeposit(id));
     return response.data;
   },
 };

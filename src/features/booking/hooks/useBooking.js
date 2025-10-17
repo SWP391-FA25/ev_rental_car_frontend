@@ -33,9 +33,9 @@ export const useBooking = () => {
       toast.success('Booking cancelled successfully!');
       return result;
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || 'Failed to cancel booking';
-      toast.error(errorMessage);
+      console.log(err);
+
+      toast(err.message);
       throw err;
     } finally {
       setLoading(false);
@@ -57,11 +57,27 @@ export const useBooking = () => {
     }
   }, []);
 
+  const checkDepositStatus = useCallback(async id => {
+    try {
+      setLoading(true);
+      const result = await bookingService.checkDepositStatus(id);
+      return result;
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message || 'Failed to check deposit status';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     loading,
     error,
     createBooking,
     cancelBooking,
     getBookingById,
+    checkDepositStatus,
   };
 };

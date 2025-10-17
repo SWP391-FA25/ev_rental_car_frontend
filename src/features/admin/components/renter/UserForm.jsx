@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useFormValidation } from '../../../shared/hooks/useFormValidation.js';
+import { renterCreateSchema } from '../../../shared/validations/renterValidation.js';
 
 import { Button } from '../../../shared/components/ui/button';
 import {
@@ -25,7 +27,9 @@ export function UserForm({ open, onOpenChange, onUserCreated, createUser }) {
     confirmPassword: '',
   });
 
-  const [errors, setErrors] = useState({});
+  // Initialize form validation
+  const { validate, validateField, clearError, hasError, getError } =
+    useFormValidation(renterCreateSchema);
 
   useEffect(() => {
     if (!open) {
@@ -37,57 +41,34 @@ export function UserForm({ open, onOpenChange, onUserCreated, createUser }) {
         password: '',
         confirmPassword: '',
       });
-      setErrors({});
+      // Clear validation errors when dialog closes
     }
   }, [open]);
 
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = t('userForm.validation.nameRequired');
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = t('userForm.validation.emailRequired');
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = t('userForm.validation.emailInvalid');
-    }
-
-    if (!formData.phone.trim()) {
-      newErrors.phone = t('userForm.validation.phoneRequired');
-    } else if (!/^[0-9+\-\s()]+$/.test(formData.phone)) {
-      newErrors.phone = t('userForm.validation.phoneInvalid');
-    }
-
-    if (!formData.password.trim()) {
-      newErrors.password = t('userForm.validation.passwordRequired');
-    } else if (formData.password.length < 6) {
-      newErrors.password = t('userForm.validation.passwordTooShort');
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = t('userForm.validation.passwordMismatch');
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const handleBlur = field => {
+    // Validate field on blur
+    validateField(field, formData[field]);
   };
 
   const handleSubmit = async e => {
     e.preventDefault();
 
-    if (!validateForm()) return;
+    // Validate form data using Zod schema
+    const validation = validate(formData);
+
+    if (!validation.success) {
+      return;
+    }
 
     try {
       setLoading(true);
 
       const userData = {
-        name: formData.name.trim(),
-        email: formData.email.trim(),
-        phone: formData.phone.trim(),
-        address: formData.address.trim(),
-        password: formData.password,
+        name: validation.data.name,
+        email: validation.data.email,
+        phone: validation.data.phone,
+        address: validation.data.address,
+        password: validation.data.password,
       };
 
       const newUser = await createUser(userData);
@@ -106,11 +87,9 @@ export function UserForm({ open, onOpenChange, onUserCreated, createUser }) {
       [field]: value,
     }));
 
-    if (errors[field]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: '',
-      }));
+    // Clear error for this field when user starts typing
+    if (hasError(field)) {
+      clearError(field);
     }
   };
 
@@ -119,9 +98,7 @@ export function UserForm({ open, onOpenChange, onUserCreated, createUser }) {
       <DialogContent className='w-[95vw] max-w-[600px] max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
           <DialogTitle>{t('userForm.title')}</DialogTitle>
-          <DialogDescription>
-            {t('userForm.description')}
-          </DialogDescription>
+          <DialogDescription>{t('userForm.description')}</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className='space-y-6'>
@@ -137,12 +114,13 @@ export function UserForm({ open, onOpenChange, onUserCreated, createUser }) {
                 id='name'
                 value={formData.name}
                 onChange={e => handleInputChange('name', e.target.value)}
-                className={errors.name ? 'border-red-500' : ''}
+                onBlur={() => handleBlur('name')}
+                className={hasError('name') ? 'border-red-500' : ''}
                 disabled={loading}
                 placeholder={t('userForm.placeholders.name')}
               />
-              {errors.name && (
-                <p className='text-sm text-red-500'>{errors.name}</p>
+              {hasError('name') && (
+                <p className='text-sm text-red-500'>{getError('name')}</p>
               )}
             </div>
 
@@ -154,12 +132,13 @@ export function UserForm({ open, onOpenChange, onUserCreated, createUser }) {
                   type='email'
                   value={formData.email}
                   onChange={e => handleInputChange('email', e.target.value)}
-                  className={errors.email ? 'border-red-500' : ''}
+                  onBlur={() => handleBlur('email')}
+                  className={hasError('email') ? 'border-red-500' : ''}
                   disabled={loading}
                   placeholder={t('userForm.placeholders.email')}
                 />
-                {errors.email && (
-                  <p className='text-sm text-red-500'>{errors.email}</p>
+                {hasError('email') && (
+                  <p className='text-sm text-red-500'>{getError('email')}</p>
                 )}
               </div>
 
@@ -170,12 +149,13 @@ export function UserForm({ open, onOpenChange, onUserCreated, createUser }) {
                   type='tel'
                   value={formData.phone}
                   onChange={e => handleInputChange('phone', e.target.value)}
-                  className={errors.phone ? 'border-red-500' : ''}
+                  onBlur={() => handleBlur('phone')}
+                  className={hasError('phone') ? 'border-red-500' : ''}
                   disabled={loading}
                   placeholder={t('userForm.placeholders.phone')}
                 />
-                {errors.phone && (
-                  <p className='text-sm text-red-500'>{errors.phone}</p>
+                {hasError('phone') && (
+                  <p className='text-sm text-red-500'>{getError('phone')}</p>
                 )}
               </div>
             </div>
@@ -186,11 +166,17 @@ export function UserForm({ open, onOpenChange, onUserCreated, createUser }) {
                 id='address'
                 value={formData.address}
                 onChange={e => handleInputChange('address', e.target.value)}
+                onBlur={() => handleBlur('address')}
                 rows={3}
-                className='w-full resize-none'
+                className={`w-full resize-none ${
+                  hasError('address') ? 'border-red-500' : ''
+                }`}
                 disabled={loading}
                 placeholder={t('userForm.placeholders.address')}
               />
+              {hasError('address') && (
+                <p className='text-sm text-red-500'>{getError('address')}</p>
+              )}
             </div>
           </div>
 
@@ -202,23 +188,28 @@ export function UserForm({ open, onOpenChange, onUserCreated, createUser }) {
 
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div className='space-y-2'>
-                <Label htmlFor='password'>{t('userForm.fields.password')} *</Label>
+                <Label htmlFor='password'>
+                  {t('userForm.fields.password')} *
+                </Label>
                 <Input
                   id='password'
                   type='password'
                   value={formData.password}
                   onChange={e => handleInputChange('password', e.target.value)}
-                  className={errors.password ? 'border-red-500' : ''}
+                  onBlur={() => handleBlur('password')}
+                  className={hasError('password') ? 'border-red-500' : ''}
                   disabled={loading}
                   placeholder={t('userForm.placeholders.password')}
                 />
-                {errors.password && (
-                  <p className='text-sm text-red-500'>{errors.password}</p>
+                {hasError('password') && (
+                  <p className='text-sm text-red-500'>{getError('password')}</p>
                 )}
               </div>
 
               <div className='space-y-2'>
-                <Label htmlFor='confirmPassword'>{t('userForm.fields.confirmPassword')} *</Label>
+                <Label htmlFor='confirmPassword'>
+                  {t('userForm.fields.confirmPassword')} *
+                </Label>
                 <Input
                   id='confirmPassword'
                   type='password'
@@ -226,13 +217,16 @@ export function UserForm({ open, onOpenChange, onUserCreated, createUser }) {
                   onChange={e =>
                     handleInputChange('confirmPassword', e.target.value)
                   }
-                  className={errors.confirmPassword ? 'border-red-500' : ''}
+                  onBlur={() => handleBlur('confirmPassword')}
+                  className={
+                    hasError('confirmPassword') ? 'border-red-500' : ''
+                  }
                   disabled={loading}
                   placeholder={t('userForm.placeholders.confirmPassword')}
                 />
-                {errors.confirmPassword && (
+                {hasError('confirmPassword') && (
                   <p className='text-sm text-red-500'>
-                    {errors.confirmPassword}
+                    {getError('confirmPassword')}
                   </p>
                 )}
               </div>
@@ -255,7 +249,9 @@ export function UserForm({ open, onOpenChange, onUserCreated, createUser }) {
               disabled={loading}
               className='w-full sm:w-auto'
             >
-              {loading ? t('userForm.buttons.creating') : t('userForm.buttons.create')}
+              {loading
+                ? t('userForm.buttons.creating')
+                : t('userForm.buttons.create')}
             </Button>
           </div>
         </form>
