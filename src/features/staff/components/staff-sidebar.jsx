@@ -449,6 +449,32 @@ export function StaffSidebar({
   ...props
 }) {
   const { t } = useTranslation();
+  const reorderMenuItems = (items = []) => {
+    const arr = Array.isArray(items) ? [...items] : [];
+    const idx = arr.findIndex(
+      it =>
+        (it.id && String(it.id).toLowerCase().includes('checkin')) ||
+        (it.label && String(it.label).toLowerCase().includes('check-in')) ||
+        (it.label && String(it.label).toLowerCase().includes('checkin'))
+    );
+    if (idx > -1) {
+      const [checkInItem] = arr.splice(idx, 1);
+      // insert after the first item (if exists), otherwise push to front
+      const insertAt = arr.length > 0 ? 1 : 0;
+      arr.splice(insertAt, 0, checkInItem);
+    }
+    return arr;
+  };
+  const orderedMenuItems = reorderMenuItems(menuItems);
+  const translateLabel = (label) => {
+    if (!label || typeof label !== 'string') return label;
+    const translated = t(label);
+    if (translated === label && label.includes('staffSidebar')) {
+      // specific fallback for the check-in label keys
+      return 'Check-In';
+    }
+    return translated;
+  };
   return (
     <Sidebar collapsible='offcanvas' {...props}>
       <SidebarHeader>
@@ -470,14 +496,14 @@ export function StaffSidebar({
         <SidebarGroup>
           <SidebarGroupLabel>{t('staffSidebar.navigation')}</SidebarGroupLabel>
           <SidebarMenu>
-            {menuItems.map(item => (
+            {orderedMenuItems.map(item => (
               <SidebarMenuItem key={item.id}>
                 <SidebarMenuButton
                   onClick={() => setActiveTab(item.id)}
                   isActive={activeTab === item.id}
                 >
                   {item.icon}
-                  <span>{item.label}</span>
+                  <span>{translateLabel(item.label)}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}

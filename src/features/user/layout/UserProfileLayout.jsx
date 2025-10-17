@@ -1,4 +1,4 @@
-import { useAuth } from '@/app/providers/AuthProvider';
+import { useAuth } from '../../../app/providers/AuthProvider';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Footer from '../../shared/components/homepage/Footer';

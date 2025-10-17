@@ -30,6 +30,8 @@ import { PaymentManagement } from '../components/payment-management';
 import { StaffHeader } from '../components/staff-header';
 import { StaffSidebar } from '../components/staff-sidebar';
 import StationManagement from '../components/station-management';
+import { CheckCircle } from 'lucide-react';
+import { CheckInPage } from '../components/checkIn.jsx/CheckInPage.jsx';
 
 // Removed QuickVerification import
 
@@ -463,7 +465,9 @@ export default function StaffDashboard() {
       </div>
     </div>
   );
-
+  const renderCheckIn = () => {
+    return <CheckInPage />;
+  }
   const renderCars = () => {
     return <VehicleManagement />;
   };
@@ -488,6 +492,8 @@ export default function StaffDashboard() {
     switch (activeTab) {
       case 'dashboard':
         return renderDashboard();
+      case "check-in":
+        return renderCheckIn()
       case 'cars':
         return renderCars();
       case 'stations':
@@ -503,6 +509,7 @@ export default function StaffDashboard() {
       case 'notifications':
         return <NotificationPreferences />;
       // Removed quick-verify case
+
       default:
         return renderDashboard();
     }
@@ -526,6 +533,11 @@ export default function StaffDashboard() {
       id: 'payments',
       label: 'Payments',
       icon: <CreditCard className='h-4 w-4' />,
+    },
+    {
+      id: "check-in",
+      label: "Check-In",
+      icon: <CheckCircle className="h-4 w-4" />,
     },
     {
       id: 'documents',
