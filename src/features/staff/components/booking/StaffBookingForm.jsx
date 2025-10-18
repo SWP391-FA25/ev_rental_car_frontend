@@ -33,9 +33,11 @@ export const StaffBookingForm = ({ onSuccess, onCancel }) => {
     calculatePricing,
     submitBooking,
     error,
+    validationErrors,
   } = useStaffBooking();
 
   const handleSubmit = async e => {
+    console.log(formData);
     e.preventDefault();
     const result = await submitBooking();
     if (result.success) {
@@ -44,6 +46,25 @@ export const StaffBookingForm = ({ onSuccess, onCancel }) => {
   };
 
   const pricingBreakdown = calculatePricing();
+
+  // Check if time range is invalid
+  const isInvalidTimeRange = () => {
+    if (!formData.startDate || !formData.endDate) return false;
+
+    const startDateTime = new Date(formData.startDate);
+    startDateTime.setHours(
+      parseInt(formData.startTime.split(':')[0]),
+      parseInt(formData.startTime.split(':')[1])
+    );
+
+    const endDateTime = new Date(formData.endDate);
+    endDateTime.setHours(
+      parseInt(formData.endTime.split(':')[0]),
+      parseInt(formData.endTime.split(':')[1])
+    );
+
+    return endDateTime <= startDateTime;
+  };
 
   // Prepare renter options for Combobox
   const renterOptions = renters.map(renter => ({
@@ -153,6 +174,7 @@ export const StaffBookingForm = ({ onSuccess, onCancel }) => {
                 value={formData.startDate}
                 onChange={value => updateField('startDate', value)}
                 placeholder='Select start date'
+                minDate={new Date()}
                 disabled={submitting}
               />
             </div>
@@ -178,7 +200,8 @@ export const StaffBookingForm = ({ onSuccess, onCancel }) => {
                 value={formData.endDate}
                 onChange={value => updateField('endDate', value)}
                 placeholder='Select end date'
-                disabled={submitting}
+                disabled={!formData.startDate || submitting}
+                minDate={formData.startDate || new Date()}
               />
             </div>
             <div className='space-y-2'>
@@ -213,7 +236,8 @@ export const StaffBookingForm = ({ onSuccess, onCancel }) => {
         formData.startDate &&
         formData.endDate &&
         formData.startTime &&
-        formData.endTime && (
+        formData.endTime &&
+        !isInvalidTimeRange() && (
           <div className='space-y-4'>
             <VehicleSelector
               vehicles={vehicles}
@@ -287,6 +311,20 @@ export const StaffBookingForm = ({ onSuccess, onCancel }) => {
             </div>
           </div>
         </>
+      )}
+
+      {/* Validation Errors Alert */}
+      {validationErrors && validationErrors.length > 0 && (
+        <Alert variant='destructive'>
+          <AlertCircle className='h-4 w-4' />
+          <AlertDescription>
+            <ul className='list-disc list-inside space-y-1'>
+              {validationErrors.map((error, idx) => (
+                <li key={idx}>{error}</li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
       )}
 
       {/* Action Buttons */}

@@ -37,6 +37,7 @@ export const useStaffBooking = () => {
 
   // Error state
   const [error, setError] = useState(null);
+  const [validationErrors, setValidationErros] = useState([]);
 
   // Fetch renters
   const fetchRenters = useCallback(async () => {
@@ -220,6 +221,9 @@ export const useStaffBooking = () => {
       [field]: value,
     }));
 
+    // Clear validation erros khi user thay đổi
+    setValidationErros([]);
+
     // Clear vehicle selection if station or time changes
     if (
       ['stationId', 'startDate', 'endDate', 'startTime', 'endTime'].includes(
@@ -356,11 +360,13 @@ export const useStaffBooking = () => {
   // Submit booking
   const submitBooking = useCallback(async () => {
     // Validate form
-    const validationErrors = validateForm();
-    if (validationErrors.length > 0) {
-      validationErrors.forEach(err => toast.error(err));
-      return { success: false, errors: validationErrors };
+    const errors = validateForm();
+    if (errors.length > 0) {
+      setValidationErros(errors);
+      return { success: false, errors };
     }
+
+    setValidationErros([]);
 
     try {
       setSubmitting(true);
@@ -476,5 +482,6 @@ export const useStaffBooking = () => {
 
     // Error
     error,
+    validationErrors,
   };
 };
