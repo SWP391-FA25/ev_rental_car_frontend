@@ -24,6 +24,7 @@ export function NotificationBell() {
     markAsRead,
     markAllAsRead,
     deleteNotification,
+    deleteAllNotifications,
   } = useNotifications();
   const { t, i18n } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -42,6 +43,14 @@ export function NotificationBell() {
 
   const handleMarkAllAsRead = async () => {
     await markAllAsRead();
+  };
+
+  const handleClearAllNotifications = async () => {
+    // Gọi API xóa all
+    await deleteAllNotifications();
+
+    // Đóng dropdown sau khi xóa
+    setOpen(false);
   };
 
   const getNotificationIcon = type => {
@@ -88,15 +97,29 @@ export function NotificationBell() {
       <DropdownMenuContent className='w-80' align='end'>
         <DropdownMenuLabel className='flex items-center justify-between'>
           <span>{t('notifications.title')}</span>
-          {unreadCount > 0 && (
-            <Button
-              variant='ghost'
-              size='sm'
-              onClick={handleMarkAllAsRead}
-              className='h-6 px-2 text-xs'
-            >
-              {t('notifications.markAllAsRead')}
-            </Button>
+          {notifications.length > 0 && (
+            <div className='flex items-center gap-1'>
+              {/* Mark All as Read button */}
+              {unreadCount > 0 && (
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  onClick={handleMarkAllAsRead}
+                  className='h-6 px-2 text-xs'
+                >
+                  {t('notifications.markAllAsRead')}
+                </Button>
+              )}
+              {/* Clear All button */}
+              <Button
+                variant='ghost'
+                size='sm'
+                onClick={handleClearAllNotifications}
+                className='h-6 px-2 text-xs text-destructive hover:bg-destructive/10'
+              >
+                {t('notifications.clearAll')}
+              </Button>
+            </div>
           )}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
