@@ -1367,6 +1367,7 @@
     "title": "Thông báo",
     "description": "Bạn có {{count}} thông báo",
     "markAllAsRead": "Đánh dấu tất cả đã đọc",
+    "clearAll": "Xóa tất cả",
     "deleteAll": "Xóa tất cả",
     "search": "Tìm kiếm thông báo...",
     "markAsRead": "Đánh dấu đã đọc",
