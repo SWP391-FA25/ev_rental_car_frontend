@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { stationService } from '../services/stationService';
 
-export const useNearbyStations = (userLocation, radius = 10) => {
+export const useNearbyStations = (userLocation, radius = 30) => {
   const [stations, setStations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
