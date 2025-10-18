@@ -151,7 +151,7 @@ export default function BookingsContent() {
   // Loading state
   if (loading) {
     return (
-      <div className='max-w-6xl mx-auto'>
+      <div className='max-w-full mx-auto'>
         <div className='mb-8'>
           <Skeleton className='h-8 w-48 mb-2' />
           <Skeleton className='h-4 w-64' />
@@ -189,7 +189,7 @@ export default function BookingsContent() {
   // Error state
   if (error) {
     return (
-      <div className='max-w-6xl mx-auto'>
+      <div className='max-w-full mx-auto'>
         <div className='mb-8'>
           <h1 className='text-2xl font-bold text-foreground mb-2'>
             Chuyến của tôi
@@ -243,7 +243,7 @@ export default function BookingsContent() {
   }
 
   return (
-    <div className='max-w-6xl mx-auto'>
+    <div className='max-w-full mx-auto'>
       {/* Header */}
       <div className='mb-8'>
         <h1 className='text-2xl font-bold text-foreground mb-2'>

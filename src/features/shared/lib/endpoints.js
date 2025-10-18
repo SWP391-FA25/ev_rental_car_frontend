@@ -99,7 +99,8 @@ export const endpoints = {
   inspections: {
     getById: id => `/api/inspections/${id}`,
     getByBooking: bookingId => `/api/inspections/booking/${bookingId}`,
-    getByBookingRenter: bookingId => `/api/inspections/booking/${bookingId}/renter`,
+    getByBookingRenter: bookingId =>
+      `/api/inspections/booking/${bookingId}/renter`,
     getByVehicle: vehicleId => `/api/inspections/vehicle/${vehicleId}`,
     getByStaff: staffId => `/api/inspections/staff/${staffId}`,
     create: () => '/api/inspections',
