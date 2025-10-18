@@ -127,6 +127,7 @@
     "dashboard": "Dashboard",
     "cars": "Manage Cars",
     "bookings": "Bookings",
+    "returnCar": "Return Car",
     "stations": "Stations",
     "customers": "Customers",
     "payments": "Payments",
@@ -174,6 +175,106 @@
       "documentDesc": "Notify when documents need verification",
       "save": "Save Preferences",
       "preferencesSaved": "Notification preferences saved successfully"
+    },
+    "returnCar": {
+      "quickAction": "Process car return"
+    }
+  },
+  "staffReturnCar": {
+    "title": "Return Car (Staff)",
+    "subtitle": "Inspect vehicle, handle incidents and refund deposit",
+    "toast": {
+      "enterBookingId": "Please enter a booking ID",
+      "loadBookingSuccess": "Loaded booking successfully",
+      "loadBookingFail": "Booking not found",
+      "selectBooking": "Please select or enter a booking",
+      "completeSuccess": "Car return completed and booking updated",
+      "completeQueued": "Completion request sent",
+      "completeFail": "Unable to complete return",
+      "overdueProceed": "Booking is overdue, proceeding with return",
+      "loadStationsFail": "Failed to load stations",
+      "invalidReturnLocation": "Please select a valid return station (3-200 chars)",
+      "invalidReturnOdometer": "Please enter a valid return odometer (>= 0)",
+      "imageTooLarge": "{{name}} exceeds 5MB, skipping this file.",
+      "missingStaff": "Missing staff information",
+      "invalidEndTime": "Return time must be after start or actual start. Try again in a few minutes.",
+      "validationFailed": "Validation failed. Please check the return information.",
+      "alreadyCompleted": "Booking was already completed; no need to confirm again."
+    },
+    "loadingStations": "Loading stations...",
+    "booking": {
+      "title": "1. Select booking to process",
+      "idLabel": "Booking ID",
+      "idPlaceholder": "e.g. BOOK001",
+      "loadButton": "Load booking",
+      "selectLabel": "Select booking",
+      "selectPlaceholder": "Choose an eligible booking",
+      "depositLabel": "Deposit (VND)",
+      "customer": "Customer",
+      "vehicle": "Vehicle",
+      "time": "Time",
+      "overdue": "Overdue",
+      "totalLabel": "Total amount (VND)"
+    },
+    "inspection": {
+      "title": "2. Vehicle inspection",
+      "resultLabel": "Inspection result",
+      "resultPlaceholder": "Select result",
+      "pass": "Refund deposit (No issues)",
+      "issue": "Has incident",
+      "checklist": {
+        "exterior": "Exterior",
+        "interior": "Interior",
+        "battery": "Battery level",
+        "mileageRecorded": "Mileage recorded",
+        "cleaningNeeded": "Needs cleaning",
+        "accessories": "Accessories/charger"
+      }
+    },
+    "incident": {
+      "title": "Upload incident (images/videos)",
+      "notesLabel": "Incident notes",
+      "notesPlaceholder": "Describe damages, location, severity..."
+    },
+    "returnDetails": {
+      "title": "Return details",
+      "odometer": "Return odometer",
+      "odometerPlaceholder": "Enter odometer at return",
+      "location": "Actual return location",
+      "notes": "Notes",
+      "notesPlaceholder": "Add any notes about the return...",
+      "locationPlaceholder": "Enter actual return location"
+    },
+    "deposit": {
+      "title": "3. Deposit & refund calculation",
+      "damage": "Damage deduction",
+      "cleaning": "Cleaning deduction",
+      "late": "Late return fee",
+      "other": "Other",
+      "baseDeposit": "Deposit",
+      "deductions": "Deductions",
+      "refund": "Refund"
+    },
+    "complete": {
+      "title": "4. Update booking and vehicle status",
+      "description": "Confirmation marks the booking as Completed and updates vehicle status accordingly.",
+      "reset": "Reset",
+      "confirm": "Confirm completion"
+    },
+    "modal": {
+      "title": "Complete Return",
+      "description": "Payment details for this return",
+      "vehicle": "Vehicle",
+      "payableVND": "Amount payable (VND)",
+      "pricingTitle": "Vehicle pricing",
+      "pricing": {
+        "hourly": "Hourly rate",
+        "daily": "Daily rate",
+        "weekly": "Weekly rate",
+        "monthly": "Monthly rate",
+        "insurance": "Insurance fee",
+        "deposit": "Deposit"
+      }
     }
   },
   "admin": {
@@ -218,7 +319,8 @@
     "english": "English",
     "vietnamese": "Vietnamese",
     "close": "Close",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "loading": "Loading..."
   },
   "admin": {
     "header": {
@@ -529,8 +631,83 @@
     "validation": {
       "nameRequired": "Name is required",
       "emailRequired": "Email is required",
-      "passwordRequired": "Password is required"
+      "passwordRequired": "Password is required",
+      "emailInvalid": "Invalid email format",
+      "phoneInvalid": "Phone must be 10 digits starting with 0",
+      "passwordMinLength": "Password must be at least 8 characters",
+      "nameTooShort": "Name must be at least 1 character",
+      "nameTooLong": "Name cannot exceed 100 characters",
+      "addressTooLong": "Address cannot exceed 255 characters",
+      "emailTooLong": "Email cannot exceed 255 characters",
+      "passwordTooLong": "Password cannot exceed 128 characters",
+      "invalidAccountStatus": "Invalid account status",
+      "invalidRole": "Invalid role",
+      "formHasErrors": "Please fix the errors below",
+      "submissionError": "Failed to create staff member"
     }
+  },
+  "validation": {
+    "emailRequired": "Email is required",
+    "emailInvalid": "Invalid email format",
+    "emailTooLong": "Email cannot exceed 255 characters",
+    "phoneRequired": "Phone is required",
+    "phoneInvalid": "Phone must be 10 digits starting with 0",
+    "passwordRequired": "Password is required",
+    "passwordMinLength": "Password must be at least 8 characters",
+    "passwordTooLong": "Password cannot exceed 128 characters",
+    "confirmPasswordRequired": "Please confirm your password",
+    "passwordMismatch": "Passwords do not match",
+    "nameRequired": "Name is required",
+    "nameTooShort": "Name must be at least 1 character",
+    "nameTooLong": "Name cannot exceed 100 characters",
+    "addressRequired": "Address is required",
+    "addressTooLong": "Address cannot exceed 255 characters",
+    "contactTooLong": "Contact cannot exceed 100 characters",
+    "invalidAccountStatus": "Invalid account status",
+    "invalidRole": "Invalid role",
+    "invalidStationStatus": "Invalid station status",
+    "invalidVehicleStatus": "Invalid vehicle status",
+    "invalidVehicleType": "Invalid vehicle type",
+    "invalidFuelType": "Invalid fuel type",
+    "mustBePositive": "Must be a positive number",
+    "mustBeFinite": "Must be a finite number",
+    "mustBeInteger": "Must be an integer",
+    "yearTooOld": "Year is too old",
+    "yearTooFuture": "Year is too far in the future",
+    "capacityTooSmall": "Capacity must be at least 1",
+    "capacityTooLarge": "Capacity cannot exceed 1000",
+    "batteryLevelTooLow": "Battery level cannot be negative",
+    "batteryLevelTooHigh": "Battery level cannot exceed 100%",
+    "seatsTooFew": "Must have at least 1 seat",
+    "seatsTooMany": "Cannot have more than 50 seats",
+    "licensePlateInvalid": "Invalid license plate format",
+    "invalidPriceFormat": "Invalid price format",
+    "priceTooHigh": "Price is too high",
+    "codeRequired": "Promotion code is required",
+    "codeMinLength": "Code must be at least 3 characters",
+    "codeMaxLength": "Code cannot exceed 20 characters",
+    "codeInvalidFormat": "Code must contain only uppercase letters and numbers",
+    "descriptionTooLong": "Description cannot exceed 500 characters",
+    "discountRequired": "Discount is required",
+    "discountPositive": "Discount must be positive",
+    "discountMax": "Discount cannot exceed 100%",
+    "discountInvalid": "Invalid discount value",
+    "discountInvalidFormat": "Invalid discount format",
+    "validFromRequired": "Valid from date is required",
+    "validFromInvalid": "Invalid valid from date",
+    "validUntilRequired": "Valid until date is required",
+    "validUntilInvalid": "Invalid valid until date",
+    "dateRangeInvalid": "Valid until must be after valid from",
+    "stationIdRequired": "Station is required",
+    "stationIdInvalid": "Invalid station ID",
+    "brandRequired": "Brand is required",
+    "brandTooLong": "Brand cannot exceed 50 characters",
+    "modelRequired": "Model is required",
+    "modelTooLong": "Model cannot exceed 50 characters",
+    "colorTooLong": "Color cannot exceed 30 characters",
+    "insuranceRateMin": "Insurance rate cannot be negative",
+    "insuranceRateMax": "Insurance rate cannot exceed 100%",
+    "invalid": "Invalid value"
   },
   "station": {
     "management": {
@@ -596,7 +773,8 @@
         "label": "Status",
         "active": "Active",
         "inactive": "Inactive",
-        "maintenance": "Maintenance"
+        "maintenance": "Maintenance",
+        "pending": "Pending"
       },
       "capacity": "Capacity",
       "contact": "Contact Information",
@@ -621,13 +799,35 @@
     },
     "details": {
       "title": "Station Details",
+      "description": "View and manage station information",
       "edit": "Edit Station",
       "info": "Information",
       "vehicles": "Vehicles",
       "staff": "Assigned Staff",
       "emptyVehicles": "No vehicles assigned to this station",
       "emptyStaff": "No staff assigned to this station",
-      "close": "Close"
+      "close": "Close",
+      "statistics": "Statistics",
+      "vehiclesAtStation": "Vehicles at Station",
+      "staffAtStation": "Staff at Station",
+      "vehicleTable": {
+        "brandModel": "Brand/Model",
+        "type": "Type",
+        "licensePlate": "License Plate",
+        "status": "Status"
+      },
+      "staffTable": {
+        "name": "Name",
+        "email": "Email",
+        "phone": "Phone",
+        "role": "Role"
+      },
+      "unknownStaff": "Unknown Staff"
+    },
+    "timeline": {
+      "title": "Station Timeline",
+      "createdAt": "Created At",
+      "updatedAt": "Last Updated"
     }
   },
   "vehicle": {
@@ -636,10 +836,15 @@
     "actions": {
       "add": "Add Vehicle",
       "create": "Create Vehicle",
+      "creating": "Creating...",
       "update": "Update Vehicle",
+      "saving": "Saving...",
       "cancel": "Cancel",
       "delete": "Delete",
-      "viewDetails": "View Details"
+      "viewDetails": "View Details",
+      "edit": "Edit Vehicle",
+      "close": "Close",
+      "saveChanges": "Save Changes"
     },
     "dialogs": {
       "create": {
@@ -654,6 +859,10 @@
         "title": "Delete Vehicle",
         "description": "Are you sure you want to permanently delete this vehicle? This action cannot be undone and will delete all associated images."
       }
+    },
+    "details": {
+      "title": "Vehicle Details",
+      "description": "View and manage vehicle information and images"
     },
     "fields": {
       "station": "Station",
@@ -677,7 +886,67 @@
       "fuelType": "Fuel Type",
       "fuelTypePlaceholder": "Select fuel type",
       "status": "Status",
-      "statusPlaceholder": "Select status"
+      "statusPlaceholder": "Select status",
+      "vehicleId": "Vehicle ID"
+    },
+    "validation": {
+      "required": "This field is required",
+      "invalidYear": "Must be a valid year",
+      "invalidBattery": "Battery must be between 0 and 100",
+      "wholeNumber": "Must be a whole number",
+      "minSeats": "Must be at least 1",
+      "minZero": "Must be >= 0",
+      "maxOne": "Must be <= 1",
+      "positive": "Must be positive"
+    },
+    "sections": {
+      "basicInfo": "Basic Information",
+      "technicalDetails": "Technical Details"
+    },
+    "pricing": {
+      "title": "Pricing Information",
+      "baseRate": "Base Rate (Daily) *",
+      "hourlyRate": "Hourly Rate *",
+      "weeklyRate": "Weekly Rate",
+      "monthlyRate": "Monthly Rate",
+      "depositAmount": "Deposit Amount *",
+      "insuranceRate": "Insurance Rate (%)",
+      "placeholders": {
+        "baseRate": "200.00",
+        "hourlyRate": "15.00",
+        "weeklyRate": "1200.00",
+        "monthlyRate": "4500.00",
+        "depositAmount": "500.00",
+        "insuranceRate": "0.10 (10%)"
+      }
+    },
+    "images": {
+      "title": "Vehicle Images",
+      "selectImages": "Select Images",
+      "uploading": "Uploading...",
+      "uploadImage": "Upload Image",
+      "noImagesSelected": "No images selected",
+      "clickToAdd": "Click \"Select Images\" to add photos (max 5MB each)",
+      "noImagesAvailable": "No images available for this vehicle",
+      "clickToUpload": "Click \"Upload Image\" to add photos",
+      "willUploadCount": "{{count}} image(s) will be uploaded after vehicle creation",
+      "removed": "Image removed",
+      "uploadSuccessAll": "All {{count}} images uploaded successfully",
+      "uploadSuccess": "Image uploaded successfully",
+      "uploadSuccessPartial": "{{success}}/{{count}} images uploaded successfully",
+      "uploadFailedSome": "Some images failed to upload",
+      "uploadFailed": "Failed to upload image",
+      "deleteSuccess": "Image deleted successfully",
+      "deleteFailed": "Failed to delete image",
+      "confirmDelete": "Are you sure you want to delete this image?",
+      "notImage": "{{name}} is not an image",
+      "exceedsLimit": "{{name}} exceeds 5MB limit",
+      "added": "{{count}} image(s) added"
+    },
+    "timeline": {
+      "title": "Vehicle Timeline",
+      "createdAt": "Created At",
+      "updatedAt": "Last Updated"
     },
     "table": {
       "image": "Image",
@@ -695,6 +964,7 @@
     "status": {
       "all": "All",
       "available": "Available",
+      "pending": "Pending",
       "rented": "Rented",
       "maintenance": "Maintenance",
       "outOfService": "Out of Service"
@@ -723,11 +993,178 @@
       "updateFailed": "Failed to update vehicle",
       "deleteSuccess": "Vehicle permanently deleted",
       "deleteFailed": "Failed to delete vehicle",
-      "loadFailed": "Failed to load vehicles"
+      "loadFailed": "Failed to load vehicles",
+      "invalidDate": "Invalid Date"
     },
     "filters": {
       "searchPlaceholder": "Search vehicles...",
       "status": "Status"
+    }
+  },
+  "booking": {
+    "title": "Booking Management",
+    "subtitle": "Manage and track all vehicle bookings",
+    "actions": {
+      "refresh": "Refresh",
+      "viewDetails": "View Details",
+      "confirmBooking": "Confirm Booking",
+      "waitingForDeposit": "Waiting for Deposit",
+      "startRental": "Start Rental",
+      "completeRental": "Complete Rental",
+      "cancelBooking": "Cancel Booking"
+    },
+    "filters": {
+      "searchPlaceholder": "Search by customer name, vehicle model, or booking ID...",
+      "status": "Status",
+      "statusAll": "All Status",
+      "depositLabel": "Deposit",
+      "depositAll": "All Deposits",
+      "deposit": {
+        "pendingPayment": "Pending Payment",
+        "paid": "Paid",
+        "failed": "Failed",
+        "refunded": "Refunded"
+      }
+    },
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "inProgress": "In Progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "depositStatus": {
+      "pending": "Pending",
+      "paid": "Paid",
+      "failed": "Failed",
+      "refunded": "Refunded"
+    },
+    "stats": {
+      "bookingAmount": "Booking Amount",
+      "pendingDeposits": "Pending Deposits",
+      "paidDeposits": "Paid Deposits",
+      "inProgress": "In Progress",
+      "completed": "Completed",
+      "refunded": "Refunded"
+    },
+    "table": {
+      "customer": "Customer",
+      "vehicle": "Vehicle",
+      "station": "Station",
+      "dateTime": "Date & Time",
+      "status": "Status",
+      "depositStatus": "Deposit Status",
+      "actions": "Actions",
+      "noBookings": "No bookings found",
+      "noEndTime": "No end time"
+    },
+    "dialogs": {
+      "complete": {
+        "title": "Complete Booking",
+        "description": "Complete this rental and update vehicle status"
+      },
+      "cancel": {
+        "title": "Cancel Booking",
+        "description": "Are you sure you want to cancel this booking? This action cannot be undone.",
+        "confirm": "Cancel Booking",
+        "keep": "Keep Booking"
+      }
+    },
+    "pagination": {
+      "page": "Page {{current}} of {{total}}",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "messages": {
+      "loading": "Loading bookings...",
+      "loadFailed": "Failed to fetch bookings",
+      "detailsFailed": "Failed to fetch booking details",
+      "confirmSuccess": "Booking confirmed successfully",
+      "confirmFailed": "Failed to confirm booking",
+      "startSuccess": "Rental started successfully",
+      "startFailed": "Failed to start rental",
+      "completeSuccess": "Booking completed successfully",
+      "completeFailed": "Failed to complete booking",
+      "cancelSuccess": "Booking cancelled successfully",
+      "cancelFailed": "Failed to cancel booking"
+    },
+    "details": {
+      "title": "Booking Details",
+      "description": "Complete information about this booking",
+      "customerInfo": {
+        "title": "Customer Information",
+        "name": "Name",
+        "email": "Email",
+        "phone": "Phone"
+      },
+      "vehicleInfo": {
+        "title": "Vehicle Information",
+        "vehicle": "Vehicle",
+        "licensePlate": "License Plate",
+        "type": "Type",
+        "status": "Status"
+      },
+      "bookingInfo": {
+        "title": "Booking Details",
+        "bookingId": "Booking ID",
+        "status": "Status",
+        "startTime": "Start Time",
+        "endTime": "End Time",
+        "station": "Station",
+        "created": "Created"
+      },
+      "inspections": {
+        "title": "Vehicle Inspections",
+        "loading": "Loading inspections...",
+        "loadFailed": "Failed to load inspections",
+        "empty": "No inspections for this booking",
+        "type": {
+          "checkout": "Check-out",
+          "return": "Return",
+          "checkin": "Check-in"
+        },
+        "item": {
+          "id": "Inspection",
+          "type": "Type",
+          "status": "Status",
+          "odometer": "Odometer",
+          "station": "Station",
+          "staff": "Staff",
+          "time": "Time",
+          "damageNotes": "Damage Notes",
+          "checklist": "Inspection Summary",
+          "battery": "Battery",
+          "exteriorCondition": "Exterior Condition",
+          "interiorCondition": "Interior Condition",
+          "tireCondition": "Tire Condition",
+          "documentVerified": "Document Verified",
+          "images": "Image Upload"
+        },
+        "status": {
+          "completed": "Completed",
+          "pending": "Pending"
+        },
+        "yes": "Yes",
+        "no": "No"
+      },
+      "notes": {
+        "title": "Notes"
+      },
+      "pricing": {
+        "title": "Pricing Breakdown",
+        "basePrice": "Base Price",
+        "insurance": "Insurance",
+        "tax": "Tax",
+        "discount": "Discount",
+        "totalAmount": "Total Amount",
+        "deposit": "Deposit"
+      },
+      "paymentHistory": "Payment History",
+      "payment": "Payment",
+      "status": "Status",
+      "close": "Close",
+      "na": "N/A",
+      "notSet": "Not set"
     }
   },
   "promotion": {

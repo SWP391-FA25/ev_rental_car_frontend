@@ -1,4 +1,5 @@
-import { Calendar, Car, CreditCard, User } from 'lucide-react';
+import { Calendar, Car, CreditCard, User, ClipboardList } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Badge } from '../../../shared/components/ui/badge';
 import { Button } from '../../../shared/components/ui/button';
 import {
@@ -10,18 +11,68 @@ import {
 } from '../../../shared/components/ui/dialog';
 import { Label } from '../../../shared/components/ui/label';
 import { formatCurrency, formatDate } from '../../../shared/lib/utils';
+import { useEffect, useState } from 'react';
+import { apiClient } from '../../../shared/lib/apiClient';
+import { endpoints } from '../../../shared/lib/endpoints';
 
 export function BookingDetails({ open, onOpenChange, booking }) {
+  const { t } = useTranslation();
+  // State for inspections (hooks must be unconditional)
+  const [inspections, setInspections] = useState([]);
+  const [loadingInspections, setLoadingInspections] = useState(false);
+  const [inspectionsError, setInspectionsError] = useState('');
+
+  useEffect(() => {
+    const fetchInspections = async () => {
+      if (!booking?.vehicle?.id || !open) return;
+      setLoadingInspections(true);
+      setInspectionsError('');
+      try {
+        const res = await apiClient.get(
+          endpoints.inspections.getByVehicle(booking.vehicle.id)
+        );
+        const data = res?.data;
+        // Backend returns: { success: true, data: { inspections: [...] } }
+        const list = Array.isArray(data?.inspections)
+          ? data.inspections
+          : Array.isArray(data)
+          ? data
+          : Array.isArray(data?.items)
+          ? data.items
+          : [];
+        const sorted = [...list].sort(
+          (a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0)
+        );
+        const latest = sorted[0] || null;
+        setInspections(latest ? [latest] : []);
+      } catch (err) {
+        setInspectionsError(
+          err?.message || t('booking.messages.detailsFailed')
+        );
+      } finally {
+        setLoadingInspections(false);
+      }
+    };
+
+    fetchInspections();
+  }, [booking?.vehicle?.id, open, t]);
+
   if (!booking) return null;
 
   // Get status badge
   const getStatusBadge = status => {
     const statusConfig = {
-      PENDING: { variant: 'secondary', label: 'Pending' },
-      CONFIRMED: { variant: 'default', label: 'Confirmed' },
-      IN_PROGRESS: { variant: 'default', label: 'In Progress' },
-      COMPLETED: { variant: 'default', label: 'Completed' },
-      CANCELLED: { variant: 'destructive', label: 'Cancelled' },
+      PENDING: { variant: 'secondary', label: t('booking.status.pending') },
+      CONFIRMED: { variant: 'default', label: t('booking.status.confirmed') },
+      IN_PROGRESS: {
+        variant: 'default',
+        label: t('booking.status.inProgress'),
+      },
+      COMPLETED: { variant: 'default', label: t('booking.status.completed') },
+      CANCELLED: {
+        variant: 'destructive',
+        label: t('booking.status.cancelled'),
+      },
     };
 
     const config = statusConfig[status] || statusConfig.PENDING;
@@ -33,6 +84,40 @@ export function BookingDetails({ open, onOpenChange, booking }) {
     );
   };
 
+  // Badge color helpers for inspection summary
+  const getBatteryBadgeClass = val => {
+    if (val === null || val === undefined) {
+      return 'bg-gray-100 text-gray-600 border-gray-200';
+    }
+    const n = Number(val);
+    if (Number.isNaN(n)) return 'bg-gray-100 text-gray-600 border-gray-200';
+    if (n >= 70) return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+    if (n >= 30) return 'bg-amber-100 text-amber-800 border-amber-200';
+    return 'bg-rose-100 text-rose-700 border-rose-200';
+  };
+
+  const getConditionBadgeClass = value => {
+    const v = (value || '').toString().toUpperCase();
+    if (!v) return 'bg-gray-100 text-gray-600 border-gray-200';
+    if (v === 'GOOD' || v === 'EXCELLENT')
+      return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+    if (v === 'FAIR' || v === 'AVERAGE')
+      return 'bg-amber-100 text-amber-800 border-amber-200';
+    if (v === 'POOR' || v === 'BAD')
+      return 'bg-rose-100 text-rose-700 border-rose-200';
+    if (v === 'N/A' || v === 'NA')
+      return 'bg-gray-100 text-gray-600 border-gray-200';
+    return 'bg-blue-100 text-blue-700 border-blue-200';
+  };
+
+  const getDocBadgeClass = val => {
+    if (typeof val !== 'boolean')
+      return 'bg-gray-100 text-gray-600 border-gray-200';
+    return val
+      ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+      : 'bg-rose-100 text-rose-700 border-rose-200';
+  };
+
   // Format currency
   const formatPrice = amount => {
     return formatCurrency(amount, 'VND');
@@ -42,9 +127,9 @@ export function BookingDetails({ open, onOpenChange, booking }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='w-[95vw] max-w-[800px] max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
-          <DialogTitle>Booking Details</DialogTitle>
+          <DialogTitle>{t('booking.details.title')}</DialogTitle>
           <DialogDescription>
-            Complete information about this booking
+            {t('booking.details.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -53,28 +138,28 @@ export function BookingDetails({ open, onOpenChange, booking }) {
           <div className='space-y-4'>
             <h3 className='text-lg font-semibold flex items-center gap-2'>
               <User className='h-5 w-5' />
-              Customer Information
+              {t('booking.details.customerInfo.title')}
             </h3>
 
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div className='space-y-2'>
-                <Label>Name</Label>
+                <Label>{t('booking.details.customerInfo.name')}</Label>
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                   {booking.user.name}
                 </div>
               </div>
 
               <div className='space-y-2'>
-                <Label>Email</Label>
+                <Label>{t('booking.details.customerInfo.email')}</Label>
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                   {booking.user.email}
                 </div>
               </div>
 
               <div className='space-y-2'>
-                <Label>Phone</Label>
+                <Label>{t('booking.details.customerInfo.phone')}</Label>
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
-                  {booking.user.phone || 'N/A'}
+                  {booking.user.phone || t('booking.details.na')}
                 </div>
               </div>
             </div>
@@ -84,33 +169,33 @@ export function BookingDetails({ open, onOpenChange, booking }) {
           <div className='space-y-4'>
             <h3 className='text-lg font-semibold flex items-center gap-2'>
               <Car className='h-5 w-5' />
-              Vehicle Information
+              {t('booking.details.vehicleInfo.title')}
             </h3>
 
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div className='space-y-2'>
-                <Label>Vehicle</Label>
+                <Label>{t('booking.details.vehicleInfo.vehicle')}</Label>
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                   {booking.vehicle.brand} {booking.vehicle.model}
                 </div>
               </div>
 
               <div className='space-y-2'>
-                <Label>License Plate</Label>
+                <Label>{t('booking.details.vehicleInfo.licensePlate')}</Label>
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
-                  {booking.vehicle.licensePlate}
+                  {booking.vehicle.licensePlate || t('booking.details.na')}
                 </div>
               </div>
 
               <div className='space-y-2'>
-                <Label>Type</Label>
+                <Label>{t('booking.details.vehicleInfo.type')}</Label>
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
-                  {booking.vehicle.type}
+                  {booking.vehicle.type || t('booking.details.na')}
                 </div>
               </div>
 
               <div className='space-y-2'>
-                <Label>Status</Label>
+                <Label>{t('booking.details.vehicleInfo.status')}</Label>
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                   <Badge variant='outline'>{booking.vehicle.status}</Badge>
                 </div>
@@ -122,47 +207,49 @@ export function BookingDetails({ open, onOpenChange, booking }) {
           <div className='space-y-4'>
             <h3 className='text-lg font-semibold flex items-center gap-2'>
               <Calendar className='h-5 w-5' />
-              Booking Details
+              {t('booking.details.bookingInfo.title')}
             </h3>
 
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div className='space-y-2'>
-                <Label>Booking ID</Label>
+                <Label>{t('booking.details.bookingInfo.bookingId')}</Label>
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center font-mono text-sm'>
                   {booking.id}
                 </div>
               </div>
 
               <div className='space-y-2'>
-                <Label>Status</Label>
+                <Label>{t('booking.details.status')}</Label>
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                   {getStatusBadge(booking.status)}
                 </div>
               </div>
 
               <div className='space-y-2'>
-                <Label>Start Time</Label>
+                <Label>{t('booking.details.bookingInfo.startTime')}</Label>
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                   {formatDate(booking.startTime)}
                 </div>
               </div>
 
               <div className='space-y-2'>
-                <Label>End Time</Label>
+                <Label>{t('booking.details.bookingInfo.endTime')}</Label>
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
-                  {booking.endTime ? formatDate(booking.endTime) : 'Not set'}
+                  {booking.endTime
+                    ? formatDate(booking.endTime)
+                    : t('booking.details.notSet')}
                 </div>
               </div>
 
               <div className='space-y-2'>
-                <Label>Station</Label>
+                <Label>{t('booking.details.bookingInfo.station')}</Label>
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                   {booking.station.name}
                 </div>
               </div>
 
               <div className='space-y-2'>
-                <Label>Created</Label>
+                <Label>{t('booking.details.bookingInfo.created')}</Label>
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                   {formatDate(booking.createdAt)}
                 </div>
@@ -173,51 +260,222 @@ export function BookingDetails({ open, onOpenChange, booking }) {
           {/* Booking Notes */}
           {booking.notes && (
             <div className='space-y-4'>
-              <h3 className='text-lg font-semibold'>Notes</h3>
+              <h3 className='text-lg font-semibold'>{t('booking.details.notes.title')}</h3>
               <div className='p-3 border rounded-md bg-muted/50'>
                 {booking.notes}
               </div>
             </div>
           )}
 
+          {/* Vehicle Inspections */}
+          <div className='space-y-4'>
+            <h3 className='text-lg font-semibold flex items-center gap-2'>
+              <ClipboardList className='h-5 w-5' />
+              {t('booking.details.inspections.title')}
+            </h3>
+
+            {loadingInspections && (
+              <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
+                {t('booking.details.inspections.loading')}
+              </div>
+            )}
+
+            {!loadingInspections && inspectionsError && (
+              <div className='p-2 border rounded-md bg-red-50 text-red-600 min-h-[40px] flex items-center'>
+                {t('booking.details.inspections.loadFailed')}: {inspectionsError}
+              </div>
+            )}
+
+            {!loadingInspections && !inspectionsError && inspections.length === 0 && (
+              <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
+                {t('booking.details.inspections.empty')}
+              </div>
+            )}
+
+            {!loadingInspections && !inspectionsError && inspections.length > 0 && (
+              <div className='space-y-3'>
+                {inspections.map(item => {
+                  const type = item?.inspectionType || item?.type || '';
+                  const statusText = item?.isCompleted
+                    ? t('booking.details.inspections.status.completed')
+                    : t('booking.details.inspections.status.pending');
+                  const odometer = item?.mileage ?? item?.odometer ?? null;
+                  const stationName =
+                    item?.station?.name || item?.stationName || booking?.station?.name || '';
+                  const staffName = item?.staff?.name || item?.staffName || '';
+                  const time = item?.createdAt || item?.time || item?.updatedAt || '';
+                  const damageNotes =
+                    item?.damageNotes || item?.incidentNotes || item?.notes || '';
+                  const battery = item?.batteryLevel ?? null;
+                  const exteriorCondition = item?.exteriorCondition || '';
+                  const interiorCondition = item?.interiorCondition || '';
+                  const rawImages = item?.images;
+                  const imageUrls = Array.isArray(rawImages)
+                    ? rawImages
+                        .map(img =>
+                          typeof img === 'string'
+                            ? img
+                            : img?.url || img?.thumbnailUrl || null
+                        )
+                        .filter(Boolean)
+                    : [];
+
+                  return (
+                    <div
+                      key={item?.id || `${type}-${time}`}
+                      className='p-3 border rounded-md bg-muted/30'
+                    >
+                      <div className='flex flex-wrap justify-between gap-2'>
+                        <div className='flex items-center gap-2'>
+                          <Badge variant='outline'>
+                            {t('booking.details.inspections.item.id')}#{
+                              (item?.id || '')
+                                .toString()
+                                .substring(0, 8)
+                            }
+                          </Badge>
+                          <Badge variant='secondary'>
+                            {t('booking.details.inspections.item.type')}:&nbsp;
+                            {type === 'CHECK_OUT'
+                              ? t('booking.details.inspections.type.checkout')
+                              : type === 'CHECK_IN'
+                              ? t('booking.details.inspections.type.checkin')
+                              : type || t('booking.details.na')}
+                          </Badge>
+                        </div>
+                        <Badge variant='default'>
+                          {t('booking.details.inspections.item.status')}: {statusText}
+                        </Badge>
+                      </div>
+
+                      <div className='grid grid-cols-1 md:grid-cols-2 gap-3 mt-3'>
+                        <div className='space-y-1'>
+                          <Label>{t('booking.details.inspections.item.odometer')}</Label>
+                          <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
+                            {typeof odometer === 'number' ? odometer : t('booking.details.na')}
+                          </div>
+                        </div>
+                        <div className='space-y-1'>
+                          <Label>{t('booking.details.inspections.item.station')}</Label>
+                          <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
+                            {stationName || t('booking.details.na')}
+                          </div>
+                        </div>
+                        <div className='space-y-1'>
+                          <Label>{t('booking.details.inspections.item.staff')}</Label>
+                          <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
+                            {staffName || t('booking.details.na')}
+                          </div>
+                        </div>
+                        <div className='space-y-1'>
+                          <Label>{t('booking.details.inspections.item.time')}</Label>
+                          <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
+                            {time ? formatDate(time) : t('booking.details.na')}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className='space-y-2 mt-3'>
+                        <Label>{t('booking.details.inspections.item.damageNotes')}</Label>
+                        <div className='p-2 border rounded-md bg-muted/50 min-h-[36px]'>
+                          {damageNotes || t('booking.details.na')}
+                        </div>
+                      </div>
+
+                      {/* Inspection summary */}
+                      {(battery !== null || exteriorCondition || interiorCondition) && (
+                        <div className='space-y-2 mt-3'>
+                          <Label>{t('booking.details.inspections.item.checklist')}</Label>
+                          <div className='grid grid-cols-1 md:grid-cols-2 gap-2'>
+                            <div className='p-2 border rounded-md bg-muted/40 flex items-center justify-between'>
+                              <span>{t('booking.details.inspections.item.battery')}</span>
+                              <Badge variant='outline' className={getBatteryBadgeClass(battery)}>
+                                {battery !== null ? `${battery}%` : t('booking.details.na')}
+                              </Badge>
+                            </div>
+                            <div className='p-2 border rounded-md bg-muted/40 flex items-center justify-between'>
+                              <span>{t('booking.details.inspections.item.exteriorCondition')}</span>
+                              <Badge variant='outline' className={getConditionBadgeClass(exteriorCondition)}>
+                                {exteriorCondition || t('booking.details.na')}
+                              </Badge>
+                            </div>
+                            <div className='p-2 border rounded-md bg-muted/40 flex items-center justify-between'>
+                              <span>{t('booking.details.inspections.item.interiorCondition')}</span>
+                              <Badge variant='outline' className={getConditionBadgeClass(interiorCondition)}>
+                                {interiorCondition || t('booking.details.na')}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Inspection images */}
+                      <div className='space-y-2 mt-3'>
+                        <Label>{t('booking.details.inspections.item.images') || 'Inspection Images'}</Label>
+                        {imageUrls.length > 0 ? (
+                          <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2'>
+                            {imageUrls.map((url, idx) => (
+                              <div key={`${item?.id || 'img'}-${idx}`} className='rounded-md overflow-hidden border bg-muted/40'>
+                                <img
+                                  src={url}
+                                  alt={`inspection-${idx + 1}`}
+                                  className='w-full h-24 object-cover'
+                                  loading='lazy'
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
+                            {t('booking.details.na')}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           {/* Pricing */}
           <div className='space-y-4'>
             <h3 className='text-lg font-semibold flex items-center gap-2'>
               <CreditCard className='h-5 w-5' />
-              Pricing Breakdown
+              {t('booking.details.pricing.title')}
             </h3>
 
             <div className='space-y-2'>
               <div className='flex justify-between p-2 border rounded-md'>
-                <span>Base Price:</span>
+                <span>{t('booking.details.pricing.basePrice')}:</span>
                 <span className='font-medium'>
                   {formatPrice(booking.basePrice)}
                 </span>
               </div>
               <div className='flex justify-between p-2 border rounded-md'>
-                <span>Insurance:</span>
+                <span>{t('booking.details.pricing.insurance')}:</span>
                 <span className='font-medium'>
                   {formatPrice(booking.insuranceAmount)}
                 </span>
               </div>
               <div className='flex justify-between p-2 border rounded-md'>
-                <span>Tax:</span>
+                <span>{t('booking.details.pricing.tax')}:</span>
                 <span className='font-medium'>
                   {formatPrice(booking.taxAmount)}
                 </span>
               </div>
               <div className='flex justify-between p-2 border rounded-md'>
-                <span>Discount:</span>
+                <span>{t('booking.details.pricing.discount')}:</span>
                 <span className='font-medium text-green-600'>
                   -{formatPrice(booking.discountAmount)}
                 </span>
               </div>
               <div className='flex justify-between p-2 border rounded-md bg-muted/50 font-bold'>
-                <span>Total Amount:</span>
+                <span>{t('booking.details.pricing.totalAmount')}:</span>
                 <span>{formatPrice(booking.totalAmount)}</span>
               </div>
               <div className='flex justify-between p-2 border rounded-md'>
-                <span>Deposit:</span>
+                <span>{t('booking.details.pricing.deposit')}:</span>
                 <span className='font-medium'>
                   {formatPrice(booking.depositAmount)}
                 </span>
@@ -228,7 +486,7 @@ export function BookingDetails({ open, onOpenChange, booking }) {
           {/* Payments */}
           {booking.payments && booking.payments.length > 0 && (
             <div className='space-y-4'>
-              <h3 className='text-lg font-semibold'>Payment History</h3>
+              <h3 className='text-lg font-semibold'>{t('booking.details.paymentHistory')}</h3>
               <div className='space-y-2'>
                 {booking.payments.map(payment => (
                   <div
@@ -237,10 +495,11 @@ export function BookingDetails({ open, onOpenChange, booking }) {
                   >
                     <div>
                       <p className='font-medium'>
-                        Payment #{payment.id.substring(0, 8)}
+                        {t('booking.details.payment')} #
+                        {payment.id.substring(0, 8)}
                       </p>
                       <p className='text-sm text-muted-foreground'>
-                        {payment.status}
+                        {t('booking.details.status')}: {payment.status}
                       </p>
                     </div>
                     <p className='font-medium'>{formatPrice(payment.amount)}</p>
@@ -258,7 +517,7 @@ export function BookingDetails({ open, onOpenChange, booking }) {
             onClick={() => onOpenChange(false)}
             className='w-full sm:w-auto'
           >
-            Close
+            {t('booking.details.close')}
           </Button>
         </div>
       </DialogContent>

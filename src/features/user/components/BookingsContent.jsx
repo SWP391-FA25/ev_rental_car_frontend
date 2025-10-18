@@ -1,6 +1,10 @@
 import { useAuth } from '@/app/providers/AuthProvider';
+import { useBooking } from '@/features/booking/hooks/useBooking';
 import { Badge } from '@/features/shared/components/ui/badge';
+import { Button } from '@/features/shared/components/ui/button';
 import { Card } from '@/features/shared/components/ui/card';
+
+import { ConfirmDialog } from '@/features/shared/components/ui/confirm-dialog';
 import { Skeleton } from '@/features/shared/components/ui/skeleton';
 import { apiClient } from '@/features/shared/lib/apiClient';
 import { endpoints } from '@/features/shared/lib/endpoints';
@@ -10,8 +14,9 @@ import {
   formatDateOnly,
 } from '@/features/shared/lib/utils';
 import gsap from 'gsap';
-import { CalendarDays, MapPin, RefreshCw } from 'lucide-react';
+import { CalendarDays, CreditCard, MapPin, RefreshCw, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 // Helper function to get status badge variant
@@ -52,10 +57,15 @@ const getStatusLabel = status => {
 
 export default function BookingsContent() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { cancelBooking } = useBooking();
   const listRef = useRef(null);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [cancelingBookingId, setCancelingBookingId] = useState(null);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [bookingToCancel, setBookingToCancel] = useState(null);
 
   const fetchBookings = useCallback(async () => {
     if (!user?.id) {
@@ -91,6 +101,33 @@ export default function BookingsContent() {
       setLoading(false);
     }
   }, [user?.id]);
+
+  const handleResumePayment = bookingId => {
+    navigate(`/payment/deposit?bookingId=${bookingId}`);
+  };
+
+  const handleCancelBooking = async () => {
+    if (!bookingToCancel) return;
+
+    try {
+      setCancelingBookingId(bookingToCancel.id);
+      await cancelBooking(bookingToCancel.id, 'User cancelled booking');
+      // Refresh bookings list
+      await fetchBookings();
+    } catch (error) {
+      console.error('Failed to cancel booking:', error);
+      // Error toast already shown by useBooking hook
+    } finally {
+      setCancelingBookingId(null);
+      setShowCancelDialog(false);
+      setBookingToCancel(null);
+    }
+  };
+
+  const openCancelDialog = booking => {
+    setBookingToCancel(booking);
+    setShowCancelDialog(true);
+  };
 
   useEffect(() => {
     fetchBookings();
@@ -345,11 +382,59 @@ export default function BookingsContent() {
                       </p>
                     </div>
                   )}
+
+                  {/* Action Buttons */}
+                  <div className='pt-2 border-t border-border space-y-2'>
+                    {booking.status === 'PENDING' && (
+                      <Button
+                        size='sm'
+                        onClick={() => handleResumePayment(booking.id)}
+                        className='w-full'
+                      >
+                        <CreditCard className='h-3 w-3 mr-1' />
+                        Resume Payment
+                      </Button>
+                    )}
+
+                    {booking.status === 'PENDING' && (
+                      <Button
+                        size='sm'
+                        variant='outline'
+                        onClick={() => openCancelDialog(booking)}
+                        disabled={cancelingBookingId === booking.id}
+                        className='w-full'
+                      >
+                        {cancelingBookingId === booking.id ? (
+                          <>
+                            <RefreshCw className='h-3 w-3 mr-1 animate-spin' />
+                            Cancelling...
+                          </>
+                        ) : (
+                          <>
+                            <X className='h-3 w-3 mr-1' />
+                            Cancel
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             </Card>
           ))}
       </div>
+
+      {/* Cancel Confirmation Dialog */}
+      <ConfirmDialog
+        open={showCancelDialog}
+        onOpenChange={setShowCancelDialog}
+        title='Cancel Booking'
+        description='Are you sure you want to cancel this booking? This action cannot be undone.'
+        confirmText='Yes, Cancel'
+        cancelText='Keep Booking'
+        onConfirm={handleCancelBooking}
+        loading={cancelingBookingId === bookingToCancel?.id}
+      />
     </div>
   );
 }

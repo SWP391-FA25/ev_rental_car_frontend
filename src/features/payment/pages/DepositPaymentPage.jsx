@@ -1,10 +1,12 @@
+import { useAuth } from '@/app/providers/AuthProvider';
 import { useBooking } from '@/features/booking/hooks/useBooking';
 import { Badge } from '@/features/shared/components/ui/badge';
 import { Button } from '@/features/shared/components/ui/button';
 import { Card } from '@/features/shared/components/ui/card';
+import { ConfirmDialog } from '@/features/shared/components/ui/confirm-dialog';
 import { formatCurrency } from '@/features/shared/lib/utils';
 import { ArrowLeft, Calendar, CreditCard, MapPin } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { paymentService } from '../services/paymentService';
@@ -12,40 +14,54 @@ import { paymentService } from '../services/paymentService';
 export default function DepositPaymentPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const bookingId = searchParams.get('bookingId');
   const amount = searchParams.get('amount');
 
-  const { getBookingById, loading: bookingLoading } = useBooking();
+  const {
+    getBookingById,
+    cancelBooking,
+    loading: bookingLoading,
+  } = useBooking();
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isCanceling, setIsCanceling] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+
+  const fetchBookingDetails = useCallback(async () => {
+    try {
+      const result = await getBookingById(bookingId);
+      // Handle both possible response structures
+      const booking = result.data?.booking || result.booking;
+      if (!booking) {
+        throw new Error('Booking data not found in response');
+      }
+      setBooking(booking);
+    } catch (error) {
+      console.error('Failed to fetch booking:', error);
+      toast.error('Failed to load booking details');
+    }
+  }, [bookingId, getBookingById]);
 
   useEffect(() => {
     if (bookingId) {
       fetchBookingDetails();
     }
-  }, [bookingId]);
-
-  const fetchBookingDetails = async () => {
-    try {
-      const result = await getBookingById(bookingId);
-      setBooking(result.booking);
-    } catch (error) {
-      console.error('Failed to fetch booking:', error);
-      toast.error('Failed to load booking details');
-    }
-  };
+  }, [bookingId, fetchBookingDetails]);
 
   const handleCreatePayment = async () => {
     try {
       setLoading(true);
+      const depositAmount = amount ? parseFloat(amount) : booking.depositAmount;
+      console.log('Creating payment with:', { bookingId, depositAmount });
+
       const result = await paymentService.createDepositPayment(
         bookingId,
-        parseFloat(amount),
+        depositAmount,
         `Deposit ${bookingId.substring(0, 8)}`
       );
 
-      console.log('Payment result:', result); // ✅ Debug log
-      console.log('PaymentUrl:', result?.paymentUrl); // ✅ Debug paymentUrl
+      console.log('Payment service result:', result);
 
       if (!result?.paymentUrl) {
         console.error('Invalid payment response:', result);
@@ -57,10 +73,31 @@ export default function DepositPaymentPage() {
       window.location.href = result.paymentUrl;
     } catch (error) {
       console.error('Failed to create payment:', error);
-      console.error('Error details:', error.response?.data); // ✅ Debug error details
       toast.error('Failed to create payment link');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCancelBooking = async () => {
+    try {
+      setIsCanceling(true);
+      await cancelBooking(bookingId, 'User cancelled before deposit payment');
+
+      // Navigate based on user role
+      if (user?.role === 'STAFF') {
+        navigate('/staff');
+      } else if (user?.role === 'ADMIN') {
+        navigate('/admin');
+      } else {
+        navigate('/cars');
+      }
+    } catch (error) {
+      console.error('Failed to cancel booking:', error);
+      // Error toast already shown by useBooking hook
+    } finally {
+      setIsCanceling(false);
+      setShowCancelDialog(false);
     }
   };
 
@@ -80,7 +117,20 @@ export default function DepositPaymentPage() {
       <div className='min-h-screen bg-background text-foreground flex items-center justify-center'>
         <div className='text-center'>
           <p className='text-muted-foreground mb-4'>Booking not found</p>
-          <Button onClick={() => navigate('/cars')}>Back to Cars</Button>
+          <Button
+            onClick={() => {
+              // Navigate back based on user role
+              if (user?.role === 'STAFF') {
+                navigate('/staff');
+              } else if (user?.role === 'ADMIN') {
+                navigate('/admin');
+              } else {
+                navigate('/cars');
+              }
+            }}
+          >
+            Back to Dashboard
+          </Button>
         </div>
       </div>
     );
@@ -93,7 +143,16 @@ export default function DepositPaymentPage() {
           <div className='mb-6'>
             <Button
               variant='ghost'
-              onClick={() => navigate(-1)}
+              onClick={() => {
+                // Navigate back based on user role
+                if (user?.role === 'STAFF') {
+                  navigate('/staff');
+                } else if (user?.role === 'ADMIN') {
+                  navigate('/admin');
+                } else {
+                  navigate(-1);
+                }
+              }}
               className='mb-4'
             >
               <ArrowLeft className='h-4 w-4 mr-2' />
@@ -232,10 +291,11 @@ export default function DepositPaymentPage() {
 
               <Button
                 variant='outline'
-                onClick={() => navigate('/cars')}
+                onClick={() => setShowCancelDialog(true)}
+                disabled={isCanceling || booking.status !== 'PENDING'}
                 className='w-full'
               >
-                Cancel Booking
+                {isCanceling ? 'Cancelling...' : 'Cancel Booking'}
               </Button>
             </div>
 
@@ -247,6 +307,18 @@ export default function DepositPaymentPage() {
           </Card>
         </div>
       </div>
+
+      {/* Cancel Confirmation Dialog */}
+      <ConfirmDialog
+        open={showCancelDialog}
+        onOpenChange={setShowCancelDialog}
+        title='Cancel Booking'
+        description='Are you sure you want to cancel this booking? This action cannot be undone.'
+        confirmText='Yes, Cancel'
+        cancelText='Keep Booking'
+        onConfirm={handleCancelBooking}
+        loading={isCanceling}
+      />
     </div>
   );
 }

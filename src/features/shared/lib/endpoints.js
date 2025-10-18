@@ -91,6 +91,18 @@ export const endpoints = {
     updateStatus: id => `/api/bookings/${id}/status`,
     cancel: id => `/api/bookings/${id}/cancel`,
     complete: id => `/api/bookings/${id}/complete`,
+    checkDeposit: id => `/api/bookings/${id}/deposit-status`,
+  },
+  rentalHistory: {
+    getByBookingId: bookingId => `/api/rental-history/booking/${bookingId}`,
+  },
+  inspections: {
+    getById: id => `/api/inspections/${id}`,
+    getByBooking: bookingId => `/api/inspections/booking/${bookingId}`,
+    getByBookingRenter: bookingId => `/api/inspections/booking/${bookingId}/renter`,
+    getByVehicle: vehicleId => `/api/inspections/vehicle/${vehicleId}`,
+    getByStaff: staffId => `/api/inspections/staff/${staffId}`,
+    create: () => '/api/inspections',
   },
   payment: {
     createDeposit: () => '/api/payos/create',
