@@ -428,11 +428,47 @@ export const useStaffBooking = () => {
       return { success: true, data: result };
     } catch (err) {
       console.error('Error creating booking:', err);
-      const errorMessage =
-        err.response?.data?.message || 'Failed to create booking';
+      // Xử lý lỗi validation với cấu trúc errors object
+      let errorMessage = err.message;
+
+      // Kiểm tra errors trực tiếp từ error object (từ apiClient interceptor)
+      if (err.errors) {
+        const errors = err.errors;
+        const firstErrorKey = Object.keys(errors)[0];
+
+        if (firstErrorKey && errors[firstErrorKey]?.msg) {
+          errorMessage = errors[firstErrorKey].msg;
+        }
+      }
+      // Fallback: kiểm tra enhancedError (từ bookingService)
+      else if (err.enhancedError?.errors) {
+        const errors = err.enhancedError.errors;
+        const firstErrorKey = Object.keys(errors)[0];
+
+        if (firstErrorKey && errors[firstErrorKey]?.msg) {
+          errorMessage = errors[firstErrorKey].msg;
+        }
+      }
+      // Fallback: kiểm tra response data trực tiếp
+      else if (err.response?.data?.errors) {
+        const errors = err.response.data.errors;
+        const firstErrorKey = Object.keys(errors)[0];
+
+        if (firstErrorKey && errors[firstErrorKey]?.msg) {
+          errorMessage = errors[firstErrorKey].msg;
+        }
+      }
+      // Fallback: sử dụng message từ enhancedError hoặc response
+      else if (err.enhancedError?.message) {
+        errorMessage = err.enhancedError.message;
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+
       setError(errorMessage);
       toast.error(errorMessage);
-      return { success: false, error: errorMessage };
+
+      throw err;
     } finally {
       setSubmitting(false);
     }
