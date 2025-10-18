@@ -90,7 +90,7 @@ export const useSearch = () => {
    * @param {number} lng - Longitude
    * @param {number} radius - Search radius in kilometers
    */
-  const getNearbyStations = useCallback(async (lat, lng, radius = 10) => {
+  const getNearbyStations = useCallback(async (lat, lng, radius = 30) => {
     try {
       setLoading(true);
       setError(null);

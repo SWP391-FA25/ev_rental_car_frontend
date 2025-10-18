@@ -48,7 +48,7 @@ export const searchService = {
    * @param {number} radius - Search radius in kilometers (default: 10)
    * @returns {Promise<Object>} Nearby stations
    */
-  async getNearbyStations(lat, lng, radius = 10) {
+  async getNearbyStations(lat, lng, radius = 30) {
     try {
       const response = await apiClient.get('/api/stations/nearby', {
         params: { lat, lng, radius },

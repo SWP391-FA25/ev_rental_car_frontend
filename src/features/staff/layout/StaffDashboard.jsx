@@ -1,6 +1,7 @@
 import {
   Bell,
   Car,
+  CheckCircle,
   CreditCard,
   FileText,
   MapPin,
@@ -22,17 +23,16 @@ import {
 } from '../../shared/components/ui/sidebar';
 import { endpoints } from '../../shared/lib/endpoints';
 import { NotificationPreferences } from '../components/NotificationPreferences';
+import ReturnCar from '../components/ReturnCar';
 import BookingManagement from '../components/booking-management';
 import VehicleManagement from '../components/car-management';
+import { CheckInPage } from '../components/checkIn.jsx/CheckInPage.jsx';
 import { CustomerManagement } from '../components/customer-management';
 import DocumentVerification from '../components/document-verification';
 import { PaymentManagement } from '../components/payment-management';
 import { StaffHeader } from '../components/staff-header';
 import { StaffSidebar } from '../components/staff-sidebar';
 import StationManagement from '../components/station-management';
-import { CheckCircle } from 'lucide-react';
-import { CheckInPage } from '../components/checkIn.jsx/CheckInPage.jsx';
-import { ReturnCar } from '../components/return-car/ReturnCar';
 
 // Removed QuickVerification import
 
@@ -471,7 +471,7 @@ export default function StaffDashboard() {
   );
   const renderCheckIn = () => {
     return <CheckInPage />;
-  }
+  };
   const renderCars = () => {
     return <VehicleManagement />;
   };
@@ -499,8 +499,8 @@ export default function StaffDashboard() {
     switch (activeTab) {
       case 'dashboard':
         return renderDashboard();
-      case "check-in":
-        return renderCheckIn()
+      case 'check-in':
+        return renderCheckIn();
       case 'cars':
         return renderCars();
       case 'stations':
@@ -549,9 +549,9 @@ export default function StaffDashboard() {
       icon: <CreditCard className='h-4 w-4' />,
     },
     {
-      id: "check-in",
-      label: "Check-In",
-      icon: <CheckCircle className="h-4 w-4" />,
+      id: 'check-in',
+      label: 'Check-In',
+      icon: <CheckCircle className='h-4 w-4' />,
     },
     {
       id: 'documents',
