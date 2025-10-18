@@ -75,14 +75,6 @@ export const StaffBookingForm = ({ onSuccess, onCancel }) => {
 
   return (
     <form onSubmit={handleSubmit} className='space-y-6'>
-      {/* Error Alert */}
-      {error && (
-        <Alert variant='destructive'>
-          <AlertCircle className='h-4 w-4' />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
       {/* Step 1: Renter Selection */}
       <div className='space-y-4'>
         <div className='flex items-center gap-2'>
@@ -324,6 +316,14 @@ export const StaffBookingForm = ({ onSuccess, onCancel }) => {
               ))}
             </ul>
           </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Error Alert */}
+      {error && (
+        <Alert variant='destructive'>
+          <AlertCircle className='h-4 w-4' />
+          <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
