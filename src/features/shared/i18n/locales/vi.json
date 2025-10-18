@@ -293,7 +293,9 @@
       "missingStaff": "Thiếu thông tin nhân viên",
       "invalidEndTime": "Thời gian trả phải sau thời gian bắt đầu hoặc giờ nhận thực tế. Vui lòng thử lại sau vài phút.",
       "validationFailed": "Xác thực thất bại. Vui lòng kiểm tra thông tin trả xe.",
-      "alreadyCompleted": "Đơn thuê đã được hoàn tất trước đó, không cần xác nhận lại."
+      "alreadyCompleted": "Đơn thuê đã được hoàn tất trước đó, không cần xác nhận lại.",
+      "invalidReturnOdometerMin": "Số km trả phải >= số km lúc nhận ({{pickup}})",
+      "invalidReturnOdometerRange": "Chênh lệch số km vượt quá giới hạn {{max}} km"
     },
     "loadingStations": "Đang tải trạm...",
     "booking": {
@@ -301,9 +303,11 @@
       "idLabel": "Mã đơn thuê",
       "idPlaceholder": "VD: BOOK001",
       "loadButton": "Tải đơn",
+      "selectLabel": "Chọn đơn",
+      "selectPlaceholder": "Chọn đơn đang hoạt động",
       "depositLabel": "Tiền cọc (VNĐ)",
       "customer": "Khách hàng",
-      "vehicle": "Xe",
+      "vehicle": "Biển số xe",
       "time": "Thời gian",
       "overdue": "Quá hạn",
       "totalLabel": "Số tiền cần phải thanh toán (VNĐ)"
@@ -325,6 +329,9 @@
     },
     "incident": {
       "title": "Upload sự cố (ảnh/video)",
+      "selectFilesButton": "Chọn tệp ảnh/video",
+      "selectedCount": "{{count}} tệp đã chọn",
+      "imagesRequired": "Vui lòng tải lên ít nhất 1 ảnh sự cố",
       "notesLabel": "Ghi chú sự cố",
       "notesPlaceholder": "Mô tả thiệt hại, vị trí, mức độ..."
     },
@@ -335,7 +342,8 @@
       "location": "Vị trí trả thực tế",
       "notes": "Ghi chú",
       "notesPlaceholder": "Thêm ghi chú về việc trả xe...",
-      "locationPlaceholder": "Nhập vị trí trả thực tế"
+      "locationPlaceholder": "Nhập vị trí trả thực tế",
+      "lastRecordedLabel": "Odo gần nhất: {{value}} km"
     },
     "deposit": {
       "title": "3. Tính toán cọc & hoàn tiền",
@@ -1334,7 +1342,8 @@
           "interiorCondition": "Tình trạng nội thất",
           "tireCondition": "Tình trạng lốp",
           "documentVerified": "Đã xác minh giấy tờ",
-          "images": "Tải ảnh"
+          "images": "Tải ảnh",
+          "noIncidentAfterReturn": "Xe sau khi trả không có sự cố"
         },
         "status": {
           "completed": "Hoàn tất",

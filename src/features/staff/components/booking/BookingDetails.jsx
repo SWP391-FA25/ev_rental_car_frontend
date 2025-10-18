@@ -320,6 +320,8 @@ export function BookingDetails({ open, onOpenChange, booking }) {
                         .filter(Boolean)
                     : [];
 
+                  const noIncident = !damageNotes && imageUrls.length === 0 && exteriorCondition === 'GOOD' && interiorCondition === 'GOOD';
+
                   return (
                     <div
                       key={item?.id || `${type}-${time}`}
@@ -378,7 +380,11 @@ export function BookingDetails({ open, onOpenChange, booking }) {
                       <div className='space-y-2 mt-3'>
                         <Label>{t('booking.details.inspections.item.damageNotes')}</Label>
                         <div className='p-2 border rounded-md bg-muted/50 min-h-[36px]'>
-                          {damageNotes || t('booking.details.na')}
+                          {damageNotes
+                            ? damageNotes
+                            : (!damageNotes && imageUrls.length === 0 && exteriorCondition === 'GOOD' && interiorCondition === 'GOOD'
+                              ? t('booking.details.inspections.item.noIncidentAfterReturn')
+                              : t('booking.details.na'))}
                         </div>
                       </div>
 
@@ -410,27 +416,29 @@ export function BookingDetails({ open, onOpenChange, booking }) {
                       )}
 
                       {/* Inspection images */}
-                      <div className='space-y-2 mt-3'>
-                        <Label>{t('booking.details.inspections.item.images') || 'Inspection Images'}</Label>
-                        {imageUrls.length > 0 ? (
-                          <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2'>
-                            {imageUrls.map((url, idx) => (
-                              <div key={`${item?.id || 'img'}-${idx}`} className='rounded-md overflow-hidden border bg-muted/40'>
-                                <img
-                                  src={url}
-                                  alt={`inspection-${idx + 1}`}
-                                  className='w-full h-24 object-cover'
-                                  loading='lazy'
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
-                            {t('booking.details.na')}
-                          </div>
-                        )}
-                      </div>
+                      {!noIncident && (
+                        <div className='space-y-2 mt-3'>
+                          <Label>{t('booking.details.inspections.item.images') || 'Inspection Images'}</Label>
+                          {imageUrls.length > 0 ? (
+                            <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2'>
+                              {imageUrls.map((url, idx) => (
+                                <div key={`${item?.id || 'img'}-${idx}`} className='rounded-md overflow-hidden border bg-muted/40'>
+                                  <img
+                                    src={url}
+                                    alt={`inspection-${idx + 1}`}
+                                    className='w-full h-24 object-cover'
+                                    loading='lazy'
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
+                              {t('booking.details.na')}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
