@@ -194,7 +194,7 @@
       "overdueProceed": "Booking is overdue, proceeding with return",
       "loadStationsFail": "Failed to load stations",
       "invalidReturnLocation": "Please select a valid return station (3-200 chars)",
-      "invalidReturnOdometer": "Please enter a valid return odometer (>= 0)",
+      "invalidReturnOdometer": "Please enter a valid return odometer (>= Pickup odometer)",
       "imageTooLarge": "{{name}} exceeds 5MB, skipping this file.",
       "missingStaff": "Missing staff information",
       "invalidEndTime": "Return time must be after start or actual start. Try again in a few minutes.",
@@ -326,7 +326,8 @@
     "vietnamese": "Vietnamese",
     "close": "Close",
     "cancel": "Cancel",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "delete": "Delete"
   },
   "admin": {
     "header": {

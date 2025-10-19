@@ -288,7 +288,7 @@
       "overdueProceed": "Đơn thuê đã quá hạn, vẫn tiến hành trả xe",
       "loadStationsFail": "Không thể tải danh sách trạm",
       "invalidReturnLocation": "Vui lòng chọn trạm trả hợp lệ (3-200 ký tự)",
-      "invalidReturnOdometer": "Vui lòng nhập công tơ mét trả hợp lệ (>= 0)",
+      "invalidReturnOdometer": "Vui lòng nhập công tơ mét trả hợp lệ (>= Odo lúc nhận)",
       "imageTooLarge": "{{name}} vượt quá 5MB, sẽ bỏ qua ảnh này.",
       "missingStaff": "Thiếu thông tin nhân viên",
       "invalidEndTime": "Thời gian trả phải sau thời gian bắt đầu hoặc giờ nhận thực tế. Vui lòng thử lại sau vài phút.",
@@ -382,7 +382,8 @@
     "vietnamese": "Tiếng Việt",
     "close": "Đóng",
     "cancel": "Hủy",
-    "loading": "Đang tải..."
+    "loading": "Đang tải...",
+    "delete": "Xóa"
   },
   "staff": {
     "notifications": {
