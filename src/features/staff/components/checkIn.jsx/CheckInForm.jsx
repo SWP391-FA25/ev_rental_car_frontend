@@ -7,8 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Badge } from '../../../shared/components/ui/badge'
 import { CheckCircle, Loader } from 'lucide-react'
 import { useState } from 'react'
-import { apiClient } from '../../../shared/lib/apiClient'
-import { endpoints } from '../../../shared/lib/endpoints'
 
 export function CheckInForm({
     carId,
@@ -19,23 +17,22 @@ export function CheckInForm({
     setNotes,
     bookings = [],
     isLoadingBookings = false,
-    carName = '',
-    renterName = '',
-    userColor = '',
+    carName = "",
+    renterName = "",
+    userColor = "",
     setUserColor = () => { },
-    carColor = '',
+    carColor = "",
     setCarColor = () => { },
     setCarName = () => { },
     setRenterName = () => { },
-    licensePlate = '',
+    licensePlate = "",
     setLicensePlate = () => { },
 }) {
     const [loadingDetail, setLoadingDetail] = useState(false)
-    const [renterEmail, setRenterEmail] = useState('')
-
+    const [renterEmail, setRenterEmail] = useState("")
 
     const handleBookingSelect = async (bookingId) => {
-        if (!bookingId || bookingId === 'no-booking') return
+        if (!bookingId || bookingId === "no-booking") return
 
         const booking = bookings.find((b) => b.id === bookingId)
 
@@ -50,20 +47,21 @@ export function CheckInForm({
             setRenterEmail("")
 
             try {
-                console.log('Selected booking:', booking)
+                console.log("Selected booking:", booking)
 
-                // use enriched booking data (parent should have populated vehicle.licensePlate and renter fields)
                 const vehicleData = booking.vehicle ?? {}
                 const renterData = booking.renter ?? booking.user ?? {}
 
-                const vName = vehicleData?.brand ? `${vehicleData.brand}${vehicleData.model ? ' ' + vehicleData.model : ''}` : vehicleData?.name || ""
+                const vName = vehicleData?.brand
+                    ? `${vehicleData.brand}${vehicleData.model ? " " + vehicleData.model : ""}`
+                    : vehicleData?.name || ""
                 const vColor = vehicleData?.color || ""
                 const vLicensePlate = vehicleData?.licensePlate || ""
 
                 const rName = renterData?.name || renterData?.fullName || ""
-                const extractedUserColor = renterData?.color || renterData?.profile?.color || renterData?.preferences?.color || ''
-                const rEmail = renterData?.email || renterData?.contact?.email || ''
-
+                const extractedUserColor =
+                    renterData?.color || renterData?.profile?.color || renterData?.preferences?.color || ""
+                const rEmail = renterData?.email || renterData?.contact?.email || ""
 
                 setCarColor(vColor)
                 setCarName(vName)
@@ -73,21 +71,20 @@ export function CheckInForm({
                 setUserColor(extractedUserColor)
                 setRenterEmail(rEmail)
 
-
-                console.log('Selected booking with full details:', {
+                console.log("Selected booking with full details:", {
                     vColor,
                     vName,
                     vLicensePlate,
                     rName,
                     rEmail,
                     vehicleData,
-                    renterData
+                    renterData,
                 })
             } catch (error) {
-                console.error('Error fetching booking details:', error)
+                console.error("Error fetching booking details:", error)
 
                 const vName = booking.vehicle?.brand
-                    ? `${booking.vehicle.brand}${booking.vehicle.model ? ' ' + booking.vehicle.model : ''}`
+                    ? `${booking.vehicle.brand}${booking.vehicle.model ? " " + booking.vehicle.model : ""}`
                     : booking.vehicle?.name || ""
 
                 const vColor = booking.vehicle?.color || ""
@@ -99,10 +96,9 @@ export function CheckInForm({
                 setCarName(vName)
                 setLicensePlate(vLicensePlate)
                 setRenterName(rName)
-                const fbColor = booking.user?.color || booking.renter?.color || ''
+                const fbColor = booking.user?.color || booking.renter?.color || ""
                 setUserColor(fbColor)
                 setRenterEmail(rEmail)
-
             } finally {
                 setLoadingDetail(false)
             }
@@ -122,7 +118,9 @@ export function CheckInForm({
                     <Select onValueChange={handleBookingSelect} disabled={isLoadingBookings || loadingDetail}>
                         <SelectTrigger id="booking" className="relative">
                             <SelectValue
-                                placeholder={isLoadingBookings ? "Đang tải..." : loadingDetail ? "Đang lấy thông tin..." : "Chọn đơn đặt xe"}
+                                placeholder={
+                                    isLoadingBookings ? "Đang tải..." : loadingDetail ? "Đang lấy thông tin..." : "Chọn đơn đặt xe"
+                                }
                             />
                             {loadingDetail && <Loader className="h-4 w-4 animate-spin absolute right-3" />}
                         </SelectTrigger>
@@ -137,13 +135,10 @@ export function CheckInForm({
                                         <div className="flex items-center gap-2 w-full">
                                             <div className="flex flex-col text-sm">
                                                 <span className="font-medium">
-                                                    {booking.user?.name ||
-                                                        booking.user?.fullName ||
-                                                        booking.user?.displayName ||
-                                                        'Người thuê'}
+                                                    {booking.user?.name || booking.user?.fullName || booking.user?.displayName || "Người thuê"}
                                                 </span>
                                                 <span className="text-xs text-muted-foreground">
-                                                    {booking.vehicle?.brand || booking.vehicle?.name || 'Xe thuê'}
+                                                    {booking.vehicle?.brand || booking.vehicle?.name || "Xe thuê"}
                                                 </span>
                                             </div>
                                             <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white flex items-center gap-1 px-2 py-0.5 ml-auto">
@@ -217,7 +212,6 @@ export function CheckInForm({
                                 value={renterName}
                                 onChange={(e) => setRenterName(e.target.value)}
                                 disabled={loadingDetail}
-
                             />
                         </div>
                         <div className="space-y-2">
@@ -228,16 +222,10 @@ export function CheckInForm({
                                 placeholder="VD: user@example.com"
                                 value={renterEmail}
                                 onChange={(e) => setRenterEmail(e.target.value)}
-
                                 disabled={loadingDetail}
                             />
                         </div>
-
                     </div>
-
-
-
-
                 </div>
 
                 {/* Notes */}

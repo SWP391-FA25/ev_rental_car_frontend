@@ -31,10 +31,9 @@ import { StaffHeader } from '../components/staff-header';
 import { StaffSidebar } from '../components/staff-sidebar';
 import StationManagement from '../components/station-management';
 import { CheckCircle } from 'lucide-react';
-import { CheckInPage } from '../components/checkIn.jsx/CheckInPage.jsx';
-import { ReturnCar } from '../components/return-car/ReturnCar';
+import CheckInPage from '../components/checkIn.jsx/CheckInPage';
 
-// Removed QuickVerification import
+import ReturnCar from '../components/ReturnCar';
 
 // const mockStaffData = [
 //   {

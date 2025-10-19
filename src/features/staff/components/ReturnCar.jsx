@@ -159,7 +159,7 @@ export default function ReturnCar() {
       urls.forEach(u => {
         try {
           URL.revokeObjectURL(u.url);
-        } catch {}
+        } catch { }
       });
     };
   }, [incidentFiles]);
@@ -282,10 +282,10 @@ export default function ReturnCar() {
     );
     const normalizedLocation = selectedStation
       ? (
-          selectedStation.address ||
-          selectedStation.name ||
-          String(selectedStation.id)
-        ).trim()
+        selectedStation.address ||
+        selectedStation.name ||
+        String(selectedStation.id)
+      ).trim()
       : '';
 
     // Frontend validation to match backend requirements
@@ -332,14 +332,14 @@ export default function ReturnCar() {
           // batteryLevel is REQUIRED by Prisma schema (0-100)
           batteryLevel:
             typeof (booking?.vehicle?.batteryLevel ?? booking?.batteryLevel) ===
-            'number'
+              'number'
               ? Math.min(
-                  100,
-                  Math.max(
-                    0,
-                    booking?.vehicle?.batteryLevel ?? booking?.batteryLevel
-                  )
+                100,
+                Math.max(
+                  0,
+                  booking?.vehicle?.batteryLevel ?? booking?.batteryLevel
                 )
+              )
               : 50, // fallback to 50% if unknown
           // Prisma enum ConditionStatus requires one of: GOOD | FAIR | POOR
           exteriorCondition: checklist.exterior ? 'GOOD' : 'POOR',
@@ -448,7 +448,7 @@ export default function ReturnCar() {
             toast.error(t('staffReturnCar.toast.invalidEndTime'));
             return;
           }
-        } catch {}
+        } catch { }
         // Fallback chung cho lỗi 400
         toast.error(serverMsg || t('staffReturnCar.toast.validationFailed'));
         return;
