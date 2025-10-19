@@ -27,80 +27,86 @@ import UserPage from '../../features/user/layout/UserPage';
 import UserProfileLayout from '../../features/user/layout/UserProfileLayout';
 import PrivateRoutes from '../utils/PrivateRoutes';
 import RoleBasedRoute from '../utils/RoleBaseRoutes';
+import RootLayout from './RouteLayout';
 
 export const router = createBrowserRouter([
-  { path: '/', element: <Home /> },
-  { path: '/cars', element: <CarsPage /> },
-  { path: '/cars/:id', element: <CarDetailPage /> },
-  { path: '/search-results', element: <SearchResultsPage /> },
-  { path: '/policy', element: <PolicyPage /> },
-  { path: '/payment/deposit', element: <DepositPaymentPage /> },
-  { path: '/payment/success', element: <PaymentSuccessPage /> },
-  { path: '/payment/cancel', element: <PaymentCancelPage /> },
-  { path: '/payment/failure', element: <PaymentCancelPage /> },
-  { path: '/login', element: <Login /> },
-  { path: '/signup', element: <SignUp /> },
-  { path: '/verify-email', element: <VerifyEmail /> },
-  { path: '/forgot-password', element: <ForgotPassword /> },
-  { path: '/reset-password', element: <ResetPassword /> },
   {
-    path: '/admin',
-    element: (
-      <PrivateRoutes>
-        <RoleBasedRoute allowedRoles={['ADMIN']}>
-          <AdminDashboard />
-        </RoleBasedRoute>
-      </PrivateRoutes>
-    ),
+    element: <RootLayout />,
     children: [
-      { index: true, element: <Dashboard /> },
-      { path: 'users', element: <UserManagement /> },
-      { path: 'staff', element: <StaffManagement /> },
-      { path: 'stations', element: <StationManagement /> },
-      { path: 'vehicles', element: <VehicleManagement /> },
-      { path: 'promotions', element: <PromotionManagement /> },
-      { path: 'notifications', element: <NotificationManagement /> },
-      { path: 'settings', element: <Settings /> },
+      { path: '/', element: <Home /> },
+      { path: '/cars', element: <CarsPage /> },
+      { path: '/cars/:id', element: <CarDetailPage /> },
+      { path: '/search-results', element: <SearchResultsPage /> },
+      { path: '/policy', element: <PolicyPage /> },
+      { path: '/payment/deposit', element: <DepositPaymentPage /> },
+      { path: '/payment/success', element: <PaymentSuccessPage /> },
+      { path: '/payment/cancel', element: <PaymentCancelPage /> },
+      { path: '/payment/failure', element: <PaymentCancelPage /> },
+      { path: '/login', element: <Login /> },
+      { path: '/signup', element: <SignUp /> },
+      { path: '/verify-email', element: <VerifyEmail /> },
+      { path: '/forgot-password', element: <ForgotPassword /> },
+      { path: '/reset-password', element: <ResetPassword /> },
+      {
+        path: '/admin',
+        element: (
+          <PrivateRoutes>
+            <RoleBasedRoute allowedRoles={['ADMIN']}>
+              <AdminDashboard />
+            </RoleBasedRoute>
+          </PrivateRoutes>
+        ),
+        children: [
+          { index: true, element: <Dashboard /> },
+          { path: 'users', element: <UserManagement /> },
+          { path: 'staff', element: <StaffManagement /> },
+          { path: 'stations', element: <StationManagement /> },
+          { path: 'vehicles', element: <VehicleManagement /> },
+          { path: 'promotions', element: <PromotionManagement /> },
+          { path: 'notifications', element: <NotificationManagement /> },
+          { path: 'settings', element: <Settings /> },
+        ],
+      },
+      {
+        path: '/staff',
+        element: (
+          <PrivateRoutes>
+            <RoleBasedRoute allowedRoles={['STAFF']}>
+              <StaffDashboard />
+            </RoleBasedRoute>
+          </PrivateRoutes>
+        ),
+      },
+      {
+        path: '/user',
+        element: (
+          <PrivateRoutes>
+            <RoleBasedRoute allowedRoles={['RENTER']}>
+              <UserPage />
+            </RoleBasedRoute>
+          </PrivateRoutes>
+        ),
+      },
+      {
+        path: '/notifications',
+        element: (
+          <PrivateRoutes>
+            <RoleBasedRoute allowedRoles={['RENTER', 'STAFF', 'ADMIN']}>
+              <NotificationPage />
+            </RoleBasedRoute>
+          </PrivateRoutes>
+        ),
+      },
+      {
+        path: '/user/profile',
+        element: (
+          <PrivateRoutes>
+            <RoleBasedRoute allowedRoles={['RENTER']}>
+              <UserProfileLayout />
+            </RoleBasedRoute>
+          </PrivateRoutes>
+        ),
+      },
     ],
-  },
-  {
-    path: '/staff',
-    element: (
-      <PrivateRoutes>
-        <RoleBasedRoute allowedRoles={['STAFF']}>
-          <StaffDashboard />
-        </RoleBasedRoute>
-      </PrivateRoutes>
-    ),
-  },
-  {
-    path: '/user',
-    element: (
-      <PrivateRoutes>
-        <RoleBasedRoute allowedRoles={['RENTER']}>
-          <UserPage />
-        </RoleBasedRoute>
-      </PrivateRoutes>
-    ),
-  },
-  {
-    path: '/notifications',
-    element: (
-      <PrivateRoutes>
-        <RoleBasedRoute allowedRoles={['RENTER', 'STAFF', 'ADMIN']}>
-          <NotificationPage />
-        </RoleBasedRoute>
-      </PrivateRoutes>
-    ),
-  },
-  {
-    path: '/user/profile',
-    element: (
-      <PrivateRoutes>
-        <RoleBasedRoute allowedRoles={['RENTER']}>
-          <UserProfileLayout />
-        </RoleBasedRoute>
-      </PrivateRoutes>
-    ),
   },
 ]);
