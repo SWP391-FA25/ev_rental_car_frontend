@@ -1,5 +1,4 @@
 import { Car, Check, Fuel, Users } from 'lucide-react';
-import { Badge } from '../../../shared/components/ui/badge';
 import { Card, CardContent } from '../../../shared/components/ui/card';
 import { Skeleton } from '../../../shared/components/ui/skeleton';
 import { cn, formatCurrency } from '../../../shared/lib/utils';
@@ -61,12 +60,12 @@ export const VehicleSelector = ({
             <Card
               key={vehicle.id}
               className={cn(
-                'cursor-pointer transition-all hover:shadow-md relative',
+                'cursor-pointer transition-all hover:shadow-md relative py-0',
                 isSelected && 'ring-2 ring-primary'
               )}
               onClick={() => onSelectVehicle(vehicle.id)}
             >
-              <CardContent className='p-4'>
+              <CardContent className='px-0'>
                 {/* Selected indicator */}
                 {isSelected && (
                   <div className='absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1'>
@@ -75,7 +74,7 @@ export const VehicleSelector = ({
                 )}
 
                 {/* Vehicle Image */}
-                <div className='relative h-32 w-full rounded-md overflow-hidden mb-3 bg-muted'>
+                <div className='relative h-32 w-full rounded-t-md overflow-hidden bg-muted'>
                   {vehicle.images && vehicle.images.length > 0 ? (
                     <img
                       src={vehicle.images[0].url}
@@ -90,7 +89,7 @@ export const VehicleSelector = ({
                 </div>
 
                 {/* Vehicle Info */}
-                <div className='space-y-2'>
+                <div className='space-y-2 p-5'>
                   <div>
                     <h4 className='font-semibold text-base'>
                       {vehicle.brand} {vehicle.model}
@@ -138,11 +137,11 @@ export const VehicleSelector = ({
                   )}
 
                   {/* Status Badge */}
-                  <div>
+                  {/* <div>
                     <Badge variant='outline' className='text-xs'>
                       {vehicle.status}
                     </Badge>
-                  </div>
+                  </div> */}
 
                   {/* Pricing */}
                   {vehicle.pricing && (

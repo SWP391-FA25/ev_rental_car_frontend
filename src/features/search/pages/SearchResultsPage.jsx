@@ -74,10 +74,17 @@ export default function SearchResultsPage() {
     );
   }
 
-  const { station, period, summary, availableVehicles, unavailableVehicles } =
+  const { station, period, availableVehicles, unavailableVehicles } =
     searchResults;
 
-  console.log(unavailableVehicles);
+  // Safe defaults to prevent undefined errors
+  const safeAvailableVehicles = availableVehicles || [];
+  const safeUnavailableVehicles = unavailableVehicles || [];
+  const safeStation = station || { name: 'Unknown Station' };
+  const safePeriod = period || { startTime: new Date(), endTime: new Date() };
+
+  console.log('Available vehicles:', safeAvailableVehicles);
+  console.log('Unavailable vehicles:', safeUnavailableVehicles);
 
   return (
     <div className='min-h-screen bg-background text-foreground'>
@@ -93,11 +100,13 @@ export default function SearchResultsPage() {
             <div className='flex flex-wrap items-center gap-4 text-muted-foreground mt-2'>
               <div className='flex items-center gap-2'>
                 <MapPin className='w-4 h-4' />
-                <span>{station.name}</span>
+                <span>{safeStation.name}</span>
               </div>
               <div className='flex items-center gap-2'>
                 <Calendar className='w-4 h-4' />
-                <span>{formatDateRange(period.startTime, period.endTime)}</span>
+                <span>
+                  {formatDateRange(safePeriod.startTime, safePeriod.endTime)}
+                </span>
               </div>
             </div>
           </div>
@@ -108,13 +117,13 @@ export default function SearchResultsPage() {
         </div>
 
         {/* Available Vehicles */}
-        {availableVehicles.length > 0 ? (
+        {safeAvailableVehicles.length > 0 ? (
           <div className='mb-8'>
             <h2 className='text-2xl font-semibold mb-6'>
-              Available Vehicles ({availableVehicles.length})
+              Available Vehicles ({safeAvailableVehicles.length})
             </h2>
             <div className='grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'>
-              {availableVehicles.map(vehicle => (
+              {safeAvailableVehicles.map(vehicle => (
                 <Card
                   key={vehicle.id}
                   className='overflow-hidden hover:shadow-lg transition-all duration-300 group p-0'
@@ -154,7 +163,7 @@ export default function SearchResultsPage() {
                       </div>
                       <div className='flex items-center gap-2 text-sm text-muted-foreground'>
                         <MapPin className='w-4 h-4' />
-                        <span>{station.name}</span>
+                        <span>{safeStation.name}</span>
                       </div>
                     </div>
                     <div className='flex justify-between items-center'>
@@ -210,13 +219,13 @@ export default function SearchResultsPage() {
         )}
 
         {/* Unavailable Vehicles */}
-        {unavailableVehicles.length > 0 && (
+        {safeUnavailableVehicles.length > 0 && (
           <div>
             <h2 className='text-2xl font-semibold mb-6'>
-              Unavailable Vehicles ({unavailableVehicles.length})
+              Unavailable Vehicles ({safeUnavailableVehicles.length})
             </h2>
             <div className='grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'>
-              {unavailableVehicles.map(vehicle => (
+              {safeUnavailableVehicles.map(vehicle => (
                 <Card
                   key={vehicle.id}
                   className='overflow-hidden opacity-75 p-0'

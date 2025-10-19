@@ -16,7 +16,7 @@ import {
   Settings,
   Users,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 // Helper function to transform vehicle data for display
 const transformVehicleData = vehicle => {
@@ -46,6 +46,8 @@ const StationVehicleGrid = ({
   loading = false,
   error = null,
 }) => {
+  const navigate = useNavigate();
+
   if (loading) {
     return (
       <div className='space-y-4'>
@@ -196,6 +198,9 @@ const StationVehicleGrid = ({
                   size='sm'
                   variant='default'
                   disabled={!vehicle.available}
+                  onClick={() => {
+                    navigate(`/cars/${vehicle.id}`);
+                  }}
                 >
                   {vehicle.available ? 'Book now' : 'Unavailable'}
                 </Button>

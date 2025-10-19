@@ -1291,6 +1291,7 @@
     "title": "Notifications",
     "description": "You have {{count}} notifications",
     "markAllAsRead": "Mark all as read",
+    "clearAll": "Clear All",
     "deleteAll": "Delete all",
     "search": "Search notifications...",
     "markAsRead": "Mark as read",

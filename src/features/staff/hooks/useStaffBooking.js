@@ -37,6 +37,7 @@ export const useStaffBooking = () => {
 
   // Error state
   const [error, setError] = useState(null);
+  const [validationErrors, setValidationErros] = useState([]);
 
   // Fetch renters
   const fetchRenters = useCallback(async () => {
@@ -220,6 +221,9 @@ export const useStaffBooking = () => {
       [field]: value,
     }));
 
+    // Clear validation erros khi user thay đổi
+    setValidationErros([]);
+
     // Clear vehicle selection if station or time changes
     if (
       ['stationId', 'startDate', 'endDate', 'startTime', 'endTime'].includes(
@@ -356,11 +360,13 @@ export const useStaffBooking = () => {
   // Submit booking
   const submitBooking = useCallback(async () => {
     // Validate form
-    const validationErrors = validateForm();
-    if (validationErrors.length > 0) {
-      validationErrors.forEach(err => toast.error(err));
-      return { success: false, errors: validationErrors };
+    const errors = validateForm();
+    if (errors.length > 0) {
+      setValidationErros(errors);
+      return { success: false, errors };
     }
+
+    setValidationErros([]);
 
     try {
       setSubmitting(true);
@@ -422,11 +428,47 @@ export const useStaffBooking = () => {
       return { success: true, data: result };
     } catch (err) {
       console.error('Error creating booking:', err);
-      const errorMessage =
-        err.response?.data?.message || 'Failed to create booking';
+      // Xử lý lỗi validation với cấu trúc errors object
+      let errorMessage = err.message;
+
+      // Kiểm tra errors trực tiếp từ error object (từ apiClient interceptor)
+      if (err.errors) {
+        const errors = err.errors;
+        const firstErrorKey = Object.keys(errors)[0];
+
+        if (firstErrorKey && errors[firstErrorKey]?.msg) {
+          errorMessage = errors[firstErrorKey].msg;
+        }
+      }
+      // Fallback: kiểm tra enhancedError (từ bookingService)
+      else if (err.enhancedError?.errors) {
+        const errors = err.enhancedError.errors;
+        const firstErrorKey = Object.keys(errors)[0];
+
+        if (firstErrorKey && errors[firstErrorKey]?.msg) {
+          errorMessage = errors[firstErrorKey].msg;
+        }
+      }
+      // Fallback: kiểm tra response data trực tiếp
+      else if (err.response?.data?.errors) {
+        const errors = err.response.data.errors;
+        const firstErrorKey = Object.keys(errors)[0];
+
+        if (firstErrorKey && errors[firstErrorKey]?.msg) {
+          errorMessage = errors[firstErrorKey].msg;
+        }
+      }
+      // Fallback: sử dụng message từ enhancedError hoặc response
+      else if (err.enhancedError?.message) {
+        errorMessage = err.enhancedError.message;
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+
       setError(errorMessage);
       toast.error(errorMessage);
-      return { success: false, error: errorMessage };
+
+      throw err;
     } finally {
       setSubmitting(false);
     }
@@ -476,5 +518,6 @@ export const useStaffBooking = () => {
 
     // Error
     error,
+    validationErrors,
   };
 };
