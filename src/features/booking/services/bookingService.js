@@ -69,6 +69,13 @@ export const bookingService = {
       throw error;
     }
   },
+  async checkInBooking(id, checkInData) {
+    const response = await apiClient.post(
+      endpoints.bookings.checkIn(id),
+      checkInData
+    );
+    return response.data;
+  },
 
   // Hoàn thành booking
   async completeBooking(id, completionData) {

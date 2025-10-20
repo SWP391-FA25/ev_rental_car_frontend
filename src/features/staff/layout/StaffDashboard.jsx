@@ -23,19 +23,15 @@ import {
 } from '../../shared/components/ui/sidebar';
 import { endpoints } from '../../shared/lib/endpoints';
 import { NotificationPreferences } from '../components/NotificationPreferences';
-import ReturnCar from '../components/ReturnCar';
 import BookingManagement from '../components/booking-management';
 import VehicleManagement from '../components/car-management';
-import { CheckInPage } from '../components/checkIn.jsx/CheckInPage.jsx';
+import CheckInPage from '../components/checkIn.jsx/CheckInPage';
 import { CustomerManagement } from '../components/customer-management';
 import DocumentVerification from '../components/document-verification';
 import { PaymentManagement } from '../components/payment-management';
 import { StaffHeader } from '../components/staff-header';
 import { StaffSidebar } from '../components/staff-sidebar';
 import StationManagement from '../components/station-management';
-import { CheckCircle } from 'lucide-react';
-import CheckInPage from '../components/checkIn.jsx/CheckInPage';
-
 import ReturnCar from '../components/ReturnCar';
 
 // const mockStaffData = [

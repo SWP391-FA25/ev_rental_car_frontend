@@ -91,6 +91,7 @@ export const endpoints = {
     updateStatus: id => `/api/bookings/${id}/status`,
     cancel: id => `/api/bookings/${id}/cancel`,
     complete: id => `/api/bookings/${id}/complete`,
+    checkIn: bookingId => `/api/bookings/${bookingId}/checkin`,
     checkDeposit: id => `/api/bookings/${id}/deposit-status`,
   },
   rentalHistory: {
@@ -104,21 +105,8 @@ export const endpoints = {
       `/api/inspections/booking/${bookingId}/renter`,
     getByVehicle: vehicleId => `/api/inspections/vehicle/${vehicleId}`,
     getByStaff: staffId => `/api/inspections/staff/${staffId}`,
-    getByType: type => `/api/inspections/type/${type}`,
-    getPending: () => `/api/inspections/pending`,
-    getCompleted: () => `/api/inspections/completed`,
-    getByDateRange: (from, to) => `/api/inspections/date-range?from=${from}&to=${to}`,
-    create: () => `/api/inspections`,
-    uploadImages: id => `/api/inspections/${id}/images`,
-    update: id => `/api/inspections/${id}`,
-    partialUpdate: id => `/api/inspections/${id}`,
-    complete: id => `/api/inspections/${id}/complete`,
-    verifyDocs: id => `/api/inspections/${id}/verify-docs`,
-    delete: id => `/api/inspections/${id}`,
-    deleteImage: (id, imageId) => `/api/inspections/${id}/images/${imageId}`,
-    statsByStaff: () => `/api/inspections/stats/by-staff`,
-    statsConditions: () => `/api/inspections/stats/conditions`,
-    statsDaily: () => `/api/inspections/stats/daily`,
+
+
   },
   payment: {
     createDeposit: () => '/api/payos/create',

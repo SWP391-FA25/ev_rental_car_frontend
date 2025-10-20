@@ -180,76 +180,9 @@ export function CheckInPage() {
         return () => { mounted = false }
     }, [])
 
-    // Fetch staff stats on mount
-    React.useEffect(() => {
-        let mounted = true
-            ; (async () => {
-                try {
-                    setIsLoadingStats(true)
-                    const res = await apiClient.get(endpoints.inspections.statsByStaff())
-                    console.debug('Staff stats response:', res)
 
-                    const statsData = res?.data?.stats ?? res?.data ?? null
 
-                    if (mounted) {
-                        setStaffStats(statsData)
-                        console.debug('Loaded staff stats:', statsData)
-                    }
-                } catch (e) {
-                    console.error('Failed to load staff stats', e)
-                    if (mounted) setStaffStats(null)
-                } finally {
-                    if (mounted) setIsLoadingStats(false)
-                }
-            })()
 
-        return () => { mounted = false }
-    }, [])
-
-    // Fetch pending and completed inspections for context
-    React.useEffect(() => {
-        let mounted = true
-            ; (async () => {
-                try {
-                    setIsLoadingInspections(true)
-
-                    // Fetch pending inspections
-                    const pendingRes = await apiClient.get(endpoints.inspections.getPending())
-                    const pendingData = pendingRes?.data?.inspections ?? pendingRes?.data ?? []
-
-                    // Fetch recent completed inspections (for reference)
-                    const completedRes = await apiClient.get(endpoints.inspections.getCompleted())
-                    const completedData = completedRes?.data?.inspections ?? completedRes?.data ?? []
-
-                    if (mounted) {
-                        setPendingInspections(Array.isArray(pendingData) ? pendingData : [])
-                        setCompletedInspections(Array.isArray(completedData) ? completedData.slice(0, 5) : []) // Only recent 5
-                        console.debug('Loaded inspections:', { pending: pendingData.length, completed: completedData.length })
-                    }
-                } catch (e) {
-                    console.error('Failed to load inspections', e)
-                    if (mounted) {
-                        setPendingInspections([])
-                        setCompletedInspections([])
-                    }
-                } finally {
-                    if (mounted) setIsLoadingInspections(false)
-                }
-            })()
-
-        return () => { mounted = false }
-    }, [])
-
-    // Function to check if booking already has inspection
-    const checkExistingInspection = async (bookingId) => {
-        try {
-            const res = await apiClient.get(endpoints.inspections.getByBooking(bookingId))
-            return res?.data?.inspections ?? res?.data ?? []
-        } catch (e) {
-            console.warn(`Failed to check existing inspection for booking ${bookingId}:`, e)
-            return []
-        }
-    }
 
     const handleInputChange = (e) => {
         const { name, value } = e.target
@@ -422,7 +355,7 @@ export function CheckInPage() {
                     console.log("Creating inspection:", inspectionData)
 
                     // Step 1: Create inspection record
-                    const inspectionRes = await apiClient.post(endpoints.inspections.create(), inspectionData)
+                    const inspectionRes = await apiClient.post(endpoints.bookings.checkIn(inspectionData.bookingId), inspectionData)
 
                     if (!inspectionRes?.success || !inspectionRes?.data?.inspection?.id) {
                         throw new Error('Failed to create inspection record')
@@ -464,6 +397,61 @@ export function CheckInPage() {
 
                     // Auto-refresh data after successful submission
                     alert("Kiểm tra xe đã được lưu thành công!")
+
+                    // Step 3: Check-in the booking (start rental)
+                    try {
+                        const checkInData = {
+                            actualStartTime: new Date().toISOString(),
+                            actualPickupLocation: formData.stationId,
+                            pickupOdometer: formData.mileage || 0,
+                            batteryLevel: formData.batteryLevel,
+                        }
+                        console.log("Checking in booking:", checkInData)
+                        const checkInRes = await apiClient.post(endpoints.bookings.checkIn(inspectionData.bookingId), checkInData)
+                        if (checkInRes?.success) {
+                            console.log("Booking checked in successfully")
+                            // Update local vehicle status to RENTED
+                            setVehicleInfo(prev => prev ? { ...prev, status: 'RENTED' } : prev)
+
+                            // Also persist vehicle status change on the server and notify other UI parts
+                            try {
+                                const vehicleIdToUpdate = inspectionData.vehicleId
+                                if (vehicleIdToUpdate) {
+                                    const vehicleUpdatePayload = {
+                                        status: 'RENTED',
+                                        ...(typeof formData.batteryLevel !== 'undefined' ? { batteryLevel: formData.batteryLevel } : {}),
+                                    }
+                                    const updateRes = await apiClient.patch(
+                                        endpoints.vehicles.update(vehicleIdToUpdate),
+                                        vehicleUpdatePayload
+                                    )
+                                    if (updateRes?.success) {
+                                        const updatedVehicle = updateRes.data?.vehicle ?? updateRes.data ?? null
+                                        if (updatedVehicle) {
+                                            setVehicleInfo(updatedVehicle)
+                                        }
+                                        // Dispatch event so other components (vehicle list) can refresh if they listen
+                                        try {
+                                            window.dispatchEvent(new CustomEvent('vehicleStatusChanged', {
+                                                detail: { vehicleId: vehicleIdToUpdate, status: 'RENTED' }
+                                            }))
+                                        } catch (e) {
+                                            // ignore event errors
+                                        }
+                                    } else {
+                                        console.warn('Vehicle update API returned failure:', updateRes)
+                                    }
+                                }
+                            } catch (vehErr) {
+                                console.warn('Failed to persist vehicle status to server:', vehErr)
+                            }
+                        } else {
+                            console.warn("Check-in failed:", checkInRes)
+                        }
+                    } catch (checkInError) {
+                        console.warn("Error during check-in:", checkInError)
+                        // Non-blocking: don't fail the whole process
+                    }
 
                     // Refresh pending inspections count
                     try {
