@@ -25,7 +25,7 @@ import { endpoints } from '../../shared/lib/endpoints';
 import { NotificationPreferences } from '../components/NotificationPreferences';
 import BookingManagement from '../components/booking-management';
 import VehicleManagement from '../components/car-management';
-import CheckInPage from '../components/checkIn.jsx/CheckInPage';
+import CheckInCar from '../components/CheckInCar';
 import { CustomerManagement } from '../components/customer-management';
 import DocumentVerification from '../components/document-verification';
 import { PaymentManagement } from '../components/payment-management';
@@ -468,8 +468,8 @@ export default function StaffDashboard() {
     </div>
   );
   const renderCheckIn = () => {
-    return <CheckInPage />;
-  };
+    return <CheckInCar />;
+  }
   const renderCars = () => {
     return <VehicleManagement />;
   };

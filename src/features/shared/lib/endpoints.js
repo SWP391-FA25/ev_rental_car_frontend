@@ -105,6 +105,9 @@ export const endpoints = {
       `/api/inspections/booking/${bookingId}/renter`,
     getByVehicle: vehicleId => `/api/inspections/vehicle/${vehicleId}`,
     getByStaff: staffId => `/api/inspections/staff/${staffId}`,
+    create: () => '/api/inspections',
+    uploadImage: inspectionId => `/api/inspections/${inspectionId}/upload-image`,
+    deleteImage: (inspectionId, imageIndex) => `/api/inspections/${inspectionId}/image/${imageIndex}`,
 
 
   },
