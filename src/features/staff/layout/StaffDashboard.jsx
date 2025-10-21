@@ -1,6 +1,7 @@
 import {
   Bell,
   Car,
+  CarFront,
   FileText,
   LayoutDashboard,
   Users,
@@ -531,7 +532,7 @@ export default function StaffDashboard() {
     {
       id: 'operations',
       label: 'Operations',
-      icon: <Car className='h-4 w-4' />,
+      icon: <CarFront className='h-4 w-4' />,
       items: [
         {
           id: 'bookings',
