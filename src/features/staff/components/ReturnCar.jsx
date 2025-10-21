@@ -29,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/features/shared/components/ui/select';
+import { Combobox } from '@/features/shared/components/ui/combobox';
 import { stationService } from '../../cars/services/stationService';
 import { formatCurrency } from '@/features/shared/lib/utils';
 import { useAuth } from '@/app/providers/AuthProvider';
@@ -55,10 +56,12 @@ export default function ReturnCar() {
   const [checklist, setChecklist] = useState({
     exterior: false,
     interior: false,
-    accessories: false,
   });
   const [incidentFiles, setIncidentFiles] = useState([]);
   const [incidentPreviews, setIncidentPreviews] = useState([]);
+  const [inspectionImages, setInspectionImages] = useState([]);
+
+
   const fileInputRef = useRef(null);
   const [hasIncident, setHasIncident] = useState(false);
   const [imageUploadError, setImageUploadError] = useState('');
@@ -80,6 +83,10 @@ export default function ReturnCar() {
   const [bookingError, setBookingError] = useState('');
   const [locationError, setLocationError] = useState('');
   const [completeError, setCompleteError] = useState('');
+  // Added: battery level & tire condition states
+  const [batteryLevel, setBatteryLevel] = useState('');
+  const [batteryError, setBatteryError] = useState('');
+  const [tireCondition, setTireCondition] = useState('');
   const MAX_ODOMETER_DIFF = 1000;
   const isOverdue = useMemo(() => {
     const deadline = booking?.endTime ? new Date(booking.endTime) : null;
@@ -107,12 +114,22 @@ export default function ReturnCar() {
     fetchEligible();
   }, []);
 
+  // Initialize batteryLevel from booking data if available
+  useEffect(() => {
+    const initial = booking?.vehicle?.batteryLevel ?? booking?.batteryLevel;
+    if (typeof initial === 'number' && !Number.isNaN(initial)) {
+      const rounded = Math.round(Math.max(0, Math.min(100, initial)));
+      setBatteryLevel(String(rounded));
+      setBatteryError('');
+    }
+  }, [booking]);
+
   const handleSelectBooking = async value => {
-      setBookingId(value);
-      setBookingError('');
-      setLocationError('');
-      setCompleteError('');
-      try {
+    setBookingId(value);
+    setBookingError('');
+    setLocationError('');
+    setCompleteError('');
+    try {
       const res = await getBookingById(value);
       const b = res?.booking || res?.data?.booking || null;
       setBooking(b);
@@ -284,7 +301,7 @@ export default function ReturnCar() {
       setIncidentPreviews([]);
       setIncidentNotes('');
       setImageUploadError('');
-      setChecklist({ exterior: false, interior: false, accessories: false });
+      setChecklist({ exterior: false, interior: false });
       // setLastRecordedOdometer(null); // removed: giữ lại Odo gần nhất theo booking
     }
   }, [hasIncident]);
@@ -315,7 +332,6 @@ export default function ReturnCar() {
     setChecklist({
       exterior: false,
       interior: false,
-      accessories: false,
     });
     setIncidentFiles([]);
     setIncidentNotes('');
@@ -324,12 +340,15 @@ export default function ReturnCar() {
     setNotes('');
     setTotalAmount(null);
     setLastRecordedOdometer(null);
-     setOdoError('');
-     setShowOdoValidation(false);
-      setBookingError('');
-      setLocationError('');
-      setCompleteError('');
-    };
+    setOdoError('');
+    setShowOdoValidation(false);
+    setBookingError('');
+    setLocationError('');
+    setCompleteError('');
+    setBatteryLevel('');
+    setBatteryError('');
+    setTireCondition('');
+  };
 
   // Inline validation helper cho Odo
   const getOdoError = (value, currentBooking) => {
@@ -397,24 +416,86 @@ export default function ReturnCar() {
           setImageUploadError(
             t('staffReturnCar.toast.imageTooLarge', { name: f.name })
           );
+        
           return false;
         }
         return true;
       });
 
-      const formData = new FormData();
-      validFiles.forEach(file => formData.append('images', file));
-      const res = await apiClient.post(
-        `/api/inspections/${inspectionId}/upload-image`,
-        formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } }
-      );
-      const images =
-        res?.data?.images ||
-        res?.data?.inspection?.images ||
-        res?.data?.uploaded ||
-        [];
-      return Array.isArray(images) ? images : [];
+      const uploadResults = [];
+      const vehicleId = booking?.vehicle?.id || booking?.vehicleId;
+
+      if (vehicleId) {
+        // Prefer uploading via vehicle images endpoint (supports multiple files)
+        const fd = new FormData();
+        for (const f of validFiles) {
+          fd.append('images', f);
+        }
+        try {
+          const res = await apiClient.post(
+            endpoints.vehicles.uploadImage(vehicleId),
+            fd,
+            { headers: { 'Content-Type': 'multipart/form-data' } }
+          );
+          const imgs = res?.data?.data?.images ?? res?.data?.images ?? [];
+          for (const it of imgs) {
+            uploadResults.push({
+              url: it?.url,
+              thumbnailUrl: it?.thumbnailUrl,
+              fileId: it?.imageKitFileId,
+              fileName: it?.fileName,
+            });
+          }
+        } catch (uploadErr) {
+          console.warn('Vehicle images upload failed:', uploadErr?.message || uploadErr);
+        }
+      } else {
+        // Fallback: upload to inspection endpoint one by one
+        for (const file of validFiles) {
+          try {
+            const fd = new FormData();
+            fd.append('image', file);
+            const res = await apiClient.post(
+              endpoints.inspections.uploadImage(inspectionId),
+              fd,
+              { headers: { 'Content-Type': 'multipart/form-data' } }
+            );
+            const base = res?.data?.data ?? res?.data;
+            uploadResults.push({
+              url: base?.url,
+              thumbnailUrl: base?.thumbnailUrl,
+              fileId: base?.fileId,
+              fileName: file.name,
+            });
+          } catch (uploadError) {
+            console.warn('Upload inspection image failed:', uploadError?.message || uploadError);
+          }
+        }
+      }
+      // Cập nhật state inspectionImages với kết quả upload
+      const normalized = (uploadResults || [])
+        .map(u => {
+          const base = u?.data ? u.data : u;
+          return {
+            url: base?.url,
+            thumbnailUrl: base?.thumbnailUrl,
+            fileId: base?.fileId,
+          };
+        })
+        .filter(x => x && (x.url || x.thumbnailUrl));
+      if (normalized.length) {
+        setInspectionImages(prev => {
+          const next = [...prev];
+          for (const ni of normalized) {
+            const exists = next.some(
+              m => (ni.fileId && m.fileId === ni.fileId) || (!ni.fileId && m.url === ni.url)
+            );
+            if (!exists) next.push(ni);
+          }
+          return next;
+        });
+      }
+      return uploadResults;
     } catch (err) {
       console.warn('Upload inspection images error:', err?.message || err);
       return [];
@@ -426,7 +507,7 @@ export default function ReturnCar() {
     try {
       if (!inspectionId || typeof imageIndex !== 'number') return false;
       await apiClient.delete(
-        `/api/inspections/${inspectionId}/image/${imageIndex}`
+        endpoints.inspections.deleteImage(inspectionId, imageIndex)
       );
       return true;
     } catch (err) {
@@ -467,7 +548,19 @@ export default function ReturnCar() {
       return;
     }
     setOdoError('');
-    // validation handled via getOdoError
+
+    // Battery level validation 0-100
+    const batteryLevelNum = Number(batteryLevel);
+    if (
+      batteryLevel === '' ||
+      Number.isNaN(batteryLevelNum) ||
+      batteryLevelNum < 0 ||
+      batteryLevelNum > 100
+    ) {
+      setBatteryError('Mức pin phải từ 0 đến 100');
+      return;
+    }
+    setBatteryError('');
 
     // Require incident images if selected incident
     if (hasIncident && incidentFiles.length === 0) {
@@ -481,12 +574,12 @@ export default function ReturnCar() {
       actualReturnLocation: normalizedLocation,
       returnOdometer: odo,
       notes,
-      // Optional fields such as batteryLevel or rating can be added here if needed
+      batteryLevel: Math.min(100, Math.max(0, Math.round(batteryLevelNum))),
     };
 
     try {
       const id = booking?.id || bookingId;
-      // Tạo inspection (CHECK_OUT) trước khi hoàn tất đơn thuê
+      // Tạo inspection (CHECK_IN) trước khi hoàn tất đơn thuê
       try {
         if (!user?.id) {
           setCompleteError(t('staffReturnCar.toast.missingStaff'));
@@ -498,21 +591,9 @@ export default function ReturnCar() {
           vehicleId: booking?.vehicle?.id || booking?.vehicleId,
           staffId: user?.id,
           bookingId: id,
-          inspectionType: 'CHECK_OUT',
+          inspectionType: 'CHECK_IN',
           mileage: odo,
-          // batteryLevel is REQUIRED by Prisma schema (0-100)
-          batteryLevel:
-            typeof (booking?.vehicle?.batteryLevel ?? booking?.batteryLevel) ===
-            'number'
-              ? Math.min(
-                  100,
-                  Math.max(
-                    0,
-                    booking?.vehicle?.batteryLevel ?? booking?.batteryLevel
-                  )
-                )
-              : 50, // fallback to 50% if unknown
-          // Prisma enum ConditionStatus requires one of: GOOD | FAIR | POOR
+          batteryLevel: Math.min(100, Math.max(0, Math.round(batteryLevelNum))),
           exteriorCondition: hasIncident
             ? checklist.exterior
               ? 'GOOD'
@@ -523,12 +604,7 @@ export default function ReturnCar() {
               ? 'GOOD'
               : 'POOR'
             : 'GOOD',
-          // accessories is JSON; send a minimal array to reflect presence/missing
-          accessories: hasIncident
-            ? checklist.accessories
-              ? ['ALL_PRESENT']
-              : ['MISSING_ITEMS']
-            : ['ALL_PRESENT'],
+          tireCondition: tireCondition || undefined,
           damageNotes: hasIncident ? incidentNotes || undefined : undefined,
           notes: notes || undefined,
           documentVerified: false,
@@ -546,7 +622,70 @@ export default function ReturnCar() {
           createdInspection?.data?.id;
 
         if (hasIncident && incidentFiles.length && inspectionId) {
-          await uploadInspectionImages(inspectionId);
+          const uploaded = await uploadInspectionImages(inspectionId);
+          try {
+            // Lấy images hiện có để tránh trùng lặp
+            let currentImages = [];
+            try {
+              const getRes = await apiClient.get(
+                endpoints.inspections.getById(inspectionId)
+              );
+              const rawImages =
+                getRes?.data?.inspection?.images ??
+                getRes?.data?.images ??
+                getRes?.images ??
+                [];
+              currentImages = Array.isArray(rawImages) ? rawImages : [];
+            } catch (e) {
+              console.warn('Fetch current inspection images error:', e?.message || e);
+            }
+
+            const normalize = imgs =>
+              (Array.isArray(imgs) ? imgs : [])
+                .map(img => {
+                  if (typeof img === 'string') return { url: img };
+                  const base = img?.data ? img.data : img;
+                  return {
+                    url: base?.url,
+                    thumbnailUrl: base?.thumbnailUrl,
+                    fileId: base?.fileId,
+                    fileName: base?.fileName,
+                  };
+                })
+                .filter(x => x && (x.url || x.thumbnailUrl));
+
+            const merged = [...normalize(currentImages)];
+            for (const ni of normalize(uploaded)) {
+              const exists = merged.some(
+                m => (ni.fileId && m.fileId === ni.fileId) || (!ni.fileId && m.url === ni.url)
+              );
+              if (!exists) merged.push(ni);
+            }
+
+            await apiClient.put(endpoints.inspections.update(inspectionId), {
+              images: merged,
+              isCompleted: true,
+            });
+            setInspectionImages(merged);
+          } catch (err) {
+            console.warn('Update inspection images error:', err?.message || err);
+            // Nếu lỗi, vẫn cố gắng đánh dấu hoàn tất
+            try {
+              await apiClient.put(endpoints.inspections.update(inspectionId), {
+                isCompleted: true,
+              });
+            } catch (err2) {
+              console.warn('Mark inspection completed error:', err2?.message || err2);
+            }
+          }
+        } else if (inspectionId) {
+          try {
+            await apiClient.put(endpoints.inspections.update(inspectionId), {
+              isCompleted: true,
+            });
+          } catch (err) {
+            console.warn('Mark inspection completed error:', err?.message || err);
+          }
         }
       } catch (err) {
         console.warn('Create inspection error:', err?.message || err);
@@ -647,7 +786,9 @@ export default function ReturnCar() {
           }
         } catch {}
         // Fallback chung cho lỗi 400
-        setCompleteError(serverMsg || t('staffReturnCar.toast.validationFailed'));
+        setCompleteError(
+          serverMsg || t('staffReturnCar.toast.validationFailed')
+        );
         return;
       }
 
@@ -682,33 +823,35 @@ export default function ReturnCar() {
             <Label className='block mb-2'>
               {t('staffReturnCar.booking.selectLabel')}
             </Label>
-            <Select value={bookingId} onValueChange={handleSelectBooking}>
-                 <SelectTrigger className={bookingError ? 'border-red-500 focus:ring-red-500' : ''}>
-                   <SelectValue
-                     placeholder={t('staffReturnCar.booking.selectPlaceholder')}
-                   />
-                 </SelectTrigger>
-                 <SelectContent>
-                {loadingBookings && (
-                  <div className='px-2 py-1 text-sm text-muted-foreground'>
-                    {t('common.loading')}
-                  </div>
-                )}
-                {eligibleBookings.map(b => (
-                  <SelectItem key={b.id} value={b.id}>
-                    {b.user?.name || b.customer?.name || ''}
-                    {' → '}
-                    {t('staffReturnCar.booking.vehicle')}
-                    {': '}
-                    {b.vehicle?.licensePlate || b.vehicle?.name || ''}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-               {bookingError && (
-                 <p className='mt-1 text-xs text-red-600'>{bookingError}</p>
-               )}
-             </div>
+            <Combobox
+              value={bookingId}
+              onValueChange={handleSelectBooking}
+              placeholder={t('staffReturnCar.booking.selectPlaceholder')}
+              searchPlaceholder='Tìm kiếm booking...'
+              className={
+                bookingError ? 'border-red-500 focus:ring-red-500' : ''
+              }
+              disabled={loadingBookings}
+              options={eligibleBookings.map(b => ({
+                value: String(b.id),
+                label: `${b.user?.name || b.customer?.name || ''} → ${t(
+                  'staffReturnCar.booking.vehicle'
+                )}: ${b.vehicle?.licensePlate || b.vehicle?.name || ''}`,
+                searchText: [
+                  b.user?.name,
+                  b.customer?.name,
+                  b.vehicle?.licensePlate,
+                  b.vehicle?.name,
+                  String(b.id),
+                ]
+                  .filter(Boolean)
+                  .join(' '),
+              }))}
+            />
+            {bookingError && (
+              <p className='mt-1 text-xs text-red-600'>{bookingError}</p>
+            )}
+          </div>
           {booking && (
             <div>
               <Label className='block mb-2'>
@@ -748,17 +891,56 @@ export default function ReturnCar() {
                   {t('staffReturnCar.booking.time')}
                 </p>
                 <p className='font-medium'>
-                  {booking.startTime
-                    ? new Date(booking.startTime).toLocaleString()
-                    : ''}{' '}
-                  {booking.endTime
-                    ? ' ' + new Date(booking.endTime).toLocaleString()
-                    : ''}
-                  {isOverdue && (
-                    <Badge variant='destructive' className='ml-2'>
-                      {t('staffReturnCar.booking.overdue')}
-                    </Badge>
-                  )}
+                  {(() => {
+                    const startStr = booking.startTime
+                      ? new Date(booking.startTime).toLocaleString()
+                      : '';
+                    const endStr = booking.endTime
+                      ? new Date(booking.endTime).toLocaleString()
+                      : '';
+                    const [sPre, sRest] = (() => {
+                      const parts = startStr.split(',');
+                      return [
+                        parts[0] || '',
+                        parts.length > 1 ? parts.slice(1).join(',').trim() : '',
+                      ];
+                    })();
+                    const [ePre, eRest] = (() => {
+                      const parts = endStr.split(',');
+                      return [
+                        parts[0] || '',
+                        parts.length > 1 ? parts.slice(1).join(',').trim() : '',
+                      ];
+                    })();
+                    const arrowPrefix =
+                      (sPre.length >= ePre.length ? sPre : ePre) + ', ';
+                    return (
+                      <>
+                        {startStr && (
+                          <>
+                            <span>
+                              {sPre}
+                              {sRest ? ', ' + sRest : ''}
+                            </span>
+                            <br />
+                            <span className='inline-block'>
+                              <span className='invisible'>{arrowPrefix}</span>↓
+                            </span>
+                            <br />
+                          </>
+                        )}
+                        <span>
+                          {ePre}
+                          {eRest ? ', ' + eRest : ''}
+                        </span>
+                        {isOverdue && (
+                          <Badge variant='destructive' className='ml-2'>
+                            {t('staffReturnCar.booking.overdue')}
+                          </Badge>
+                        )}
+                      </>
+                    );
+                  })()}
                 </p>
               </div>
               {(totalAmount ?? booking?.totalAmount) != null && (
@@ -820,34 +1002,37 @@ export default function ReturnCar() {
             <Label className='block mb-2'>
               {t('staffReturnCar.returnDetails.location')}
             </Label>
-            <Select
+            <Combobox
               value={selectedReturnStationId}
               onValueChange={value => {
-                 setSelectedReturnStationId(value);
-                 setLocationError('');
-                 setCompleteError('');
-               }}
-            >
-              <SelectTrigger className={locationError ? 'border-red-500 focus:ring-red-500' : ''}>
-                <SelectValue
-                  placeholder={t(
-                    'staffReturnCar.returnDetails.locationPlaceholder'
-                  )}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {loadingStations && (
-                  <div className='px-2 py-1 text-sm text-muted-foreground'>
-                    {t('staffReturnCar.loadingStations')}
-                  </div>
-                )}
-                {stations.map(station => (
-                  <SelectItem key={station.id} value={String(station.id)}>
-                    {station.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                setSelectedReturnStationId(value);
+                setLocationError('');
+                setCompleteError('');
+              }}
+              placeholder={t(
+                'staffReturnCar.returnDetails.locationPlaceholder'
+              )}
+              searchPlaceholder='Tìm kiếm trạm...'
+              className={
+                locationError ? 'border-red-500 focus:ring-red-500' : ''
+              }
+              disabled={loadingStations}
+              options={stations.map(station => ({
+                value: String(station.id),
+                label: station.name || station.address || String(station.id),
+                searchText: [
+                  station.name,
+                  station.address,
+                  station.code,
+                  station.city,
+                  station.district,
+                  station.province,
+                  String(station.id),
+                ]
+                  .filter(Boolean)
+                  .join(' '),
+              }))}
+            />
             {locationError && (
               <p className='mt-1 text-xs text-red-600'>{locationError}</p>
             )}
@@ -896,6 +1081,49 @@ export default function ReturnCar() {
                   <SelectItem value='ISSUE'>
                     {t('staffReturnCar.inspection.issue')}
                   </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Mức pin (%) */}
+            <div>
+              <Label className='block mb-2'>Mức pin (%)</Label>
+              <Input
+                type='number'
+                min={0}
+                max={100}
+                value={batteryLevel}
+                onChange={e => {
+                  setBatteryLevel(e.target.value);
+                  setBatteryError('');
+                }}
+                placeholder='Nhập phần trăm pin (0–100)'
+                aria-invalid={!!batteryError}
+                className={
+                  batteryError
+                    ? 'border-red-500 focus-visible:ring-red-500'
+                    : ''
+                }
+              />
+              {batteryError && (
+                <p className='text-xs text-red-600 mt-1'>{batteryError}</p>
+              )}
+            </div>
+
+            {/* Tình trạng lốp */}
+            <div>
+              <Label className='block mb-2'>Tình trạng lốp</Label>
+              <Select
+                value={tireCondition || ''}
+                onValueChange={val => setTireCondition(val)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder='Chọn tình trạng' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='GOOD'>Tốt</SelectItem>
+                  <SelectItem value='FAIR'>Trung bình</SelectItem>
+                  <SelectItem value='POOR'>Kém</SelectItem>
                 </SelectContent>
               </Select>
             </div>
