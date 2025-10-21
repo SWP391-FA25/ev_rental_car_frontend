@@ -63,6 +63,7 @@ export default function ReturnCar() {
   const [incidentPreviews, setIncidentPreviews] = useState([]);
   const [inspectionImages, setInspectionImages] = useState([]);
 
+
   const fileInputRef = useRef(null);
   const [hasIncident, setHasIncident] = useState(false);
   const [imageUploadError, setImageUploadError] = useState('');
@@ -74,8 +75,7 @@ export default function ReturnCar() {
   // Payment loading state
   const [paymentLoading, setPaymentLoading] = useState(false);
   // Payload lưu lại để hoàn tất sau khi thanh toán
-  const [pendingCompletionPayload, setPendingCompletionPayload] =
-    useState(null);
+  const [pendingCompletionPayload, setPendingCompletionPayload] = useState(null);
   // Return details per schema
   const [returnOdometer, setReturnOdometer] = useState('');
   // Actual return station selection
@@ -422,7 +422,7 @@ export default function ReturnCar() {
           setImageUploadError(
             t('staffReturnCar.toast.imageTooLarge', { name: f.name })
           );
-
+        
           return false;
         }
         return true;
@@ -453,10 +453,7 @@ export default function ReturnCar() {
             });
           }
         } catch (uploadErr) {
-          console.warn(
-            'Vehicle images upload failed:',
-            uploadErr?.message || uploadErr
-          );
+          console.warn('Vehicle images upload failed:', uploadErr?.message || uploadErr);
         }
       } else {
         // Fallback: upload to inspection endpoint one by one
@@ -477,10 +474,7 @@ export default function ReturnCar() {
               fileName: file.name,
             });
           } catch (uploadError) {
-            console.warn(
-              'Upload inspection image failed:',
-              uploadError?.message || uploadError
-            );
+            console.warn('Upload inspection image failed:', uploadError?.message || uploadError);
           }
         }
       }
@@ -500,9 +494,7 @@ export default function ReturnCar() {
           const next = [...prev];
           for (const ni of normalized) {
             const exists = next.some(
-              m =>
-                (ni.fileId && m.fileId === ni.fileId) ||
-                (!ni.fileId && m.url === ni.url)
+              m => (ni.fileId && m.fileId === ni.fileId) || (!ni.fileId && m.url === ni.url)
             );
             if (!exists) next.push(ni);
           }
@@ -605,7 +597,7 @@ export default function ReturnCar() {
           vehicleId: booking?.vehicle?.id || booking?.vehicleId,
           staffId: user?.id,
           bookingId: id,
-          inspectionType: 'CHECK_OUT',
+          inspectionType: 'CHECK_IN',
           mileage: odo,
           batteryLevel: Math.min(100, Math.max(0, Math.round(batteryLevelNum))),
           exteriorCondition: hasIncident
@@ -651,10 +643,7 @@ export default function ReturnCar() {
                 [];
               currentImages = Array.isArray(rawImages) ? rawImages : [];
             } catch (e) {
-              console.warn(
-                'Fetch current inspection images error:',
-                e?.message || e
-              );
+              console.warn('Fetch current inspection images error:', e?.message || e);
             }
 
             const normalize = imgs =>
@@ -674,9 +663,7 @@ export default function ReturnCar() {
             const merged = [...normalize(currentImages)];
             for (const ni of normalize(uploaded)) {
               const exists = merged.some(
-                m =>
-                  (ni.fileId && m.fileId === ni.fileId) ||
-                  (!ni.fileId && m.url === ni.url)
+                m => (ni.fileId && m.fileId === ni.fileId) || (!ni.fileId && m.url === ni.url)
               );
               if (!exists) merged.push(ni);
             }
@@ -687,20 +674,14 @@ export default function ReturnCar() {
             });
             setInspectionImages(merged);
           } catch (err) {
-            console.warn(
-              'Update inspection images error:',
-              err?.message || err
-            );
+            console.warn('Update inspection images error:', err?.message || err);
             // Nếu lỗi, vẫn cố gắng đánh dấu hoàn tất
             try {
               await apiClient.put(endpoints.inspections.update(inspectionId), {
                 isCompleted: true,
               });
             } catch (err2) {
-              console.warn(
-                'Mark inspection completed error:',
-                err2?.message || err2
-              );
+              console.warn('Mark inspection completed error:', err2?.message || err2);
             }
           }
         } else if (inspectionId) {
@@ -709,10 +690,7 @@ export default function ReturnCar() {
               isCompleted: true,
             });
           } catch (err) {
-            console.warn(
-              'Mark inspection completed error:',
-              err?.message || err
-            );
+            console.warn('Mark inspection completed error:', err?.message || err);
           }
         }
       } catch (err) {
@@ -726,7 +704,9 @@ export default function ReturnCar() {
       // Chuẩn bị dữ liệu cho modal thanh toán trước khi hoàn tất
       const vehiclePricing = booking?.vehicle?.pricing || null;
       const vehicleLabel =
-        booking?.vehicle?.name || booking?.vehicle?.licensePlate || '';
+        booking?.vehicle?.name ||
+        booking?.vehicle?.licensePlate ||
+        '';
       const payable = booking?.totalAmount ?? 0;
       setReturnSummary({
         bookingId: id,
@@ -843,10 +823,7 @@ export default function ReturnCar() {
     if (!id || !pendingCompletionPayload) return;
 
     try {
-      const res = await bookingService.completeBooking(
-        id,
-        pendingCompletionPayload
-      );
+      const res = await bookingService.completeBooking(id, pendingCompletionPayload);
       const updatedBooking = res?.booking;
       const pricing = res?.summary?.pricing;
 
@@ -1446,38 +1423,38 @@ export default function ReturnCar() {
               </div>
             </div>
           </div>
-          <DialogFooter className='flex gap-2'>
-            <Button
-              variant='outline'
+          <DialogFooter className="flex gap-2">
+            <Button 
+              variant="outline" 
               onClick={() => setReturnSummaryOpen(false)}
             >
               {t('common.close')}
             </Button>
-            <Button
-              onClick={handlePayment}
-              disabled={paymentLoading || !returnSummary?.totalAmount}
-              className='flex items-center gap-2'
-            >
-              {paymentLoading ? (
-                <>
-                  <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-white'></div>
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <CreditCard className='h-4 w-4' />
-                  Pay {formatCurrency(returnSummary?.totalAmount ?? 0, 'VND')}
-                </>
-              )}
-            </Button>
-            <Button
-              variant='default'
-              onClick={handleMarkCompleted}
-              disabled={!pendingCompletionPayload}
-            >
-              Mark Completed
-            </Button>
-          </DialogFooter>
+            <Button 
+               onClick={handlePayment}
+               disabled={paymentLoading || !returnSummary?.totalAmount}
+               className="flex items-center gap-2"
+             >
+               {paymentLoading ? (
+                 <>
+                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                   Processing...
+                 </>
+               ) : (
+                 <>
+                   <CreditCard className="h-4 w-4" />
+                   Pay {formatCurrency(returnSummary?.totalAmount ?? 0, 'VND')}
+                 </>
+               )}
+             </Button>
+             <Button 
+               variant="default"
+               onClick={handleMarkCompleted}
+               disabled={!pendingCompletionPayload}
+             >
+               Mark Completed
+             </Button>
+           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
