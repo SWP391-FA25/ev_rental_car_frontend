@@ -372,7 +372,7 @@ export default function CarDetailPage() {
               </div>
               <div className='border rounded-lg px-4 py-3 flex items-center justify-center gap-2'>
                 <Settings className='w-4 h-4' />
-                <span className='text-sm'>{car.transmission}</span>
+                <span className='text-sm'>{car.licensePlate}</span>
               </div>
               <div className='border rounded-lg px-4 py-3 flex items-center justify-center gap-2'>
                 <MapPin className='w-4 h-4' />

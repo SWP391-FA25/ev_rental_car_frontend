@@ -646,7 +646,7 @@ const BookingManagement = () => {
                               {t('booking.actions.waitingForDeposit')}
                             </DropdownMenuItem>
                           )} */}
-                        {booking.status === 'CONFIRMED' && (
+                        {/* {booking.status === 'CONFIRMED' && (
                           <DropdownMenuItem
                             onClick={() => startRental(booking.id)}
                             className='text-blue-600'
@@ -666,8 +666,8 @@ const BookingManagement = () => {
                             <CheckCircle className='mr-2 h-4 w-4' />
                             {t('booking.actions.completeRental')}
                           </DropdownMenuItem>
-                        )}
-                        {!['COMPLETED', 'CANCELLED'].includes(
+                        )} */}
+                        {!['COMPLETED', 'CANCELLED', 'CONFIRMED'].includes(
                           booking.status
                         ) && (
                           <DropdownMenuItem
