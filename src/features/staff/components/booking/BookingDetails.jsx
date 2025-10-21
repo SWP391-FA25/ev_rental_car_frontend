@@ -14,6 +14,7 @@ import { formatCurrency, formatDate } from '../../../shared/lib/utils';
 import { useEffect, useState } from 'react';
 import { apiClient } from '../../../shared/lib/apiClient';
 import { endpoints } from '../../../shared/lib/endpoints';
+import { env } from '../../../shared/lib/env';
 
 export function BookingDetails({ open, onOpenChange, booking }) {
   const { t } = useTranslation();
@@ -309,16 +310,37 @@ export function BookingDetails({ open, onOpenChange, booking }) {
                   const battery = item?.batteryLevel ?? null;
                   const exteriorCondition = item?.exteriorCondition || '';
                   const interiorCondition = item?.interiorCondition || '';
+                  const tireCondition = item?.tireCondition || '';
+                  // Robustly normalize image URLs and make absolute when needed
+                  const makeAbsoluteUrl = (url) => {
+                    if (!url) return null;
+                    const s = String(url);
+                    if (/^https?:\/\//i.test(s) || s.startsWith('data:')) return s;
+                    const base = env.apiBaseUrl.replace(/\/+$/, '');
+                    const path = s.startsWith('/') ? s : `/${s}`;
+                    return `${base}${path}`;
+                  };
                   const rawImages = item?.images;
                   const imageUrls = Array.isArray(rawImages)
-                    ? rawImages
-                        .map(img =>
-                          typeof img === 'string'
-                            ? img
-                            : img?.url || img?.thumbnailUrl || null
+                    ? Array.from(
+                        new Set(
+                          rawImages
+                            .map((img) => {
+                              const candidate =
+                                typeof img === 'string'
+                                  ? img
+                                  : img?.url ||
+                                    img?.thumbnailUrl ||
+                                    img?.data?.url ||
+                                    img?.data?.thumbnailUrl ||
+                                    null;
+                              return makeAbsoluteUrl(candidate);
+                            })
+                            .filter(Boolean)
                         )
-                        .filter(Boolean)
+                      )
                     : [];
+                  const noIncident = !damageNotes && imageUrls.length === 0 && exteriorCondition === 'GOOD' && interiorCondition === 'GOOD' && tireCondition === 'GOOD';
 
                   return (
                     <div
@@ -378,12 +400,16 @@ export function BookingDetails({ open, onOpenChange, booking }) {
                       <div className='space-y-2 mt-3'>
                         <Label>{t('booking.details.inspections.item.damageNotes')}</Label>
                         <div className='p-2 border rounded-md bg-muted/50 min-h-[36px]'>
-                          {damageNotes || t('booking.details.na')}
+                          {damageNotes
+                            ? damageNotes
+                            : (!damageNotes && imageUrls.length === 0 && exteriorCondition === 'GOOD' && interiorCondition === 'GOOD' && tireCondition === 'GOOD'
+                              ? t('booking.details.inspections.item.noIncidentAfterReturn')
+                              : t('booking.details.na'))}
                         </div>
                       </div>
 
                       {/* Inspection summary */}
-                      {(battery !== null || exteriorCondition || interiorCondition) && (
+                      {(battery !== null || exteriorCondition || interiorCondition || tireCondition) && (
                         <div className='space-y-2 mt-3'>
                           <Label>{t('booking.details.inspections.item.checklist')}</Label>
                           <div className='grid grid-cols-1 md:grid-cols-2 gap-2'>
@@ -405,32 +431,40 @@ export function BookingDetails({ open, onOpenChange, booking }) {
                                 {interiorCondition || t('booking.details.na')}
                               </Badge>
                             </div>
+                            <div className='p-2 border rounded-md bg-muted/40 flex items-center justify-between'>
+                              <span>{t('booking.details.inspections.item.tireCondition')}</span>
+                              <Badge variant='outline' className={getConditionBadgeClass(tireCondition)}>
+                                {tireCondition || t('booking.details.na')}
+                              </Badge>
+                            </div>
                           </div>
                         </div>
                       )}
 
                       {/* Inspection images */}
-                      <div className='space-y-2 mt-3'>
-                        <Label>{t('booking.details.inspections.item.images') || 'Inspection Images'}</Label>
-                        {imageUrls.length > 0 ? (
-                          <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2'>
-                            {imageUrls.map((url, idx) => (
-                              <div key={`${item?.id || 'img'}-${idx}`} className='rounded-md overflow-hidden border bg-muted/40'>
-                                <img
-                                  src={url}
-                                  alt={`inspection-${idx + 1}`}
-                                  className='w-full h-24 object-cover'
-                                  loading='lazy'
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
-                            {t('booking.details.na')}
-                          </div>
-                        )}
-                      </div>
+                      {!noIncident && (
+                        <div className='space-y-2 mt-3'>
+                          <Label>{t('booking.details.inspections.item.images') || 'Inspection Images'}</Label>
+                          {imageUrls.length > 0 ? (
+                            <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2'>
+                              {imageUrls.map((url, idx) => (
+                                <div key={`${item?.id || 'img'}-${idx}`} className='rounded-md overflow-hidden border bg-muted/40'>
+                                  <img
+                                    src={url}
+                                    alt={`inspection-${idx + 1}`}
+                                    className='w-full h-24 object-cover'
+                                    loading='lazy'
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
+                              {t('booking.details.na')}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   );
                 })}

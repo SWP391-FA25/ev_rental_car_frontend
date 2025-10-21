@@ -198,12 +198,14 @@
       "overdueProceed": "Booking is overdue, proceeding with return",
       "loadStationsFail": "Failed to load stations",
       "invalidReturnLocation": "Please select a valid return station (3-200 chars)",
-      "invalidReturnOdometer": "Please enter a valid return odometer (>= 0)",
+      "invalidReturnOdometer": "Please enter a valid return odometer (>= Pickup odometer)",
       "imageTooLarge": "{{name}} exceeds 5MB, skipping this file.",
       "missingStaff": "Missing staff information",
       "invalidEndTime": "Return time must be after start or actual start. Try again in a few minutes.",
       "validationFailed": "Validation failed. Please check the return information.",
-      "alreadyCompleted": "Booking was already completed; no need to confirm again."
+      "alreadyCompleted": "Booking was already completed; no need to confirm again.",
+      "invalidReturnOdometerMin": "Return odometer must be >= pickup odometer ({{pickup}})",
+      "invalidReturnOdometerRange": "Odometer difference exceeds {{max}} km limit"
     },
     "loadingStations": "Loading stations...",
     "booking": {
@@ -215,7 +217,7 @@
       "selectPlaceholder": "Choose an eligible booking",
       "depositLabel": "Deposit (VND)",
       "customer": "Customer",
-      "vehicle": "Vehicle",
+      "vehicle": "Vehicle License Plate",
       "time": "Time",
       "overdue": "Overdue",
       "totalLabel": "Total amount (VND)"
@@ -224,8 +226,8 @@
       "title": "2. Vehicle inspection",
       "resultLabel": "Inspection result",
       "resultPlaceholder": "Select result",
-      "pass": "Refund deposit (No issues)",
-      "issue": "Has incident",
+      "pass": "No damage",
+      "issue": "Incident",
       "checklist": {
         "exterior": "Exterior",
         "interior": "Interior",
@@ -237,6 +239,9 @@
     },
     "incident": {
       "title": "Upload incident (images/videos)",
+      "selectFilesButton": "Select files (images/videos)",
+      "selectedCount": "{{count}} files selected",
+      "imagesRequired": "Please upload at least 1 incident image",
       "notesLabel": "Incident notes",
       "notesPlaceholder": "Describe damages, location, severity..."
     },
@@ -247,7 +252,8 @@
       "location": "Actual return location",
       "notes": "Notes",
       "notesPlaceholder": "Add any notes about the return...",
-      "locationPlaceholder": "Enter actual return location"
+      "locationPlaceholder": "Enter actual return location",
+      "lastRecordedLabel": "Last recorded odometer: {{value}} km"
     },
     "deposit": {
       "title": "3. Deposit & refund calculation",
@@ -324,7 +330,8 @@
     "vietnamese": "Vietnamese",
     "close": "Close",
     "cancel": "Cancel",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "delete": "Delete"
   },
   "admin": {
     "header": {
@@ -1142,7 +1149,8 @@
           "interiorCondition": "Interior Condition",
           "tireCondition": "Tire Condition",
           "documentVerified": "Document Verified",
-          "images": "Image Upload"
+          "images": "Image Upload",
+          "noIncidentAfterReturn": "No incident after return"
         },
         "status": {
           "completed": "Completed",
@@ -1833,6 +1841,40 @@
       "broadcastError": "Failed to broadcast notification",
       "deleteSuccess": "Notification deleted successfully",
       "deleteError": "Failed to delete notification"
+    }
+  },
+  "payment": {
+    "success": {
+      "title": "Payment Successful!",
+      "rentalFeeSubtitle": "Rental fee has been paid successfully.",
+      "depositSubtitle": "Your deposit has been paid successfully.",
+      "rentalFeeBannerTitle": "Rental Fee Received",
+      "rentalFeeBannerDesc": "Your rental fee payment is complete.",
+      "depositConfirmedTitle": "Booking Confirmed - Vehicle Reserved",
+      "depositConfirmedDesc": "Your booking has been automatically confirmed and the vehicle is now reserved for you. No further action needed from staff.",
+      "depositPending": "Payment received. Booking confirmation in progress...",
+      "bookingIdLabel": "Booking ID:",
+      "statusLabel": "Status:",
+      "depositStatusLabel": "Deposit Status:",
+      "vehicleDetails": "Vehicle Details",
+      "vehicleLabel": "Vehicle:",
+      "licenseLabel": "License:",
+      "rentalPeriod": "Rental Period",
+      "startLabel": "Start:",
+      "endLabel": "End:",
+      "pickupLocation": "Pickup Location",
+      "paymentSummary": "Payment Summary",
+      "totalPaid": "Total Paid:",
+      "depositPaid": "Deposit Paid:",
+      "remainingAmount": "Remaining Amount:",
+      "whatsNextTitle": "What's next?",
+      "whatsNextReserved": "Your vehicle is reserved. Arrive at the pickup location on your scheduled date.",
+      "whatsNextProcessing": "We are processing your booking confirmation. You will receive an email notification shortly.",
+      "viewBookings": "View My Bookings",
+      "bookAnother": "Book Another Vehicle",
+      "backToStaff": "Back to Staff Dashboard",
+      "loading": "Verifying payment status...",
+      "notFound": "Booking not found"
     }
   }
 }

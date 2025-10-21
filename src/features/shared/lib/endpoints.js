@@ -104,9 +104,13 @@ export const endpoints = {
     getByVehicle: vehicleId => `/api/inspections/vehicle/${vehicleId}`,
     getByStaff: staffId => `/api/inspections/staff/${staffId}`,
     create: () => '/api/inspections',
+    uploadImage: id => `/api/inspections/${id}/upload-image`,
+    deleteImage: (id, imageIndex) => `/api/inspections/${id}/image/${imageIndex}`,
+    update: id => `/api/inspections/${id}`,
   },
   payment: {
     createDeposit: () => '/api/payos/create',
+    createRentalFee: () => '/api/payos/create-rental-fee',
     getStatus: paymentId => `/api/payos/status/${paymentId}`,
   },
 };
