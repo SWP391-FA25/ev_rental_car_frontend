@@ -235,6 +235,7 @@ const BookingManagement = () => {
         variant: 'default',
         icon: Car,
         label: t('booking.status.inProgress'),
+        color: 'text-white bg-amber-700 border-amber-700',
       },
       COMPLETED: {
         variant: 'default',
@@ -252,7 +253,7 @@ const BookingManagement = () => {
     const Icon = config.icon;
 
     return (
-      <Badge variant={config.variant} className='flex items-center gap-1'>
+      <Badge variant={config.variant} className={`flex items-center gap-1 ${config.color || ''}`}>
         <Icon className='h-3 w-3' />
         {config.label}
       </Badge>
@@ -507,7 +508,7 @@ const BookingManagement = () => {
           </div>
         </div>
         <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold text-blue-600'>
+          <div className='text-2xl font-bold text-orange-600'>
             {bookings.filter(b => b.status === 'IN_PROGRESS').length}
           </div>
           <div className='text-sm text-muted-foreground'>
@@ -646,7 +647,7 @@ const BookingManagement = () => {
                               {t('booking.actions.waitingForDeposit')}
                             </DropdownMenuItem>
                           )} */}
-                        {booking.status === 'CONFIRMED' && (
+                        {/* {booking.status === 'CONFIRMED' && (
                           <DropdownMenuItem
                             onClick={() => startRental(booking.id)}
                             className='text-blue-600'
@@ -666,8 +667,8 @@ const BookingManagement = () => {
                             <CheckCircle className='mr-2 h-4 w-4' />
                             {t('booking.actions.completeRental')}
                           </DropdownMenuItem>
-                        )}
-                        {!['COMPLETED', 'CANCELLED'].includes(
+                        )} */}
+                        {!['COMPLETED', 'CANCELLED', 'CONFIRMED'].includes(
                           booking.status
                         ) && (
                           <DropdownMenuItem

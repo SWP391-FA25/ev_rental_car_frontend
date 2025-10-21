@@ -246,8 +246,12 @@
   },
   "staffSidebar": {
     "dashboard": "Bảng điều khiển",
+    "operations": "Hoạt động",
+    "vehicle-management": "Quản lý xe",
+    "customer-service": "Dịch vụ khách hàng",
     "cars": "Quản lý xe",
     "bookings": "Đặt lịch",
+    "check-in": "Check-In",
     "returnCar": "Trả xe",
     "stations": "Trạm",
     "customers": "Khách hàng",
@@ -288,12 +292,14 @@
       "overdueProceed": "Đơn thuê đã quá hạn, vẫn tiến hành trả xe",
       "loadStationsFail": "Không thể tải danh sách trạm",
       "invalidReturnLocation": "Vui lòng chọn trạm trả hợp lệ (3-200 ký tự)",
-      "invalidReturnOdometer": "Vui lòng nhập công tơ mét trả hợp lệ (>= 0)",
+      "invalidReturnOdometer": "Vui lòng nhập công tơ mét trả hợp lệ (>= Odo lúc nhận)",
       "imageTooLarge": "{{name}} vượt quá 5MB, sẽ bỏ qua ảnh này.",
       "missingStaff": "Thiếu thông tin nhân viên",
       "invalidEndTime": "Thời gian trả phải sau thời gian bắt đầu hoặc giờ nhận thực tế. Vui lòng thử lại sau vài phút.",
       "validationFailed": "Xác thực thất bại. Vui lòng kiểm tra thông tin trả xe.",
-      "alreadyCompleted": "Đơn thuê đã được hoàn tất trước đó, không cần xác nhận lại."
+      "alreadyCompleted": "Đơn thuê đã được hoàn tất trước đó, không cần xác nhận lại.",
+      "invalidReturnOdometerMin": "Số km trả phải >= số km lúc nhận ({{pickup}})",
+      "invalidReturnOdometerRange": "Chênh lệch số km vượt quá giới hạn {{max}} km"
     },
     "loadingStations": "Đang tải trạm...",
     "booking": {
@@ -301,9 +307,11 @@
       "idLabel": "Mã đơn thuê",
       "idPlaceholder": "VD: BOOK001",
       "loadButton": "Tải đơn",
+      "selectLabel": "Chọn đơn",
+      "selectPlaceholder": "Chọn đơn đang hoạt động",
       "depositLabel": "Tiền cọc (VNĐ)",
       "customer": "Khách hàng",
-      "vehicle": "Xe",
+      "vehicle": "Biển số xe",
       "time": "Thời gian",
       "overdue": "Quá hạn",
       "totalLabel": "Số tiền cần phải thanh toán (VNĐ)"
@@ -325,6 +333,9 @@
     },
     "incident": {
       "title": "Upload sự cố (ảnh/video)",
+      "selectFilesButton": "Chọn tệp ảnh/video",
+      "selectedCount": "{{count}} tệp đã chọn",
+      "imagesRequired": "Vui lòng tải lên ít nhất 1 ảnh sự cố",
       "notesLabel": "Ghi chú sự cố",
       "notesPlaceholder": "Mô tả thiệt hại, vị trí, mức độ..."
     },
@@ -335,7 +346,8 @@
       "location": "Vị trí trả thực tế",
       "notes": "Ghi chú",
       "notesPlaceholder": "Thêm ghi chú về việc trả xe...",
-      "locationPlaceholder": "Nhập vị trí trả thực tế"
+      "locationPlaceholder": "Nhập vị trí trả thực tế",
+      "lastRecordedLabel": "Odo gần nhất: {{value}} km"
     },
     "deposit": {
       "title": "3. Tính toán cọc & hoàn tiền",
@@ -374,7 +386,8 @@
     "vietnamese": "Tiếng Việt",
     "close": "Đóng",
     "cancel": "Hủy",
-    "loading": "Đang tải..."
+    "loading": "Đang tải...",
+    "delete": "Xóa"
   },
   "staff": {
     "notifications": {
@@ -1334,7 +1347,8 @@
           "interiorCondition": "Tình trạng nội thất",
           "tireCondition": "Tình trạng lốp",
           "documentVerified": "Đã xác minh giấy tờ",
-          "images": "Tải ảnh"
+          "images": "Tải ảnh",
+          "noIncidentAfterReturn": "Xe sau khi trả không có sự cố"
         },
         "status": {
           "completed": "Hoàn tất",
@@ -1703,6 +1717,40 @@
     "actions": {
       "processPayment": "Xử lý thanh toán",
       "processRefund": "Xử lý hoàn tiền"
+    }
+  },
+  "payment": {
+    "success": {
+      "title": "Thanh toán thành công!",
+      "rentalFeeSubtitle": "Phí thuê xe đã được thanh toán thành công.",
+      "depositSubtitle": "Tiền cọc đã được thanh toán thành công.",
+      "rentalFeeBannerTitle": "Đã nhận phí thuê",
+      "rentalFeeBannerDesc": "Thanh toán phí thuê xe đã hoàn tất.",
+      "depositConfirmedTitle": "Đặt chỗ đã xác nhận - Xe đã được giữ chỗ",
+      "depositConfirmedDesc": "Đơn đặt của bạn đã được xác nhận tự động và xe đã được giữ chỗ. Nhân viên không cần thao tác thêm.",
+      "depositPending": "Đã nhận thanh toán. Đang xử lý xác nhận đặt chỗ...",
+      "bookingIdLabel": "Mã đơn:",
+      "statusLabel": "Trạng thái:",
+      "depositStatusLabel": "Trạng thái tiền cọc:",
+      "vehicleDetails": "Chi tiết xe",
+      "vehicleLabel": "Xe:",
+      "licenseLabel": "Biển số:",
+      "rentalPeriod": "Thời gian thuê",
+      "startLabel": "Bắt đầu:",
+      "endLabel": "Kết thúc:",
+      "pickupLocation": "Điểm nhận xe",
+      "paymentSummary": "Tổng kết thanh toán",
+      "totalPaid": "Đã thanh toán:",
+      "depositPaid": "Đã cọc:",
+      "remainingAmount": "Còn lại:",
+      "whatsNextTitle": "Tiếp theo là gì?",
+      "whatsNextReserved": "Xe của bạn đã được giữ chỗ. Vui lòng đến điểm nhận vào ngày đã hẹn.",
+      "whatsNextProcessing": "Chúng tôi đang xử lý xác nhận đặt chỗ. Bạn sẽ nhận email thông báo sớm.",
+      "viewBookings": "Xem đơn của tôi",
+      "bookAnother": "Đặt xe khác",
+      "backToStaff": "Về bảng điều khiển nhân viên",
+      "loading": "Đang xác minh trạng thái thanh toán...",
+      "notFound": "Không tìm thấy đơn đặt"
     }
   }
 }

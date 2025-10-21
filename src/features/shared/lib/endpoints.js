@@ -113,6 +113,7 @@ export const endpoints = {
   },
   payment: {
     createDeposit: () => '/api/payos/create',
+    createRentalFee: () => '/api/payos/create-rental-fee',
     getStatus: paymentId => `/api/payos/status/${paymentId}`,
   },
 };

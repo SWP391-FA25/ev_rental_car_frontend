@@ -200,7 +200,6 @@ const data = {
 };
 
 function StaffNav({ items }) {
-  const { t } = useTranslation();
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Staff Dashboard</SidebarGroupLabel>
@@ -451,22 +450,28 @@ export function StaffSidebar({
   const { t } = useTranslation();
   const reorderMenuItems = (items = []) => {
     const arr = Array.isArray(items) ? [...items] : [];
-    const idx = arr.findIndex(
-      it =>
-        (it.id && String(it.id).toLowerCase().includes('checkin')) ||
-        (it.label && String(it.label).toLowerCase().includes('check-in')) ||
-        (it.label && String(it.label).toLowerCase().includes('checkin'))
-    );
-    if (idx > -1) {
-      const [checkInItem] = arr.splice(idx, 1);
-      // insert after the first item (if exists), otherwise push to front
-      const insertAt = arr.length > 0 ? 1 : 0;
-      arr.splice(insertAt, 0, checkInItem);
-    }
+
+    // Find the parent group containing check-in
+    arr.forEach(group => {
+      if (group.items && Array.isArray(group.items)) {
+        const checkInIdx = group.items.findIndex(
+          it =>
+            (it.id && String(it.id).toLowerCase().includes('checkin')) ||
+            (it.label && String(it.label).toLowerCase().includes('check-in'))
+        );
+
+        // If found, move to first position within its group
+        if (checkInIdx > -1 && checkInIdx !== 0) {
+          const [checkInItem] = group.items.splice(checkInIdx, 1);
+          group.items.unshift(checkInItem);
+        }
+      }
+    });
+
     return arr;
   };
   const orderedMenuItems = reorderMenuItems(menuItems);
-  const translateLabel = (label) => {
+  const translateLabel = label => {
     if (!label || typeof label !== 'string') return label;
     const translated = t(label);
     if (translated === label && label.includes('staffSidebar')) {
@@ -496,17 +501,59 @@ export function StaffSidebar({
         <SidebarGroup>
           <SidebarGroupLabel>{t('staffSidebar.navigation')}</SidebarGroupLabel>
           <SidebarMenu>
-            {orderedMenuItems.map(item => (
-              <SidebarMenuItem key={item.id}>
-                <SidebarMenuButton
-                  onClick={() => setActiveTab(item.id)}
-                  isActive={activeTab === item.id}
-                >
-                  {item.icon}
-                  <span>{translateLabel(item.label)}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
+            {orderedMenuItems.map(item => {
+              // Check if item has submenus
+              if (item.items && item.items.length > 0) {
+                // Render as collapsible group
+                return (
+                  <Collapsible
+                    key={item.id}
+                    asChild
+                    defaultOpen={item.items.some(
+                      subItem => subItem.id === activeTab
+                    )}
+                    className='group/collapsible'
+                  >
+                    <SidebarMenuItem>
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuButton>
+                          {item.icon}
+                          <span>{translateLabel(item.label)}</span>
+                          <ChevronUp className='ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180' />
+                        </SidebarMenuButton>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <SidebarMenuSub>
+                          {item.items.map(subItem => (
+                            <SidebarMenuSubItem key={subItem.id}>
+                              <SidebarMenuSubButton
+                                onClick={() => setActiveTab(subItem.id)}
+                                isActive={activeTab === subItem.id}
+                              >
+                                <span>{translateLabel(subItem.label)}</span>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    </SidebarMenuItem>
+                  </Collapsible>
+                );
+              } else {
+                // Render as standalone menu item
+                return (
+                  <SidebarMenuItem key={item.id}>
+                    <SidebarMenuButton
+                      onClick={() => setActiveTab(item.id)}
+                      isActive={activeTab === item.id}
+                    >
+                      {item.icon}
+                      <span>{translateLabel(item.label)}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              }
+            })}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>

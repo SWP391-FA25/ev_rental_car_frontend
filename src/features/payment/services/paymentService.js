@@ -33,6 +33,37 @@ export const paymentService = {
     }
   },
 
+  // Tạo payment link cho rental fee
+  async createRentalFeePayment(bookingId, amount, description) {
+    try {
+      console.log('PaymentService - RentalFee - Sending request:', {
+        bookingId,
+        amount,
+        description: description || `Rental Fee ${bookingId.substring(0, 8)}`,
+      });
+
+      const response = await apiClient.post(
+        endpoints.payment.createRentalFee(),
+        {
+          bookingId,
+          amount,
+          description: description || `Rental Fee ${bookingId.substring(0, 8)}`,
+        }
+      );
+
+      // Ensure we return the correct data structure
+      const result = response.data.data || response.data;
+      return result;
+    } catch (error) {
+      console.error('PaymentService - RentalFee - Error:', error);
+      console.error(
+        'PaymentService - RentalFee - Error response:',
+        error.response?.data
+      );
+      throw error;
+    }
+  },
+
   // Lấy payment status
   async getPaymentStatus(paymentId) {
     const response = await apiClient.get(

@@ -234,8 +234,6 @@ export default function CarsPage() {
                     <SelectItem value='all'>All Fuels</SelectItem>
                     <SelectItem value='Electric'>Electric</SelectItem>
                     <SelectItem value='Hybrid'>Hybrid</SelectItem>
-                    <SelectItem value='Diesel'>Diesel</SelectItem>
-                    <SelectItem value='Petrol'>Petrol</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button variant='outline' onClick={resetFilters}>
@@ -382,7 +380,7 @@ export default function CarsPage() {
                         </div>
                         <div className='flex items-center gap-2 text-sm text-muted-foreground'>
                           <Settings className='w-4 h-4' />
-                          <span>{vehicle.transmission}</span>
+                          <span>{vehicle.licensePlate}</span>
                         </div>
                         <div className='flex items-center gap-2 text-sm text-muted-foreground'>
                           <MapPin className='w-4 h-4' />

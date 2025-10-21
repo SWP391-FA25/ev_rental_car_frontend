@@ -16,6 +16,7 @@ import CarsPage from '@/features/cars/components/CarsPage.jsx';
 import DepositPaymentPage from '@/features/payment/pages/DepositPaymentPage.jsx';
 import PaymentCancelPage from '@/features/payment/pages/PaymentCancelPage.jsx';
 import PaymentSuccessPage from '@/features/payment/pages/PaymentSuccessPage.jsx';
+import TotalAmountPaymentPage from '@/features/payment/pages/TotalAmountPaymentPage.jsx';
 import SearchResultsPage from '@/features/search/pages/SearchResultsPage.jsx';
 import Home from '@/features/shared/components/Home.jsx';
 import { NotificationPage } from '@/features/shared/components/NotificationPage';
@@ -39,6 +40,7 @@ export const router = createBrowserRouter([
       { path: '/search-results', element: <SearchResultsPage /> },
       { path: '/policy', element: <PolicyPage /> },
       { path: '/payment/deposit', element: <DepositPaymentPage /> },
+      { path: '/payment/total-amount', element: <TotalAmountPaymentPage /> },
       { path: '/payment/success', element: <PaymentSuccessPage /> },
       { path: '/payment/cancel', element: <PaymentCancelPage /> },
       { path: '/payment/failure', element: <PaymentCancelPage /> },
