@@ -1714,5 +1714,39 @@
       "processPayment": "Xử lý thanh toán",
       "processRefund": "Xử lý hoàn tiền"
     }
+  },
+  "payment": {
+    "success": {
+      "title": "Thanh toán thành công!",
+      "rentalFeeSubtitle": "Phí thuê xe đã được thanh toán thành công.",
+      "depositSubtitle": "Tiền cọc đã được thanh toán thành công.",
+      "rentalFeeBannerTitle": "Đã nhận phí thuê",
+      "rentalFeeBannerDesc": "Thanh toán phí thuê xe đã hoàn tất.",
+      "depositConfirmedTitle": "Đặt chỗ đã xác nhận - Xe đã được giữ chỗ",
+      "depositConfirmedDesc": "Đơn đặt của bạn đã được xác nhận tự động và xe đã được giữ chỗ. Nhân viên không cần thao tác thêm.",
+      "depositPending": "Đã nhận thanh toán. Đang xử lý xác nhận đặt chỗ...",
+      "bookingIdLabel": "Mã đơn:",
+      "statusLabel": "Trạng thái:",
+      "depositStatusLabel": "Trạng thái tiền cọc:",
+      "vehicleDetails": "Chi tiết xe",
+      "vehicleLabel": "Xe:",
+      "licenseLabel": "Biển số:",
+      "rentalPeriod": "Thời gian thuê",
+      "startLabel": "Bắt đầu:",
+      "endLabel": "Kết thúc:",
+      "pickupLocation": "Điểm nhận xe",
+      "paymentSummary": "Tổng kết thanh toán",
+      "totalPaid": "Đã thanh toán:",
+      "depositPaid": "Đã cọc:",
+      "remainingAmount": "Còn lại:",
+      "whatsNextTitle": "Tiếp theo là gì?",
+      "whatsNextReserved": "Xe của bạn đã được giữ chỗ. Vui lòng đến điểm nhận vào ngày đã hẹn.",
+      "whatsNextProcessing": "Chúng tôi đang xử lý xác nhận đặt chỗ. Bạn sẽ nhận email thông báo sớm.",
+      "viewBookings": "Xem đơn của tôi",
+      "bookAnother": "Đặt xe khác",
+      "backToStaff": "Về bảng điều khiển nhân viên",
+      "loading": "Đang xác minh trạng thái thanh toán...",
+      "notFound": "Không tìm thấy đơn đặt"
+    }
   }
 }

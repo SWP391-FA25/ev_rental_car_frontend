@@ -1838,5 +1838,39 @@
       "deleteSuccess": "Notification deleted successfully",
       "deleteError": "Failed to delete notification"
     }
+  },
+  "payment": {
+    "success": {
+      "title": "Payment Successful!",
+      "rentalFeeSubtitle": "Rental fee has been paid successfully.",
+      "depositSubtitle": "Your deposit has been paid successfully.",
+      "rentalFeeBannerTitle": "Rental Fee Received",
+      "rentalFeeBannerDesc": "Your rental fee payment is complete.",
+      "depositConfirmedTitle": "Booking Confirmed - Vehicle Reserved",
+      "depositConfirmedDesc": "Your booking has been automatically confirmed and the vehicle is now reserved for you. No further action needed from staff.",
+      "depositPending": "Payment received. Booking confirmation in progress...",
+      "bookingIdLabel": "Booking ID:",
+      "statusLabel": "Status:",
+      "depositStatusLabel": "Deposit Status:",
+      "vehicleDetails": "Vehicle Details",
+      "vehicleLabel": "Vehicle:",
+      "licenseLabel": "License:",
+      "rentalPeriod": "Rental Period",
+      "startLabel": "Start:",
+      "endLabel": "End:",
+      "pickupLocation": "Pickup Location",
+      "paymentSummary": "Payment Summary",
+      "totalPaid": "Total Paid:",
+      "depositPaid": "Deposit Paid:",
+      "remainingAmount": "Remaining Amount:",
+      "whatsNextTitle": "What's next?",
+      "whatsNextReserved": "Your vehicle is reserved. Arrive at the pickup location on your scheduled date.",
+      "whatsNextProcessing": "We are processing your booking confirmation. You will receive an email notification shortly.",
+      "viewBookings": "View My Bookings",
+      "bookAnother": "Book Another Vehicle",
+      "backToStaff": "Back to Staff Dashboard",
+      "loading": "Verifying payment status...",
+      "notFound": "Booking not found"
+    }
   }
 }

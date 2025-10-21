@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import { bookingService } from '../../booking/services/bookingService';
 import { useBooking } from '../../booking/hooks/useBooking';
+import { paymentService } from '../../payment/services/paymentService';
 import { Button } from '../../shared/components/ui/button';
 import {
   Card,
@@ -33,6 +34,7 @@ import { Combobox } from '@/features/shared/components/ui/combobox';
 import { stationService } from '../../cars/services/stationService';
 import { formatCurrency } from '@/features/shared/lib/utils';
 import { useAuth } from '@/app/providers/AuthProvider';
+import { CreditCard } from 'lucide-react';
 import { apiClient } from '../../shared/lib/apiClient';
 import { endpoints } from '../../shared/lib/endpoints';
 
@@ -70,6 +72,10 @@ export default function ReturnCar() {
   // Modal hiển thị tổng tiền và pricing của xe sau khi hoàn tất
   const [returnSummaryOpen, setReturnSummaryOpen] = useState(false);
   const [returnSummary, setReturnSummary] = useState(null);
+  // Payment loading state
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  // Payload lưu lại để hoàn tất sau khi thanh toán
+  const [pendingCompletionPayload, setPendingCompletionPayload] = useState(null);
   // Return details per schema
   const [returnOdometer, setReturnOdometer] = useState('');
   // Actual return station selection
@@ -692,33 +698,16 @@ export default function ReturnCar() {
         // Không chặn luồng; vẫn tiến hành hoàn tất đơn thuê
       }
 
-      const res = await bookingService.completeBooking(id, payload);
-      // bookingService.completeBooking trả về response.data từ API:
-      // { booking: ..., summary: { pricing: ... } }
-      const updatedBooking = res?.booking;
-      const pricing = res?.summary?.pricing;
+      // Lưu payload để hoàn tất sau khi thanh toán
+      setPendingCompletionPayload(payload);
 
-      // Cập nhật booking và totalAmount
-      if (updatedBooking) setBooking(updatedBooking);
-      if (pricing && typeof pricing.totalAmount !== 'undefined') {
-        setTotalAmount(pricing.totalAmount);
-      } else if (typeof updatedBooking?.totalAmount !== 'undefined') {
-        setTotalAmount(updatedBooking.totalAmount);
-      }
-
-      // Chuẩn bị dữ liệu cho modal hiển thị sau khi hoàn tất
-      const vehiclePricing =
-        updatedBooking?.vehicle?.pricing || booking?.vehicle?.pricing || null;
+      // Chuẩn bị dữ liệu cho modal thanh toán trước khi hoàn tất
+      const vehiclePricing = booking?.vehicle?.pricing || null;
       const vehicleLabel =
-        updatedBooking?.vehicle?.name ||
-        updatedBooking?.vehicle?.licensePlate ||
         booking?.vehicle?.name ||
         booking?.vehicle?.licensePlate ||
         '';
-      const payable =
-        (pricing && typeof pricing.totalAmount !== 'undefined'
-          ? pricing.totalAmount
-          : updatedBooking?.totalAmount) ?? 0;
+      const payable = booking?.totalAmount ?? 0;
       setReturnSummary({
         bookingId: id,
         vehicleLabel,
@@ -728,23 +717,14 @@ export default function ReturnCar() {
       setReturnSummaryOpen(true);
 
       setCompleteError('');
-      // Refresh eligible bookings list to remove completed booking
-      try {
-        setLoadingBookings(true);
-        const resData = await getAllBookings({ limit: 100 });
-        const list = (resData?.bookings || resData || []).filter(b => {
-          const status = b.status || b.bookingStatus || '';
-          return status === 'IN_PROGRESS';
-        });
-        setEligibleBookings(list);
-      } catch (err) {
-        console.error('Refresh eligible bookings error', err);
-      } finally {
-        setLoadingBookings(false);
-      }
 
-      // Reset form chỉ khi hoàn tất thành công
-      resetAllFields();
+      // KHÔNG cập nhật danh sách booking ở đây vì chưa hoàn tất
+      // Người dùng sẽ thanh toán trước, sau đó bấm "Mark Completed" để đổi trạng thái
+
+      // Không reset form ngay để giữ lại dữ liệu cho bước hoàn tất
+
+      // Chờ thanh toán trước khi hoàn tất đơn thuê
+      // (Danh sách booking sẽ được refresh sau khi bấm "Mark Completed")
     } catch (e) {
       // Hiển thị thông báo lỗi rõ ràng cho các trường hợp 400 (Validation) và 409 (Idempotent)
       const status = e?.status ?? e?.response?.status;
@@ -799,6 +779,85 @@ export default function ReturnCar() {
       }
 
       // Mặc định
+      setCompleteError(serverMsg || t('staffReturnCar.toast.completeFail'));
+    }
+  };
+
+  // Handle payment for total amount
+  const handlePayment = async () => {
+    if (!returnSummary?.bookingId || !returnSummary?.totalAmount) {
+      return;
+    }
+
+    try {
+      setPaymentLoading(true);
+      // Persist completion payload for success page to use
+      try {
+        localStorage.setItem(
+          `completePayload:${returnSummary.bookingId}`,
+          JSON.stringify(pendingCompletionPayload || {})
+        );
+      } catch {}
+
+      const response = await paymentService.createRentalFeePayment(
+        returnSummary.bookingId,
+        returnSummary.totalAmount,
+        `Rental Fee ${returnSummary.bookingId.slice(-8)}`
+      );
+
+      if (response?.paymentUrl) {
+        // Redirect to PayOS payment page
+        window.location.href = response.paymentUrl;
+      }
+    } catch (error) {
+      console.error('Payment creation failed:', error);
+      // You can add toast notification here if needed
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
+  // Mark booking completed after payment
+  const handleMarkCompleted = async () => {
+    const id = booking?.id || bookingId;
+    if (!id || !pendingCompletionPayload) return;
+
+    try {
+      const res = await bookingService.completeBooking(id, pendingCompletionPayload);
+      const updatedBooking = res?.booking;
+      const pricing = res?.summary?.pricing;
+
+      if (updatedBooking) setBooking(updatedBooking);
+      if (pricing && typeof pricing.totalAmount !== 'undefined') {
+        setTotalAmount(pricing.totalAmount);
+      } else if (typeof updatedBooking?.totalAmount !== 'undefined') {
+        setTotalAmount(updatedBooking.totalAmount);
+      }
+
+      setReturnSummaryOpen(false);
+      setPendingCompletionPayload(null);
+      setCompleteError('');
+
+      // Refresh eligible bookings list to remove completed booking
+      try {
+        setLoadingBookings(true);
+        const resData = await getAllBookings({ limit: 100 });
+        const list = (resData?.bookings || resData || []).filter(b => {
+          const status = b.status || b.bookingStatus || '';
+          return status === 'IN_PROGRESS';
+        });
+        setEligibleBookings(list);
+      } catch (err) {
+        console.error('Refresh eligible bookings error', err);
+      } finally {
+        setLoadingBookings(false);
+      }
+
+      // Reset form sau khi hoàn tất
+      resetAllFields();
+    } catch (e) {
+      const status = e?.status ?? e?.response?.status;
+      const serverMsg = e?.response?.data?.message || e?.message;
       setCompleteError(serverMsg || t('staffReturnCar.toast.completeFail'));
     }
   };
@@ -1364,11 +1423,38 @@ export default function ReturnCar() {
               </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button onClick={() => setReturnSummaryOpen(false)}>
+          <DialogFooter className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setReturnSummaryOpen(false)}
+            >
               {t('common.close')}
             </Button>
-          </DialogFooter>
+            <Button 
+               onClick={handlePayment}
+               disabled={paymentLoading || !returnSummary?.totalAmount}
+               className="flex items-center gap-2"
+             >
+               {paymentLoading ? (
+                 <>
+                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                   Processing...
+                 </>
+               ) : (
+                 <>
+                   <CreditCard className="h-4 w-4" />
+                   Pay {formatCurrency(returnSummary?.totalAmount ?? 0, 'VND')}
+                 </>
+               )}
+             </Button>
+             <Button 
+               variant="default"
+               onClick={handleMarkCompleted}
+               disabled={!pendingCompletionPayload}
+             >
+               Mark Completed
+             </Button>
+           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
