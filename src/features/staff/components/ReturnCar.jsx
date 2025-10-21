@@ -159,10 +159,10 @@ export default function ReturnCar() {
           const list = Array.isArray(data?.inspections)
             ? data.inspections
             : Array.isArray(data)
-            ? data
-            : Array.isArray(data?.items)
-            ? data.items
-            : [];
+              ? data
+              : Array.isArray(data?.items)
+                ? data.items
+                : [];
           const sorted = [...list].sort(
             (a, c) => new Date(c?.createdAt || 0) - new Date(a?.createdAt || 0)
           );
@@ -174,14 +174,14 @@ export default function ReturnCar() {
             typeof latest?.mileage === 'number'
               ? latest.mileage
               : typeof latest?.odometer === 'number'
-              ? latest.odometer
-              : null;
+                ? latest.odometer
+                : null;
           setLastRecordedOdometer(
             latestOdo != null
               ? latestOdo
               : typeof b?.pickupOdometer === 'number'
-              ? b.pickupOdometer
-              : null
+                ? b.pickupOdometer
+                : null
           );
         } else {
           setLastRecordedOdometer(
@@ -227,10 +227,10 @@ export default function ReturnCar() {
           const list = Array.isArray(data?.inspections)
             ? data.inspections
             : Array.isArray(data)
-            ? data
-            : Array.isArray(data?.items)
-            ? data.items
-            : [];
+              ? data
+              : Array.isArray(data?.items)
+                ? data.items
+                : [];
           const sorted = [...list].sort(
             (a, c) => new Date(c?.createdAt || 0) - new Date(a?.createdAt || 0)
           );
@@ -242,14 +242,14 @@ export default function ReturnCar() {
             typeof latest?.mileage === 'number'
               ? latest.mileage
               : typeof latest?.odometer === 'number'
-              ? latest.odometer
-              : null;
+                ? latest.odometer
+                : null;
           setLastRecordedOdometer(
             latestOdo != null
               ? latestOdo
               : typeof b?.pickupOdometer === 'number'
-              ? b.pickupOdometer
-              : null
+                ? b.pickupOdometer
+                : null
           );
         } else {
           setLastRecordedOdometer(
@@ -295,7 +295,7 @@ export default function ReturnCar() {
       previews.forEach(p => {
         try {
           URL.revokeObjectURL(p.url);
-        } catch {}
+        } catch { }
       });
     };
   }, [incidentFiles]);
@@ -367,8 +367,8 @@ export default function ReturnCar() {
       typeof lastRecordedOdometer === 'number'
         ? lastRecordedOdometer
         : Number.isFinite(pickup)
-        ? pickup
-        : undefined;
+          ? pickup
+          : undefined;
 
     if (typeof baseMin === 'number') {
       if (odo < baseMin) {
@@ -422,7 +422,7 @@ export default function ReturnCar() {
           setImageUploadError(
             t('staffReturnCar.toast.imageTooLarge', { name: f.name })
           );
-        
+
           return false;
         }
         return true;
@@ -535,10 +535,10 @@ export default function ReturnCar() {
     );
     const normalizedLocation = selectedStation
       ? (
-          selectedStation.address ||
-          selectedStation.name ||
-          String(selectedStation.id)
-        ).trim()
+        selectedStation.address ||
+        selectedStation.name ||
+        String(selectedStation.id)
+      ).trim()
       : '';
 
     // Frontend validation to match backend requirements
@@ -764,7 +764,7 @@ export default function ReturnCar() {
             setCompleteError(t('staffReturnCar.toast.invalidEndTime'));
             return;
           }
-        } catch {}
+        } catch { }
         // Fallback chung cho lỗi 400
         setCompleteError(
           serverMsg || t('staffReturnCar.toast.validationFailed')
@@ -797,7 +797,7 @@ export default function ReturnCar() {
           `completePayload:${returnSummary.bookingId}`,
           JSON.stringify(pendingCompletionPayload || {})
         );
-      } catch {}
+      } catch { }
 
       const response = await paymentService.createRentalFeePayment(
         returnSummary.bookingId,
@@ -1424,37 +1424,37 @@ export default function ReturnCar() {
             </div>
           </div>
           <DialogFooter className="flex gap-2">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setReturnSummaryOpen(false)}
             >
               {t('common.close')}
             </Button>
-            <Button 
-               onClick={handlePayment}
-               disabled={paymentLoading || !returnSummary?.totalAmount}
-               className="flex items-center gap-2"
-             >
-               {paymentLoading ? (
-                 <>
-                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                   Processing...
-                 </>
-               ) : (
-                 <>
-                   <CreditCard className="h-4 w-4" />
-                   Pay {formatCurrency(returnSummary?.totalAmount ?? 0, 'VND')}
-                 </>
-               )}
-             </Button>
-             <Button 
-               variant="default"
-               onClick={handleMarkCompleted}
-               disabled={!pendingCompletionPayload}
-             >
-               Mark Completed
-             </Button>
-           </DialogFooter>
+            <Button
+              onClick={handlePayment}
+              disabled={paymentLoading || !returnSummary?.totalAmount}
+              className="flex items-center gap-2"
+            >
+              {paymentLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <CreditCard className="h-4 w-4" />
+                  Pay {formatCurrency(returnSummary?.totalAmount ?? 0, 'VND')}
+                </>
+              )}
+            </Button>
+            <Button
+              variant="default"
+              onClick={handleMarkCompleted}
+              disabled={!pendingCompletionPayload}
+            >
+              Mark Completed
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

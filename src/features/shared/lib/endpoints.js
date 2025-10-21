@@ -91,12 +91,14 @@ export const endpoints = {
     updateStatus: id => `/api/bookings/${id}/status`,
     cancel: id => `/api/bookings/${id}/cancel`,
     complete: id => `/api/bookings/${id}/complete`,
+    checkIn: bookingId => `/api/bookings/${bookingId}/checkin`,
     checkDeposit: id => `/api/bookings/${id}/deposit-status`,
   },
   rentalHistory: {
     getByBookingId: bookingId => `/api/rental-history/booking/${bookingId}`,
   },
   inspections: {
+    getAll: () => `/api/inspections`,
     getById: id => `/api/inspections/${id}`,
     getByBooking: bookingId => `/api/inspections/booking/${bookingId}`,
     getByBookingRenter: bookingId =>
@@ -104,9 +106,10 @@ export const endpoints = {
     getByVehicle: vehicleId => `/api/inspections/vehicle/${vehicleId}`,
     getByStaff: staffId => `/api/inspections/staff/${staffId}`,
     create: () => '/api/inspections',
-    uploadImage: id => `/api/inspections/${id}/upload-image`,
-    deleteImage: (id, imageIndex) => `/api/inspections/${id}/image/${imageIndex}`,
-    update: id => `/api/inspections/${id}`,
+    uploadImage: inspectionId => `/api/inspections/${inspectionId}/upload-image`,
+    deleteImage: (inspectionId, imageIndex) => `/api/inspections/${inspectionId}/image/${imageIndex}`,
+
+
   },
   payment: {
     createDeposit: () => '/api/payos/create',

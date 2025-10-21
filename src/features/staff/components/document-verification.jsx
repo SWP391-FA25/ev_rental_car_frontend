@@ -45,6 +45,7 @@ import {
 } from '../../shared/components/ui/select';
 import { Textarea } from '../../shared/components/ui/textarea';
 import documentService from '../../shared/services/documentService';
+import { endpoints } from '../../shared/lib/endpoints';
 
 const DocumentVerification = ({ userId, onVerificationUpdated }) => {
   const { t } = useTranslation();
@@ -66,6 +67,7 @@ const DocumentVerification = ({ userId, onVerificationUpdated }) => {
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredDocuments, setFilteredDocuments] = useState([]);
+  const [verifyingId, setVerifyingId] = useState(null);
 
   useEffect(() => {
     fetchDocuments();
@@ -320,11 +322,41 @@ const DocumentVerification = ({ userId, onVerificationUpdated }) => {
       });
       toast.success(
         t('staffDocuments.toasts.batchApproveSuccess') ||
-          'Approved all pending documents'
+        'Approved all pending documents'
       );
     } catch (err) {
       console.error('Batch approve error:', err);
       toast.error(err.message || t('staffDocuments.errors.approveFailed'));
+    }
+  };
+
+  const verifyDocument = async id => {
+    if (!id) return;
+    setVerifyingId(id);
+    try {
+      // Use POST to verify; backend may accept POST or PUT depending on implementation
+      const res = await fetch(endpoints.documents.verify(id), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        console.error('verifyDocument failed:', res.status, body);
+        alert('Xác minh thất bại. Vui lòng thử lại.');
+        return;
+      }
+      // success: update local state (mark document as verified or remove from pending)
+      const json = await res.json().catch(() => null);
+      const updatedDoc = json?.data?.document ?? json?.document ?? null;
+      setDocuments(prev =>
+        prev.map(d => (d.id === id ? { ...d, ...updatedDoc } : d))
+      );
+      alert('Xác minh tài liệu thành công.');
+    } catch (err) {
+      console.error('verifyDocument error:', err);
+      alert('Có lỗi khi xác minh. Vui lòng thử lại.');
+    } finally {
+      setVerifyingId(null);
     }
   };
 
@@ -886,7 +918,7 @@ const DocumentVerification = ({ userId, onVerificationUpdated }) => {
                     setDocuments(prev => {
                       const next = prev.map(doc =>
                         doc.user?.id === selectedUserForBatch &&
-                        doc.status === 'PENDING'
+                          doc.status === 'PENDING'
                           ? { ...doc, status: 'REJECTED' }
                           : doc
                       );

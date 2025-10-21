@@ -22,18 +22,16 @@ import {
 } from '../../shared/components/ui/sidebar';
 import { endpoints } from '../../shared/lib/endpoints';
 import { NotificationPreferences } from '../components/NotificationPreferences';
-import ReturnCar from '../components/ReturnCar';
 import BookingManagement from '../components/booking-management';
 import VehicleManagement from '../components/car-management';
-import { CheckInPage } from '../components/checkIn.jsx/CheckInPage.jsx';
+import CheckInCar from '../components/CheckInCar';
 import { CustomerManagement } from '../components/customer-management';
 import DocumentVerification from '../components/document-verification';
 import { PaymentManagement } from '../components/payment-management';
 import { StaffHeader } from '../components/staff-header';
 import { StaffSidebar } from '../components/staff-sidebar';
 import StationManagement from '../components/station-management';
-
-// Removed QuickVerification import
+import ReturnCar from '../components/ReturnCar';
 
 // const mockStaffData = [
 //   {
@@ -469,8 +467,8 @@ export default function StaffDashboard() {
     </div>
   );
   const renderCheckIn = () => {
-    return <CheckInPage />;
-  };
+    return <CheckInCar />;
+  }
   const renderCars = () => {
     return <VehicleManagement />;
   };
