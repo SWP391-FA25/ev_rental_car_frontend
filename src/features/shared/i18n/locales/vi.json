@@ -246,8 +246,12 @@
   },
   "staffSidebar": {
     "dashboard": "Bảng điều khiển",
+    "operations": "Hoạt động",
+    "vehicle-management": "Quản lý xe",
+    "customer-service": "Dịch vụ khách hàng",
     "cars": "Quản lý xe",
     "bookings": "Đặt lịch",
+    "check-in": "Check-In",
     "returnCar": "Trả xe",
     "stations": "Trạm",
     "customers": "Khách hàng",

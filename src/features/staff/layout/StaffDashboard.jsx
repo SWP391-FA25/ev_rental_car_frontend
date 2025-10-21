@@ -1,10 +1,8 @@
 import {
   Bell,
   Car,
-  CheckCircle,
-  CreditCard,
   FileText,
-  MapPin,
+  LayoutDashboard,
   Users,
   Wrench,
 } from 'lucide-react';
@@ -525,39 +523,66 @@ export default function StaffDashboard() {
   };
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: <Car className='h-4 w-4' /> },
     {
-      id: 'bookings',
-      label: 'Booking Management',
-      icon: <FileText className='h-4 w-4' />,
+      id: 'dashboard',
+      label: 'Dashboard',
+      icon: <LayoutDashboard className='h-4 w-4' />,
     },
     {
-      id: 'returnCar',
-      label: 'Return Car',
-      icon: <Wrench className='h-4 w-4' />,
+      id: 'operations',
+      label: 'Operations',
+      icon: <Car className='h-4 w-4' />,
+      items: [
+        {
+          id: 'bookings',
+          label: 'Booking Management',
+        },
+        {
+          id: 'check-in',
+          label: 'Check-In',
+        },
+        {
+          id: 'returnCar',
+          label: 'Return Car',
+        },
+      ],
     },
-    { id: 'cars', label: 'Car Management', icon: <Car className='h-4 w-4' /> },
-    { id: 'stations', label: 'Stations', icon: <MapPin className='h-4 w-4' /> },
+
     {
-      id: 'customers',
-      label: 'Customers',
+      id: 'vehicle-management',
+      label: 'Vehicle Management',
+      icon: <Car className='h-4 w-4' />,
+      items: [
+        {
+          id: 'cars',
+          label: 'Car Management',
+        },
+        {
+          id: 'stations',
+          label: 'Stations',
+        },
+      ],
+    },
+    {
+      id: 'customer-service',
+      label: 'Customer Service',
       icon: <Users className='h-4 w-4' />,
+      items: [
+        {
+          id: 'customers',
+          label: 'Customers',
+        },
+        {
+          id: 'documents',
+          label: 'Document Verification',
+        },
+      ],
     },
-    {
-      id: 'payments',
-      label: 'Payments',
-      icon: <CreditCard className='h-4 w-4' />,
-    },
-    {
-      id: 'check-in',
-      label: 'Check-In',
-      icon: <CheckCircle className='h-4 w-4' />,
-    },
-    {
-      id: 'documents',
-      label: 'Document Verification',
-      icon: <FileText className='h-4 w-4' />,
-    },
+    // {
+    //   id: 'payments',
+    //   label: 'Payments',
+    //   icon: <CreditCard className='h-4 w-4' />,
+    // },
     {
       id: 'notifications',
       label: 'Notifications',
@@ -581,6 +606,10 @@ export default function StaffDashboard() {
         menuItems={menuItems.map(item => ({
           ...item,
           label: t(`staffSidebar.${item.id}`),
+          items: item.items?.map(subItem => ({
+            ...subItem,
+            label: t(`staffSidebar.${subItem.id}`),
+          })),
         }))}
       />
       <SidebarInset>
