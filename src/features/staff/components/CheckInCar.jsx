@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'react-toastify';
+import { useAuth } from '../../../app/providers/AuthProvider';
 import { useBooking } from '../../booking/hooks/useBooking';
 import { Button } from '../../shared/components/ui/button';
 import {
@@ -9,9 +9,6 @@ import {
     CardHeader,
     CardTitle,
 } from '../../shared/components/ui/card';
-import { Input } from '../../shared/components/ui/input';
-import { Label } from '../../shared/components/ui/label';
-import { Textarea } from '../../shared/components/ui/textarea';
 import {
     Dialog,
     DialogContent,
@@ -20,6 +17,8 @@ import {
     DialogHeader,
     DialogTitle,
 } from '../../shared/components/ui/dialog';
+import { Input } from '../../shared/components/ui/input';
+import { Label } from '../../shared/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -27,10 +26,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from '../../shared/components/ui/select';
-import { formatCurrency } from '../../shared/lib/utils';
-import { useAuth } from '../../../app/providers/AuthProvider';
+import { Textarea } from '../../shared/components/ui/textarea';
 import { apiClient } from '../../shared/lib/apiClient';
 import { endpoints } from '../../shared/lib/endpoints';
+import { toast } from '../../shared/lib/toast';
+import { formatCurrency } from '../../shared/lib/utils';
 
 export default function CheckInCar() {
     const { t } = useTranslation();

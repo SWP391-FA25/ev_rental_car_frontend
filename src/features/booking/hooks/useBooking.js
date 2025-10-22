@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { toast } from 'react-toastify';
+import { toast } from '../../shared/lib/toast';
 import { bookingService } from '../services/bookingService';
 
 export const useBooking = () => {

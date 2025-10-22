@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
 import { Button } from '../../../shared/components/ui/button';
 import { Label } from '../../../shared/components/ui/label';
 import {
@@ -11,6 +10,7 @@ import {
 } from '../../../shared/components/ui/select';
 import { apiClient } from '../../../shared/lib/apiClient';
 import { endpoints } from '../../../shared/lib/endpoints';
+import { toast } from '../../../shared/lib/toast';
 
 export function SimpleAssignmentForm({
   stationId,

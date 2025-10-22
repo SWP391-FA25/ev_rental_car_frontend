@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { toast } from '../../shared/lib/toast';
 import { searchService } from '../services/searchService';
 
 export const useSearch = () => {

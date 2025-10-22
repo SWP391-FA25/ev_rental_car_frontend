@@ -4,7 +4,7 @@ import { apiClient } from '@/features/shared/lib/apiClient';
 import { endpoints } from '@/features/shared/lib/endpoints';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { toast } from '../../shared/lib/toast';
 
 export const useStaffBooking = () => {
   const navigate = useNavigate();

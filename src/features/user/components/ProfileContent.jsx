@@ -1,7 +1,6 @@
 import { Briefcase, Edit, Star } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
 import {
   Avatar,
   AvatarFallback,
@@ -20,6 +19,7 @@ import {
 import VerificationBanner from '../../shared/components/VerificationBanner';
 import { apiClient } from '../../shared/lib/apiClient';
 import { endpoints } from '../../shared/lib/endpoints';
+import { toast } from '../../shared/lib/toast';
 
 export default function ProfileContent({ user }) {
   const navigate = useNavigate();

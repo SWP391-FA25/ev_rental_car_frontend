@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'react-toastify';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
@@ -53,6 +52,7 @@ import {
 } from '../../shared/components/ui/table';
 import { Textarea } from '../../shared/components/ui/textarea';
 import { apiClient } from '../../shared/lib/apiClient';
+import { toast } from '../../shared/lib/toast';
 
 export default function NotificationManagement() {
   const { user } = useAuth();

@@ -9,8 +9,8 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'react-toastify';
 import { useFormValidation } from '../../shared/hooks/useFormValidation.js';
+import { toast } from '../../shared/lib/toast';
 import { vehicleCreateSchema } from '../../shared/validations/vehicleValidation.js';
 
 import { Badge } from '../../shared/components/ui/badge';

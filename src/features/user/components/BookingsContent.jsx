@@ -17,7 +17,7 @@ import gsap from 'gsap';
 import { CalendarDays, CreditCard, MapPin, RefreshCw, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { toast } from '../../shared/lib/toast';
 
 // Helper function to get status badge variant
 const getStatusBadgeVariant = status => {

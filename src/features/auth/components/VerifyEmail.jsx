@@ -2,7 +2,6 @@ import { useAuth } from '@/app/providers/AuthProvider';
 import { ArrowLeft, CheckCircle2, Mail, XCircle } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { toast } from 'react-toastify';
 import { Button } from '../../shared/components/ui/button';
 import {
   Card,
@@ -13,6 +12,7 @@ import {
 } from '../../shared/components/ui/card';
 import { apiClient } from '../../shared/lib/apiClient';
 import { endpoints } from '../../shared/lib/endpoints';
+import { toast } from '../../shared/lib/toast';
 
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
