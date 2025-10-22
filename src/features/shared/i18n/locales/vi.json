@@ -309,6 +309,7 @@
       "loadButton": "Tải đơn",
       "selectLabel": "Chọn đơn",
       "selectPlaceholder": "Chọn đơn đang hoạt động",
+      "searchPlaceholder": "Tìm kiếm booking...",
       "depositLabel": "Tiền cọc (VNĐ)",
       "customer": "Khách hàng",
       "vehicle": "Biển số xe",
@@ -320,6 +321,13 @@
       "title": "2. Kiểm tra xe",
       "resultLabel": "Kết quả kiểm tra",
       "resultPlaceholder": "Chọn kết quả",
+      "batteryLabel": "Mức pin",
+      "batteryPlaceholder": "Nhập mức pin",
+      "tireLabel": "Tình trạng lốp",
+      "tirePlaceholder": "Chọn tình trạng lốp",
+      "tireGood": "Good",
+      "tireFair": "Fair",
+      "tirePoor": "Poor",
       "pass": "Hoàn cọc (Không vấn đề)",
       "issue": "Có sự cố",
       "checklist": {
@@ -347,6 +355,7 @@
       "notes": "Ghi chú",
       "notesPlaceholder": "Thêm ghi chú về việc trả xe...",
       "locationPlaceholder": "Nhập vị trí trả thực tế",
+      "searchStationPlaceholder": "Tìm kiếm trạm...",
       "lastRecordedLabel": "Odo gần nhất: {{value}} km"
     },
     "deposit": {
@@ -378,6 +387,24 @@
         "monthly": "Giá theo tháng",
         "insurance": "Phí bảo hiểm",
         "deposit": "Tiền cọc"
+      },
+      "payment": {
+        "methodTitle": "Phương thức thanh toán",
+        "methodPlaceholder": "Chọn phương thức",
+        "method": {
+          "online": "Trực tuyến (PayOS)",
+          "cash": "Tiền mặt"
+        }
+      },
+      "cashEvidenceTitle": "Bằng chứng thanh toán (tệp)",
+      "cashEvidenceDesc": "Chọn tệp ảnh hoặc PDF làm bằng chứng thanh toán tiền mặt.",
+      "cashEvidenceLabel": "Chọn tệp bằng chứng",
+      "cashEvidenceHint": "Vui lòng chọn tệp bằng chứng trước khi xác nhận.",
+      "cashEvidenceConfirm": "Tải bằng chứng",
+      "cashEvidenceConfirming": "Đang xử lý...",
+      "cashEvidence": {
+        "invalidFileType": "Tệp không hợp lệ. Chỉ chấp nhận ảnh hoặc PDF.",
+        "fileTooLarge": "Tệp quá lớn (tối đa 5MB). Vui lòng chọn tệp khác."
       }
     }
   },

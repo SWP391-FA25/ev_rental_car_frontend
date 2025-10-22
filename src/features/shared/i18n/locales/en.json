@@ -215,6 +215,7 @@
       "loadButton": "Load booking",
       "selectLabel": "Select booking",
       "selectPlaceholder": "Choose an eligible booking",
+      "searchPlaceholder": "Search bookings...",
       "depositLabel": "Deposit (VND)",
       "customer": "Customer",
       "vehicle": "Vehicle License Plate",
@@ -226,6 +227,13 @@
       "title": "2. Vehicle inspection",
       "resultLabel": "Inspection result",
       "resultPlaceholder": "Select result",
+      "batteryLabel": "Battery level",
+      "batteryPlaceholder": "Enter battery level",
+      "tireLabel": "Tire condition",
+      "tirePlaceholder": "Select tire condition",
+      "tireGood": "Good",
+      "tireFair": "Fair",
+      "tirePoor": "Poor",
       "pass": "No damage",
       "issue": "Incident",
       "checklist": {
@@ -253,6 +261,7 @@
       "notes": "Notes",
       "notesPlaceholder": "Add any notes about the return...",
       "locationPlaceholder": "Enter actual return location",
+      "searchStationPlaceholder": "Search stations...",
       "lastRecordedLabel": "Last recorded odometer: {{value}} km"
     },
     "deposit": {
@@ -284,6 +293,24 @@
         "monthly": "Monthly rate",
         "insurance": "Insurance fee",
         "deposit": "Deposit"
+      },
+      "payment": {
+        "methodTitle": "Payment method",
+        "methodPlaceholder": "Select method",
+        "method": {
+          "online": "Online (PayOS)",
+          "cash": "Cash"
+        }
+      },
+      "cashEvidenceTitle": "Cash Payment Evidence (file)",
+      "cashEvidenceDesc": "Select an image or PDF as cash payment evidence.",
+      "cashEvidenceLabel": "Select evidence file",
+      "cashEvidenceHint": "Please select an evidence file before confirming.",
+      "cashEvidenceConfirm": "Upload evidence",
+      "cashEvidenceConfirming": "Uploading evidence...",
+      "cashEvidence": {
+        "invalidFileType": "Invalid file type. Only images or PDF are allowed.",
+        "fileTooLarge": "File too large (max 5MB). Please choose another file."
       }
     }
   },

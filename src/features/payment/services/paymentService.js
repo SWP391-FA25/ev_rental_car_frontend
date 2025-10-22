@@ -71,4 +71,39 @@ export const paymentService = {
     );
     return response.data;
   },
+
+  // Tạo thanh toán tiền mặt cho rental fee
+  async createCashPayment(bookingId, amount, description) {
+    try {
+      const response = await apiClient.post(endpoints.payment.createCashPayment(), {
+        bookingId,
+        amount,
+        description: description || `Rental Fee ${bookingId.substring(0, 8)}`,
+      });
+      const result = response.data?.data || response.data;
+      return result;
+    } catch (error) {
+      console.error('PaymentService - Cash - Error:', error);
+      throw error;
+    }
+  },
+
+  // Upload bằng chứng cho thanh toán tiền mặt (multipart/form-data với field 'evidence')
+  async uploadCashPaymentEvidence(paymentId, evidenceFile) {
+    try {
+      const fd = new FormData();
+      fd.append('paymentId', paymentId);
+      fd.append('evidence', evidenceFile);
+      const response = await apiClient.post(
+        endpoints.payment.uploadCashEvidence(),
+        fd,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      );
+      const result = response.data?.data || response.data;
+      return result;
+    } catch (error) {
+      console.error('PaymentService - CashEvidence - Error:', error);
+      throw error;
+    }
+  },
 };
