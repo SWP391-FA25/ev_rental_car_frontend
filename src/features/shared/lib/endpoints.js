@@ -8,6 +8,15 @@ export const endpoints = {
     logout: () => '/api/auth/logout',
     me: () => '/api/auth/me',
   },
+  contracts: {
+    getAll: () => '/api/contracts',
+    getById: id => `/api/contracts/${id}`,
+    getByBooking: bookingId => `/api/contracts/booking/${bookingId}`,
+    create: () => '/api/contracts',
+    update: id => `/api/contracts/${id}`,
+    uploadSignedFile: contractId => `/api/contracts/${contractId}/upload`,
+    delete: id => `/api/contracts/${id}`,
+  },
   staffs: {
     getAll: () => '/api/staffs',
     getById: id => `/api/staffs/${id}`,
@@ -115,5 +124,24 @@ export const endpoints = {
     createDeposit: () => '/api/payos/create',
     createRentalFee: () => '/api/payos/create-rental-fee',
     getStatus: paymentId => `/api/payos/status/${paymentId}`,
+  },
+  contracts: {
+    // 🧾 Tạo hợp đồng mới (Staff/Admin)
+    create: () => '/api/contracts',
+
+    // 📤 Upload file hợp đồng đã ký (Staff/Admin)
+    uploadSignedFile: (contractId) => `/api/contracts/${contractId}/upload`,
+
+    // 🔍 Lấy chi tiết hợp đồng theo ID
+    getById: (contractId) => `/api/contracts/${contractId}`,
+
+    // 📚 Lấy danh sách hợp đồng theo booking ID
+    getByBooking: (bookingId) => `/api/contracts/booking/${bookingId}`,
+
+    // 📋 Lấy toàn bộ hợp đồng (Staff/Admin)
+    getAll: () => '/api/contracts',
+
+    // 📊 Lấy thống kê hợp đồng (Staff/Admin)
+    getStats: () => '/api/contracts/stats/overview',
   },
 };
