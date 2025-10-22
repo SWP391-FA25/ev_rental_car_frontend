@@ -1405,7 +1405,9 @@
     },
     "support": {
       "searchPlaceholder": "Search customers...",
-      "filters": { "all": "All Customers" },
+      "filters": {
+        "all": "All Customers"
+      },
       "membership": "Membership",
       "totalBookings": "Total Bookings",
       "verification": "Verification",
