@@ -1,6 +1,6 @@
 import { ImageIcon, TrashIcon, UploadIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from '../../../shared/lib/toast';
 
 import { Button } from '../../../shared/components/ui/button';
 import {

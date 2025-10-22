@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'react-toastify';
+import { toast } from '../../shared/lib/toast';
 
 import { VehicleDetails } from '../../admin/components/vehicle/VehicleDetails';
 import { Badge } from '../../shared/components/ui/badge';

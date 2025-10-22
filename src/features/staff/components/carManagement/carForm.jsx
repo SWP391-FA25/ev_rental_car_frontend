@@ -2,7 +2,6 @@ import { useFormik } from 'formik';
 import { ImageIcon, TrashIcon, UploadIcon } from 'lucide-react';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'react-toastify';
 import * as Yup from 'yup';
 import { Button } from '../../../shared/components/ui/button';
 import { Input } from '../../../shared/components/ui/input';
@@ -16,6 +15,7 @@ import {
 } from '../../../shared/components/ui/select';
 import { apiClient } from '../../../shared/lib/apiClient';
 import { endpoints } from '../../../shared/lib/endpoints';
+import { toast } from '../../../shared/lib/toast';
 
 export default function CarForm({
   stations = [],

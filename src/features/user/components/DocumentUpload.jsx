@@ -9,7 +9,6 @@ import {
   XCircle,
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
 import { Button } from '../../shared/components/ui/button';
 import {
   Card,
@@ -27,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../shared/components/ui/select';
+import { toast } from '../../shared/lib/toast';
 import documentService from '../../shared/services/documentService';
 
 const DocumentUpload = () => {

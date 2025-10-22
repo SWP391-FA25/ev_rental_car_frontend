@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'react-toastify';
 import { useFormValidation } from '../../../shared/hooks/useFormValidation.js';
+import { toast } from '../../../shared/lib/toast';
 import { staffCreateSchema } from '../../../shared/validations/staffValidation.js';
 
 import {

@@ -1,36 +1,37 @@
 import {
+  AlertCircle,
   AlertTriangle,
   Ban,
   Camera,
   CheckCircle,
-  Clock,
-  Edit,
-  Eye,
-  FileText,
-  Mail,
-  MoreHorizontal,
   ChevronLeft,
   ChevronRight,
+  Clock,
+  Eye,
+  FileText,
+  Info as InfoIcon,
+  Mail,
+  MoreHorizontal,
   Phone,
   Search,
-  Shield,
   UserCheck,
-  AlertCircle,
-  Info as InfoIcon,
 } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
-import { toast } from 'react-toastify';
+import { toast } from '../../shared/lib/toast';
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from '../../shared/components/ui/avatar';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import UserDetails from '../../admin/components/renter/UserDetails';
 import {
   Alert,
   AlertDescription,
   AlertTitle,
 } from '../../shared/components/ui/alert';
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '../../shared/components/ui/avatar';
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
 import {
@@ -55,7 +56,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../../shared/components/ui/dropdown-menu';
 import { Input } from '../../shared/components/ui/input';
@@ -82,13 +82,10 @@ import {
   TabsTrigger,
 } from '../../shared/components/ui/tabs';
 import { Textarea } from '../../shared/components/ui/textarea';
-import { useTranslation } from 'react-i18next';
-import { endpoints } from '../../shared/lib/endpoints';
 import { apiClient } from '../../shared/lib/apiClient';
-import { useNavigate } from 'react-router-dom';
-import UserDetails from '../../admin/components/renter/UserDetails';
-import DocumentVerification from './document-verification';
+import { endpoints } from '../../shared/lib/endpoints';
 import documentService from '../../shared/services/documentService';
+import DocumentVerification from './document-verification';
 
 function CustomerStatusBadge({ status }) {
   const config = {

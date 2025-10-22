@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'react-toastify';
+import { toast } from '../../shared/lib/toast';
 
 import { SimpleAssignmentForm } from '../../admin/components/assignment/SimpleAssignmentForm';
 import { StationDetails } from '../../admin/components/station/StationDetails';

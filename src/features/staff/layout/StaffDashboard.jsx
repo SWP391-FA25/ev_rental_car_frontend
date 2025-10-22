@@ -604,14 +604,7 @@ export default function StaffDashboard() {
         payments={mockPaymentData}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        menuItems={menuItems.map(item => ({
-          ...item,
-          label: t(`staffSidebar.${item.id}`),
-          items: item.items?.map(subItem => ({
-            ...subItem,
-            label: t(`staffSidebar.${subItem.id}`),
-          })),
-        }))}
+        menuItems={menuItems}
       />
       <SidebarInset>
         {/* Header có thêm Language Toggle */}

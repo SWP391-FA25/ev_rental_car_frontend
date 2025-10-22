@@ -6,7 +6,7 @@ import {
   SearchIcon,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
+import { toast } from '../../shared/lib/toast';
 
 import { MoreVerticalIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';

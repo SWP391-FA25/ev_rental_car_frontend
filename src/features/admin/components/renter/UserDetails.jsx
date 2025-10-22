@@ -1,41 +1,27 @@
-import {
-  CalendarIcon,
-  MailIcon,
-  MapPinIcon,
-  PhoneIcon,
-  UserIcon,
-} from 'lucide-react';
+import { UserIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '../../../shared/components/ui/badge';
+import { Button } from '../../../shared/components/ui/button';
 import {
   Card,
+  CardContent,
   CardHeader,
   CardTitle,
-  CardContent,
 } from '../../../shared/components/ui/card';
+import { toast } from '../../../shared/lib/toast';
 import documentService from '../../../shared/services/documentService';
-import { Button } from '../../../shared/components/ui/button';
 
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from '../../../shared/components/ui/dialog';
 import { Input } from '../../../shared/components/ui/input';
 import { Label } from '../../../shared/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../../shared/components/ui/select';
-import { Separator } from '../../../shared/components/ui/separator';
 import { Textarea } from '../../../shared/components/ui/textarea';
 import { apiClient } from '../../../shared/lib/apiClient';
 import { endpoints } from '../../../shared/lib/endpoints';

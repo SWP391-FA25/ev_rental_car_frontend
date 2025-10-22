@@ -2,7 +2,6 @@ import { useAuth } from '@/app/providers/AuthProvider';
 import { ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
 import { Button } from '../../shared/components/ui/button';
 import {
   Card,
@@ -15,6 +14,7 @@ import { Input } from '../../shared/components/ui/input';
 import { Label } from '../../shared/components/ui/label';
 import { apiClient } from '../../shared/lib/apiClient';
 import { endpoints } from '../../shared/lib/endpoints';
+import { toast } from '../../shared/lib/toast';
 
 export default function Login() {
   const [formData, setFormData] = useState({

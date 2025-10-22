@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { toast } from '../../shared/lib/toast';
 import { useVehicles } from '../hooks/useVehicles';
 
 // Helper function to transform vehicle data for display

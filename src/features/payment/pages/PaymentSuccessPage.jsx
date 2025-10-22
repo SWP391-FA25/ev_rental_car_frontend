@@ -6,7 +6,7 @@ import { formatCurrency } from '@/features/shared/lib/utils';
 import { Calendar, Car, CheckCircle, Mail, MapPin } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { toast } from '../../shared/lib/toast';
 import { paymentService } from '../services/paymentService';
 
 import { useTranslation } from 'react-i18next';
@@ -24,7 +24,6 @@ export default function PaymentSuccessPage() {
   const [isChecking, setIsChecking] = useState(true);
   const [paymentType, setPaymentType] = useState(paymentTypeParam || null);
   const { t } = useTranslation();
-
 
   const checkDepositAndFetchBooking = async () => {
     try {
@@ -46,7 +45,9 @@ export default function PaymentSuccessPage() {
       if (paymentId) {
         try {
           const statusRes = await paymentService.getPaymentStatus(paymentId);
-          setPaymentType(statusRes?.data?.paymentType || paymentTypeParam || null);
+          setPaymentType(
+            statusRes?.data?.paymentType || paymentTypeParam || null
+          );
         } catch (paymentError) {
           console.error('Failed to check payment status:', paymentError);
           // Fallback to query param
@@ -108,7 +109,9 @@ export default function PaymentSuccessPage() {
     return (
       <div className='min-h-screen bg-background text-foreground flex items-center justify-center'>
         <div className='text-center'>
-          <p className='text-muted-foreground mb-4'>{t('payment.success.notFound')}</p>
+          <p className='text-muted-foreground mb-4'>
+            {t('payment.success.notFound')}
+          </p>
           <Button onClick={() => navigate('/bookings')}>
             {t('payment.success.viewBookings')}
           </Button>
@@ -129,7 +132,9 @@ export default function PaymentSuccessPage() {
         <div className='max-w-md mx-auto text-center'>
           <div className='mb-6'>
             <CheckCircle className='h-16 w-16 text-green-500 mx-auto mb-4' />
-            <h1 className='text-2xl font-bold mb-2'>{t('payment.success.title')}</h1>
+            <h1 className='text-2xl font-bold mb-2'>
+              {t('payment.success.title')}
+            </h1>
             <p className='text-muted-foreground'>
               {isRentalFee
                 ? t('payment.success.rentalFeeSubtitle')
@@ -168,12 +173,16 @@ export default function PaymentSuccessPage() {
               {/* Booking Details */}
               <div className='space-y-3 text-sm text-left'>
                 <div className='flex justify-between items-center'>
-                  <span className='text-muted-foreground'>{t('payment.success.bookingIdLabel')}</span>
+                  <span className='text-muted-foreground'>
+                    {t('payment.success.bookingIdLabel')}
+                  </span>
                   <span className='font-mono'>{booking.id}</span>
                 </div>
 
                 <div className='flex justify-between items-center'>
-                  <span className='text-muted-foreground'>{t('payment.success.statusLabel')}</span>
+                  <span className='text-muted-foreground'>
+                    {t('payment.success.statusLabel')}
+                  </span>
                   <Badge variant={isBookingConfirmed ? 'default' : 'secondary'}>
                     {booking.status}
                   </Badge>
@@ -181,8 +190,12 @@ export default function PaymentSuccessPage() {
 
                 {!isRentalFee && (
                   <div className='flex justify-between items-center'>
-                    <span className='text-muted-foreground'>{t('payment.success.depositStatusLabel')}</span>
-                    <Badge variant={isDepositConfirmed ? 'default' : 'secondary'}>
+                    <span className='text-muted-foreground'>
+                      {t('payment.success.depositStatusLabel')}
+                    </span>
+                    <Badge
+                      variant={isDepositConfirmed ? 'default' : 'secondary'}
+                    >
                       {booking.depositStatus || 'PENDING'}
                     </Badge>
                   </div>
@@ -192,17 +205,23 @@ export default function PaymentSuccessPage() {
                 <div className='border-t pt-3 mt-3'>
                   <div className='flex items-center gap-2 mb-2'>
                     <Car className='h-4 w-4 text-muted-foreground' />
-                    <span className='font-medium'>{t('payment.success.vehicleDetails')}</span>
+                    <span className='font-medium'>
+                      {t('payment.success.vehicleDetails')}
+                    </span>
                   </div>
                   <div className='text-xs space-y-1'>
                     <div className='flex justify-between'>
-                      <span className='text-muted-foreground'>{t('payment.success.vehicleLabel')}</span>
+                      <span className='text-muted-foreground'>
+                        {t('payment.success.vehicleLabel')}
+                      </span>
                       <span>
                         {booking.vehicle?.brand} {booking.vehicle?.model}
                       </span>
                     </div>
                     <div className='flex justify-between'>
-                      <span className='text-muted-foreground'>{t('payment.success.licenseLabel')}</span>
+                      <span className='text-muted-foreground'>
+                        {t('payment.success.licenseLabel')}
+                      </span>
                       <span className='font-mono'>
                         {booking.vehicle?.licensePlate}
                       </span>
@@ -214,17 +233,23 @@ export default function PaymentSuccessPage() {
                 <div className='border-t pt-3 mt-3'>
                   <div className='flex items-center gap-2 mb-2'>
                     <Calendar className='h-4 w-4 text-muted-foreground' />
-                    <span className='font-medium'>{t('payment.success.rentalPeriod')}</span>
+                    <span className='font-medium'>
+                      {t('payment.success.rentalPeriod')}
+                    </span>
                   </div>
                   <div className='text-xs space-y-1'>
                     <div className='flex justify-between'>
-                      <span className='text-muted-foreground'>{t('payment.success.startLabel')}</span>
+                      <span className='text-muted-foreground'>
+                        {t('payment.success.startLabel')}
+                      </span>
                       <span>
                         {new Date(booking.startTime).toLocaleDateString()}
                       </span>
                     </div>
                     <div className='flex justify-between'>
-                      <span className='text-muted-foreground'>{t('payment.success.endLabel')}</span>
+                      <span className='text-muted-foreground'>
+                        {t('payment.success.endLabel')}
+                      </span>
                       <span>
                         {new Date(booking.endTime).toLocaleDateString()}
                       </span>
@@ -235,7 +260,9 @@ export default function PaymentSuccessPage() {
                 <div className='border-t pt-3 mt-3'>
                   <div className='flex items-center gap-2 mb-2'>
                     <MapPin className='h-4 w-4 text-muted-foreground' />
-                    <span className='font-medium'>{t('payment.success.pickupLocation')}</span>
+                    <span className='font-medium'>
+                      {t('payment.success.pickupLocation')}
+                    </span>
                   </div>
                   <div className='text-xs'>
                     <span>{booking.station?.name}</span>
@@ -245,12 +272,16 @@ export default function PaymentSuccessPage() {
                 {/* Payment Summary */}
                 <div className='border-t pt-3 mt-3'>
                   <div className='flex items-center gap-2 mb-2'>
-                    <span className='font-medium'>{t('payment.success.paymentSummary')}</span>
+                    <span className='font-medium'>
+                      {t('payment.success.paymentSummary')}
+                    </span>
                   </div>
                   <div className='text-xs space-y-1'>
                     {isRentalFee ? (
                       <div className='flex justify-between'>
-                        <span className='text-muted-foreground'>{t('payment.success.totalPaid')}</span>
+                        <span className='text-muted-foreground'>
+                          {t('payment.success.totalPaid')}
+                        </span>
                         <span className='text-green-600 font-medium'>
                           {formatCurrency(booking.totalAmount, 'VND')}
                         </span>
@@ -269,7 +300,9 @@ export default function PaymentSuccessPage() {
                           <span className='text-muted-foreground'>
                             {t('payment.success.remainingAmount')}
                           </span>
-                          <span>{formatCurrency(booking.totalAmount, 'VND')}</span>
+                          <span>
+                            {formatCurrency(booking.totalAmount, 'VND')}
+                          </span>
                         </div>
                       </>
                     )}
@@ -296,7 +329,9 @@ export default function PaymentSuccessPage() {
                 <div className='flex items-center gap-3 text-sm'>
                   <Mail className='h-4 w-4 text-muted-foreground' />
                   <div className='text-left'>
-                    <p className='font-medium'>{t('payment.success.whatsNextTitle')}</p>
+                    <p className='font-medium'>
+                      {t('payment.success.whatsNextTitle')}
+                    </p>
                     <p className='text-muted-foreground'>
                       {isBookingConfirmed
                         ? t('payment.success.whatsNextReserved')

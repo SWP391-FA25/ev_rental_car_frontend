@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
 import { apiClient } from '../../features/shared/lib/apiClient';
+import { toast } from '../../features/shared/lib/toast';
 import { useAuth } from './AuthProvider';
 import { NotificationContext } from './NotificationContext';
 

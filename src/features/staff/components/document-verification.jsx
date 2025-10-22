@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'react-toastify';
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
 import {
@@ -44,6 +43,7 @@ import {
   SelectValue,
 } from '../../shared/components/ui/select';
 import { Textarea } from '../../shared/components/ui/textarea';
+import { toast } from '../../shared/lib/toast';
 import documentService from '../../shared/services/documentService';
 
 const DocumentVerification = ({ userId, onVerificationUpdated }) => {

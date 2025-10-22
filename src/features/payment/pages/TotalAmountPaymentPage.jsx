@@ -7,7 +7,7 @@ import { formatCurrency } from '@/features/shared/lib/utils';
 import { ArrowLeft, Calendar, CreditCard, MapPin } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { toast } from '../../shared/lib/toast';
 import { paymentService } from '../services/paymentService';
 
 export default function TotalAmountPaymentPage() {
@@ -243,7 +243,11 @@ export default function TotalAmountPaymentPage() {
             </div>
 
             <div className='space-y-3'>
-              <Button onClick={handleCreatePayment} disabled={loading} className='w-full'>
+              <Button
+                onClick={handleCreatePayment}
+                disabled={loading}
+                className='w-full'
+              >
                 {loading ? (
                   <>
                     <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2'></div>
@@ -260,7 +264,10 @@ export default function TotalAmountPaymentPage() {
 
             <div className='mt-6 text-xs text-muted-foreground space-y-1'>
               <p>• You will be redirected to PayOS to complete the payment</p>
-              <p>• Total amount includes base price, insurance, tax and any overtime</p>
+              <p>
+                • Total amount includes base price, insurance, tax and any
+                overtime
+              </p>
               <p>• Deposit refund is handled upon successful completion</p>
             </div>
           </Card>

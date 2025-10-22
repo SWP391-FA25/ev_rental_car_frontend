@@ -448,37 +448,14 @@ export function StaffSidebar({
   ...props
 }) {
   const { t } = useTranslation();
-  const reorderMenuItems = (items = []) => {
-    const arr = Array.isArray(items) ? [...items] : [];
-
-    // Find the parent group containing check-in
-    arr.forEach(group => {
-      if (group.items && Array.isArray(group.items)) {
-        const checkInIdx = group.items.findIndex(
-          it =>
-            (it.id && String(it.id).toLowerCase().includes('checkin')) ||
-            (it.label && String(it.label).toLowerCase().includes('check-in'))
-        );
-
-        // If found, move to first position within its group
-        if (checkInIdx > -1 && checkInIdx !== 0) {
-          const [checkInItem] = group.items.splice(checkInIdx, 1);
-          group.items.unshift(checkInItem);
-        }
-      }
-    });
-
-    return arr;
-  };
-  const orderedMenuItems = reorderMenuItems(menuItems);
+  // Keep original order from menuItems prop
+  const orderedMenuItems = Array.isArray(menuItems) ? menuItems : [];
   const translateLabel = label => {
     if (!label || typeof label !== 'string') return label;
-    const translated = t(label);
-    if (translated === label && label.includes('staffSidebar')) {
-      // specific fallback for the check-in label keys
-      return 'Check-In';
-    }
-    return translated;
+    // Try to translate using i18n key format
+    const translated = t(`staffSidebar.${label}`);
+    // If translation not found, return original label
+    return translated !== `staffSidebar.${label}` ? translated : label;
   };
   return (
     <Sidebar collapsible='offcanvas' {...props}>

@@ -12,7 +12,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
+import { toast } from '../../shared/lib/toast';
 
 import { useTranslation } from 'react-i18next';
 import { Badge } from '../../shared/components/ui/badge';
@@ -253,7 +253,10 @@ const BookingManagement = () => {
     const Icon = config.icon;
 
     return (
-      <Badge variant={config.variant} className={`flex items-center gap-1 ${config.color || ''}`}>
+      <Badge
+        variant={config.variant}
+        className={`flex items-center gap-1 ${config.color || ''}`}
+      >
         <Icon className='h-3 w-3' />
         {config.label}
       </Badge>
