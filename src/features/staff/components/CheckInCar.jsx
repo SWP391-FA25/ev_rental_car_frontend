@@ -115,7 +115,7 @@ export default function CheckInCar() {
         try {
             setLoadingDocuments(true);
             // Staff fetches customer's documents using /all endpoint with renterId query
-            const response = await apiClient.get(`/api/documents/all`);
+            const response = await apiClient.get(`/api/documents/all?renterId=${rentersId}`);
             const docs = response?.data?.documents || response?.data || null;
             setCustomerDocuments(docs);
             console.debug('Customer documents:', docs);
@@ -282,11 +282,11 @@ export default function CheckInCar() {
             inspectionType: inspectionType,
             batteryLevel: batteryNum,
             mileage: mileageNum,
-            // Force GOOD to bypass server validation
-            exteriorCondition: 'GOOD',
-            interiorCondition: 'GOOD',
-            tireCondition: 'GOOD',
-            accessories: ['ALL_PRESENT'],
+            // ✅ FIX: Sử dụng giá trị thực từ state
+            exteriorCondition: exteriorCondition,
+            interiorCondition: interiorCondition,
+            tireCondition: tireCondition,
+            accessories: accessories === 'ALL_PRESENT' ? ['ALL_PRESENT'] : ['MISSING_ITEMS'],
             damageNotes: damageNotes || undefined,
             notes: notes || undefined,
             documentVerified: documentVerified,
