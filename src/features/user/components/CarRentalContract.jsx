@@ -8,11 +8,13 @@ import { CheckCircle2, AlertCircle, FileText, Upload, Check } from "lucide-react
 import { endpoints } from "../../shared/lib/endpoints"
 import { toast as notify } from 'react-toastify'
 import { apiClient } from '../../shared/lib/apiClient'
+import { useAuth } from '../../../app/providers/AuthProvider'
 import { Input } from "../../shared/components/ui/input"
 import { Label } from "../../shared/components/ui/label"
 import { Textarea } from "../../shared/components/ui/textarea"
 
 export default function CarRentalContract({ bookingId, onStatusChange }) {
+  const { user } = useAuth()
   // local helper to emulate previous useToast({title,description,variant})
   const showToast = ({ title = '', description = '', variant = '' } = {}) => {
     const message = title && description ? `${title} — ${description}` : title || description || '';
@@ -43,7 +45,7 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
     conditionsAccepted: false,
     damageResponsibility: false,
     dataPrivacy: false,
-  })
+  });
 
   // Fetch contracts for a specific booking
   const fetchContracts = useCallback(async (bookingId) => {
@@ -79,6 +81,7 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
     }
   }, []);
 
+
   // Fetch booking details if bookingId is provided
   const fetchBookingDetails = useCallback(async (id) => {
     if (!id) return;
@@ -108,20 +111,25 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
       return;
     }
 
+    if (!user?.id) {
+      setError('Vui lòng đăng nhập để xem bookings');
+      setBookings([]);
+      return;
+    }
+
     setLoadingBookings(true);
     setError(null);
     try {
-      const res = await apiClient.get('/api/bookings?status=CONFIRMED');
+      // ✅ FIX: Gọi API lấy bookings của user hiện tại
+      const res = await apiClient.get(endpoints.bookings.getUserBookings(user.id));
       const json = res?.data;
-      if (json && Array.isArray(json?.data?.bookings)) {
-        setBookings(json.data.bookings);
-      } else if (Array.isArray(json)) {
-        setBookings(json);
-      } else if (Array.isArray(json?.bookings)) {
-        setBookings(json.bookings);
-      } else {
-        setBookings([]);
-      }
+      // Backend trả về { bookings: [...] } hoặc trực tiếp array
+      const list = json?.bookings ?? json?.data?.bookings ?? json?.data ?? json;
+      // Lọc chỉ lấy bookings CONFIRMED
+      const confirmedBookings = (Array.isArray(list) ? list : []).filter(
+        b => (b.status || b.bookingStatus) === 'CONFIRMED'
+      );
+      setBookings(confirmedBookings);
     } catch (err) {
       console.error("fetchBookings error:", err);
       setError("Không thể tải danh sách booking. Vui lòng thử lại sau.");
@@ -129,7 +137,7 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
     } finally {
       setLoadingBookings(false);
     }
-  }, [bookingId, fetchBookingDetails]);
+  }, [bookingId, fetchBookingDetails, user?.id]);
 
   useEffect(() => {
     fetchBookings();
@@ -318,8 +326,9 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
       });
     } finally {
       setActionLoading(false);
+      setActionLoading(false);
     }
-  }
+  };
 
   const handleFinalSubmit = async () => {
     if (!allAgreementsAccepted) {
