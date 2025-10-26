@@ -25,15 +25,14 @@ export function BookingDetails({ open, onOpenChange, booking }) {
 
   useEffect(() => {
     const fetchInspections = async () => {
-      if (!booking?.vehicle?.id || !open) return;
+      if (!booking?.id || !open) return;
       setLoadingInspections(true);
       setInspectionsError('');
       try {
         const res = await apiClient.get(
-          endpoints.inspections.getByVehicle(booking.vehicle.id)
+          endpoints.inspections.getByBooking(booking.id)
         );
         const data = res?.data;
-        // Backend returns: { success: true, data: { inspections: [...] } }
         const list = Array.isArray(data?.inspections)
           ? data.inspections
           : Array.isArray(data)
@@ -56,7 +55,7 @@ export function BookingDetails({ open, onOpenChange, booking }) {
     };
 
     fetchInspections();
-  }, [booking?.vehicle?.id, open, t]);
+  }, [booking?.id, open, t]);
 
   if (!booking) return null;
 
@@ -314,10 +313,13 @@ export function BookingDetails({ open, onOpenChange, booking }) {
                   // Robustly normalize image URLs and make absolute when needed
                   const makeAbsoluteUrl = (url) => {
                     if (!url) return null;
-                    const s = String(url);
+                    const s = String(url).trim();
+                    if (!s) return null;
                     if (/^https?:\/\//i.test(s) || s.startsWith('data:')) return s;
+                    // Accept only paths that look like files (starts with '/' or 'uploads')
+                    const path = s.startsWith('/') ? s : (s.startsWith('uploads') ? `/${s}` : null);
+                    if (!path) return null;
                     const base = env.apiBaseUrl.replace(/\/+$/, '');
-                    const path = s.startsWith('/') ? s : `/${s}`;
                     return `${base}${path}`;
                   };
                   const rawImages = item?.images;
@@ -333,6 +335,8 @@ export function BookingDetails({ open, onOpenChange, booking }) {
                                     img?.thumbnailUrl ||
                                     img?.data?.url ||
                                     img?.data?.thumbnailUrl ||
+                                    img?.path ||
+                                    img?.filePath ||
                                     null;
                               return makeAbsoluteUrl(candidate);
                             })
@@ -454,6 +458,10 @@ export function BookingDetails({ open, onOpenChange, booking }) {
                                     alt={`inspection-${idx + 1}`}
                                     className='w-full h-24 object-cover'
                                     loading='lazy'
+                                    onError={(e) => {
+                                      // Hide broken images gracefully
+                                      e.currentTarget.style.display = 'none';
+                                    }}
                                   />
                                 </div>
                               ))}

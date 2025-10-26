@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useState, useRef } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { bookingService } from '../../booking/services/bookingService';
@@ -45,11 +51,7 @@ import { endpoints } from '../../shared/lib/endpoints';
  */
 export default function ReturnCar() {
   const { t } = useTranslation();
-  const {
-    loading: bookingLoading,
-    getAllBookings,
-    getBookingById,
-  } = useBooking();
+  const { getAllBookings, getBookingById } = useBooking();
   const { user } = useAuth();
   const [bookingId, setBookingId] = useState('');
   const [booking, setBooking] = useState(null);
@@ -124,7 +126,7 @@ export default function ReturnCar() {
       }
     };
     fetchEligible();
-  }, []);
+  }, [getAllBookings]);
 
   // Initialize batteryLevel from booking data if available
   useEffect(() => {
@@ -204,75 +206,6 @@ export default function ReturnCar() {
     }
   };
 
-  const handleFetchBooking = async () => {
-    if (!bookingId) {
-      setBookingError(t('staffReturnCar.toast.enterBookingId'));
-      return;
-    }
-    try {
-      const res = await getBookingById(bookingId);
-      const b = res?.booking || res?.data?.booking || null;
-      setBooking(b);
-      // Initialize totalAmount from booking if available
-      setTotalAmount(
-        typeof b?.totalAmount !== 'undefined' ? b.totalAmount : null
-      );
-      const defaultStationId = b?.pickupStation?.id
-        ? String(b.pickupStation.id)
-        : '';
-      setSelectedReturnStationId(defaultStationId);
-      setBookingError('');
-      // Fetch last recorded odometer from inspections by vehicle
-      try {
-        const vehId = b?.vehicle?.id || b?.vehicleId;
-        if (vehId) {
-          const inspRes = await apiClient.get(
-            endpoints.inspections.getByVehicle(vehId)
-          );
-          const data = inspRes?.data;
-          const list = Array.isArray(data?.inspections)
-            ? data.inspections
-            : Array.isArray(data)
-            ? data
-            : Array.isArray(data?.items)
-            ? data.items
-            : [];
-          const sorted = [...list].sort(
-            (a, c) => new Date(c?.createdAt || 0) - new Date(a?.createdAt || 0)
-          );
-          const latest = sorted.find(
-            i =>
-              typeof i?.mileage === 'number' || typeof i?.odometer === 'number'
-          );
-          const latestOdo =
-            typeof latest?.mileage === 'number'
-              ? latest.mileage
-              : typeof latest?.odometer === 'number'
-              ? latest.odometer
-              : null;
-          setLastRecordedOdometer(
-            latestOdo != null
-              ? latestOdo
-              : typeof b?.pickupOdometer === 'number'
-              ? b.pickupOdometer
-              : null
-          );
-        } else {
-          setLastRecordedOdometer(
-            typeof b?.pickupOdometer === 'number' ? b.pickupOdometer : null
-          );
-        }
-      } catch {
-        setLastRecordedOdometer(
-          typeof b?.pickupOdometer === 'number' ? b.pickupOdometer : null
-        );
-      }
-      setCompleteError('');
-    } catch (e) {
-      setBookingError(e?.message || t('staffReturnCar.toast.loadBookingFail'));
-    }
-  };
-
   const handleChecklistChange = key => {
     setChecklist(prev => ({ ...prev, [key]: !prev[key] }));
   };
@@ -301,7 +234,9 @@ export default function ReturnCar() {
       previews.forEach(p => {
         try {
           URL.revokeObjectURL(p.url);
-        } catch {}
+        } catch (e) {
+          console.error('Error revoking URL for preview:', p.url, e);
+        }
       });
     };
   }, [incidentFiles]);
@@ -363,7 +298,7 @@ export default function ReturnCar() {
   };
 
   // Inline validation helper cho Odo
-  const getOdoError = (value, currentBooking) => {
+  const getOdoError = useCallback((value, currentBooking) => {
     const odo = Number(value);
     if (!value || Number.isNaN(odo) || odo < 0) {
       return t('staffReturnCar.toast.invalidReturnOdometer');
@@ -390,28 +325,11 @@ export default function ReturnCar() {
       }
     }
     return '';
-  };
-
+  });
   // Đồng bộ lỗi odo khi giá trị hoặc booking thay đổi
   useEffect(() => {
     setOdoError(getOdoError(returnOdometer, booking));
-  }, [returnOdometer, booking]);
-
-  // Convert selected image files to base64 strings for API payload
-  const filesToBase64 = async files => {
-    const imageFiles = (files || []).filter(
-      f => f && f.type && f.type.startsWith('image/')
-    );
-    if (!imageFiles.length) return [];
-    const toBase64 = file =>
-      new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-    return Promise.all(imageFiles.map(f => toBase64(f)));
-  };
+  }, [returnOdometer, booking, getOdoError]);
 
   // Upload incident images directly to the inspection using new API
   const uploadInspectionImages = async inspectionId => {
@@ -435,61 +353,36 @@ export default function ReturnCar() {
       });
 
       const uploadResults = [];
-      const vehicleId = booking?.vehicle?.id || booking?.vehicleId;
 
-      if (vehicleId) {
-        // Prefer uploading via vehicle images endpoint (supports multiple files)
-        const fd = new FormData();
-        for (const f of validFiles) {
-          fd.append('images', f);
-        }
+      console.log(inspectionId);
+
+      // Upload to inspection endpoint, one file per request
+      for (const file of validFiles) {
         try {
+          const fd = new FormData();
+          fd.append('image', file);
           const res = await apiClient.post(
-            endpoints.vehicles.uploadImage(vehicleId),
+            endpoints.inspections.uploadImage(inspectionId),
             fd,
             { headers: { 'Content-Type': 'multipart/form-data' } }
           );
-          const imgs = res?.data?.data?.images ?? res?.data?.images ?? [];
+          const imgs = res?.data?.images ?? [];
           for (const it of imgs) {
             uploadResults.push({
               url: it?.url,
               thumbnailUrl: it?.thumbnailUrl,
-              fileId: it?.imageKitFileId,
-              fileName: it?.fileName,
+              fileId: it?.fileId || it?.imageKitFileId,
+              fileName: it?.fileName || file.name,
             });
           }
-        } catch (uploadErr) {
+        } catch (uploadError) {
           console.warn(
-            'Vehicle images upload failed:',
-            uploadErr?.message || uploadErr
+            'Upload inspection image failed:',
+            uploadError?.message || uploadError
           );
         }
-      } else {
-        // Fallback: upload to inspection endpoint one by one
-        for (const file of validFiles) {
-          try {
-            const fd = new FormData();
-            fd.append('image', file);
-            const res = await apiClient.post(
-              endpoints.inspections.uploadImage(inspectionId),
-              fd,
-              { headers: { 'Content-Type': 'multipart/form-data' } }
-            );
-            const base = res?.data?.data ?? res?.data;
-            uploadResults.push({
-              url: base?.url,
-              thumbnailUrl: base?.thumbnailUrl,
-              fileId: base?.fileId,
-              fileName: file.name,
-            });
-          } catch (uploadError) {
-            console.warn(
-              'Upload inspection image failed:',
-              uploadError?.message || uploadError
-            );
-          }
-        }
       }
+
       // Cập nhật state inspectionImages với kết quả upload
       const normalized = (uploadResults || [])
         .map(u => {
@@ -519,20 +412,6 @@ export default function ReturnCar() {
     } catch (err) {
       console.warn('Upload inspection images error:', err?.message || err);
       return [];
-    }
-  };
-
-  // Delete an image from the inspection by index using new API
-  const deleteInspectionImage = async (inspectionId, imageIndex) => {
-    try {
-      if (!inspectionId || typeof imageIndex !== 'number') return false;
-      await apiClient.delete(
-        endpoints.inspections.deleteImage(inspectionId, imageIndex)
-      );
-      return true;
-    } catch (err) {
-      console.warn('Delete inspection image error:', err?.message || err);
-      return false;
     }
   };
 
@@ -634,12 +513,14 @@ export default function ReturnCar() {
           endpoints.inspections.create(),
           inspectionPayload
         );
-        const createdInspection =
-          inspRes?.data?.inspection || inspRes?.data || null;
-        const inspectionId =
-          createdInspection?.id ||
-          createdInspection?.inspectionId ||
-          createdInspection?.data?.id;
+        
+        // Backend returns: { success: true, data: inspection, message: '...' }
+        const createdInspection = inspRes?.data?.data || inspRes?.data?.inspection || inspRes?.data || null;
+        const inspectionId = createdInspection?.id;
+        
+        console.log('Inspection creation response:', inspRes?.data);
+        console.log('Created inspection:', createdInspection);
+        console.log('Extracted inspectionId:', inspectionId);
 
         if (hasIncident && incidentFiles.length && inspectionId) {
           const uploaded = await uploadInspectionImages(inspectionId);
@@ -824,7 +705,9 @@ export default function ReturnCar() {
             setCompleteError(t('staffReturnCar.toast.invalidEndTime'));
             return;
           }
-        } catch {}
+        } catch (e) {
+          console.warn('Validate return time error:', e?.message || e);
+        }
         // Fallback chung cho lỗi 400
         setCompleteError(
           serverMsg || t('staffReturnCar.toast.validationFailed')
@@ -890,10 +773,11 @@ export default function ReturnCar() {
           paymentId,
           cashEvidenceFile
         );
+        // Sau khi upload bằng chứng thành công, tiến hành hoàn tất đơn thuê
+        await handleMarkCompleted();
       }
 
       setCashEvidenceOpen(false);
-      setReturnSummaryOpen(false);
       setCashEvidenceFile(null);
     } catch (error) {
       console.error('Cash payment failed:', error);
@@ -944,7 +828,6 @@ export default function ReturnCar() {
       // Reset form sau khi hoàn tất
       resetAllFields();
     } catch (e) {
-      const status = e?.status ?? e?.response?.status;
       const serverMsg = e?.response?.data?.message || e?.message;
       setCompleteError(serverMsg || t('staffReturnCar.toast.completeFail'));
     }
