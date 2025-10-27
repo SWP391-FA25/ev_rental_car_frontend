@@ -41,8 +41,12 @@ export default function CheckInCar() {
     const [booking, setBooking] = useState(null);
     const [availableBookings, setAvailableBookings] = useState([]);
     const [loadingBookings, setLoadingBookings] = useState(false);
+    const [stations, setStations] = useState([]);
+    const [loadingStations, setLoadingStations] = useState(false);
+    const [selectedStation, setSelectedStation] = useState('');
 
     const inspectionType = 'CHECK_IN';
+    // Mặc định hiển thị "GOOD" để dễ nhận biết trạng thái ban đầu
     const [exteriorCondition, setExteriorCondition] = useState('GOOD');
     const [interiorCondition, setInteriorCondition] = useState('GOOD');
     const [tireCondition, setTireCondition] = useState('GOOD');
@@ -89,6 +93,34 @@ export default function CheckInCar() {
         fetchEligibleBookings();
     }, [getAllBookings]);
 
+    useEffect(() => {
+        const fetchStations = async () => {
+            try {
+                setLoadingStations(true);
+                const response = await apiClient.get(endpoints.stations.getAll());
+                // Đảm bảo dữ liệu trả về là một mảng
+                const stationsList = Array.isArray(response?.data) ? response.data :
+                    Array.isArray(response?.data?.stations) ? response.data.stations : [];
+                setStations(stationsList);
+
+                // Nếu có booking và có trạm mặc định, chọn trạm đó
+                if (booking && booking?.station?.id) {
+                    setSelectedStation(booking.station.id);
+                } else if (stationsList.length > 0) {
+                    setSelectedStation(stationsList[0].id);
+                }
+            } catch (err) {
+                console.error('Fetch stations error', err);
+                toast.error('Không thể tải danh sách trạm');
+                setStations([]); // Đảm bảo stations luôn là mảng
+            } finally {
+                setLoadingStations(false);
+            }
+        };
+
+        fetchStations();
+    }, [booking]);
+
     const handleSelectBooking = async value => {
         setBookingId(value);
         try {
@@ -103,6 +135,24 @@ export default function CheckInCar() {
             if (b?.renters?.id || b?.renters) {
                 await fetchCustomerDocuments(b.renters?.id || b.renters);
             }
+
+            // Khởi tạo các trường inspection: nếu booking đã có inspection thì dùng nó,
+            // nếu không thì đặt về "GOOD" để không để trống
+            setExteriorCondition(b?.inspection?.exteriorCondition || 'GOOD');
+            setInteriorCondition(b?.inspection?.interiorCondition || 'GOOD');
+            setTireCondition(b?.inspection?.tireCondition || 'GOOD');
+            setAccessories(
+                b?.inspection?.accessories
+                    ? (Array.isArray(b.inspection.accessories) && b.inspection.accessories.includes('ALL_PRESENT') ? 'ALL_PRESENT' : 'MISSING_ITEMS')
+                    : 'ALL_PRESENT'
+            );
+            setBatteryLevel(
+                b?.inspection?.batteryLevel !== undefined && b?.inspection?.batteryLevel !== null
+                    ? String(b.inspection.batteryLevel)
+                    : (b?.vehicle?.batteryLevel ? String(b.vehicle.batteryLevel) : '')
+            );
+            setDamageNotes(b?.inspection?.damageNotes || '');
+            setNotes(b?.inspection?.notes || '');
         } catch (e) {
             toast.error(e?.message || 'Failed to load booking');
         }
@@ -257,6 +307,7 @@ export default function CheckInCar() {
     const resetAllFields = () => {
         setBookingId('');
         setBooking(null);
+        // Reset về "GOOD" để không hiển thị rỗng
         setExteriorCondition('GOOD');
         setInteriorCondition('GOOD');
         setTireCondition('GOOD');
@@ -267,10 +318,11 @@ export default function CheckInCar() {
         setNotes('');
         setDocumentVerified(false);
         setInspectionFiles([]);
+        setSelectedStation('');
     };
 
-    // Separate submission logic to avoid re-running all validations
-    const performCheckInSubmission = async () => {
+    // Create inspection only (without checking in booking)
+    const performInspectionSubmission = async () => {
         const batteryNum = Number(batteryLevel);
         const mileageNum = Number(mileage);
         const id = booking?.id || bookingId;
@@ -282,7 +334,6 @@ export default function CheckInCar() {
             inspectionType: inspectionType,
             batteryLevel: batteryNum,
             mileage: mileageNum,
-            // ✅ FIX: Sử dụng giá trị thực từ state
             exteriorCondition: exteriorCondition,
             interiorCondition: interiorCondition,
             tireCondition: tireCondition,
@@ -300,60 +351,39 @@ export default function CheckInCar() {
         try {
             setIsSubmitting(true);
 
-            // Create inspection record first
+            // Create inspection record
             try {
                 const inspectionRes = await apiClient.post(
                     endpoints.inspections.create(),
                     inspectionPayload
                 );
                 createdInspection = inspectionRes?.data?.inspection || inspectionRes?.data || null;
-                console.debug('inspection create response:', inspectionRes?.data || inspectionRes);
+                console.log('✅ Inspection created:', createdInspection?.id);
                 if (createdInspection && createdInspection.id) {
-                    toast.info(`Inspection created (id=${createdInspection.id})`);
+                    toast.success(`Inspection created successfully (ID: ${createdInspection.id})`);
                 } else {
-                    toast.warn('Inspection creation returned no id');
+                    toast.warn('Inspection creation returned no ID');
                 }
             } catch (insErr) {
-                console.warn('Inspection creation failed:', insErr);
-                toast.warn('Failed to create inspection record (server may reject). Proceeding to check-in attempt.');
-                // continue; we still try to perform check-in to avoid blocking staff flow
+                console.error('Inspection creation failed:', insErr);
+                throw insErr;
             }
 
             // Upload images if inspection was created and we have files
             if (inspectionFiles.length && createdInspection?.id) {
                 try {
                     uploadedImageUrls = await uploadInspectionImages(createdInspection.id);
-                    console.debug('uploaded image urls for inspection', createdInspection.id, uploadedImageUrls);
-                    if (!uploadedImageUrls.length) {
-                        toast.info('No images were uploaded (server may have rejected them)');
+                    console.log('✅ Uploaded images:', uploadedImageUrls.length);
+                    if (uploadedImageUrls.length > 0) {
+                        toast.success(`${uploadedImageUrls.length} image(s) uploaded successfully`);
                     }
                 } catch (uploadErr) {
-                    console.warn('uploadInspectionImages failed:', uploadErr);
-                    toast.warn('Image upload failed (check network / server).');
+                    console.warn('Image upload failed (non-blocking):', uploadErr);
+                    toast.warn('Some images failed to upload');
                 }
             }
 
-            // Proceed with booking check-in
-            const checkInPayload = {
-                actualStartTime: new Date().toISOString(),
-                actualPickupLocation:
-                    booking?.station?.address ||
-                    booking?.pickupStation?.address ||
-                    booking?.station?.name ||
-                    booking?.pickupStation?.name ||
-                    'Station location',
-                pickupOdometer: mileageNum,
-                batteryLevel: batteryNum,
-            };
-
-            const checkInRes = await apiClient.post(
-                endpoints.bookings.checkIn(id),
-                checkInPayload
-            );
-
-            console.debug('checkIn response:', checkInRes?.data || checkInRes);
-
-            const checkInSummaryData = checkInRes?.data?.checkInSummary || {};
+            // Show success summary
             const vehicleLabel =
                 booking?.vehicle?.name ||
                 booking?.vehicle?.licensePlate ||
@@ -369,14 +399,14 @@ export default function CheckInCar() {
                 customerName,
                 mileage: mileageNum,
                 batteryLevel: batteryNum,
-                actualStartTime: checkInSummaryData.actualStartTime || new Date().toISOString(),
-                staffInfo: checkInSummaryData.staffInfo || { name: user?.name || 'Current staff' },
+                actualStartTime: new Date().toISOString(),
+                staffInfo: { name: user?.name || 'Current staff' },
             });
             setCheckInSummaryOpen(true);
 
-            toast.success('Check-in completed successfully');
+            toast.success('Inspection created successfully');
 
-            // refresh bookings list
+            // Refresh bookings list
             try {
                 setLoadingBookings(true);
                 const resData = await getAllBookings({ limit: 100 });
@@ -391,12 +421,6 @@ export default function CheckInCar() {
                 setLoadingBookings(false);
             }
 
-            // debug: if inspection was not created, help troubleshooting
-            if (!createdInspection || !createdInspection.id) {
-                console.warn('Inspection record not present after check-in. Verify server endpoint:', endpoints.inspections.create());
-                toast.info('Note: inspection record was not created. Check server logs or network requests.');
-            }
-
             resetAllFields();
         } catch (e) {
             const status = e?.status ?? e?.response?.status;
@@ -407,18 +431,13 @@ export default function CheckInCar() {
                 return;
             }
 
-            if (status === 409) {
-                toast.info('Booking already checked in');
-                return;
-            }
-
-            toast.error(serverMsg || 'Check-in failed');
+            toast.error(serverMsg || 'Failed to create inspection');
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    const handleCompleteCheckIn = async () => {
+    const handleCreateInspection = async () => {
 
         // Basic validations 
         if (!booking) {
@@ -468,13 +487,13 @@ export default function CheckInCar() {
             const actualStartTime = new Date();
             const maxAllowed = new Date(plannedStartTime.getTime() + 24 * 60 * 60 * 1000);
             if (actualStartTime > maxAllowed) {
-                toast.error('Cannot check-in more than 24 hours after scheduled start time');
+                toast.error('Cannot create inspection more than 24 hours after scheduled start time');
                 return;
             }
         }
 
-        // If not late or dialog confirmed, proceed with submission
-        await performCheckInSubmission();
+        // Proceed with inspection submission
+        await performInspectionSubmission();
     };
 
     return (
@@ -556,9 +575,32 @@ export default function CheckInCar() {
                 <CardContent className='space-y-4'>
                     <div>
                         <Label className='block mb-2'>Inspection Type</Label>
-                        <div className="px-3 py-2 border rounded bg-slate-50 text-slate-800">
+                        <div className="px-3 py-2 border rounded bg-muted text-foreground">
                             CHECK_IN
                         </div>
+                    </div>
+
+                    <div>
+                        <Label className='block mb-2'>
+                            Địa điểm nhận xe <span className='text-red-500'>*</span>
+                        </Label>
+                        <Select value={selectedStation} onValueChange={setSelectedStation} disabled={loadingStations}>
+                            <SelectTrigger>
+                                <SelectValue placeholder='Chọn địa điểm nhận xe...' />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {loadingStations && (
+                                    <div className='px-2 py-1 text-sm text-muted-foreground'>
+                                        Đang tải danh sách trạm...
+                                    </div>
+                                )}
+                                {stations.map(station => (
+                                    <SelectItem key={station.id} value={station.id}>
+                                        {station.name} - {station.address}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
 
                     <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
@@ -806,13 +848,14 @@ export default function CheckInCar() {
                 </CardContent>
             </Card>
 
+
             <Card>
                 <CardHeader>
-                    <CardTitle>Complete Check-In</CardTitle>
+                    <CardTitle>Create Inspection</CardTitle>
                 </CardHeader>
                 <CardContent className='flex items-center justify-between gap-3'>
                     <p className='text-sm text-muted-foreground'>
-                        Review all information and hand over vehicle to customer.
+                        Review all information and create vehicle inspection record.
                     </p>
                     <div className='flex gap-2'>
                         <Button
@@ -823,21 +866,22 @@ export default function CheckInCar() {
                             Reset
                         </Button>
                         <Button
-                            onClick={handleCompleteCheckIn}
+                            onClick={handleCreateInspection}
                             disabled={isSubmitting || !booking}
                         >
-                            {isSubmitting ? 'Processing...' : 'Confirm Check-In'}
+                            {isSubmitting ? 'Processing...' : 'Create Inspection'}
                         </Button>
                     </div>
                 </CardContent>
             </Card>
 
+
             <Dialog open={checkInSummaryOpen} onOpenChange={setCheckInSummaryOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>✅ Check-In Completed</DialogTitle>
+                        <DialogTitle>✅ Inspection Created</DialogTitle>
                         <DialogDescription>
-                            Vehicle has been handed over to customer successfully.
+                            Vehicle inspection record has been created successfully.
                         </DialogDescription>
                     </DialogHeader>
                     <div className='space-y-4'>
@@ -855,13 +899,13 @@ export default function CheckInCar() {
                         )}
                         {(checkInSummary?.staffInfo?.name || user?.name) && (
                             <div>
-                                <p className='text-sm text-muted-foreground'>Processed by</p>
+                                <p className='text-sm text-muted-foreground'>Inspected by</p>
                                 <p className='font-medium'>{checkInSummary?.staffInfo?.name || user?.name}</p>
                             </div>
                         )}
                         <div className='grid grid-cols-2 gap-4'>
                             <div>
-                                <p className='text-sm text-muted-foreground'>Starting Mileage</p>
+                                <p className='text-sm text-muted-foreground'>Odometer Reading</p>
                                 <p className='font-medium'>
                                     {checkInSummary?.mileage?.toLocaleString()} km
                                 </p>
@@ -873,7 +917,7 @@ export default function CheckInCar() {
                         </div>
                         {checkInSummary?.actualStartTime && (
                             <div>
-                                <p className='text-sm text-muted-foreground'>Check-in Time</p>
+                                <p className='text-sm text-muted-foreground'>Inspection Time</p>
                                 <p className='font-medium'>
                                     {new Date(checkInSummary.actualStartTime).toLocaleString()}
                                 </p>
@@ -881,7 +925,7 @@ export default function CheckInCar() {
                         )}
                         <div className='pt-2 border-t'>
                             <p className='text-sm text-green-600'>
-                                Booking status updated to: <strong>IN_PROGRESS</strong>
+                                Inspection record created successfully
                             </p>
                         </div>
                     </div>

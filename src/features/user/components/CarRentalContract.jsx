@@ -6,7 +6,7 @@ import { Button } from "../../shared/components/ui/button"
 import { Checkbox } from "../../shared/components/ui/checkbox"
 import { CheckCircle2, AlertCircle, FileText, Upload, Check } from "lucide-react"
 import { endpoints } from "../../shared/lib/endpoints"
-import { toast as notify } from 'react-toastify'
+import { toast as notify } from '../../shared/lib/toast'
 import { apiClient } from '../../shared/lib/apiClient'
 import { useAuth } from '../../../app/providers/AuthProvider'
 import { Input } from "../../shared/components/ui/input"

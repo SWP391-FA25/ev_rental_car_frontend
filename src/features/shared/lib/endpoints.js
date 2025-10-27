@@ -8,15 +8,8 @@ export const endpoints = {
     logout: () => '/api/auth/logout',
     me: () => '/api/auth/me',
   },
-  contracts: {
-    getAll: () => '/api/contracts',
-    getById: id => `/api/contracts/${id}`,
-    getByBooking: bookingId => `/api/contracts/booking/${bookingId}`,
-    create: () => '/api/contracts',
-    update: id => `/api/contracts/${id}`,
-    uploadSignedFile: contractId => `/api/contracts/${contractId}/upload`,
-    delete: id => `/api/contracts/${id}`,
-  },
+
+
   staffs: {
     getAll: () => '/api/staffs',
     getById: id => `/api/staffs/${id}`,
