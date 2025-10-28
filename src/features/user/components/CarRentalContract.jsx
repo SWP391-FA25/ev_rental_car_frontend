@@ -30,8 +30,8 @@ export default function RentalContractPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
-    notes: 'Xe có vết xước nhỏ ở cánh trái, pin còn 85%',
-    clauses: 'Yêu cầu trả xe trước 18:00 hôm nay',
+    notes: 'Minor scratch on left door, battery at 85%',
+    clauses: 'Return the vehicle before 18:00 today',
     images: {
       exterior: 'image_exterior.jpg',
       interior: 'image_interior.jpg',
@@ -59,8 +59,8 @@ export default function RentalContractPage() {
       scooterModel: 'Xiaomi Mi 3',
       rentalDate: '2024-10-20',
       returnDate: '2024-10-22',
-      duration: '2 ngày',
-      price: '200.000 VNĐ',
+      duration: '2 days',
+      price: '200,000 VND',
       staff: {
         id: 1,
         name: 'Trần Thị B',
@@ -69,8 +69,8 @@ export default function RentalContractPage() {
       },
       station: {
         id: 1,
-        name: 'Trạm Hà Nội - Hoàn Kiếm',
-        address: '123 Đường Tràng Tiền, Hoàn Kiếm, Hà Nội',
+        name: 'Hanoi Station - Hoan Kiem',
+        address: '123 Trang Tien Street, Hoan Kiem, Hanoi',
         phone: '024-1234-5678',
       },
     },
@@ -82,8 +82,8 @@ export default function RentalContractPage() {
       scooterModel: 'Xiaomi Mi 4 Pro',
       rentalDate: '2024-10-21',
       returnDate: '2024-10-23',
-      duration: '2 ngày',
-      price: '250.000 VNĐ',
+      duration: '2 days',
+      price: '250,000 VND',
       staff: {
         id: 2,
         name: 'Lê Văn D',
@@ -92,8 +92,8 @@ export default function RentalContractPage() {
       },
       station: {
         id: 2,
-        name: 'Trạm Hà Nội - Ba Đình',
-        address: '456 Đường Đinh Tiên Hoàng, Ba Đình, Hà Nội',
+        name: 'Hanoi Station - Ba Dinh',
+        address: '456 Dinh Tien Hoang Street, Ba Dinh, Hanoi',
         phone: '024-8765-4321',
       },
     },
@@ -105,8 +105,8 @@ export default function RentalContractPage() {
       scooterModel: 'Xiaomi Mi 3',
       rentalDate: '2024-10-22',
       returnDate: '2024-10-24',
-      duration: '2 ngày',
-      price: '200.000 VNĐ',
+      duration: '2 days',
+      price: '200,000 VND',
       staff: {
         id: 3,
         name: 'Hoàng Anh F',
@@ -115,8 +115,8 @@ export default function RentalContractPage() {
       },
       station: {
         id: 1,
-        name: 'Trạm Hà Nội - Hoàn Kiếm',
-        address: '123 Đường Tràng Tiền, Hoàn Kiếm, Hà Nội',
+        name: 'Hanoi Station - Hoan Kiem',
+        address: '123 Trang Tien Street, Hoan Kiem, Hanoi',
         phone: '024-1234-5678',
       },
     },
@@ -125,33 +125,33 @@ export default function RentalContractPage() {
   const imageCategories = [
     {
       id: 'exterior',
-      label: 'Ngoài Thất',
-      description: 'Ảnh bên ngoài và lá góc, cửa, đen guơng',
+      label: 'Exterior',
+      description: 'Outside views: doors, mirrors, corners',
     },
     {
       id: 'interior',
-      label: 'Nội Thất',
-      description: 'Ảnh nội thất bên trong, bảng điều khiển, vô lăng',
+      label: 'Interior',
+      description: 'Interior, dashboard, steering wheel',
     },
     {
       id: 'engine',
-      label: 'Động Cơ & Pin',
-      description: 'Ảnh khoang máy, pin, công sắc',
+      label: 'Motor & Battery',
+      description: 'Engine bay, battery, charging port',
     },
     {
       id: 'damage',
-      label: 'Hư Hỏng',
-      description: 'Ảnh các vết trầy xước, móp máo, hư hỏng',
+      label: 'Damages',
+      description: 'Scratches, dents, and damage spots',
     },
     {
       id: 'accessories',
-      label: 'Phụ Kiện',
-      description: 'Ảnh phụ kiện trong xe (tấy sạc, công cụ)',
+      label: 'Accessories',
+      description: 'In-car accessories (charger, tools)',
     },
     {
       id: 'odometer',
       label: 'Odometer',
-      description: 'Ảnh đồng hồ số km hiện tại của xe',
+      description: 'Current mileage reading',
     },
   ];
 
@@ -174,7 +174,7 @@ export default function RentalContractPage() {
       }
     } catch (err) {
       console.warn('fetchBookings error:', err);
-      setError('Không thể tải các booking. Đang dùng dữ liệu offline.');
+      setError('Unable to load bookings. Using offline data.');
       setBookings(mockBookings);
     } finally {
       setLoadingBookings(false);
@@ -220,11 +220,11 @@ export default function RentalContractPage() {
   // sign contract -> request backend to change booking status to CONFIRMED
   const handleSubmit = async () => {
     if (!selectedBooking) {
-      alert('Vui lòng chọn một booking');
+      alert('Please select a booking');
       return;
     }
     if (!allAgreementsAccepted) {
-      alert('Vui lòng đồng ý với tất cả các điều khoản trước khi ký hợp đồng');
+      alert('Please agree to all terms before signing the contract');
       return;
     }
     setActionLoading(true);
@@ -238,7 +238,7 @@ export default function RentalContractPage() {
       if (!res.ok) {
         const body = await res.json().catch(() => null);
         console.error('Failed to confirm booking:', res.status, body);
-        alert('Không thể ký hợp đồng — xin thử lại sau.');
+        alert('Unable to sign the contract — please try again later.');
         return;
       }
       const json = await res.json().catch(() => null);
@@ -247,10 +247,10 @@ export default function RentalContractPage() {
       setSelectedBooking(updated);
       // refresh bookings list to reflect changed status
       fetchBookings();
-      alert('Hợp đồng điện tử đã được ký thành công!');
+      alert('Electronic contract signed successfully!');
     } catch (err) {
       console.error('handleSubmit error:', err);
-      alert('Có lỗi xảy ra khi ký hợp đồng. Vui lòng thử lại.');
+      alert('An error occurred while signing the contract. Please try again.');
     } finally {
       setActionLoading(false);
     }
@@ -262,10 +262,10 @@ export default function RentalContractPage() {
         {/* Header */}
         <div className='mb-8'>
           <h1 className='text-4xl font-bold text-slate-900 mb-2'>
-            Hợp Đồng Thuê Xe Điện
+            Electric Car Rental Contract
           </h1>
           <p className='text-slate-600'>
-            Vui lòng hoàn thành tất cả các bước để ký hợp đồng điện tử
+            Please complete all steps to sign the electronic contract
           </p>
         </div>
 
@@ -277,9 +277,9 @@ export default function RentalContractPage() {
                 1
               </div>
               <div>
-                <CardTitle className='text-slate-900'>Chọn Booking</CardTitle>
+                <CardTitle className='text-slate-900'>Select Booking</CardTitle>
                 <CardDescription>
-                  Lựa chọn booking thuê xe của bạn
+                  Choose your rental booking
                 </CardDescription>
               </div>
             </div>
@@ -288,7 +288,7 @@ export default function RentalContractPage() {
             <div className='space-y-3'>
               {loadingBookings && (
                 <div className='text-sm text-slate-500'>
-                  Đang tải bookings...
+                  Loading bookings...
                 </div>
               )}
               {error && <div className='text-sm text-red-600'>{error}</div>}
@@ -314,25 +314,25 @@ export default function RentalContractPage() {
                       </div>
                       <div className='grid grid-cols-2 gap-4 text-sm text-slate-600'>
                         <div>
-                          <p className='text-slate-500'>Khách hàng</p>
+                          <p className='text-slate-500'>Customer</p>
                           <p className='font-medium text-slate-900'>
                             {booking.renterName}
                           </p>
                         </div>
                         <div>
-                          <p className='text-slate-500'>Xe</p>
+                          <p className='text-slate-500'>Vehicle</p>
                           <p className='font-medium text-slate-900'>
                             {booking.scooterModel}
                           </p>
                         </div>
                         <div>
-                          <p className='text-slate-500'>Ngày thuê</p>
+                          <p className='text-slate-500'>Rental date</p>
                           <p className='font-medium text-slate-900'>
                             {booking.rentalDate}
                           </p>
                         </div>
                         <div>
-                          <p className='text-slate-500'>Giá</p>
+                          <p className='text-slate-500'>Price</p>
                           <p className='font-medium text-slate-900'>
                             {booking.price}
                           </p>
@@ -366,9 +366,9 @@ export default function RentalContractPage() {
                     </div>
                     <div>
                       <CardTitle className='text-slate-900'>
-                        Thông Tin Nhân Viên
+                        Staff Information
                       </CardTitle>
-                      <CardDescription>Nhân viên đảm nhiệm</CardDescription>
+                      <CardDescription>Assigned staff</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
@@ -380,7 +380,7 @@ export default function RentalContractPage() {
                       </div>
                       <div className='flex-1'>
                         <p className='text-sm text-slate-500 mb-1'>
-                          Tên nhân viên
+                          Staff name
                         </p>
                         <p className='font-semibold text-slate-900'>
                           {selectedBooking.staff.name}
@@ -394,7 +394,7 @@ export default function RentalContractPage() {
                       </div>
                       <div className='flex-1'>
                         <p className='text-sm text-slate-500 mb-1'>
-                          Số điện thoại
+                          Phone number
                         </p>
                         <p className='font-semibold text-slate-900'>
                           {selectedBooking.staff.phone}
@@ -426,16 +426,16 @@ export default function RentalContractPage() {
                     </div>
                     <div>
                       <CardTitle className='text-slate-900'>
-                        Trạm Thuê
+                        Rental Station
                       </CardTitle>
-                      <CardDescription>Trạm được chọn</CardDescription>
+                      <CardDescription>Selected station</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className='pt-6'>
                   <div className='space-y-4'>
                     <div>
-                      <p className='text-sm text-slate-500 mb-2'>Tên trạm</p>
+                      <p className='text-sm text-slate-500 mb-2'>Station name</p>
                       <p className='font-semibold text-slate-900 text-lg'>
                         {selectedBooking.station.name}
                       </p>
@@ -444,7 +444,7 @@ export default function RentalContractPage() {
                     <div className='flex items-start gap-3'>
                       <MapPin className='w-5 h-5 text-blue-600 mt-1 flex-shrink-0' />
                       <div>
-                        <p className='text-sm text-slate-500 mb-1'>Địa chỉ</p>
+                        <p className='text-sm text-slate-500 mb-1'>Address</p>
                         <p className='text-slate-900'>
                           {selectedBooking.station.address}
                         </p>
@@ -455,7 +455,7 @@ export default function RentalContractPage() {
                       <Phone className='w-5 h-5 text-green-600 mt-1 flex-shrink-0' />
                       <div>
                         <p className='text-sm text-slate-500 mb-1'>
-                          Số điện thoại
+                          Phone number
                         </p>
                         <p className='font-semibold text-slate-900'>
                           {selectedBooking.station.phone}
@@ -476,10 +476,10 @@ export default function RentalContractPage() {
                   </div>
                   <div>
                     <CardTitle className='text-slate-900'>
-                      Chi Tiết Hợp Đồng
+                      Contract Details
                     </CardTitle>
                     <CardDescription>
-                      Thông tin chi tiết về xe và hợp đồng
+                      Detailed information about the vehicle and contract
                     </CardDescription>
                   </div>
                 </div>
@@ -491,13 +491,13 @@ export default function RentalContractPage() {
                       <Calendar className='w-6 h-6 text-blue-600 mt-1' />
                       <div>
                         <p className='text-sm text-slate-600 mb-1'>
-                          Thời gian thuê
+                          Rental period
                         </p>
                         <p className='font-semibold text-slate-900'>
                           {selectedBooking.rentalDate}
                         </p>
                         <p className='text-sm text-slate-600'>
-                          đến {selectedBooking.returnDate}
+                          to {selectedBooking.returnDate}
                         </p>
                       </div>
                     </div>
@@ -507,7 +507,7 @@ export default function RentalContractPage() {
                     <div className='flex items-start gap-3'>
                       <Zap className='w-6 h-6 text-green-600 mt-1' />
                       <div>
-                        <p className='text-sm text-slate-600 mb-1'>Mẫu xe</p>
+                        <p className='text-sm text-slate-600 mb-1'>Model</p>
                         <p className='font-semibold text-slate-900'>
                           {selectedBooking.scooterModel}
                         </p>
@@ -522,11 +522,11 @@ export default function RentalContractPage() {
                     <div className='flex items-start gap-3'>
                       <DollarSign className='w-6 h-6 text-purple-600 mt-1' />
                       <div>
-                        <p className='text-sm text-slate-600 mb-1'>Giá thuê</p>
+                        <p className='text-sm text-slate-600 mb-1'>Rental price</p>
                         <p className='font-semibold text-slate-900'>
                           {selectedBooking.price}
                         </p>
-                        <p className='text-sm text-slate-600'>Tổng cộng</p>
+                        <p className='text-sm text-slate-600'>Total</p>
                       </div>
                     </div>
                   </Card>
@@ -543,10 +543,10 @@ export default function RentalContractPage() {
                   </div>
                   <div>
                     <CardTitle className='text-slate-900'>
-                      Hình Ảnh Kiểm Tra Từ Nhân Viên
+                      Inspection Images From Staff
                     </CardTitle>
                     <CardDescription>
-                      Ảnh tình trạng xe được gửi bởi nhân viên (chỉ xem)
+                      Vehicle condition images provided by staff (view only)
                     </CardDescription>
                   </div>
                 </div>
@@ -565,17 +565,17 @@ export default function RentalContractPage() {
                               <Check className='w-6 h-6' />
                             </div>
                             <p className='text-sm font-medium text-slate-900'>
-                              Đã tải lên
+                              Uploaded
                             </p>
                             <p className='text-xs text-slate-500 mt-1'>
-                              Ảnh từ nhân viên
+                              Image from staff
                             </p>
                           </div>
                         ) : (
                           <div className='text-center'>
                             <div className='text-slate-400 mb-2'>-</div>
                             <p className='text-sm font-medium text-slate-500'>
-                              Chưa có ảnh
+                              No image
                             </p>
                           </div>
                         )}
@@ -603,10 +603,10 @@ export default function RentalContractPage() {
                   </div>
                   <div>
                     <CardTitle className='text-slate-900'>
-                      Ghi Chú & Hu Hỏng Từ Nhân Viên
+                      Notes & Damages From Staff
                     </CardTitle>
                     <CardDescription>
-                      Ghi chú từ nhân viên (chỉ xem)
+                      Staff notes (view only)
                     </CardDescription>
                   </div>
                 </div>
@@ -615,19 +615,19 @@ export default function RentalContractPage() {
                 <div className='space-y-6'>
                   <div>
                     <label className='block text-sm font-semibold text-slate-900 mb-2'>
-                      Ghi Chú Hu Hỏng
+                      Damage Notes
                     </label>
                     <div className='w-full px-4 py-3 border border-slate-300 rounded-lg bg-slate-50 text-slate-700 min-h-24'>
-                      {formData.notes || 'Không có ghi chú'}
+                      {formData.notes || 'No notes'}
                     </div>
                   </div>
 
                   <div>
                     <label className='block text-sm font-semibold text-slate-900 mb-2'>
-                      Ghi Chú Khác
+                      Additional Notes
                     </label>
                     <div className='w-full px-4 py-3 border border-slate-300 rounded-lg bg-slate-50 text-slate-700 min-h-24'>
-                      {formData.clauses || 'Không có ghi chú bổ sung'}
+                      {formData.clauses || 'No additional notes'}
                     </div>
                   </div>
                 </div>
@@ -643,10 +643,10 @@ export default function RentalContractPage() {
                   </div>
                   <div>
                     <CardTitle className='text-slate-900'>
-                      Xác Nhận Hợp Đồng Điện Tử
+                      Electronic Contract Confirmation
                     </CardTitle>
                     <CardDescription>
-                      Vui lòng đồng ý với tất cả các điều khoản để ký hợp đồng
+                      Please agree to all terms to sign the contract
                     </CardDescription>
                   </div>
                 </div>
@@ -657,61 +657,49 @@ export default function RentalContractPage() {
                   <Card className='border-slate-200'>
                     <CardHeader className='bg-slate-50 border-b border-slate-200'>
                       <CardTitle className='text-slate-900'>
-                        Điều Khoản & Điều Kiện Hợp Đồng
+                        Contract Terms & Conditions
                       </CardTitle>
                     </CardHeader>
                     <CardContent className='pt-6'>
                       <div className='space-y-4 mb-6 text-sm text-slate-700 max-h-48 overflow-y-auto'>
                         <div>
                           <h4 className='font-semibold text-slate-900 mb-2'>
-                            1. Thời Hạn Thuê
+                            1. Rental Period
                           </h4>
                           <p>
-                            Thời hạn thuê xe bắt đầu từ lúc nhận xe tại trạm và
-                            kết thúc khi trả xe tại trạm. Bất kỳ thời gian sử
-                            dụng vượt quá thời hạn sẽ bị tính phí theo giá quy
-                            định.
+                            The rental period starts from the time of pickup at the station and ends when the vehicle is returned to the station. Any usage beyond the agreed period will be charged according to the applicable rate.
                           </p>
                         </div>
                         <div>
                           <h4 className='font-semibold text-slate-900 mb-2'>
-                            2. Trách Nhiệm Bảo Quản Xe
+                            2. Vehicle Care Responsibility
                           </h4>
                           <p>
-                            Người thuê chịu trách nhiệm bảo quản xe trong suốt
-                            thời gian thuê. Mọi hư hỏng, mất mát hoặc thiệt hại
-                            xảy ra trong thời gian thuê sẽ do người thuê chịu
-                            trách nhiệm.
+                            The renter is responsible for maintaining the vehicle during the rental period. Any damage, loss, or harm occurring during the rental period will be the renter’s responsibility.
                           </p>
                         </div>
                         <div>
                           <h4 className='font-semibold text-slate-900 mb-2'>
-                            3. Điều Kiện Sử Dụng
+                            3. Usage Conditions
                           </h4>
                           <p>
-                            Xe chỉ được sử dụng cho mục đích cá nhân, không được
-                            cho thuê lại, không được sử dụng cho hoạt động
-                            thương mại hoặc bất hợp pháp.
+                            The vehicle may only be used for personal purposes. Subleasing and use for commercial or illegal activities are prohibited.
                           </p>
                         </div>
                         <div>
                           <h4 className='font-semibold text-slate-900 mb-2'>
-                            4. Bảo Hiểm & Bảo Vệ
+                            4. Insurance & Protection
                           </h4>
                           <p>
-                            Xe được bảo hiểm cơ bản. Người thuê có thể mua bảo
-                            hiểm bổ sung để tăng mức bảo vệ. Mọi yêu cầu bảo
-                            hiểm phải được báo cáo trong vòng 24 giờ.
+                            The vehicle is covered by basic insurance. The renter may purchase additional coverage to increase protection. Any insurance claim must be reported within 24 hours.
                           </p>
                         </div>
                         <div>
                           <h4 className='font-semibold text-slate-900 mb-2'>
-                            5. Phí & Thanh Toán
+                            5. Fees & Payment
                           </h4>
                           <p>
-                            Phí thuê phải được thanh toán đầy đủ trước khi nhận
-                            xe. Các phí bổ sung (quá giờ, hư hỏng, v.v.) sẽ được
-                            tính toán và thanh toán khi trả xe.
+                            Rental fees must be paid in full before pickup. Additional fees (overtime, damage, etc.) will be calculated and settled upon return.
                           </p>
                         </div>
                       </div>
@@ -741,11 +729,11 @@ export default function RentalContractPage() {
                           className='text-base text-slate-800 cursor-pointer flex-1'
                         >
                           <span className='font-bold text-green-900'>
-                            Tôi đồng ý với các điều khoản & điều kiện
+                            I agree to the terms & conditions
                           </span>
                           <span className='text-slate-700'>
                             {' '}
-                            của hợp đồng thuê xe điện này
+                            of this electric car rental contract
                           </span>
                         </label>
                       </div>
@@ -756,26 +744,21 @@ export default function RentalContractPage() {
                   <Card className='border-slate-200'>
                     <CardHeader className='bg-slate-50 border-b border-slate-200'>
                       <CardTitle className='text-slate-900'>
-                        Trách Nhiệm Về Hư Hỏng
+                        Damage Responsibility
                       </CardTitle>
                     </CardHeader>
                     <CardContent className='pt-6'>
                       <div className='space-y-3 mb-6 text-sm text-slate-700'>
                         <p>
                           <span className='font-semibold text-slate-900'>
-                            Người thuê xác nhận rằng:
+                            The renter confirms that:
                           </span>
                         </p>
                         <ul className='list-disc list-inside space-y-2 ml-2'>
-                          <li>Đã kiểm tra kỹ tình trạng xe trước khi nhận</li>
-                          <li>
-                            Đã ghi lại tất cả các hư hỏng hiện có bằng ảnh
-                          </li>
-                          <li>
-                            Sẽ chịu trách nhiệm cho mọi hư hỏng mới xảy ra trong
-                            thời gian thuê
-                          </li>
-                          <li>Sẽ báo cáo ngay mọi tai nạn hoặc sự cố xảy ra</li>
+                          <li>Has carefully inspected the vehicle condition before pickup</li>
+                          <li>Has recorded all existing damages with photos</li>
+                          <li>Will be responsible for any new damages during the rental period</li>
+                          <li>Will immediately report any accidents or incidents</li>
                         </ul>
                       </div>
 
@@ -804,11 +787,11 @@ export default function RentalContractPage() {
                           className='text-base text-slate-800 cursor-pointer flex-1'
                         >
                           <span className='font-bold text-green-900'>
-                            Tôi hiểu và chấp nhận trách nhiệm
+                            I understand and accept responsibility
                           </span>
                           <span className='text-slate-700'>
                             {' '}
-                            về mọi hư hỏng xảy ra trong thời gian thuê
+                            for any damages occurring during the rental period
                           </span>
                         </label>
                       </div>
@@ -819,16 +802,13 @@ export default function RentalContractPage() {
                   <Card className='border-slate-200'>
                     <CardHeader className='bg-slate-50 border-b border-slate-200'>
                       <CardTitle className='text-slate-900'>
-                        Bảo Vệ Dữ Liệu Cá Nhân
+                        Personal Data Protection
                       </CardTitle>
                     </CardHeader>
                     <CardContent className='pt-6'>
                       <div className='space-y-3 mb-6 text-sm text-slate-700'>
                         <p>
-                          Dữ liệu cá nhân của bạn sẽ được xử lý theo chính sách
-                          bảo vệ dữ liệu của chúng tôi. Chúng tôi cam kết bảo vệ
-                          thông tin của bạn và chỉ sử dụng nó cho mục đích liên
-                          quan đến hợp đồng thuê xe.
+                          Your personal data is processed in accordance with our data protection policy. We are committed to safeguarding your information and using it only for purposes related to the rental contract.
                         </p>
                       </div>
 
@@ -857,11 +837,11 @@ export default function RentalContractPage() {
                           className='text-base text-slate-800 cursor-pointer flex-1'
                         >
                           <span className='font-bold text-green-900'>
-                            Tôi đồng ý với chính sách bảo vệ dữ liệu cá nhân
+                            I agree to the personal data protection policy
                           </span>
                           <span className='text-slate-700'>
                             {' '}
-                            và cho phép xử lý dữ liệu của tôi
+                            and allow processing of my data
                           </span>
                         </label>
                       </div>
@@ -872,27 +852,21 @@ export default function RentalContractPage() {
                   <Card className='border-slate-200'>
                     <CardHeader className='bg-slate-50 border-b border-slate-200'>
                       <CardTitle className='text-slate-900'>
-                        Điều Kiện Khác
+                        Additional Conditions
                       </CardTitle>
                     </CardHeader>
                     <CardContent className='pt-6'>
                       <div className='space-y-3 mb-6 text-sm text-slate-700'>
                         <p>
                           <span className='font-semibold text-slate-900'>
-                            Các điều kiện bổ sung:
+                            Additional conditions:
                           </span>
                         </p>
                         <ul className='list-disc list-inside space-y-2 ml-2'>
-                          <li>
-                            Xe phải được trả lại đúng thời gian và địa điểm quy
-                            định
-                          </li>
-                          <li>Xe phải được trả lại trong tình trạng sạch sẽ</li>
-                          <li>Bình pin phải được sạc đầy trước khi trả xe</li>
-                          <li>
-                            Mọi phí phát sinh phải được thanh toán trước khi trả
-                            xe
-                          </li>
+                          <li>The vehicle must be returned at the agreed time and location</li>
+                          <li>The vehicle must be returned in clean condition</li>
+                          <li>The battery must be fully charged before return</li>
+                          <li>All additional fees must be paid before returning the vehicle</li>
                         </ul>
                       </div>
 
@@ -921,11 +895,11 @@ export default function RentalContractPage() {
                           className='text-base text-slate-800 cursor-pointer flex-1'
                         >
                           <span className='font-bold text-green-900'>
-                            Tôi đồng ý với tất cả các điều kiện bổ sung
+                            I agree to all additional conditions
                           </span>
                           <span className='text-slate-700'>
                             {' '}
-                            được liệt kê ở trên
+                            listed above
                           </span>
                         </label>
                       </div>
@@ -936,12 +910,11 @@ export default function RentalContractPage() {
                   <div className='flex gap-3 p-4 bg-red-50 rounded-lg border border-red-200'>
                     <AlertCircle className='w-5 h-5 text-red-600 flex-shrink-0 mt-0.5' />
                     <div className='text-sm text-red-800'>
-                      <p className='font-semibold mb-1'>Lưu ý quan trọng:</p>
+                      <p className='font-semibold mb-1'>Important notice:</p>
                       <p>
-                        Bằng cách ký hợp đồng này, bạn xác nhận rằng bạn đã đọc,
-                        hiểu và đồng ý với tất cả các điều khoản và điều kiện.
-                        Hợp đồng này có giá trị pháp lý và bạn chịu trách nhiệm
-                        pháp lý về các vi phạm.
+                        By signing this contract, you confirm that you have read,
+                        understood, and agreed to all terms and conditions. This contract
+                        is legally binding and you are legally responsible for any violations.
                       </p>
                     </div>
                   </div>
@@ -957,10 +930,10 @@ export default function RentalContractPage() {
                     <CheckCircle2 className='w-6 h-6 text-green-600 flex-shrink-0' />
                     <div>
                       <p className='font-semibold text-green-900'>
-                        Tất cả điều khoản đã được chấp nhận
+                        All terms accepted
                       </p>
                       <p className='text-sm text-green-700'>
-                        Bạn đã sẵn sàng ký hợp đồng điện tử
+                        You are ready to sign the electronic contract
                       </p>
                     </div>
                   </div>
@@ -975,11 +948,10 @@ export default function RentalContractPage() {
                     <AlertCircle className='w-6 h-6 text-amber-600 flex-shrink-0' />
                     <div>
                       <p className='font-semibold text-amber-900'>
-                        Chưa hoàn thành tất cả các điều khoản
+                        Not all terms completed
                       </p>
                       <p className='text-sm text-amber-700'>
-                        Vui lòng đồng ý với tất cả các điều khoản trước khi ký
-                        hợp đồng
+                        Please agree to all terms before signing the contract
                       </p>
                     </div>
                   </div>
@@ -994,7 +966,7 @@ export default function RentalContractPage() {
                 size='lg'
                 className='border-slate-300 text-slate-700 hover:bg-slate-50 bg-transparent'
               >
-                Hủy
+                Cancel
               </Button>
               <Button
                 size='lg'
@@ -1006,7 +978,7 @@ export default function RentalContractPage() {
                     : 'bg-slate-400 cursor-not-allowed'
                 }`}
               >
-                {actionLoading ? 'Đang xử lý...' : 'Ký Hợp Đồng Điện Tử'}
+                {actionLoading ? 'Processing...' : 'Sign Electronic Contract'}
               </Button>
             </div>
           </>

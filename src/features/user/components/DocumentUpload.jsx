@@ -269,9 +269,7 @@ const DocumentUpload = () => {
         <div className='flex items-start gap-3'>
           <AlertTriangle className='h-5 w-5 text-red-600 mt-0.5 flex-shrink-0' />
           <p className='text-red-800 text-sm'>
-            <strong>Lưu ý:</strong> để tránh phát sinh vấn đề trong quá trình
-            thuê xe, người đặt xe trên EV Rental (đã xác thực GPLX) ĐỒNG THỜI
-            phải là người nhận xe.
+            <strong>Note:</strong> To avoid issues during the rental process, the person who makes the booking on EV Rental (with a verified driver's license) must also be the person who picks up the car.
           </p>
         </div>
       </div>

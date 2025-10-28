@@ -456,7 +456,7 @@ export default function ReturnCar() {
       batteryLevelNum < 0 ||
       batteryLevelNum > 100
     ) {
-      setBatteryError('Mức pin phải từ 0 đến 100');
+      setBatteryError('Battery level must be between 0 and 100');
       return;
     }
     setBatteryError('');
@@ -1517,7 +1517,7 @@ export default function ReturnCar() {
                 {cashPaymentLoading ? (
                   <>
                     <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-white'></div>
-                    Đang xử lý...
+                    Processing...
                   </>
                 ) : (
                   <>Mark Completed</>
@@ -1534,20 +1534,20 @@ export default function ReturnCar() {
           <DialogHeader>
             <DialogTitle>
               {t('staffReturnCar.modal.cashEvidenceTitle', {
-                defaultValue: 'Bằng chứng thanh toán (tệp)',
+                defaultValue: 'Payment Evidence (file)',
               })}
             </DialogTitle>
             <DialogDescription>
               {t('staffReturnCar.modal.cashEvidenceDesc', {
                 defaultValue:
-                  'Chọn tệp ảnh hoặc PDF làm bằng chứng thanh toán tiền mặt.',
+                  'Select an image or PDF as cash payment proof.',
               })}
             </DialogDescription>
           </DialogHeader>
           <div className='space-y-3'>
             <Label className='text-sm'>
               {t('staffReturnCar.modal.cashEvidenceLabel', {
-                defaultValue: 'Chọn tệp bằng chứng',
+                defaultValue: 'Choose evidence file',
               })}
             </Label>
             <Input
@@ -1592,7 +1592,7 @@ export default function ReturnCar() {
               <p className='text-xs text-muted-foreground'>
                 {t('staffReturnCar.modal.cashEvidenceHint', {
                   defaultValue:
-                    'Vui lòng chọn tệp bằng chứng trước khi xác nhận.',
+                    'Please select an evidence file before confirming.',
                 })}
               </p>
             )}

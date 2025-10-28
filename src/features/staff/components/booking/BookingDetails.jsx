@@ -23,6 +23,18 @@ export function BookingDetails({ open, onOpenChange, booking }) {
   const [loadingInspections, setLoadingInspections] = useState(false);
   const [inspectionsError, setInspectionsError] = useState('');
 
+  // Helper to normalize and make absolute URLs (for evidence, images, etc.)
+  const makeAbsoluteUrl = (url) => {
+    if (!url) return null;
+    const s = String(url).trim();
+    if (!s) return null;
+    if (/^https?:\/\//i.test(s) || s.startsWith('data:')) return s;
+    const path = s.startsWith('/') ? s : (s.startsWith('uploads') ? `/${s}` : null);
+    if (!path) return null;
+    const base = env.apiBaseUrl.replace(/\/+$/, '');
+    return `${base}${path}`;
+  };
+
   useEffect(() => {
     const fetchInspections = async () => {
       if (!booking?.id || !open) return;
@@ -32,18 +44,34 @@ export function BookingDetails({ open, onOpenChange, booking }) {
         const res = await apiClient.get(
           endpoints.inspections.getByBooking(booking.id)
         );
-        const data = res?.data;
-        const list = Array.isArray(data?.inspections)
-          ? data.inspections
-          : Array.isArray(data)
-          ? data
-          : Array.isArray(data?.items)
-          ? data.items
+        const payload = res?.data;
+        const list = Array.isArray(payload?.data?.inspections)
+          ? payload.data.inspections
+          : Array.isArray(payload?.inspections)
+          ? payload.inspections
+          : Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.items)
+          ? payload.items
           : [];
         const sorted = [...list].sort(
           (a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0)
         );
         const latest = sorted[0] || null;
+        
+        // Debug log để kiểm tra dữ liệu inspection
+        console.log('=== INSPECTION DEBUG ===');
+        console.log('Booking ID:', booking.id);
+        console.log('Raw API response:', payload);
+        console.log('Extracted inspections list:', list);
+        console.log('Latest inspection:', latest);
+        if (latest) {
+          console.log('Latest inspection images field:', latest.images);
+          console.log('Latest inspection imageUrl field:', latest.imageUrl);
+          console.log('Latest inspection thumbnailUrl field:', latest.thumbnailUrl);
+        }
+        console.log('========================');
+        
         setInspections(latest ? [latest] : []);
       } catch (err) {
         setInspectionsError(
@@ -322,28 +350,44 @@ export function BookingDetails({ open, onOpenChange, booking }) {
                     const base = env.apiBaseUrl.replace(/\/+$/, '');
                     return `${base}${path}`;
                   };
+                  
+                  // Collect all possible image URLs from different fields
+                  const allImageCandidates = [];
+                  
+                  // 1) From images array (Json field) — prefer original URL over thumbnail
                   const rawImages = item?.images;
-                  const imageUrls = Array.isArray(rawImages)
-                    ? Array.from(
-                        new Set(
-                          rawImages
-                            .map((img) => {
-                              const candidate =
-                                typeof img === 'string'
-                                  ? img
-                                  : img?.url ||
-                                    img?.thumbnailUrl ||
-                                    img?.data?.url ||
-                                    img?.data?.thumbnailUrl ||
-                                    img?.path ||
-                                    img?.filePath ||
-                                    null;
-                              return makeAbsoluteUrl(candidate);
-                            })
-                            .filter(Boolean)
-                        )
-                      )
-                    : [];
+                  if (Array.isArray(rawImages)) {
+                    rawImages.forEach((img) => {
+                      let candidate = null;
+                      if (typeof img === 'string') {
+                        candidate = img;
+                      } else if (img && typeof img === 'object') {
+                        candidate = img.url || img.data?.url || img.path || img.filePath || img.imageUrl || null;
+                        // Only fall back to thumbnail when no original URL exists
+                        if (!candidate) {
+                          candidate = img.thumbnailUrl || img.data?.thumbnailUrl || null;
+                        }
+                      }
+                      if (candidate) allImageCandidates.push(candidate);
+                    });
+                  }
+                  
+                  // 2) From top-level imageUrl (String) — primary
+                  if (item?.imageUrl) {
+                    allImageCandidates.push(item.imageUrl);
+                  } else if (item?.thumbnailUrl) {
+                    // 3) Fallback to top-level thumbnailUrl only when imageUrl is absent
+                    allImageCandidates.push(item.thumbnailUrl);
+                  }
+                  
+                  // Process and deduplicate URLs
+                  const imageUrls = Array.from(
+                    new Set(
+                      allImageCandidates
+                        .map(candidate => makeAbsoluteUrl(candidate))
+                        .filter(Boolean)
+                    )
+                  );
                   const noIncident = !damageNotes && imageUrls.length === 0 && exteriorCondition === 'GOOD' && interiorCondition === 'GOOD' && tireCondition === 'GOOD';
 
                   return (
@@ -530,23 +574,93 @@ export function BookingDetails({ open, onOpenChange, booking }) {
             <div className='space-y-4'>
               <h3 className='text-lg font-semibold'>{t('booking.details.paymentHistory')}</h3>
               <div className='space-y-2'>
-                {booking.payments.map(payment => (
-                  <div
-                    key={payment.id}
-                    className='flex justify-between items-center p-3 border rounded-md'
-                  >
-                    <div>
-                      <p className='font-medium'>
-                        {t('booking.details.payment')} #
-                        {payment.id.substring(0, 8)}
-                      </p>
-                      <p className='text-sm text-muted-foreground'>
-                        {t('booking.details.status')}: {payment.status}
-                      </p>
+                {(() => {
+                  const list = Array.isArray(booking.payments)
+                    ? booking.payments
+                    : [];
+                  const latest = [...list]
+                    .sort((a, b) => {
+                      const da = new Date(
+                        a?.paymentDate || a?.updatedAt || a?.createdAt || 0
+                      ).getTime();
+                      const db = new Date(
+                        b?.paymentDate || b?.updatedAt || b?.createdAt || 0
+                      ).getTime();
+                      return db - da;
+                    })[0];
+                  if (!latest) return null;
+                  const payment = latest;
+                  return (
+                    <div
+                      key={payment.id}
+                      className='flex justify-between items-start p-3 border rounded-md gap-3'
+                    >
+                      <div className='flex-1 space-y-1'>
+                        <p className='font-medium'>
+                          {t('booking.details.payment')} #
+                          {payment.id.substring(0, 8)}
+                        </p>
+                        <p className='text-sm text-muted-foreground'>
+                          {t('booking.details.status')}: {payment.status}
+                        </p>
+                        {payment.paymentMethod && (
+                          <p className='text-sm text-muted-foreground'>
+                            Method: {payment.paymentMethod}
+                          </p>
+                        )}
+                        {payment.paymentType && (
+                          <p className='text-sm text-muted-foreground'>
+                            Type: {payment.paymentType}
+                          </p>
+                        )}
+                        {payment.transactionId && (
+                          <p className='text-sm text-muted-foreground font-mono'>
+                            Transaction ID: {payment.transactionId}
+                          </p>
+                        )}
+                        {payment.paymentDate && (
+                          <p className='text-sm text-muted-foreground'>
+                            Payment date: {formatDate(payment.paymentDate)}
+                          </p>
+                        )}
+
+                        {/* Cash evidence preview/link */}
+                        {payment.paymentMethod === 'CASH' && payment.evidenceUrl && (
+                          (() => {
+                            const evidenceUrl = makeAbsoluteUrl(payment.evidenceUrl);
+                            if (!evidenceUrl) return null;
+                            const isImage = /\.(png|jpe?g|gif|webp|bmp)$/i.test(evidenceUrl);
+                            return (
+                              <div className='mt-2 flex items-center gap-3'>
+                                <span className='text-xs text-muted-foreground'>Evidence:</span>
+                                <a
+                                  href={evidenceUrl}
+                                  target='_blank'
+                                  rel='noreferrer'
+                                  className='text-xs underline text-blue-600'
+                                >
+                                  Open
+                                </a>
+                                {isImage && (
+                                  <div className='rounded-md overflow-hidden border bg-muted/40'>
+                                    <img
+                                      src={evidenceUrl}
+                                      alt={`cash-evidence-${payment.id.substring(0, 8)}`}
+                                      className='w-20 h-14 object-cover'
+                                      loading='lazy'
+                                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()
+                        )}
+                      </div>
+                      <p className='font-medium whitespace-nowrap'>{formatPrice(payment.amount)}</p>
                     </div>
-                    <p className='font-medium'>{formatPrice(payment.amount)}</p>
-                  </div>
-                ))}
+                  );
+                })()}
               </div>
             </div>
           )}

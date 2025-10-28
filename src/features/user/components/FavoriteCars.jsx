@@ -17,11 +17,11 @@ export default function FavoriteCars() {
       image: '/api/placeholder/300/200',
       price: 500000,
       rating: 4.8,
-      location: 'Trạm A - Quận 1',
-      fuel: 'Xăng',
+      location: 'Station A - District 1',
+      fuel: 'Petrol',
       seats: 5,
-      transmission: 'Số tự động',
-      features: ['Điều hòa', 'Bluetooth', 'Camera lùi'],
+      transmission: 'Automatic',
+      features: ['Air conditioning', 'Bluetooth', 'Rear camera'],
     },
     {
       id: 2,
@@ -29,11 +29,11 @@ export default function FavoriteCars() {
       image: '/api/placeholder/300/200',
       price: 450000,
       rating: 4.6,
-      location: 'Trạm B - Quận 3',
-      fuel: 'Xăng',
+      location: 'Station B - District 3',
+      fuel: 'Petrol',
       seats: 5,
-      transmission: 'Số tự động',
-      features: ['Điều hòa', 'Bluetooth', 'GPS'],
+      transmission: 'Automatic',
+      features: ['Air conditioning', 'Bluetooth', 'GPS'],
     },
   ];
 
@@ -41,9 +41,9 @@ export default function FavoriteCars() {
     <div className='max-w-6xl mx-auto'>
       <div className='mb-8'>
         <h1 className='text-2xl font-bold text-foreground mb-2'>
-          Xe yêu thích
+          Favorite Cars
         </h1>
-        <p className='text-muted-foreground'>Danh sách các xe bạn đã thích</p>
+        <p className='text-muted-foreground'>List of cars you liked</p>
       </div>
 
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
@@ -53,12 +53,12 @@ export default function FavoriteCars() {
               <CardContent className='text-center py-12'>
                 <Heart className='h-12 w-12 text-muted-foreground mx-auto mb-4' />
                 <h3 className='text-lg font-medium text-card-foreground mb-2'>
-                  Chưa có xe yêu thích
+                  No favorite cars yet
                 </h3>
                 <p className='text-muted-foreground mb-4'>
-                  Khám phá và thêm xe vào danh sách yêu thích!
+                  Explore and add cars to your favorites!
                 </p>
-                <Button>Khám phá xe</Button>
+                <Button>Explore cars</Button>
               </CardContent>
             </Card>
           </div>
@@ -103,7 +103,7 @@ export default function FavoriteCars() {
                   </div>
                   <div className='flex items-center gap-2'>
                     <Users className='h-4 w-4' />
-                    {car.seats} chỗ ngồi
+                    {car.seats} seats
                   </div>
                 </div>
 
@@ -120,12 +120,9 @@ export default function FavoriteCars() {
                     <span className='text-2xl font-bold text-primary'>
                       {car.price.toLocaleString('vi-VN')}
                     </span>
-                    <span className='text-sm text-muted-foreground'>
-                      {' '}
-                      VNĐ/ngày
-                    </span>
+                    <span className='text-sm text-muted-foreground'> VND/day</span>
                   </div>
-                  <Button size='sm'>Thuê ngay</Button>
+                  <Button size='sm'>Rent now</Button>
                 </div>
               </CardContent>
             </Card>

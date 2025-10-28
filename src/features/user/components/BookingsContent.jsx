@@ -3,11 +3,19 @@ import { useBooking } from '@/features/booking/hooks/useBooking';
 import { Badge } from '@/features/shared/components/ui/badge';
 import { Button } from '@/features/shared/components/ui/button';
 import { Card } from '@/features/shared/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/features/shared/components/ui/dialog';
+import { Label } from '@/features/shared/components/ui/label';
 
 import { ConfirmDialog } from '@/features/shared/components/ui/confirm-dialog';
 import { Skeleton } from '@/features/shared/components/ui/skeleton';
 import { apiClient } from '@/features/shared/lib/apiClient';
 import { endpoints } from '@/features/shared/lib/endpoints';
+import { env } from '@/features/shared/lib/env';
 import {
   formatCurrency,
   formatDate,
@@ -41,15 +49,15 @@ const getStatusBadgeVariant = status => {
 const getStatusLabel = status => {
   switch (status) {
     case 'PENDING':
-      return 'Chờ xác nhận';
+      return 'Awaiting confirmation';
     case 'CONFIRMED':
-      return 'Đã xác nhận';
+      return 'Confirmed';
     case 'IN_PROGRESS':
-      return 'Đang thuê';
+      return 'In progress';
     case 'COMPLETED':
-      return 'Hoàn thành';
+      return 'Completed';
     case 'CANCELLED':
-      return 'Đã hủy';
+      return 'Cancelled';
     default:
       return status;
   }
@@ -66,6 +74,12 @@ export default function BookingsContent() {
   const [cancelingBookingId, setCancelingBookingId] = useState(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState(null);
+  // Inspection modal state
+  const [isInspectionOpen, setIsInspectionOpen] = useState(false);
+  const [inspectionLoading, setInspectionLoading] = useState(false);
+  const [inspectionError, setInspectionError] = useState('');
+  const [inspectionItems, setInspectionItems] = useState([]);
+  const [selectedBookingForInspection, setSelectedBookingForInspection] = useState(null);
 
   const fetchBookings = useCallback(async () => {
     if (!user?.id) {
@@ -127,6 +141,39 @@ export default function BookingsContent() {
   const openCancelDialog = booking => {
     setBookingToCancel(booking);
     setShowCancelDialog(true);
+  };
+
+  const openInspectionDialog = async booking => {
+    if (!booking?.id) return;
+    setSelectedBookingForInspection(booking);
+    setIsInspectionOpen(true);
+    // fetch renter-side inspections
+    try {
+      setInspectionLoading(true);
+      setInspectionError('');
+      const res = await apiClient.get(
+        endpoints.inspections.getByBookingRenter(booking.id)
+      );
+      const payload = res?.data;
+      const list = Array.isArray(payload?.data?.inspections)
+        ? payload.data.inspections
+        : Array.isArray(payload?.inspections)
+        ? payload.inspections
+        : Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload?.items)
+        ? payload.items
+        : [];
+      const sorted = [...list].sort(
+        (a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0)
+      );
+      const latest = sorted[0] || null;
+      setInspectionItems(latest ? [latest] : []);
+    } catch (err) {
+      setInspectionError(err?.message || 'Failed to load inspection report');
+    } finally {
+      setInspectionLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -192,23 +239,23 @@ export default function BookingsContent() {
       <div className='max-w-full mx-auto'>
         <div className='mb-8'>
           <h1 className='text-2xl font-bold text-foreground mb-2'>
-            Chuyến của tôi
+            My Trips
           </h1>
           <p className='text-sm text-muted-foreground'>
-            Xem và quản lý các chuyến thuê xe của bạn
+            View and manage your car rentals
           </p>
         </div>
         <div className='text-center py-12'>
           <div className='text-red-500 mb-4'>
             <RefreshCw className='h-12 w-12 mx-auto' />
           </div>
-          <h3 className='text-lg font-semibold mb-2'>Không thể tải dữ liệu</h3>
+          <h3 className='text-lg font-semibold mb-2'>Failed to load data</h3>
           <p className='text-muted-foreground mb-4'>{error}</p>
           <button
             onClick={fetchBookings}
             className='px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90'
           >
-            Thử lại
+            Retry
           </button>
         </div>
       </div>
@@ -221,10 +268,10 @@ export default function BookingsContent() {
       <div className='max-w-6xl mx-auto'>
         <div className='mb-8'>
           <h1 className='text-2xl font-bold text-foreground mb-2'>
-            Chuyến của tôi
+            My Trips
           </h1>
           <p className='text-sm text-muted-foreground'>
-            Xem và quản lý các chuyến thuê xe của bạn
+            View and manage your car rentals
           </p>
         </div>
         <div className='text-center py-12'>
@@ -232,10 +279,10 @@ export default function BookingsContent() {
             <CalendarDays className='h-12 w-12 mx-auto' />
           </div>
           <h3 className='text-lg font-semibold mb-2'>
-            Chưa có chuyến thuê nào
+            No rentals yet
           </h3>
           <p className='text-muted-foreground'>
-            Bạn chưa có chuyến thuê xe nào. Hãy bắt đầu đặt xe ngay!
+            You don’t have any rentals yet. Start booking now!
           </p>
         </div>
       </div>
@@ -247,10 +294,10 @@ export default function BookingsContent() {
       {/* Header */}
       <div className='mb-8'>
         <h1 className='text-2xl font-bold text-foreground mb-2'>
-          Chuyến của tôi
+          My Trips
         </h1>
         <p className='text-sm text-muted-foreground'>
-          Xem và quản lý các chuyến thuê xe của bạn
+          View and manage your car rentals
         </p>
       </div>
 
@@ -311,7 +358,7 @@ export default function BookingsContent() {
                       <CalendarDays className='w-4 h-4 mt-0.5 text-muted-foreground flex-shrink-0' />
                       <div className='min-w-0'>
                         <p className='text-muted-foreground text-xs mb-1'>
-                          Thời gian thuê
+                          Rental period
                         </p>
                         <p className='font-medium text-foreground'>
                           {formatDate(booking.startTime)} -{' '}
@@ -325,7 +372,7 @@ export default function BookingsContent() {
                       <MapPin className='w-4 h-4 mt-0.5 text-primary flex-shrink-0' />
                       <div className='min-w-0'>
                         <p className='text-muted-foreground text-xs mb-1'>
-                          Điểm nhận xe
+                          Pickup location
                         </p>
                         <p className='font-medium text-foreground'>
                           {booking.station?.name || 'N/A'}
@@ -341,7 +388,7 @@ export default function BookingsContent() {
                       <MapPin className='w-4 h-4 mt-0.5 text-muted-foreground flex-shrink-0' />
                       <div className='min-w-0'>
                         <p className='text-muted-foreground text-xs mb-1'>
-                          Điểm trả xe
+                          Return location
                         </p>
                         <p className='font-medium text-foreground'>
                           {booking.station?.name || 'N/A'}
@@ -358,7 +405,7 @@ export default function BookingsContent() {
                 <div className='text-right space-y-2'>
                   <div>
                     <p className='text-xs text-muted-foreground mb-1'>
-                      Tổng tiền
+                      Total
                     </p>
                     <p className='text-2xl font-bold text-primary'>
                       {formatCurrency(booking.totalAmount, 'VND')}
@@ -367,7 +414,7 @@ export default function BookingsContent() {
 
                   <div className='pt-2 border-t border-border'>
                     <p className='text-xs text-muted-foreground mb-1'>
-                      Đặt ngày
+                      Booked on
                     </p>
                     <p className='text-sm font-medium text-foreground'>
                       {formatDateOnly(booking.createdAt)}
@@ -376,7 +423,7 @@ export default function BookingsContent() {
 
                   {booking.depositAmount > 0 && (
                     <div>
-                      <p className='text-xs text-muted-foreground mb-1'>Cọc</p>
+                      <p className='text-xs text-muted-foreground mb-1'>Deposit</p>
                       <p className='text-sm font-medium text-foreground'>
                         {formatCurrency(booking.depositAmount, 'VND')}
                       </p>
@@ -417,6 +464,16 @@ export default function BookingsContent() {
                         )}
                       </Button>
                     )}
+
+                    {/* View Inspection button for renter */}
+                    <Button
+                      size='sm'
+                      variant='outline'
+                      className='w-full'
+                      onClick={() => openInspectionDialog(booking)}
+                    >
+                      View inspection
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -435,6 +492,150 @@ export default function BookingsContent() {
         onConfirm={handleCancelBooking}
         loading={cancelingBookingId === bookingToCancel?.id}
       />
+
+      {/* Inspection Dialog */}
+      <Dialog open={isInspectionOpen} onOpenChange={setIsInspectionOpen}>
+        <DialogContent className='max-w-3xl max-h-[90vh] overflow-y-auto'>
+          <DialogHeader>
+            <DialogTitle>Inspection Report</DialogTitle>
+          </DialogHeader>
+
+          {!selectedBookingForInspection ? (
+            <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
+              Please select a trip to view inspection.
+          </div>
+          ) : inspectionLoading ? (
+          <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
+              Loading inspection report...
+          </div>
+          ) : inspectionError ? (
+          <div className='p-2 border rounded-md bg-red-50 text-red-600 min-h-[40px] flex items-center'>
+              {inspectionError}
+          </div>
+          ) : inspectionItems.length === 0 ? (
+          <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
+              No inspection report available.
+          </div>
+          ) : (
+            <div className='space-y-3'>
+              {inspectionItems.map(item => {
+                const type = item?.inspectionType || item?.type || '';
+                const statusText = item?.isCompleted ? 'Completed' : 'Processing';
+                const stationName =
+                  item?.station?.name || item?.stationName || selectedBookingForInspection?.station?.name || '';
+                const staffName = item?.staff?.name || item?.staffName || '';
+                const time = item?.createdAt || item?.time || item?.updatedAt || '';
+                const damageNotes =
+                  item?.damageNotes || item?.incidentNotes || item?.notes || '';
+
+                const makeAbsoluteUrl = (url) => {
+                  if (!url) return null;
+                  const s = String(url).trim();
+                  if (!s) return null;
+                  if (/^https?:\/\//i.test(s) || s.startsWith('data:')) return s;
+                  const path = s.startsWith('/') ? s : (s.startsWith('uploads') ? `/${s}` : null);
+                  if (!path) return null;
+                  const base = env.apiBaseUrl.replace(/\/+$/, '');
+                  return `${base}${path}`;
+                };
+
+                const allImageCandidates = [];
+                const rawImages = item?.images;
+                if (Array.isArray(rawImages)) {
+                  rawImages.forEach(img => {
+                    let candidate = null;
+                    if (typeof img === 'string') {
+                      candidate = img;
+                    } else if (img && typeof img === 'object') {
+                      candidate = img.url || img.data?.url || img.path || img.filePath || img.imageUrl || null;
+                      if (!candidate) {
+                        candidate = img.thumbnailUrl || img.data?.thumbnailUrl || null;
+                      }
+                    }
+                    if (candidate) allImageCandidates.push(candidate);
+                  });
+                }
+                if (item?.imageUrl) {
+                  allImageCandidates.push(item.imageUrl);
+                } else if (item?.thumbnailUrl) {
+                  allImageCandidates.push(item.thumbnailUrl);
+                }
+
+                const imageUrls = Array.from(new Set(allImageCandidates.map(c => makeAbsoluteUrl(c)).filter(Boolean)));
+
+                return (
+                  <div key={item?.id || `${type}-${time}`} className='p-3 border rounded-md bg-muted/30'>
+                    <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
+                      <div className='space-y-1'>
+                        <Label>Inspection type</Label>
+                        <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
+                          {type === 'CHECK_OUT' ? 'Check-out' : type === 'CHECK_IN' ? 'Check-in' : (type || 'N/A')}
+                        </div>
+                      </div>
+                      <div className='space-y-1'>
+                        <Label>Status</Label>
+                        <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
+                          {statusText}
+                        </div>
+                      </div>
+                      <div className='space-y-1'>
+                        <Label>Station</Label>
+                        <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
+                          {stationName || 'N/A'}
+                        </div>
+                      </div>
+                      <div className='space-y-1'>
+                        <Label>Staff</Label>
+                        <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
+                          {staffName || 'N/A'}
+                        </div>
+                      </div>
+                      <div className='space-y-1'>
+                        <Label>Time</Label>
+                        <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
+                          {time ? formatDate(time) : 'N/A'}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className='space-y-2 mt-3'>
+                      <Label>Notes</Label>
+                      <div className='p-2 border rounded-md bg-muted/50 min-h-[36px]'>
+                        {damageNotes ? damageNotes : (imageUrls.length === 0 ? 'No incidents/damages' : 'N/A')}
+                      </div>
+                    </div>
+
+                    <div className='space-y-2 mt-3'>
+                      <Label>Inspection images</Label>
+                      {imageUrls.length > 0 ? (
+                        <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2'>
+                          {imageUrls.map((url, idx) => (
+                            <div key={`${item?.id || 'img'}-${idx}`} className='rounded-md overflow-hidden border bg-muted/40'>
+                              <img
+                                src={url}
+                                alt={`inspection-${idx + 1}`}
+                                className='w-full h-24 object-cover'
+                                loading='lazy'
+                                onError={e => {
+                                  e.currentTarget.style.display = 'none';
+                                }}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
+                          N/A
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

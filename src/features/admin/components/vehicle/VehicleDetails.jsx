@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from '../../../shared/components/ui/select';
 import { apiClient } from '../../../shared/lib/apiClient';
+import { endpoints } from '../../../shared/lib/endpoints';
 import { formatCurrency } from '../../../shared/lib/utils';
 import { Badge } from './../../../shared/components/ui/badge';
 
@@ -56,6 +57,10 @@ export function VehicleDetails({
   const [isEditing, setIsEditing] = useState(false);
   const [vehicleImages, setVehicleImages] = useState([]);
   const [imageLoading, setImageLoading] = useState(false);
+  // Thêm state cho inspections
+  const [vehicleInspections, setVehicleInspections] = useState([]);
+  const [loadingInspections, setLoadingInspections] = useState(false);
+  const [inspectionsError, setInspectionsError] = useState('');
   const [formData, setFormData] = useState({
     stationId: '',
     type: '',
@@ -116,6 +121,43 @@ export function VehicleDetails({
       setIsEditing(false);
     }
   }, [open]);
+
+  // Fetch inspections theo vehicle khi mở dialog
+  useEffect(() => {
+    const fetchVehicleInspections = async () => {
+      if (!open || !vehicle?.id) return;
+      setLoadingInspections(true);
+      setInspectionsError('');
+      try {
+        const res = await apiClient.get(
+          endpoints.inspections.getByVehicle(vehicle.id)
+        );
+        const payload = res?.data;
+        const list = Array.isArray(payload?.data?.inspections)
+          ? payload.data.inspections
+          : Array.isArray(payload?.inspections)
+          ? payload.inspections
+          : Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.items)
+          ? payload.items
+          : [];
+
+        const normalized = (list || [])
+          .map(insp => ({ ...insp, images: normalizeInspectionImages(insp) }))
+          .sort(
+            (a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0)
+          );
+        setVehicleInspections(normalized);
+      } catch (err) {
+        setInspectionsError(err?.message || 'Failed to load inspections');
+      } finally {
+        setLoadingInspections(false);
+      }
+    };
+
+    fetchVehicleInspections();
+  }, [open, vehicle?.id]);
 
   const loadVehicleImages = async vehicleId => {
     try {
@@ -309,6 +351,54 @@ export function VehicleDetails({
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  // Chuẩn hoá danh sách ảnh inspection từ nhiều định dạng trả về
+  const normalizeInspectionImages = insp => {
+    if (!insp) return [];
+    const rawList = Array.isArray(insp.images)
+      ? insp.images
+      : Array.isArray(insp.imageList)
+      ? insp.imageList
+      : insp.images?.data && Array.isArray(insp.images?.data)
+      ? insp.images.data
+      : [];
+
+    const collected = [];
+    for (const img of rawList) {
+      if (!img) continue;
+      if (typeof img === 'string') {
+        collected.push({ url: img });
+        continue;
+      }
+      const base = img?.data ? img.data : img;
+      const url = base?.url || base?.imageUrl || null;
+      const thumbnailUrl = base?.thumbnailUrl || null;
+      const fileId = base?.fileId || base?.imageKitFileId || null;
+      const fileName = base?.fileName || null;
+      if (url || thumbnailUrl) {
+        collected.push({ url, thumbnailUrl, fileId, fileName });
+      }
+    }
+
+    // Fallback nếu API trả về một trường đơn lẻ
+    if (!collected.length) {
+      const single = insp?.imageUrl || insp?.thumbnailUrl;
+      if (single) collected.push({ url: single });
+    }
+
+    // Loại trùng theo fileId hoặc url
+    const dedup = [];
+    for (const it of collected) {
+      const exists = dedup.some(
+        m => (it.fileId && m.fileId === it.fileId) || (!it.fileId && m.url === it.url)
+      );
+      if (!exists) dedup.push(it);
+    }
+
+    return dedup
+      .map(it => ({ ...it, displayUrl: it.url || it.thumbnailUrl }))
+      .filter(it => it.displayUrl);
   };
 
   if (!vehicle) return null;
@@ -779,6 +869,69 @@ export function VehicleDetails({
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Inspection Images */}
+          <div className='space-y-4'>
+            <h3 className='text-lg font-semibold'>Inspection Images</h3>
+            {loadingInspections ? (
+              <div className='text-sm text-muted-foreground'>Loading inspection...</div>
+            ) : inspectionsError ? (
+              <div className='text-sm text-destructive'>{inspectionsError}</div>
+            ) : vehicleInspections.length === 0 ? (
+              <div className='text-sm text-muted-foreground'>No inspection images yet.</div>
+            ) : (
+              <div className='space-y-6'>
+                {vehicleInspections.map(ins => (
+                  <div key={ins.id || ins._id || ins.bookingId} className='space-y-2'>
+                    <div className='flex items-center justify-between'>
+                      <div className='text-sm'>
+                        <span className='font-semibold'>{ins.type || 'Inspection'}</span>
+                        <span className='mx-2 text-muted-foreground'>•</span>
+                        <span>{formatDate(ins.createdAt)}</span>
+                        {ins.bookingId && (
+                          <>
+                            <span className='mx-2 text-muted-foreground'>•</span>
+                            <span>Booking: {ins.bookingId}</span>
+                          </>
+                        )}
+                        {ins.staff?.name && (
+                          <>
+                            <span className='mx-2 text-muted-foreground'>•</span>
+                            <span>Staff: {ins.staff.name}</span>
+                          </>
+                        )}
+                      </div>
+                      <Badge variant='outline'>{(ins.images || []).length} ảnh</Badge>
+                    </div>
+
+                    {(ins.notes || ins.damageNotes || ins.note || ins.remark || ins.description) ? (
+                      <div className='text-sm p-2 border rounded-md bg-muted/50'>
+                        <span className='font-semibold'>Ghi chú:</span>{' '}
+                        {ins.notes ?? ins.damageNotes ?? ins.note ?? ins.remark ?? ins.description}
+                      </div>
+                    ) : null}
+
+                    <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'>
+                      {(ins.images || []).map((img, idx) => (
+                        <div key={img.fileId || img.url || idx} className='relative group'>
+                          <img
+                            src={img.displayUrl}
+                            alt={img.fileName || 'inspection'}
+                            className='w-full h-32 object-cover rounded-lg border'
+                          />
+                          {img.fileName && (
+                            <div className='absolute bottom-2 left-2 right-2 text-[11px] px-1 py-0.5 bg-black/50 text-white rounded'>
+                              {img.fileName}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Timestamps */}

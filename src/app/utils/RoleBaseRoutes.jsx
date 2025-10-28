@@ -15,7 +15,7 @@ const RoleBaseRoutes = ({ children, allowedRoles }) => {
           fontSize: '18px',
         }}
       >
-        Đang tải...
+        Loading...
       </div>
     );
   }
