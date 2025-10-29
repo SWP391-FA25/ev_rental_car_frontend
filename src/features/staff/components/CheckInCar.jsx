@@ -713,6 +713,7 @@ export default function CheckInCar() {
                 staffInfo: { name: user?.name || 'Current staff' },
             });
             setCheckInSummaryOpen(true);
+            resetAllFields();
 
             // Refresh bookings list
             try {
@@ -728,8 +729,6 @@ export default function CheckInCar() {
             } finally {
                 setLoadingBookings(false);
             }
-
-            resetAllFields();
         } catch (e) {
             const status = e?.status ?? e?.response?.status;
             const serverMsg = e?.response?.data?.message || e?.message;
@@ -1251,12 +1250,7 @@ export default function CheckInCar() {
                     <CardTitle>Vehicle Inspection Checklist</CardTitle>
                 </CardHeader>
                 <CardContent className='space-y-4'>
-                    <div>
-                        <Label className='block mb-2'>Inspection Type</Label>
-                        <div className="px-3 py-2 border rounded bg-muted text-foreground">
-                            CHECK_IN
-                        </div>
-                    </div>
+
 
                     <div>
                         <Label className='block mb-2'>
