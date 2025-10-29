@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { Upload, CheckCircle, AlertCircle, FileText, X } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Upload, CheckCircle, AlertCircle, FileText, X, AlertTriangle } from "lucide-react"
 import { Button } from "../../../shared/components/ui/button"
 import { Card } from "../../../shared/components/ui/card"
 import { Input } from "../../../shared/components/ui/input"
@@ -9,18 +9,30 @@ import { endpoints } from "../../../shared/lib/endpoints"
 import { toast } from "sonner"
 import { useAuth } from "../../../../app/providers/AuthProvider"
 
-export function ContractUploadForm({ bookingId, contractId, onSuccess, onCancel }) {
+export function ContractUploadForm({ bookingId, contractId, onSuccess, onCancel, customerName }) {
   const { user } = useAuth()
   const [formData, setFormData] = useState({
-    renterName: "",
-    witnessName: "",
+    renterName: customerName || "",
+    witnessName: user?.name || "",
     notes: "",
     file: null,
   })
 
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
   const [currentContractId, setCurrentContractId] = useState(contractId)
+
+  // Auto-fill customer name and witness name when available
+  useEffect(() => {
+    if (customerName && !formData.renterName) {
+      setFormData(prev => ({ ...prev, renterName: customerName }))
+    }
+    if (user?.name && !formData.witnessName) {
+      setFormData(prev => ({ ...prev, witnessName: user.name }))
+    }
+  }, [customerName, user])
 
   const validateForm = () => {
     const newErrors = {}
@@ -77,6 +89,12 @@ export function ContractUploadForm({ bookingId, contractId, onSuccess, onCancel 
       return
     }
 
+    // Show confirmation dialog before uploading
+    setShowConfirmDialog(true)
+  }
+
+  const handleConfirmUpload = async () => {
+    setShowConfirmDialog(false)
     setLoading(true)
 
     try {
@@ -212,7 +230,7 @@ export function ContractUploadForm({ bookingId, contractId, onSuccess, onCancel 
     <div className="bg-white">
       <form onSubmit={handleSubmit}>
         <div className="space-y-4">
-          {/* Renter Name */}
+          {/* Renter Name - Read Only */}
           <div>
             <label className="block text-sm font-semibold text-slate-900 mb-1.5">
               Tên khách hàng <span className="text-red-600">*</span>
@@ -220,15 +238,13 @@ export function ContractUploadForm({ bookingId, contractId, onSuccess, onCancel 
             <Input
               type="text"
               value={formData.renterName}
-              onChange={(e) => handleInputChange("renterName", e.target.value)}
-              placeholder="Nhập tên khách hàng"
-              className={`bg-white border-2 ${errors.renterName ? "border-red-500" : "border-slate-200"
-                } focus:border-blue-500 focus:ring-2 focus:ring-blue-200`}
+              readOnly
+              className="bg-slate-100 border-2 border-slate-200 text-slate-700 cursor-not-allowed"
             />
-            {errors.renterName && <p className="text-sm text-red-600 mt-1">{errors.renterName}</p>}
+            <p className="text-xs text-slate-500 mt-1">Tự động lấy từ thông tin booking</p>
           </div>
 
-          {/* Witness Name */}
+          {/* Witness Name - Read Only */}
           <div>
             <label className="block text-sm font-semibold text-slate-900 mb-1.5">
               Tên người chứng kiến <span className="text-red-600">*</span>
@@ -236,12 +252,10 @@ export function ContractUploadForm({ bookingId, contractId, onSuccess, onCancel 
             <Input
               type="text"
               value={formData.witnessName}
-              onChange={(e) => handleInputChange("witnessName", e.target.value)}
-              placeholder="Nhập tên người chứng kiến"
-              className={`bg-white border-2 ${errors.witnessName ? "border-red-500" : "border-slate-200"
-                } focus:border-blue-500 focus:ring-2 focus:ring-blue-200`}
+              readOnly
+              className="bg-slate-100 border-2 border-slate-200 text-slate-700 cursor-not-allowed"
             />
-            {errors.witnessName && <p className="text-sm text-red-600 mt-1">{errors.witnessName}</p>}
+            <p className="text-xs text-slate-500 mt-1">Tự động lấy từ thông tin nhân viên</p>
           </div>
 
           {/* Notes */}
@@ -332,6 +346,67 @@ export function ContractUploadForm({ bookingId, contractId, onSuccess, onCancel 
           </p>
         </div>
       </form>
+
+      {/* Confirmation Dialog */}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[100]">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="p-3 bg-amber-100 rounded-full">
+                <AlertTriangle className="w-6 h-6 text-amber-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-slate-900 mb-2">Xác nhận tải lên hợp đồng</h3>
+                <p className="text-sm text-slate-600 mb-4">
+                  Vui lòng kiểm tra kỹ các thông tin trước khi tải lên:
+                </p>
+                <ul className="space-y-2 text-sm text-slate-700 mb-4">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span>Hợp đồng đã được ký đầy đủ bởi khách hàng</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span>Thông tin khách hàng và người chứng kiến chính xác</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span>File hợp đồng rõ ràng, không bị mờ hoặc thiếu trang</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span>Tất cả các điều khoản đã được giải thích cho khách hàng</span>
+                  </li>
+                </ul>
+                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-xs text-blue-800">
+                    <span className="font-semibold">Lưu ý:</span> Sau khi tải lên, hợp đồng sẽ được lưu vào hệ thống và không thể chỉnh sửa.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1 border-slate-300 text-slate-700 hover:bg-slate-50"
+                onClick={() => setShowConfirmDialog(false)}
+              >
+                Hủy bỏ
+              </Button>
+              <Button
+                type="button"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                onClick={handleConfirmUpload}
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Xác nhận tải lên
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

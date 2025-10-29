@@ -89,15 +89,81 @@ export function ContractUploadPage() {
 
 			console.log('🔗 Merged data:', mergedData.length)
 
+			// Collect user ids to fetch phone numbers
+			const userIdsToFetch = [...new Set(mergedData.map(b => b.userId).filter(id => id))]
+
 			// Collect vehicle ids to fetch brand and model
 			const vehicleIdsToFetch = [...new Set(mergedData.map(b => b.vehicleId).filter(id => id))]
 
+			// Fetch user details to get phone numbers
+			if (userIdsToFetch.length > 0) {
+				try {
+					console.log('👤 Fetching user details for:', userIdsToFetch)
+					const userFetches = userIdsToFetch.map(id =>
+						apiClient.get(endpoints.renters.getById(id))
+							.then(r => {
+								console.log(`🔍 API Response for user ${id}:`, r)
+								// Backend returns { success: true, data: { renter } }
+								return { id, data: r?.data?.data?.renter || r?.data?.renter }
+							})
+							.catch(err => {
+								console.error(`❌ Error fetching user ${id}:`, err)
+								return { id, data: null }
+							})
+					)
+					const users = await Promise.all(userFetches)
+
+					const userMap = {}
+					users.forEach(u => {
+						if (u?.id && u?.data) {
+							userMap[u.id] = u.data
+							console.log(`✅ User ${u.id}:`, {
+								name: u.data.name,
+								email: u.data.email,
+								phone: u.data.phone,
+							})
+						}
+					})
+
+					// Merge fetched user phone back into mergedData
+					for (let i = 0; i < mergedData.length; i++) {
+						const uid = mergedData[i]?.userId
+						if (uid && userMap[uid]) {
+							// If user object doesn't exist, create it
+							if (!mergedData[i].user) {
+								mergedData[i].user = {}
+							}
+							mergedData[i].user = {
+								...mergedData[i].user,
+								id: uid,
+								name: userMap[uid].name || mergedData[i].user.name,
+								email: userMap[uid].email || mergedData[i].user.email,
+								phone: userMap[uid].phone,
+							}
+							console.log(`✅ Merged user ${uid}:`, mergedData[i].user)
+						}
+					}
+					console.log('🔄 User phone data merged successfully')
+				} catch (err) {
+					console.warn('⚠️ Could not fetch user details:', err)
+				}
+			}
+
+			// Fetch vehicle details
 			if (vehicleIdsToFetch.length > 0) {
 				try {
 					console.log('🚗 Fetching vehicle details for:', vehicleIdsToFetch)
 					// Fetch vehicle details in parallel
 					const vehicleFetches = vehicleIdsToFetch.map(id =>
-						apiClient.get(endpoints.vehicles.getById(id)).then(r => ({ id, data: r?.data?.data || r?.data }))
+						apiClient.get(endpoints.vehicles.getById(id))
+							.then(r => {
+								console.log(`🔍 API Response for vehicle ${id}:`, r)
+								return { id, data: r?.data?.data || r?.data }
+							})
+							.catch(err => {
+								console.error(`❌ Error fetching vehicle ${id}:`, err)
+								return { id, data: null }
+							})
 					)
 					const vehicles = await Promise.all(vehicleFetches)
 
@@ -105,7 +171,12 @@ export function ContractUploadPage() {
 					vehicles.forEach(v => {
 						if (v?.id && v?.data) {
 							vehicleMap[v.id] = v.data
-							console.log(`✅ Vehicle ${v.id}:`, { brand: v.data.brand, model: v.data.model })
+							console.log(`✅ Vehicle ${v.id}:`, {
+								brand: v.data.brand,
+								model: v.data.model,
+								licensePlate: v.data.licensePlate,
+								fullData: v.data
+							})
 						}
 					})
 
@@ -118,6 +189,7 @@ export function ContractUploadPage() {
 								brand: vehicleMap[vid].brand,
 								model: vehicleMap[vid].model
 							}
+							console.log(`✅ Merged vehicle ${vid}:`, mergedData[i].vehicle)
 						}
 					}
 					console.log('🔄 Vehicle data merged successfully')
@@ -145,6 +217,8 @@ export function ContractUploadPage() {
 	}, [])
 
 	const handleUploadClick = (contract) => {
+		console.log('📤 Opening upload modal for contract:', contract)
+		console.log('🚗 Vehicle data:', contract?.vehicle)
 		setSelectedContract(contract)
 		setShowUploadModal(true)
 	}
@@ -157,6 +231,8 @@ export function ContractUploadPage() {
 	}
 
 	const handleViewDetails = (contract) => {
+		console.log('👁️ Opening detail modal for contract:', contract)
+		console.log('🚗 Vehicle data:', contract?.vehicle)
 		setSelectedContract(contract)
 		setShowDetailModal(true)
 	}
@@ -220,13 +296,13 @@ export function ContractUploadPage() {
 	const getVehicleLabel = (vehicle) => {
 		if (!vehicle) return ''
 
-		// Priority: brand + model > model alone > name > licensePlate
+		// Priority: brand + model > model alone > name
+		// Do NOT fallback to licensePlate (to avoid duplication)
 		if (vehicle.brand && vehicle.model) return `${vehicle.brand} ${vehicle.model}`
 		if (vehicle.model) return vehicle.model
 		if (vehicle.name) return vehicle.name
-		if (vehicle.licensePlate) return vehicle.licensePlate
 
-		return ''
+		return '' // Return empty string if no brand/model/name
 	}
 
 	const formatFileSize = (bytes) => {
@@ -329,7 +405,6 @@ export function ContractUploadPage() {
 						<table className="w-full">
 							<thead className="bg-slate-50 border-b border-slate-200">
 								<tr>
-									<th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Booking ID</th>
 									<th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Số hợp đồng</th>
 									<th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Khách hàng</th>
 									<th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Xe / Chi nhánh</th>
@@ -342,9 +417,6 @@ export function ContractUploadPage() {
 								{filteredContracts.length > 0 ? (
 									filteredContracts.map((contract) => (
 										<tr key={contract?.id} className="hover:bg-slate-50 transition-colors">
-											<td className="px-6 py-4">
-												<p className="font-mono text-sm font-medium text-slate-900">{contract?.id || 'N/A'}</p>
-											</td>
 											<td className="px-6 py-4">
 												{contract?.contractNumber ? (
 													<p className="font-mono text-sm font-medium text-blue-600">{contract.contractNumber}</p>
@@ -414,7 +486,7 @@ export function ContractUploadPage() {
 									))
 								) : (
 									<tr>
-										<td colSpan={7} className="px-6 py-12 text-center">
+										<td colSpan={6} className="px-6 py-12 text-center">
 											<div className="flex flex-col items-center gap-2">
 												<FileText className="w-12 h-12 text-slate-300" />
 												<p className="text-slate-600">Không tìm thấy booking nào</p>
@@ -469,10 +541,6 @@ export function ContractUploadPage() {
 							<div className="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
 								<div className="grid grid-cols-2 gap-4">
 									<div>
-										<p className="text-sm text-slate-600">Booking ID</p>
-										<p className="font-mono font-semibold text-slate-900">{selectedContract?.id || 'N/A'}</p>
-									</div>
-									<div>
 										<p className="text-sm text-slate-600">Số hợp đồng</p>
 										{selectedContract?.contractNumber ? (
 											<p className="font-mono font-semibold text-blue-600">{selectedContract.contractNumber}</p>
@@ -481,23 +549,27 @@ export function ContractUploadPage() {
 										)}
 									</div>
 									<div>
-										<p className="text-sm text-slate-600">Khách hàng</p>
-										<p className="font-semibold text-slate-900">{selectedContract?.user?.name || getVehicleLabel(selectedContract?.vehicle) || 'N/A'}</p>
-									</div>
-									<div>
-										<p className="text-sm text-slate-600">Xe</p>
-										<p className="font-semibold text-slate-900">{selectedContract?.vehicle?.licensePlate || 'N/A'}</p>
-									</div>
-									<div>
-										<p className="text-sm text-slate-600">Chi nhánh</p>
-										<p className="font-semibold text-slate-900">{selectedContract?.station?.name || 'N/A'}</p>
-									</div>
-									<div>
 										<p className="text-sm text-slate-600">Trạng thái</p>
 										<div className="flex items-center gap-2 mt-1">
 											{getStatusIcon(selectedContract?.contractStatus)}
 											<span className="font-semibold text-slate-900">{getStatusLabel(selectedContract?.contractStatus)}</span>
 										</div>
+									</div>
+									<div>
+										<p className="text-sm text-slate-600">Khách hàng</p>
+										<p className="font-semibold text-slate-900">{selectedContract?.user?.name || 'N/A'}</p>
+										<p className="text-xs text-slate-500">{selectedContract?.user?.phone || 'N/A'}</p>
+									</div>
+									<div>
+										<p className="text-sm text-slate-600">Xe</p>
+										<p className="font-semibold text-slate-900">{selectedContract?.vehicle?.licensePlate || 'N/A'}</p>
+										{getVehicleLabel(selectedContract?.vehicle) && (
+											<p className="text-xs text-slate-500">{getVehicleLabel(selectedContract?.vehicle)}</p>
+										)}
+									</div>
+									<div className="col-span-2">
+										<p className="text-sm text-slate-600">Chi nhánh</p>
+										<p className="font-semibold text-slate-900">{selectedContract?.station?.name || 'N/A'}</p>
 									</div>
 								</div>
 							</div>
@@ -505,6 +577,7 @@ export function ContractUploadPage() {
 							<ContractUploadForm
 								bookingId={selectedContract?.id}
 								contractId={selectedContract?.contractId}
+								customerName={selectedContract?.user?.name}
 								onSuccess={handleUploadSuccess}
 								onCancel={() => setShowUploadModal(false)}
 							/>
@@ -531,10 +604,6 @@ export function ContractUploadPage() {
 									<h3 className="text-lg font-semibold text-slate-900 mb-4">Thông tin Booking</h3>
 									<div className="grid grid-cols-2 gap-4">
 										<div className="p-3 bg-slate-50 rounded">
-											<p className="text-sm text-slate-600">Booking ID</p>
-											<p className="font-mono font-semibold text-slate-900">{selectedContract?.id || 'N/A'}</p>
-										</div>
-										<div className="p-3 bg-slate-50 rounded">
 											<p className="text-sm text-slate-600">Trạng thái</p>
 											<div className="flex items-center gap-2 mt-1">
 												{getStatusIcon(selectedContract?.status)}
@@ -542,23 +611,30 @@ export function ContractUploadPage() {
 											</div>
 										</div>
 										<div className="p-3 bg-slate-50 rounded">
+											<p className="text-sm text-slate-600">Điện thoại</p>
+											<p className="font-semibold text-slate-900">{selectedContract?.user?.phone || 'N/A'}</p>
+										</div>
+										<div className="p-3 bg-slate-50 rounded">
 											<p className="text-sm text-slate-600">Khách hàng</p>
 											<p className="font-semibold text-slate-900">{selectedContract?.user?.name || getVehicleLabel(selectedContract?.vehicle) || 'N/A'}</p>
 											<p className="text-xs text-slate-500">{selectedContract?.user?.email || 'N/A'}</p>
 										</div>
 										<div className="p-3 bg-slate-50 rounded">
-											<p className="text-sm text-slate-600">Điện thoại</p>
-											<p className="font-semibold text-slate-900">{selectedContract?.user?.phone || 'N/A'}</p>
-										</div>
-										<div className="p-3 bg-slate-50 rounded">
 											<p className="text-sm text-slate-600">Xe</p>
 											<p className="font-semibold text-slate-900">{selectedContract?.vehicle?.licensePlate || 'N/A'}</p>
-											<p className="text-xs text-slate-500">{selectedContract?.vehicle?.model || 'N/A'}</p>
+											{getVehicleLabel(selectedContract?.vehicle) && (
+												<p className="text-xs text-slate-500">{getVehicleLabel(selectedContract?.vehicle)}</p>
+											)}
 										</div>
 										<div className="p-3 bg-slate-50 rounded">
 											<p className="text-sm text-slate-600">Chi nhánh</p>
 											<p className="font-semibold text-slate-900">{selectedContract?.station?.name || 'N/A'}</p>
 											<p className="text-xs text-slate-500">{selectedContract?.station?.address || 'N/A'}</p>
+										</div>
+										<div className="p-3 bg-slate-50 rounded">
+											<p className="text-sm text-slate-600">Nhân viên phụ trách</p>
+											<p className="font-semibold text-slate-900">{selectedContract?.staff?.name || user?.name || 'N/A'}</p>
+											<p className="text-xs text-slate-500">{selectedContract?.staff?.email || user?.email || 'N/A'}</p>
 										</div>
 									</div>
 								</div>
@@ -569,11 +645,11 @@ export function ContractUploadPage() {
 									<div className="grid grid-cols-2 gap-4">
 										<div className="p-3 bg-slate-50 rounded">
 											<p className="text-sm text-slate-600">Ngày bắt đầu</p>
-											<p className="font-semibold text-slate-900">{formatDate(selectedContract?.startDate)}</p>
+											<p className="font-semibold text-slate-900">{selectedContract?.startTime ? new Date(selectedContract.startTime).toLocaleString('vi-VN') : 'N/A'}</p>
 										</div>
 										<div className="p-3 bg-slate-50 rounded">
 											<p className="text-sm text-slate-600">Ngày kết thúc</p>
-											<p className="font-semibold text-slate-900">{formatDate(selectedContract?.endDate)}</p>
+											<p className="font-semibold text-slate-900">{selectedContract?.endTime ? new Date(selectedContract.endTime).toLocaleString('vi-VN') : 'N/A'}</p>
 										</div>
 									</div>
 								</div>

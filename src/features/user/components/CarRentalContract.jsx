@@ -47,6 +47,30 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
     dataPrivacy: false,
   });
 
+  const [authUser, setAuthUser] = useState(null);
+
+  useEffect(() => {
+    const fetchAuthUser = async () => {
+      try {
+        const res = await fetch('/api/auth/me', {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        const result = await res.json();
+        setAuthUser(result.data?.user);
+      } catch (err) {
+        console.error('Failed to fetch auth user:', err);
+      }
+    };
+
+    fetchAuthUser();
+  }, []);
+
+
+
   // Fetch contracts for a specific booking
   const fetchContracts = useCallback(async (bookingId) => {
     if (!bookingId) return;
@@ -106,42 +130,57 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
 
   // Fetch bookings for current user
   const fetchBookings = useCallback(async () => {
+    console.log("fetchBookings called");
+
     if (bookingId) {
+      console.log("bookingId provided, fetching booking details for:", bookingId);
       fetchBookingDetails(bookingId);
       return;
     }
 
     if (!user?.id) {
+      console.warn("User not logged in. Cannot fetch bookings.");
       setError('Vui lòng đăng nhập để xem bookings');
       setBookings([]);
       return;
     }
 
+    console.log("Fetching bookings for user ID:", user.id);
     setLoadingBookings(true);
     setError(null);
+
     try {
-      // ✅ FIX: Gọi API lấy bookings của user hiện tại
       const res = await apiClient.get(endpoints.bookings.getUserBookings(user.id));
+      console.log("API response:", res);
       const json = res?.data;
+      console.log("Parsed JSON data:", json);
+
       // Backend trả về { bookings: [...] } hoặc trực tiếp array
       const list = json?.bookings ?? json?.data?.bookings ?? json?.data ?? json;
+      console.log("Extracted bookings list:", list);
+
       // Lọc chỉ lấy bookings CONFIRMED
       const confirmedBookings = (Array.isArray(list) ? list : []).filter(
         b => (b.status || b.bookingStatus) === 'CONFIRMED'
       );
+      console.log("Filtered confirmed bookings:", confirmedBookings);
+
       setBookings(confirmedBookings);
     } catch (err) {
       console.error("fetchBookings error:", err);
       setError("Không thể tải danh sách booking. Vui lòng thử lại sau.");
       setBookings([]);
     } finally {
+      console.log("fetchBookings completed");
       setLoadingBookings(false);
     }
   }, [bookingId, fetchBookingDetails, user?.id]);
 
   useEffect(() => {
+    console.log("useEffect triggered: calling fetchBookings");
     fetchBookings();
   }, [fetchBookings]);
+
 
   const handleBookingSelect = (booking) => {
     setSelectedBooking(booking);
@@ -200,74 +239,17 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
   const allAgreementsAccepted = Object.values(agreements).every((v) => v === true);
 
   // Validate form data
-  const validateFormData = (data, isUpload = false) => {
-    if (isUpload) {
-      // Validation for upload (renterName & witnessName required)
-      if (!data.renterName || data.renterName.trim().length < 2 || data.renterName.length > 100) {
-        throw new Error('Tên người thuê phải từ 2-100 ký tự');
-      }
-      if (!data.witnessName || data.witnessName.trim().length < 2 || data.witnessName.length > 100) {
-        throw new Error('Tên người làm chứng phải từ 2-100 ký tự');
-      }
-    } else {
-      // Validation for create (optional but must be valid if provided)
-      if (data.renterName && (data.renterName.length < 2 || data.renterName.length > 100)) {
-        throw new Error('Tên người thuê phải từ 2-100 ký tự');
-      }
-      if (data.witnessName && (data.witnessName.length < 2 || data.witnessName.length > 100)) {
-        throw new Error('Tên người làm chứng phải từ 2-100 ký tự');
-      }
+  const validateFormData = (data) => {
+    // Validation for upload (renterName & witnessName required)
+    if (!data.renterName || data.renterName.trim().length < 2 || data.renterName.length > 100) {
+      throw new Error('Tên người thuê phải từ 2-100 ký tự');
+    }
+    if (!data.witnessName || data.witnessName.trim().length < 2 || data.witnessName.length > 100) {
+      throw new Error('Tên người làm chứng phải từ 2-100 ký tự');
     }
 
     if (data.notes && data.notes.length > 500) {
       throw new Error('Ghi chú không được vượt quá 500 ký tự');
-    }
-  }
-
-  // Create a new contract
-  const handleCreateContract = async () => {
-    if (!selectedBooking) {
-      showToast({
-        title: "Lỗi",
-        description: "Vui lòng chọn một booking trước khi tạo hợp đồng",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setActionLoading(true);
-    setError(null);
-
-    try {
-      validateFormData(formData, false);
-
-      const res = await apiClient.post(endpoints.contracts.create(), {
-        bookingId: selectedBooking.id,
-        renterName: formData.renterName || selectedBooking.user?.name,
-        witnessName: formData.witnessName,
-        notes: formData.notes,
-      });
-      const successData = res?.data;
-      if (!successData) throw new Error('Failed to create contract (no response)');
-
-      showToast({
-        title: "Thành công",
-        description: "Hợp đồng đã được tạo thành công",
-      });
-
-      // Refresh contracts list
-      await fetchContracts(selectedBooking.id);
-
-      if (onStatusChange) onStatusChange();
-    } catch (err) {
-      console.error("Create contract error:", err);
-      showToast({
-        title: "Lỗi",
-        description: err.message || "Không thể tạo hợp đồng. Vui lòng thử lại sau.",
-        variant: "destructive",
-      });
-    } finally {
-      setActionLoading(false);
     }
   }
 
@@ -286,7 +268,7 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
     setError(null);
 
     try {
-      validateFormData(formData, true);
+      validateFormData(formData);
 
       const formDataObj = new FormData();
       formDataObj.append("file", selectedFile);
@@ -365,7 +347,7 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                   <p className="text-slate-500">Không có booking nào cần tạo hợp đồng</p>
                 </div>
               )}
-              {bookings && bookings.length > 0 && bookings.map((booking) => (
+              {bookings && bookings.length > 0 && bookings.map((booking, index) => (
                 <Card
                   key={booking.id}
                   className={`p-4 cursor-pointer transition-all border-2 ${selectedBooking?.id === booking.id
@@ -377,7 +359,7 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <h3 className="font-semibold text-slate-900">{booking.bookingCode || `Booking #${booking.id}`}</h3>
+                        <h3 className="font-semibold text-slate-900">{booking.bookingCode || `Hồ sơ số ${index + 1}`}</h3>
                         <span className="text-sm bg-blue-100 text-blue-700 px-2 py-1 rounded">
                           {booking.status}
                         </span>
@@ -385,16 +367,24 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                       <div className='grid grid-cols-2 gap-4 text-sm text-slate-600'>
                         <div>
                           <p className="text-slate-500">Khách hàng</p>
-                          <p className="font-medium text-slate-900">{booking.user?.name || booking.renterName}</p>
+                          <p className="font-medium text-slate-900">{authUser?.name || booking.staff?.name}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-500">Nhân Viên Phụ Trách</p>
+                          <p className="font-medium text-slate-900">{booking.staff?.name}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-500">Địa Điểm</p>
+                          <p className="font-medium text-slate-900">{booking.station?.name}</p>
                         </div>
                         <div>
                           <p className="text-slate-500">Xe</p>
-                          <p className="font-medium text-slate-900">{booking.vehicle?.name || booking.scooterModel}</p>
+                          <p className="font-medium text-slate-900">{booking.vehicle?.brand} {booking.vehicle?.model}</p>
                         </div>
                         <div>
                           <p className="text-slate-500">Ngày thuê</p>
                           <p className="font-medium text-slate-900">
-                            {new Date(booking.startDate || booking.rentalDate).toLocaleDateString('vi-VN')}
+                            {new Date(booking.createdAt || booking.rentalDate).toLocaleDateString('vi-VN')}
                           </p>
                         </div>
                         <div>
@@ -424,18 +414,8 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
       {selectedBooking && (
         <Card className="border-slate-200 shadow-sm">
           <CardHeader className="bg-white border-b border-slate-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-slate-900">Hợp Đồng</CardTitle>
-                <CardDescription>Danh sách hợp đồng cho booking này</CardDescription>
-              </div>
-              <Button
-                onClick={handleCreateContract}
-                disabled={actionLoading || loadingContracts}
-              >
-                {actionLoading ? "Đang xử lý..." : "Tạo hợp đồng mới"}
-              </Button>
-            </div>
+            <CardTitle className="text-slate-900">Hợp Đồng</CardTitle>
+            <CardDescription>Danh sách hợp đồng cho booking này</CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
             {loadingContracts && <div className="text-sm text-slate-500">Đang tải hợp đồng...</div>}
@@ -445,7 +425,7 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
               <div className="text-center py-8 border-2 border-dashed border-slate-200 rounded-lg">
                 <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                 <p className="text-slate-500">Chưa có hợp đồng nào cho booking này</p>
-                <p className="text-sm text-slate-400 mt-1">Nhấn "Tạo hợp đồng mới" để bắt đầu</p>
+                <p className="text-sm text-slate-400 mt-1">Hợp đồng sẽ được tạo bởi nhân viên</p>
               </div>
             )}
 
