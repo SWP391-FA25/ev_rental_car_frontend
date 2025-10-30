@@ -367,7 +367,7 @@ export default function UserDetails({
                       />
                     ) : (
                       <p className='text-sm text-muted-foreground'>
-                        Chưa có tài liệu đã xác minh
+                        No verified documents
                       </p>
                     )}
                   </CardContent>
@@ -400,7 +400,7 @@ export default function UserDetails({
                       />
                     ) : (
                       <p className='text-sm text-muted-foreground'>
-                        Chưa có tài liệu đã xác minh
+                        No verified documents
                       </p>
                     )}
                   </CardContent>

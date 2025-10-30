@@ -854,10 +854,10 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                     <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0" />
                     <div>
                       <p className='font-semibold text-green-900'>
-                        Tất cả điều khoản đã được chấp nhận
+                        All terms accepted
                       </p>
                       <p className='text-sm text-green-700'>
-                        Bạn đã sẵn sàng ký hợp đồng điện tử
+                        You are ready to sign the electronic contract
                       </p>
                     </div>
                   </div>

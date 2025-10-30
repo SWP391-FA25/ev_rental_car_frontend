@@ -12,15 +12,15 @@ import {
 } from 'lucide-react';
 
 const menuItems = [
-  { id: 'profile', label: 'Tài khoản của tôi', icon: User },
-  { id: 'documents', label: 'Giấy tờ cá nhân', icon: FileText },
-  { id: 'contracts', label: 'Hợp đồng thuê xe', icon: FileText },
-  { id: 'favorites', label: 'Xe yêu thích', icon: Heart },
-  { id: 'trips', label: 'Chuyến của tôi', icon: Briefcase },
-  { id: 'longterm', label: 'Đơn hàng Thuê xe dài hạn', icon: CheckSquare },
-  { id: 'gifts', label: 'Quà tặng', icon: Gift },
-  { id: 'addresses', label: 'Địa chỉ của tôi', icon: MapPin },
-  { id: 'password', label: 'Đổi mật khẩu', icon: Lock },
+  { id: 'profile', label: 'My Account', icon: User },
+  { id: 'documents', label: 'Personal Documents', icon: FileText },
+  { id: 'contracts', label: 'Rental Contracts', icon: FileText },
+  { id: 'favorites', label: 'Favorite Cars', icon: Heart },
+  { id: 'trips', label: 'My Trips', icon: Briefcase },
+  { id: 'longterm', label: 'Long-term Rentals', icon: CheckSquare },
+  { id: 'gifts', label: 'Gifts', icon: Gift },
+  { id: 'addresses', label: 'My Addresses', icon: MapPin },
+  { id: 'password', label: 'Change Password', icon: Lock },
 ];
 
 export default function UserSidebar({ activeTab, setActiveTab }) {
@@ -71,7 +71,7 @@ export default function UserSidebar({ activeTab, setActiveTab }) {
           className='w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-red-600 hover:bg-red-50 hover:text-red-700'
         >
           <LogOut className='h-5 w-5' />
-          <span className='font-medium'>Đăng xuất</span>
+          <span className='font-medium'>Logout</span>
         </button>
       </div>
     </div>

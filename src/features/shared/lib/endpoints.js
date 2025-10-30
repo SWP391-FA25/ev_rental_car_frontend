@@ -109,15 +109,18 @@ export const endpoints = {
     getByVehicle: vehicleId => `/api/inspections/vehicle/${vehicleId}`,
     getByStaff: staffId => `/api/inspections/staff/${staffId}`,
     create: () => '/api/inspections',
-    uploadImage: inspectionId => `/api/inspections/${inspectionId}/upload-image`,
-    deleteImage: (inspectionId, imageIndex) => `/api/inspections/${inspectionId}/image/${imageIndex}`,
-
-
+    uploadImage: inspectionId =>
+      `/api/inspections/${inspectionId}/upload-image`,
+    deleteImage: (inspectionId, imageIndex) =>
+      `/api/inspections/${inspectionId}/image/${imageIndex}`,
+    update: id => `/api/inspections/${id}`,
   },
   payment: {
     createDeposit: () => '/api/payos/create',
     createRentalFee: () => '/api/payos/create-rental-fee',
     getStatus: paymentId => `/api/payos/status/${paymentId}`,
+    createCashPayment: () => '/api/payments/cash-payment',
+    uploadCashEvidence: () => '/api/payments/cash-payment/evidence',
   },
   contracts: {
     // 🧾 Tạo hợp đồng mới (Staff/Admin)

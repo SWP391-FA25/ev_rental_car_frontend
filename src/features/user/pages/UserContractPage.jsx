@@ -60,10 +60,10 @@ export default function UserContractPage() {
                 <div className="flex items-center justify-between mb-8">
                     <div>
                         <div className="flex items-center gap-2 mb-1">
-                            <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-8 w-8" 
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
                                 onClick={() => navigate(-1)}
                             >
                                 <ArrowLeft className="h-5 w-5" />
@@ -73,18 +73,18 @@ export default function UserContractPage() {
                             </h1>
                         </div>
                         <p className="text-slate-600 ml-10">
-                            {bookingId 
-                                ? loading 
-                                    ? 'Đang tải thông tin...' 
-                                    : bookingDetails 
+                            {bookingId
+                                ? loading
+                                    ? 'Đang tải thông tin...'
+                                    : bookingDetails
                                         ? `Booking #${bookingDetails.id} - ${bookingDetails.vehicle?.name || 'Xe điện'}`
                                         : 'Thông tin hợp đồng cho booking này'
                                 : 'Xem và quản lý các hợp đồng thuê xe của bạn'}
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <Button 
-                            variant="outline" 
+                        <Button
+                            variant="outline"
                             onClick={() => navigate('/user/bookings')}
                             className="gap-2"
                         >
@@ -95,9 +95,9 @@ export default function UserContractPage() {
                 </div>
 
                 {/* CarRentalContract nhận prop bookingId (nếu có) */}
-                <CarRentalContract 
-                    bookingId={bookingId} 
-                    onStatusChange={handleStatusChange} 
+                <CarRentalContract
+                    bookingId={bookingId}
+                    onStatusChange={handleStatusChange}
                 />
             </div>
 
