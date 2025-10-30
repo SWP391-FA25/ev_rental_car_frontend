@@ -65,6 +65,16 @@ export default function TotalAmountPaymentPage() {
         return;
       }
 
+      // Persist payment context for cancel/success pages
+      try {
+        localStorage.setItem('lastPaymentType', 'RENTAL_FEE');
+        localStorage.setItem('lastBookingId', String(bookingId));
+        const pid = result?.paymentId || result?.data?.paymentId;
+        if (pid) localStorage.setItem('lastPaymentId', String(pid));
+      } catch (e) {
+        console.warn('localStorage unavailable:', e);
+      }
+
       // Redirect to PayOS
       window.location.href = result.paymentUrl;
     } catch (error) {

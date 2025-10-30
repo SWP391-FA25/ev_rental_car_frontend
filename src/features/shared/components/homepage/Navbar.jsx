@@ -165,7 +165,7 @@ export default function Navbar() {
               {/* User section in mobile menu */}
               <div className='flex flex-col items-center gap-4 pt-8 border-t border-[hsl(var(--primary-foreground))]/20 w-full'>
                 <div className='flex items-center gap-2'>
-                  <LanguageToggle />
+                  {/* <LanguageToggle /> */}
                   <ThemeToggle />
                 </div>
                 {!user ? (
@@ -259,7 +259,7 @@ export default function Navbar() {
         <div className='hidden md:flex items-center gap-10'>
           <div className='flex items-center gap-2 ml-4'>
             {user && <NotificationBell />}
-            <LanguageToggle />
+            {/* <LanguageToggle /> */}
             <ThemeToggle />
             {!user ? (
               <>

@@ -44,30 +44,30 @@ export default function UserProfileLayout() {
             {activeTab === 'longterm' && (
               <div className='text-center py-12'>
                 <h2 className='text-xl font-semibold text-foreground'>
-                  Đơn hàng Thuê xe dài hạn
+                  Long-term Rentals
                 </h2>
                 <p className='text-muted-foreground mt-2'>
-                  Tính năng đang phát triển
+                  Feature under development
                 </p>
               </div>
             )}
             {activeTab === 'gifts' && (
               <div className='text-center py-12'>
                 <h2 className='text-xl font-semibold text-foreground'>
-                  Quà tặng
+                  Gifts
                 </h2>
                 <p className='text-muted-foreground mt-2'>
-                  Tính năng đang phát triển
+                  Feature under development
                 </p>
               </div>
             )}
             {activeTab === 'addresses' && (
               <div className='text-center py-12'>
                 <h2 className='text-xl font-semibold text-foreground'>
-                  Địa chỉ của tôi
+                  My Addresses
                 </h2>
                 <p className='text-muted-foreground mt-2'>
-                  Tính năng đang phát triển
+                  Feature under development
                 </p>
               </div>
             )}

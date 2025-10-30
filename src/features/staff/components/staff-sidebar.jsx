@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import * as React from 'react';
 
-import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import {
@@ -350,7 +349,6 @@ function StaffQuickStats({ cars, stations, customers, payments }) {
 function StaffUser({ staff }) {
   const { logout } = useAuth();
   const navigate = useNavigate();
-  const { t } = useTranslation();
   const handleLogout = async () => {
     try {
       await apiClient.post(endpoints.auth.logout());
@@ -414,25 +412,25 @@ function StaffUser({ staff }) {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <User2 className='mr-2 h-4 w-4' />
-                {t('staffSidebar.profile')}
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Calendar className='mr-2 h-4 w-4' />
-                {t('staffSidebar.schedule')}
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className='mr-2 h-4 w-4' />
-                {t('staffSidebar.settings')}
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>
-              <span className='mr-2 h-4 w-4' />
-              {t('staffSidebar.logout')}
+          <DropdownMenuGroup>
+            <DropdownMenuItem>
+              <User2 className='mr-2 h-4 w-4' />
+              <span>Profile</span>
             </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Calendar className='mr-2 h-4 w-4' />
+              <span>Schedule</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Settings className='mr-2 h-4 w-4' />
+              <span>Settings</span>
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleLogout}>
+            <span className='mr-2 h-4 w-4' />
+            <span>Logout</span>
+          </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
@@ -447,15 +445,10 @@ export function StaffSidebar({
   menuItems,
   ...props
 }) {
-  const { t } = useTranslation();
   // Keep original order from menuItems prop
   const orderedMenuItems = Array.isArray(menuItems) ? menuItems : [];
   const translateLabel = label => {
-    if (!label || typeof label !== 'string') return label;
-    // Try to translate using i18n key format
-    const translated = t(`staffSidebar.${label}`);
-    // If translation not found, return original label
-    return translated !== `staffSidebar.${label}` ? translated : label;
+    return label;
   };
   return (
     <Sidebar collapsible='offcanvas' {...props}>
@@ -476,7 +469,7 @@ export function StaffSidebar({
       </SidebarHeader>
       <SidebarContent className='[&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-border/80'>
         <SidebarGroup>
-          <SidebarGroupLabel>{t('staffSidebar.navigation')}</SidebarGroupLabel>
+          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarMenu>
             {orderedMenuItems.map(item => {
               // Check if item has submenus

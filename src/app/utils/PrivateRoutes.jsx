@@ -38,7 +38,7 @@ const PrivateRoutes = ({ children }) => {
           fontSize: '18px',
         }}
       >
-        Đang tải...
+        Loading...
       </div>
     );
   }

@@ -16,9 +16,9 @@ export default function UserContractPage() {
 
             <div className="max-w-5xl mx-auto px-4 py-10">
                 <div className="flex items-center justify-between mb-6">
-                    <h1 className="text-2xl font-semibold">Hợp đồng thuê xe</h1>
+                    <h1 className="text-2xl font-semibold">Electric Car Rental Contract</h1>
                     <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
-                        Quay lại
+                        Back
                     </Button>
                 </div>
 

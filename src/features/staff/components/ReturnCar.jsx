@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useState, useRef } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { bookingService } from '../../booking/services/bookingService';
@@ -45,11 +51,7 @@ import { endpoints } from '../../shared/lib/endpoints';
  */
 export default function ReturnCar() {
   const { t } = useTranslation();
-  const {
-    loading: bookingLoading,
-    getAllBookings,
-    getBookingById,
-  } = useBooking();
+  const { getAllBookings, getBookingById } = useBooking();
   const { user } = useAuth();
   const [bookingId, setBookingId] = useState('');
   const [booking, setBooking] = useState(null);
@@ -63,7 +65,6 @@ export default function ReturnCar() {
   const [incidentPreviews, setIncidentPreviews] = useState([]);
   const [inspectionImages, setInspectionImages] = useState([]);
 
-
   const fileInputRef = useRef(null);
   const [hasIncident, setHasIncident] = useState(false);
   const [imageUploadError, setImageUploadError] = useState('');
@@ -74,8 +75,15 @@ export default function ReturnCar() {
   const [returnSummary, setReturnSummary] = useState(null);
   // Payment loading state
   const [paymentLoading, setPaymentLoading] = useState(false);
+  // Chọn phương thức thanh toán: ONLINE hoặc CASH
+  const [paymentMethod, setPaymentMethod] = useState('ONLINE');
+  // Dialog upload bằng chứng thanh toán tiền mặt
+  const [cashEvidenceOpen, setCashEvidenceOpen] = useState(false);
+  const [cashEvidenceFile, setCashEvidenceFile] = useState(null);
+  const [cashPaymentLoading, setCashPaymentLoading] = useState(false);
   // Payload lưu lại để hoàn tất sau khi thanh toán
-  const [pendingCompletionPayload, setPendingCompletionPayload] = useState(null);
+  const [pendingCompletionPayload, setPendingCompletionPayload] =
+    useState(null);
   // Return details per schema
   const [returnOdometer, setReturnOdometer] = useState('');
   // Actual return station selection
@@ -118,7 +126,7 @@ export default function ReturnCar() {
       }
     };
     fetchEligible();
-  }, []);
+  }, [getAllBookings]);
 
   // Initialize batteryLevel from booking data if available
   useEffect(() => {
@@ -159,10 +167,10 @@ export default function ReturnCar() {
           const list = Array.isArray(data?.inspections)
             ? data.inspections
             : Array.isArray(data)
-              ? data
-              : Array.isArray(data?.items)
-                ? data.items
-                : [];
+            ? data
+            : Array.isArray(data?.items)
+            ? data.items
+            : [];
           const sorted = [...list].sort(
             (a, c) => new Date(c?.createdAt || 0) - new Date(a?.createdAt || 0)
           );
@@ -174,14 +182,14 @@ export default function ReturnCar() {
             typeof latest?.mileage === 'number'
               ? latest.mileage
               : typeof latest?.odometer === 'number'
-                ? latest.odometer
-                : null;
+              ? latest.odometer
+              : null;
           setLastRecordedOdometer(
             latestOdo != null
               ? latestOdo
               : typeof b?.pickupOdometer === 'number'
-                ? b.pickupOdometer
-                : null
+              ? b.pickupOdometer
+              : null
           );
         } else {
           setLastRecordedOdometer(
@@ -193,75 +201,6 @@ export default function ReturnCar() {
           typeof b?.pickupOdometer === 'number' ? b.pickupOdometer : null
         );
       }
-    } catch (e) {
-      setBookingError(e?.message || t('staffReturnCar.toast.loadBookingFail'));
-    }
-  };
-
-  const handleFetchBooking = async () => {
-    if (!bookingId) {
-      setBookingError(t('staffReturnCar.toast.enterBookingId'));
-      return;
-    }
-    try {
-      const res = await getBookingById(bookingId);
-      const b = res?.booking || res?.data?.booking || null;
-      setBooking(b);
-      // Initialize totalAmount from booking if available
-      setTotalAmount(
-        typeof b?.totalAmount !== 'undefined' ? b.totalAmount : null
-      );
-      const defaultStationId = b?.pickupStation?.id
-        ? String(b.pickupStation.id)
-        : '';
-      setSelectedReturnStationId(defaultStationId);
-      setBookingError('');
-      // Fetch last recorded odometer from inspections by vehicle
-      try {
-        const vehId = b?.vehicle?.id || b?.vehicleId;
-        if (vehId) {
-          const inspRes = await apiClient.get(
-            endpoints.inspections.getByVehicle(vehId)
-          );
-          const data = inspRes?.data;
-          const list = Array.isArray(data?.inspections)
-            ? data.inspections
-            : Array.isArray(data)
-              ? data
-              : Array.isArray(data?.items)
-                ? data.items
-                : [];
-          const sorted = [...list].sort(
-            (a, c) => new Date(c?.createdAt || 0) - new Date(a?.createdAt || 0)
-          );
-          const latest = sorted.find(
-            i =>
-              typeof i?.mileage === 'number' || typeof i?.odometer === 'number'
-          );
-          const latestOdo =
-            typeof latest?.mileage === 'number'
-              ? latest.mileage
-              : typeof latest?.odometer === 'number'
-                ? latest.odometer
-                : null;
-          setLastRecordedOdometer(
-            latestOdo != null
-              ? latestOdo
-              : typeof b?.pickupOdometer === 'number'
-                ? b.pickupOdometer
-                : null
-          );
-        } else {
-          setLastRecordedOdometer(
-            typeof b?.pickupOdometer === 'number' ? b.pickupOdometer : null
-          );
-        }
-      } catch {
-        setLastRecordedOdometer(
-          typeof b?.pickupOdometer === 'number' ? b.pickupOdometer : null
-        );
-      }
-      setCompleteError('');
     } catch (e) {
       setBookingError(e?.message || t('staffReturnCar.toast.loadBookingFail'));
     }
@@ -295,7 +234,9 @@ export default function ReturnCar() {
       previews.forEach(p => {
         try {
           URL.revokeObjectURL(p.url);
-        } catch { }
+        } catch (e) {
+          console.error('Error revoking URL for preview:', p.url, e);
+        }
       });
     };
   }, [incidentFiles]);
@@ -357,7 +298,7 @@ export default function ReturnCar() {
   };
 
   // Inline validation helper cho Odo
-  const getOdoError = (value, currentBooking) => {
+  const getOdoError = useCallback((value, currentBooking) => {
     const odo = Number(value);
     if (!value || Number.isNaN(odo) || odo < 0) {
       return t('staffReturnCar.toast.invalidReturnOdometer');
@@ -367,8 +308,8 @@ export default function ReturnCar() {
       typeof lastRecordedOdometer === 'number'
         ? lastRecordedOdometer
         : Number.isFinite(pickup)
-          ? pickup
-          : undefined;
+        ? pickup
+        : undefined;
 
     if (typeof baseMin === 'number') {
       if (odo < baseMin) {
@@ -384,28 +325,11 @@ export default function ReturnCar() {
       }
     }
     return '';
-  };
-
+  });
   // Đồng bộ lỗi odo khi giá trị hoặc booking thay đổi
   useEffect(() => {
     setOdoError(getOdoError(returnOdometer, booking));
-  }, [returnOdometer, booking]);
-
-  // Convert selected image files to base64 strings for API payload
-  const filesToBase64 = async files => {
-    const imageFiles = (files || []).filter(
-      f => f && f.type && f.type.startsWith('image/')
-    );
-    if (!imageFiles.length) return [];
-    const toBase64 = file =>
-      new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-    return Promise.all(imageFiles.map(f => toBase64(f)));
-  };
+  }, [returnOdometer, booking, getOdoError]);
 
   // Upload incident images directly to the inspection using new API
   const uploadInspectionImages = async inspectionId => {
@@ -429,55 +353,36 @@ export default function ReturnCar() {
       });
 
       const uploadResults = [];
-      const vehicleId = booking?.vehicle?.id || booking?.vehicleId;
 
-      if (vehicleId) {
-        // Prefer uploading via vehicle images endpoint (supports multiple files)
-        const fd = new FormData();
-        for (const f of validFiles) {
-          fd.append('images', f);
-        }
+      console.log(inspectionId);
+
+      // Upload to inspection endpoint, one file per request
+      for (const file of validFiles) {
         try {
+          const fd = new FormData();
+          fd.append('image', file);
           const res = await apiClient.post(
-            endpoints.vehicles.uploadImage(vehicleId),
+            endpoints.inspections.uploadImage(inspectionId),
             fd,
             { headers: { 'Content-Type': 'multipart/form-data' } }
           );
-          const imgs = res?.data?.data?.images ?? res?.data?.images ?? [];
+          const imgs = res?.data?.images ?? [];
           for (const it of imgs) {
             uploadResults.push({
               url: it?.url,
               thumbnailUrl: it?.thumbnailUrl,
-              fileId: it?.imageKitFileId,
-              fileName: it?.fileName,
+              fileId: it?.fileId || it?.imageKitFileId,
+              fileName: it?.fileName || file.name,
             });
           }
-        } catch (uploadErr) {
-          console.warn('Vehicle images upload failed:', uploadErr?.message || uploadErr);
-        }
-      } else {
-        // Fallback: upload to inspection endpoint one by one
-        for (const file of validFiles) {
-          try {
-            const fd = new FormData();
-            fd.append('image', file);
-            const res = await apiClient.post(
-              endpoints.inspections.uploadImage(inspectionId),
-              fd,
-              { headers: { 'Content-Type': 'multipart/form-data' } }
-            );
-            const base = res?.data?.data ?? res?.data;
-            uploadResults.push({
-              url: base?.url,
-              thumbnailUrl: base?.thumbnailUrl,
-              fileId: base?.fileId,
-              fileName: file.name,
-            });
-          } catch (uploadError) {
-            console.warn('Upload inspection image failed:', uploadError?.message || uploadError);
-          }
+        } catch (uploadError) {
+          console.warn(
+            'Upload inspection image failed:',
+            uploadError?.message || uploadError
+          );
         }
       }
+
       // Cập nhật state inspectionImages với kết quả upload
       const normalized = (uploadResults || [])
         .map(u => {
@@ -494,7 +399,9 @@ export default function ReturnCar() {
           const next = [...prev];
           for (const ni of normalized) {
             const exists = next.some(
-              m => (ni.fileId && m.fileId === ni.fileId) || (!ni.fileId && m.url === ni.url)
+              m =>
+                (ni.fileId && m.fileId === ni.fileId) ||
+                (!ni.fileId && m.url === ni.url)
             );
             if (!exists) next.push(ni);
           }
@@ -505,20 +412,6 @@ export default function ReturnCar() {
     } catch (err) {
       console.warn('Upload inspection images error:', err?.message || err);
       return [];
-    }
-  };
-
-  // Delete an image from the inspection by index using new API
-  const deleteInspectionImage = async (inspectionId, imageIndex) => {
-    try {
-      if (!inspectionId || typeof imageIndex !== 'number') return false;
-      await apiClient.delete(
-        endpoints.inspections.deleteImage(inspectionId, imageIndex)
-      );
-      return true;
-    } catch (err) {
-      console.warn('Delete inspection image error:', err?.message || err);
-      return false;
     }
   };
 
@@ -535,10 +428,10 @@ export default function ReturnCar() {
     );
     const normalizedLocation = selectedStation
       ? (
-        selectedStation.address ||
-        selectedStation.name ||
-        String(selectedStation.id)
-      ).trim()
+          selectedStation.address ||
+          selectedStation.name ||
+          String(selectedStation.id)
+        ).trim()
       : '';
 
     // Frontend validation to match backend requirements
@@ -563,7 +456,7 @@ export default function ReturnCar() {
       batteryLevelNum < 0 ||
       batteryLevelNum > 100
     ) {
-      setBatteryError('Mức pin phải từ 0 đến 100');
+      setBatteryError('Battery level must be between 0 and 100');
       return;
     }
     setBatteryError('');
@@ -597,7 +490,7 @@ export default function ReturnCar() {
           vehicleId: booking?.vehicle?.id || booking?.vehicleId,
           staffId: user?.id,
           bookingId: id,
-          inspectionType: 'CHECK_IN',
+          inspectionType: 'CHECK_OUT',
           mileage: odo,
           batteryLevel: Math.min(100, Math.max(0, Math.round(batteryLevelNum))),
           exteriorCondition: hasIncident
@@ -620,12 +513,14 @@ export default function ReturnCar() {
           endpoints.inspections.create(),
           inspectionPayload
         );
-        const createdInspection =
-          inspRes?.data?.inspection || inspRes?.data || null;
-        const inspectionId =
-          createdInspection?.id ||
-          createdInspection?.inspectionId ||
-          createdInspection?.data?.id;
+        
+        // Backend returns: { success: true, data: inspection, message: '...' }
+        const createdInspection = inspRes?.data?.data || inspRes?.data?.inspection || inspRes?.data || null;
+        const inspectionId = createdInspection?.id;
+        
+        console.log('Inspection creation response:', inspRes?.data);
+        console.log('Created inspection:', createdInspection);
+        console.log('Extracted inspectionId:', inspectionId);
 
         if (hasIncident && incidentFiles.length && inspectionId) {
           const uploaded = await uploadInspectionImages(inspectionId);
@@ -643,7 +538,10 @@ export default function ReturnCar() {
                 [];
               currentImages = Array.isArray(rawImages) ? rawImages : [];
             } catch (e) {
-              console.warn('Fetch current inspection images error:', e?.message || e);
+              console.warn(
+                'Fetch current inspection images error:',
+                e?.message || e
+              );
             }
 
             const normalize = imgs =>
@@ -663,7 +561,9 @@ export default function ReturnCar() {
             const merged = [...normalize(currentImages)];
             for (const ni of normalize(uploaded)) {
               const exists = merged.some(
-                m => (ni.fileId && m.fileId === ni.fileId) || (!ni.fileId && m.url === ni.url)
+                m =>
+                  (ni.fileId && m.fileId === ni.fileId) ||
+                  (!ni.fileId && m.url === ni.url)
               );
               if (!exists) merged.push(ni);
             }
@@ -674,14 +574,20 @@ export default function ReturnCar() {
             });
             setInspectionImages(merged);
           } catch (err) {
-            console.warn('Update inspection images error:', err?.message || err);
+            console.warn(
+              'Update inspection images error:',
+              err?.message || err
+            );
             // Nếu lỗi, vẫn cố gắng đánh dấu hoàn tất
             try {
               await apiClient.put(endpoints.inspections.update(inspectionId), {
                 isCompleted: true,
               });
             } catch (err2) {
-              console.warn('Mark inspection completed error:', err2?.message || err2);
+              console.warn(
+                'Mark inspection completed error:',
+                err2?.message || err2
+              );
             }
           }
         } else if (inspectionId) {
@@ -690,7 +596,10 @@ export default function ReturnCar() {
               isCompleted: true,
             });
           } catch (err) {
-            console.warn('Mark inspection completed error:', err?.message || err);
+            console.warn(
+              'Mark inspection completed error:',
+              err?.message || err
+            );
           }
         }
       } catch (err) {
@@ -698,33 +607,65 @@ export default function ReturnCar() {
         // Không chặn luồng; vẫn tiến hành hoàn tất đơn thuê
       }
 
-      // Lưu payload để hoàn tất sau khi thanh toán
+      // TÍNH TỔNG TIỀN VÀ PHÍ TRẢ TRỄ TRƯỚC, KHÔNG GỌI completeBooking
+      // Giữ payload để hoàn tất sau khi thanh toán
       setPendingCompletionPayload(payload);
 
-      // Chuẩn bị dữ liệu cho modal thanh toán trước khi hoàn tất
       const vehiclePricing = booking?.vehicle?.pricing || null;
       const vehicleLabel =
-        booking?.vehicle?.name ||
-        booking?.vehicle?.licensePlate ||
-        '';
-      const payable = booking?.totalAmount ?? 0;
+        booking?.vehicle?.name || booking?.vehicle?.licensePlate || '';
+
+      // Tính thời lượng thực tế và kế hoạch
+      const actualStartDate = new Date(
+        booking?.actualStartTime || booking?.startTime
+      );
+      const actualEndDate = new Date(actualEndTime);
+      const actualDurationHours = Math.ceil(
+        (actualEndDate.getTime() - actualStartDate.getTime()) / (1000 * 60 * 60)
+      );
+      const plannedDurationMs = booking?.endTime
+        ? new Date(booking.endTime).getTime() -
+          new Date(booking.startTime).getTime()
+        : 24 * 60 * 60 * 1000;
+      const plannedDurationHours = Math.ceil(
+        plannedDurationMs / (1000 * 60 * 60)
+      );
+
+      let overtimeHours = 0;
+      let overtimeAmount = 0;
+      if (actualDurationHours > plannedDurationHours && vehiclePricing) {
+        overtimeHours = actualDurationHours - plannedDurationHours;
+        // Tính basePrice cho số giờ overtime (daily + hourly)
+        const fullDays = Math.floor(overtimeHours / 24);
+        const remainingHours = overtimeHours % 24;
+        const dailyCost = (vehiclePricing.baseRate || 0) * fullDays;
+        const hourlyCost = (vehiclePricing.hourlyRate || 0) * remainingHours;
+        const basePrice = dailyCost + hourlyCost;
+        const effectiveHourly =
+          overtimeHours > 0 ? basePrice / overtimeHours : 0;
+        const OVERTIME_MULTIPLIER = 1.5; // khớp mặc định backend
+        overtimeAmount =
+          Math.round(
+            effectiveHourly * OVERTIME_MULTIPLIER * overtimeHours * 100
+          ) / 100;
+      }
+
+      const payable = (booking?.totalAmount ?? 0) + overtimeAmount;
+      setTotalAmount(payable);
+
+      const overtime = { hours: overtimeHours, amount: overtimeAmount };
       setReturnSummary({
         bookingId: id,
         vehicleLabel,
         totalAmount: payable,
         vehiclePricing,
+        overtime,
       });
       setReturnSummaryOpen(true);
 
       setCompleteError('');
 
-      // KHÔNG cập nhật danh sách booking ở đây vì chưa hoàn tất
-      // Người dùng sẽ thanh toán trước, sau đó bấm "Mark Completed" để đổi trạng thái
-
-      // Không reset form ngay để giữ lại dữ liệu cho bước hoàn tất
-
-      // Chờ thanh toán trước khi hoàn tất đơn thuê
-      // (Danh sách booking sẽ được refresh sau khi bấm "Mark Completed")
+      // Không reset form ngay để giữ lại dữ liệu cho bước thanh toán
     } catch (e) {
       // Hiển thị thông báo lỗi rõ ràng cho các trường hợp 400 (Validation) và 409 (Idempotent)
       const status = e?.status ?? e?.response?.status;
@@ -764,7 +705,9 @@ export default function ReturnCar() {
             setCompleteError(t('staffReturnCar.toast.invalidEndTime'));
             return;
           }
-        } catch { }
+        } catch (e) {
+          console.warn('Validate return time error:', e?.message || e);
+        }
         // Fallback chung cho lỗi 400
         setCompleteError(
           serverMsg || t('staffReturnCar.toast.validationFailed')
@@ -791,13 +734,6 @@ export default function ReturnCar() {
 
     try {
       setPaymentLoading(true);
-      // Persist completion payload for success page to use
-      try {
-        localStorage.setItem(
-          `completePayload:${returnSummary.bookingId}`,
-          JSON.stringify(pendingCompletionPayload || {})
-        );
-      } catch { }
 
       const response = await paymentService.createRentalFeePayment(
         returnSummary.bookingId,
@@ -811,9 +747,42 @@ export default function ReturnCar() {
       }
     } catch (error) {
       console.error('Payment creation failed:', error);
-      // You can add toast notification here if needed
+      // You can add toast ntion here if needed
     } finally {
       setPaymentLoading(false);
+    }
+  };
+
+  // Xử lý thanh toán tiền mặt: tạo payment và upload bằng chứng
+  const handleCashSubmitEvidence = async () => {
+    if (!returnSummary?.bookingId || !returnSummary?.totalAmount) {
+      return;
+    }
+    try {
+      setCashPaymentLoading(true);
+      const res = await paymentService.createCashPayment(
+        returnSummary.bookingId,
+        returnSummary.totalAmount,
+        `Rental Fee ${returnSummary.bookingId.slice(-8)}`
+      );
+      const paymentId =
+        res?.paymentId || res?.data?.paymentId || res?.payment?.id || res?.id;
+
+      if (paymentId && cashEvidenceFile) {
+        await paymentService.uploadCashPaymentEvidence(
+          paymentId,
+          cashEvidenceFile
+        );
+        // Sau khi upload bằng chứng thành công, tiến hành hoàn tất đơn thuê
+        await handleMarkCompleted();
+      }
+
+      setCashEvidenceOpen(false);
+      setCashEvidenceFile(null);
+    } catch (error) {
+      console.error('Cash payment failed:', error);
+    } finally {
+      setCashPaymentLoading(false);
     }
   };
 
@@ -823,7 +792,10 @@ export default function ReturnCar() {
     if (!id || !pendingCompletionPayload) return;
 
     try {
-      const res = await bookingService.completeBooking(id, pendingCompletionPayload);
+      const res = await bookingService.completeBooking(
+        id,
+        pendingCompletionPayload
+      );
       const updatedBooking = res?.booking;
       const pricing = res?.summary?.pricing;
 
@@ -856,7 +828,6 @@ export default function ReturnCar() {
       // Reset form sau khi hoàn tất
       resetAllFields();
     } catch (e) {
-      const status = e?.status ?? e?.response?.status;
       const serverMsg = e?.response?.data?.message || e?.message;
       setCompleteError(serverMsg || t('staffReturnCar.toast.completeFail'));
     }
@@ -886,7 +857,7 @@ export default function ReturnCar() {
               value={bookingId}
               onValueChange={handleSelectBooking}
               placeholder={t('staffReturnCar.booking.selectPlaceholder')}
-              searchPlaceholder='Tìm kiếm booking...'
+              searchPlaceholder={t('staffReturnCar.booking.searchPlaceholder')}
               className={
                 bookingError ? 'border-red-500 focus:ring-red-500' : ''
               }
@@ -1071,7 +1042,9 @@ export default function ReturnCar() {
               placeholder={t(
                 'staffReturnCar.returnDetails.locationPlaceholder'
               )}
-              searchPlaceholder='Tìm kiếm trạm...'
+              searchPlaceholder={t(
+                'staffReturnCar.returnDetails.searchStationPlaceholder'
+              )}
               className={
                 locationError ? 'border-red-500 focus:ring-red-500' : ''
               }
@@ -1117,7 +1090,7 @@ export default function ReturnCar() {
         </CardHeader>
         <CardContent className='space-y-4'>
           <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-            {/* Dropdown chọn kết quả kiểm tra */}
+            {/* Dropdown ch?n k?t qu?a ki?m tra */}
             <div>
               <Label className='block mb-2'>
                 {t('staffReturnCar.inspection.resultLabel')}
@@ -1144,9 +1117,11 @@ export default function ReturnCar() {
               </Select>
             </div>
 
-            {/* Mức pin (%) */}
+            {/* M?c pin (%) */}
             <div>
-              <Label className='block mb-2'>Mức pin (%)</Label>
+              <Label className='block mb-2'>
+                {t('staffReturnCar.inspection.batteryLabel')} (%)
+              </Label>
               <Input
                 type='number'
                 min={0}
@@ -1156,7 +1131,7 @@ export default function ReturnCar() {
                   setBatteryLevel(e.target.value);
                   setBatteryError('');
                 }}
-                placeholder='Nhập phần trăm pin (0–100)'
+                placeholder={t('staffReturnCar.inspection.batteryPlaceholder')}
                 aria-invalid={!!batteryError}
                 className={
                   batteryError
@@ -1169,25 +1144,35 @@ export default function ReturnCar() {
               )}
             </div>
 
-            {/* Tình trạng lốp */}
+            {/* T?nh tr?ng l?p */}
             <div>
-              <Label className='block mb-2'>Tình trạng lốp</Label>
+              <Label className='block mb-2'>
+                {t('staffReturnCar.inspection.tireLabel')}
+              </Label>
               <Select
                 value={tireCondition || ''}
                 onValueChange={val => setTireCondition(val)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder='Chọn tình trạng' />
+                  <SelectValue
+                    placeholder={t('staffReturnCar.inspection.tirePlaceholder')}
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value='GOOD'>Tốt</SelectItem>
-                  <SelectItem value='FAIR'>Trung bình</SelectItem>
-                  <SelectItem value='POOR'>Kém</SelectItem>
+                  <SelectItem value='GOOD'>
+                    {t('staffReturnCar.inspection.tireGood')}
+                  </SelectItem>
+                  <SelectItem value='FAIR'>
+                    {t('staffReturnCar.inspection.tireFair')}
+                  </SelectItem>
+                  <SelectItem value='POOR'>
+                    {t('staffReturnCar.inspection.tirePoor')}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Checklist chỉ hiển thị khi có sự cố */}
+            {/* Checklist ch? hi?n th?n th? khi c? s? c?o */}
             {hasIncident && (
               <div className='md:col-span-3 grid grid-cols-2 gap-3'>
                 {Object.entries(checklist).map(([key, val]) => {
@@ -1215,7 +1200,7 @@ export default function ReturnCar() {
             )}
           </div>
 
-          {/* Upload ảnh & ghi chú sự cố: chỉ hiển thị khi có sự cố */}
+          {/* Upload ?nh?n & ghi ch? s? c?o: ch? hi?n th?n khi c? s? c?o */}
           {hasIncident && (
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div>
@@ -1323,7 +1308,7 @@ export default function ReturnCar() {
         </CardContent>
       </Card>
 
-      {/* Modal hiển thị tổng tiền & pricing của xe sau khi hoàn tất trả xe */}
+      {/* Modal hi?n th?n t?ng ti?n & pricing c?a xe sau khi ho?n t?t tr? xe */}
       <Dialog open={returnSummaryOpen} onOpenChange={setReturnSummaryOpen}>
         <DialogContent>
           <DialogHeader>
@@ -1348,6 +1333,76 @@ export default function ReturnCar() {
               <p className='text-2xl font-bold'>
                 {formatCurrency(returnSummary?.totalAmount ?? 0, 'VND')}
               </p>
+            </div>
+            {returnSummary?.overtime &&
+              (returnSummary.overtime.hours > 0 ||
+                returnSummary.overtime.amount > 0) && (
+                <div className='pt-2 border-t'>
+                  <p className='text-sm font-medium'>
+                    {t('staffReturnCar.modal.overtime.title', {
+                      defaultValue: 'Phí trả trễ',
+                    })}
+                  </p>
+                  <div className='mt-2 space-y-1 text-sm'>
+                    {returnSummary.overtime.hours > 0 && (
+                      <div className='flex justify-between'>
+                        <span>
+                          {t('staffReturnCar.modal.overtime.hours', {
+                            defaultValue: 'Giờ trễ',
+                          })}
+                        </span>
+                        <span className='font-medium'>
+                          {returnSummary.overtime.hours}
+                        </span>
+                      </div>
+                    )}
+                    {returnSummary.overtime.amount > 0 && (
+                      <div className='flex justify-between'>
+                        <span>
+                          {t('staffReturnCar.modal.overtime.amount', {
+                            defaultValue: 'Số tiền trễ',
+                          })}
+                        </span>
+                        <span className='font-medium'>
+                          {formatCurrency(returnSummary.overtime.amount, 'VND')}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            <div className='pt-2 border-t'>
+              <p className='text-sm font-medium'>
+                {t('staffReturnCar.modal.payment.methodTitle', {
+                  defaultValue: 'Payment method',
+                })}
+              </p>
+              <div className='mt-2'>
+                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                  <SelectTrigger className='w-full'>
+                    <SelectValue
+                      placeholder={t(
+                        'staffReturnCar.modal.payment.methodPlaceholder',
+                        {
+                          defaultValue: 'Select method',
+                        }
+                      )}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='ONLINE'>
+                      {t('staffReturnCar.modal.payment.method.online', {
+                        defaultValue: 'Online (PayOS)',
+                      })}
+                    </SelectItem>
+                    <SelectItem value='CASH'>
+                      {t('staffReturnCar.modal.payment.method.cash', {
+                        defaultValue: 'Cash',
+                      })}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className='pt-2 border-t'>
               <p className='text-sm font-medium'>
@@ -1423,36 +1478,143 @@ export default function ReturnCar() {
               </div>
             </div>
           </div>
-          <DialogFooter className="flex gap-2">
+          <DialogFooter className='flex gap-2'>
             <Button
-              variant="outline"
+              variant='outline'
               onClick={() => setReturnSummaryOpen(false)}
             >
               {t('common.close')}
             </Button>
+            {paymentMethod === 'ONLINE' ? (
+              <Button
+                onClick={handlePayment}
+                disabled={paymentLoading || !returnSummary?.totalAmount}
+                className='flex items-center gap-2'
+              >
+                {paymentLoading ? (
+                  <>
+                    <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-white'></div>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className='h-4 w-4' />
+                    Pay {formatCurrency(returnSummary?.totalAmount ?? 0, 'VND')}
+                  </>
+                )}
+              </Button>
+            ) : (
+              <Button
+                onClick={() => {
+                  // Close summary dialog before opening evidence dialog to avoid aria-hidden focus conflict
+                  setReturnSummaryOpen(false);
+                  setTimeout(() => setCashEvidenceOpen(true), 10);
+                }}
+                disabled={cashPaymentLoading || !returnSummary?.totalAmount}
+                className='flex items-center gap-2'
+                variant='secondary'
+              >
+                {cashPaymentLoading ? (
+                  <>
+                    <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-white'></div>
+                    Processing...
+                  </>
+                ) : (
+                  <>Mark Completed</>
+                )}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog upload bằng chứng thanh toán tiền mặt */}
+      <Dialog open={cashEvidenceOpen} onOpenChange={setCashEvidenceOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {t('staffReturnCar.modal.cashEvidenceTitle', {
+                defaultValue: 'Payment Evidence (file)',
+              })}
+            </DialogTitle>
+            <DialogDescription>
+              {t('staffReturnCar.modal.cashEvidenceDesc', {
+                defaultValue:
+                  'Select an image or PDF as cash payment proof.',
+              })}
+            </DialogDescription>
+          </DialogHeader>
+          <div className='space-y-3'>
+            <Label className='text-sm'>
+              {t('staffReturnCar.modal.cashEvidenceLabel', {
+                defaultValue: 'Choose evidence file',
+              })}
+            </Label>
+            <Input
+              type='file'
+              accept='image/*,.pdf'
+              onChange={e => {
+                const file = e.target.files?.[0] || null;
+                if (!file) {
+                  setCashEvidenceFile(null);
+                  return;
+                }
+                const isValidType =
+                  file.type?.startsWith('image/') ||
+                  file.type === 'application/pdf';
+                const isValidSize = file.size <= 5 * 1024 * 1024; // 5MB
+                if (!isValidType) {
+                  alert(
+                    t('staffReturnCar.modal.cashEvidence.invalidFileType', {
+                      defaultValue:
+                        'Invalid file type. Only images or PDF are allowed.',
+                    })
+                  );
+                  e.target.value = '';
+                  setCashEvidenceFile(null);
+                  return;
+                }
+                if (!isValidSize) {
+                  alert(
+                    t('staffReturnCar.modal.cashEvidence.fileTooLarge', {
+                      defaultValue:
+                        'File too large (max 5MB). Please choose another file.',
+                    })
+                  );
+                  e.target.value = '';
+                  setCashEvidenceFile(null);
+                  return;
+                }
+                setCashEvidenceFile(file);
+              }}
+            />
+            {!cashEvidenceFile && (
+              <p className='text-xs text-muted-foreground'>
+                {t('staffReturnCar.modal.cashEvidenceHint', {
+                  defaultValue:
+                    'Please select an evidence file before confirming.',
+                })}
+              </p>
+            )}
+          </div>
+          <DialogFooter className='flex gap-2'>
             <Button
-              onClick={handlePayment}
-              disabled={paymentLoading || !returnSummary?.totalAmount}
-              className="flex items-center gap-2"
+              variant='outline'
+              onClick={() => setCashEvidenceOpen(false)}
             >
-              {paymentLoading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <CreditCard className="h-4 w-4" />
-                  Pay {formatCurrency(returnSummary?.totalAmount ?? 0, 'VND')}
-                </>
-              )}
+              {t('common.cancel')}
             </Button>
             <Button
-              variant="default"
-              onClick={handleMarkCompleted}
-              disabled={!pendingCompletionPayload}
+              onClick={handleCashSubmitEvidence}
+              disabled={cashPaymentLoading || !cashEvidenceFile}
             >
-              Mark Completed
+              {cashPaymentLoading
+                ? t('staffReturnCar.modal.cashEvidenceConfirming', {
+                    defaultValue: 'Uploading evidence...',
+                  })
+                : t('staffReturnCar.modal.cashEvidenceConfirm', {
+                    defaultValue: 'Upload evidence',
+                  })}
             </Button>
           </DialogFooter>
         </DialogContent>

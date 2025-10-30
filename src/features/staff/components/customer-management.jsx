@@ -896,26 +896,26 @@ function CustomerSupport() {
             : r
         )
       );
-      toast.success('Đã cập nhật trạng thái người dùng');
+      toast.success('User status updated');
     } catch (err) {
       console.error('Error updating status:', err);
-      toast.error(err.message || 'Cập nhật trạng thái thất bại');
+      toast.error(err.message || 'Failed to update status');
     } finally {
       setLoading(false);
     }
   };
 
   const handleContactCustomer = customer => {
-    const phone = customer.phone || 'Không có số điện thoại';
+    const phone = customer.phone || 'No phone number';
     try {
       if (navigator?.clipboard && customer.phone) {
         navigator.clipboard.writeText(customer.phone);
-        toast.info(`SĐT khách hàng: ${phone} (đã sao chép)`);
+        toast.info(`Customer phone: ${phone} (copied)`);
       } else {
-        toast.info(`SĐT khách hàng: ${phone}`);
+        toast.info(`Customer phone: ${phone}`);
       }
     } catch {
-      toast.info(`SĐT khách hàng: ${phone}`);
+      toast.info(`Customer phone: ${phone}`);
     }
   };
 
@@ -990,13 +990,13 @@ function CustomerSupport() {
         {loading && (
           <div className='flex justify-center items-center p-8'>
             <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary'></div>
-            <span className='ml-2'>Đang tải dữ liệu...</span>
+            <span className='ml-2'>Loading data...</span>
           </div>
         )}
 
         {error && (
           <div className='bg-red-50 border border-red-200 text-red-700 p-4 rounded-md'>
-            <p className='font-medium'>Lỗi khi tải dữ liệu</p>
+            <p className='font-medium'>Error loading data</p>
             <p>{error}</p>
           </div>
         )}
@@ -1013,24 +1013,24 @@ function CustomerSupport() {
               <TableHeader>
                 <TableRow>
                   <TableHead className='w-2/12'>
-                    {t('userManagement.table.name', { defaultValue: 'Tên' })}
+                    {t('userManagement.table.name', { defaultValue: 'Name' })}
                   </TableHead>
                   <TableHead className='w-3/12'>
                     {t('userManagement.table.email', { defaultValue: 'Email' })}
                   </TableHead>
                   <TableHead className='w-2/12'>
                     {t('userManagement.table.phone', {
-                      defaultValue: 'Số điện thoại',
+                      defaultValue: 'Phone',
                     })}
                   </TableHead>
                   <TableHead className='w-2/12'>
                     {t('userManagement.table.status', {
-                      defaultValue: 'Trạng thái',
+                      defaultValue: 'Status',
                     })}
                   </TableHead>
                   <TableHead className='w-2/12'>
                     {t('userManagement.table.joinDate', {
-                      defaultValue: 'Ngày tạo',
+                      defaultValue: 'Created at',
                     })}
                   </TableHead>
                   <TableHead className='w-1/12 text-center'>
@@ -1114,9 +1114,9 @@ function CustomerSupport() {
             </Table>
             <div className='flex items-center justify-between px-4 py-3 border-t'>
               <div className='text-sm text-muted-foreground'>
-                Hiển thị {filteredCustomers.length === 0 ? 0 : startIndex + 1}–
-                {Math.min(endIndex, filteredCustomers.length)} trong{' '}
-                {filteredCustomers.length} khách hàng
+                Showing {filteredCustomers.length === 0 ? 0 : startIndex + 1}–
+                {Math.min(endIndex, filteredCustomers.length)} of{' '}
+                {filteredCustomers.length} customers
               </div>
               <div className='flex items-center gap-2'>
                 <Button
@@ -1126,10 +1126,10 @@ function CustomerSupport() {
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 >
                   <ChevronLeft className='mr-1 h-4 w-4' />
-                  Trước
+                  Previous
                 </Button>
                 <span className='text-sm'>
-                  Trang {currentPage}/{totalPages}
+                  Page {currentPage}/{totalPages}
                 </span>
                 <Button
                   variant='outline'

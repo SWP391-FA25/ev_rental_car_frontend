@@ -46,8 +46,8 @@ export default function ProfileContent({ user }) {
   })();
 
   const joinDate = user?.createdAt
-    ? new Date(user.createdAt).toLocaleDateString('vi-VN')
-    : '28/09/2025';
+    ? new Date(user.createdAt).toLocaleDateString('en-US')
+    : '09/28/2025';
 
   const handleProfileInputChange = (field, value) => {
     setProfileData(prev => ({
@@ -58,13 +58,13 @@ export default function ProfileContent({ user }) {
 
   const handleSaveProfile = async () => {
     if (!user?.id) {
-      toast.error('Không tìm thấy thông tin người dùng');
+      toast.error('User information not found');
       return;
     }
 
     // Validate phone number format (must start with 0 and have exactly 10 digits)
     if (profileData.phone && !/^0\d{9}$/.test(profileData.phone)) {
-      toast.error('Số điện thoại phải bắt đầu bằng 0 và có đúng 10 chữ số');
+      toast.error('Phone number must start with 0 and be exactly 10 digits');
       return;
     }
 
@@ -85,7 +85,7 @@ export default function ProfileContent({ user }) {
       );
 
       if (response.success) {
-        toast.success('Cập nhật thông tin thành công');
+        toast.success('Profile updated successfully');
         setIsEditingProfile(false);
 
         // Update local user data if parent component provides update function
@@ -93,12 +93,12 @@ export default function ProfileContent({ user }) {
           user.onUpdate(response.data.renter);
         }
       } else {
-        toast.error(response.message || 'Cập nhật thất bại');
+        toast.error(response.message || 'Update failed');
       }
     } catch (error) {
       console.error('Error updating profile:', error);
       toast.error(
-        error.response?.data?.message || 'Có lỗi xảy ra khi cập nhật thông tin'
+        error.response?.data?.message || 'An error occurred while updating information'
       );
     } finally {
       setIsSaving(false);
@@ -113,7 +113,7 @@ export default function ProfileContent({ user }) {
       <div className='flex items-center justify-between mb-8'>
         <div className='flex items-center gap-3'>
           <h1 className='text-2xl font-bold text-foreground'>
-            Thông tin tài khoản
+            Account Information
           </h1>
           <Button
             variant='outline'
@@ -122,7 +122,7 @@ export default function ProfileContent({ user }) {
             disabled={isSaving}
           >
             <Edit className='h-4 w-4' />
-            Chỉnh sửa
+            Edit
           </Button>
         </div>
 
@@ -130,7 +130,7 @@ export default function ProfileContent({ user }) {
         <div className='flex items-center gap-2 bg-card px-4 py-2 rounded-lg border border-border shadow-sm'>
           <Briefcase className='h-5 w-5 text-primary' />
           <span className='text-sm font-medium text-card-foreground'>
-            0 chuyến
+            0 trips
           </span>
         </div>
       </div>
@@ -155,26 +155,26 @@ export default function ProfileContent({ user }) {
 
             {/* Join Date */}
             <p className='text-sm text-muted-foreground mb-4'>
-              Tham gia: {joinDate}
+              Joined: {joinDate}
             </p>
 
             {/* Points Badge */}
             <Badge className='flex items-center gap-1'>
-              <Star className='h-3 w-3' />0 điểm
+              <Star className='h-3 w-3' />0 points
             </Badge>
           </div>
 
           {/* Personal Details */}
           <div className='flex-1'>
             <h3 className='text-lg font-semibold text-card-foreground mb-6'>
-              Thông tin cá nhân
+              Personal Information
             </h3>
 
             <div className='space-y-3'>
               {/* Full Name */}
               <div className='flex items-center justify-between py-2'>
                 <span className='text-sm font-medium text-muted-foreground w-32 flex-shrink-0'>
-                  Họ và tên
+                  Full name
                 </span>
                 {isEditingProfile ? (
                   <Input
@@ -182,7 +182,7 @@ export default function ProfileContent({ user }) {
                     onChange={e =>
                       handleProfileInputChange('fullName', e.target.value)
                     }
-                    placeholder='Nhập họ và tên'
+                    placeholder='Enter full name'
                     className='bg-gray-50 flex-1 ml-4'
                   />
                 ) : (
@@ -200,7 +200,7 @@ export default function ProfileContent({ user }) {
               {/* Gender */}
               <div className='flex items-center justify-between py-2'>
                 <span className='text-sm font-medium text-muted-foreground w-32 flex-shrink-0'>
-                  Giới tính
+                  Gender
                 </span>
                 {isEditingProfile ? (
                   <Select
@@ -210,11 +210,11 @@ export default function ProfileContent({ user }) {
                     }
                   >
                     <SelectTrigger className='flex-1 ml-4'>
-                      <SelectValue placeholder='Chọn giới tính' />
+                      <SelectValue placeholder='Select gender' />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value='Nam'>Nam</SelectItem>
-                      <SelectItem value='Nữ'>Nữ</SelectItem>
+                      <SelectItem value='Nam'>Male</SelectItem>
+                      <SelectItem value='Nữ'>Female</SelectItem>
                     </SelectContent>
                   </Select>
                 ) : (
@@ -229,7 +229,7 @@ export default function ProfileContent({ user }) {
               {/* Phone */}
               <div className='flex items-center justify-between py-2'>
                 <span className='text-sm font-medium text-muted-foreground w-32 flex-shrink-0'>
-                  Số điện thoại
+                  Phone number
                 </span>
                 {isEditingProfile ? (
                   <Input
@@ -237,13 +237,13 @@ export default function ProfileContent({ user }) {
                     onChange={e =>
                       handleProfileInputChange('phone', e.target.value)
                     }
-                    placeholder='Nhập số điện thoại'
+                    placeholder='Enter phone number'
                     className='bg-gray-50 flex-1 ml-4'
                   />
                 ) : (
                   <div className='flex items-center gap-2 flex-1 ml-4'>
                     <span className='text-sm font-bold text-card-foreground'>
-                      {profileData.phone || 'Chưa cập nhật'}
+                      {profileData.phone || 'Not updated'}
                     </span>
                   </div>
                 )}
@@ -252,7 +252,7 @@ export default function ProfileContent({ user }) {
               {/* Address */}
               <div className='flex items-center justify-between py-2'>
                 <span className='text-sm font-medium text-muted-foreground w-32 flex-shrink-0'>
-                  Địa chỉ
+                  Address
                 </span>
                 {isEditingProfile ? (
                   <Input
@@ -260,13 +260,13 @@ export default function ProfileContent({ user }) {
                     onChange={e =>
                       handleProfileInputChange('address', e.target.value)
                     }
-                    placeholder='Nhập địa chỉ'
+                    placeholder='Enter address'
                     className='bg-gray-50 flex-1 ml-4'
                   />
                 ) : (
                   <div className='flex items-center gap-2 flex-1 ml-4'>
                     <span className='text-sm font-bold text-card-foreground'>
-                      {profileData.address || 'Chưa cập nhật'}
+                      {profileData.address || 'Not updated'}
                     </span>
                   </div>
                 )}
@@ -287,7 +287,7 @@ export default function ProfileContent({ user }) {
                         variant='outline'
                         className='text-green-600 border-green-200 bg-green-50'
                       >
-                        Đã xác thực
+                        Verified
                       </Badge>
                     ) : (
                       <>
@@ -295,7 +295,7 @@ export default function ProfileContent({ user }) {
                           variant='outline'
                           className='text-red-600 border-red-200 bg-red-50'
                         >
-                          Chưa xác thực
+                          Not verified
                         </Badge>
                         <Button
                           variant='outline'
@@ -319,7 +319,7 @@ export default function ProfileContent({ user }) {
                   className='flex-1'
                   disabled={isSaving}
                 >
-                  {isSaving ? 'Đang lưu...' : 'Lưu thông tin'}
+                  {isSaving ? 'Saving...' : 'Save information'}
                 </Button>
                 <Button
                   variant='outline'
@@ -327,7 +327,7 @@ export default function ProfileContent({ user }) {
                   className='flex-1'
                   disabled={isSaving}
                 >
-                  Hủy
+                  Cancel
                 </Button>
               </div>
             )}

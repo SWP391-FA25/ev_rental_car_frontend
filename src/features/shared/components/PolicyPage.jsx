@@ -35,20 +35,20 @@ const AccordionSection = ({
 );
 
 const policySections = [
-  { id: 'introduction', title: 'Giới thiệu' },
-  { id: 'data-protection', title: 'Bảo vệ dữ liệu' },
-  { id: 'user-rights', title: 'Quyền & Trách nhiệm' },
-  { id: 'account-management', title: 'Quản lý tài khoản' },
-  { id: 'vehicle-rental', title: 'Điều khoản thuê xe' },
-  { id: 'booking-payment', title: 'Chính sách đặt xe' },
-  { id: 'out-of-area', title: 'Chính sách ngoài khu vực' },
-  { id: 'station-management', title: 'Quản lý trạm' },
-  { id: 'staff-management', title: 'Quản lý nhân viên' },
-  { id: 'vehicle-usage', title: 'Hướng dẫn sử dụng' },
-  { id: 'liability-insurance', title: 'Trách nhiệm & Bảo hiểm' },
-  { id: 'dispute-resolution', title: 'Giải quyết tranh chấp' },
-  { id: 'violation-enforcement', title: 'Vi phạm & Thực thi' },
-  { id: 'general-terms', title: 'Điều khoản chung' },
+  { id: 'introduction', title: 'Introduction' },
+  { id: 'data-protection', title: 'Data Protection' },
+  { id: 'user-rights', title: 'User Rights & Responsibilities' },
+  { id: 'account-management', title: 'Account Management' },
+  { id: 'vehicle-rental', title: 'Vehicle Rental Terms' },
+  { id: 'booking-payment', title: 'Booking & Payment Policy' },
+  { id: 'out-of-area', title: 'Out-of-Area Policy' },
+  { id: 'station-management', title: 'Station Management' },
+  { id: 'staff-management', title: 'Staff Management' },
+  { id: 'vehicle-usage', title: 'Vehicle Usage Guidelines' },
+  { id: 'liability-insurance', title: 'Liability & Insurance' },
+  { id: 'dispute-resolution', title: 'Dispute Resolution' },
+  { id: 'violation-enforcement', title: 'Violations & Enforcement' },
+  { id: 'general-terms', title: 'General Terms' },
 ];
 
 export default function PolicyPage() {
@@ -94,7 +94,7 @@ export default function PolicyPage() {
         <div className='w-80 bg-muted/30 border-r border-border flex-shrink-0'>
           <div className='p-6'>
             <h2 className='text-xl font-bold text-foreground mb-6'>
-              Chính sách & Quy định
+              Policies & Regulations
             </h2>
             <nav className='space-y-2'>
               {policySections.map(section => (
@@ -126,444 +126,400 @@ export default function PolicyPage() {
         <div className='flex-1 bg-background overflow-y-auto'>
           <div className='max-w-4xl mx-auto p-8'>
             <h1 className='text-3xl font-bold text-foreground mb-8'>
-              Chính sách & Quy định EV-Rental
+              EV-Rental Policies & Regulations
             </h1>
 
             {/* Introduction */}
             <AccordionSection
               id='introduction'
-              title='Giới thiệu'
+              title='Introduction'
               sectionNumber={1}
               isExpanded={expandedSections.introduction}
               onToggle={toggleSection}
             >
               <p>
-                <strong>1.1 Về nền tảng EV-Rental</strong>
+                <strong>1.1 About the EV-Rental Platform</strong>
                 <br />
-                Chào mừng đến với nền tảng EV-Rental, dịch vụ cho thuê xe điện
-                sáng tạo cung cấp giải pháp giao thông bền vững. Bằng việc truy
-                cập và sử dụng nền tảng EV-Rental, tạo tài khoản, hoặc sử dụng
-                dịch vụ của chúng tôi, bạn đồng ý tuân thủ các Điều khoản và
-                Điều kiện này cùng tất cả các chính sách áp dụng.
+                Welcome to EV-Rental, an innovative electric vehicle rental platform that provides sustainable transportation solutions. By accessing or using EV-Rental, creating an account, or using our services, you agree to comply with these Terms and Conditions and all applicable policies.
               </p>
               <p>
-                <strong>1.2 Phạm vi dịch vụ</strong>
+                <strong>1.2 Scope of Services</strong>
                 <br />
-                Nền tảng EV-Rental cho phép khách hàng:
+                The EV-Rental platform allows customers to:
               </p>
               <ul className='list-disc pl-6 space-y-2'>
-                <li>Duyệt và thuê xe điện từ nhiều trạm</li>
-                <li>Quản lý đặt xe và thanh toán qua nền tảng số</li>
-                <li>Truy cập hỗ trợ khách hàng và dịch vụ bảo trì xe</li>
-                <li>
-                  Tham gia chương trình khuyến mãi và phần thưởng trung thành
-                </li>
+                <li>Browse and rent electric vehicles across multiple stations</li>
+                <li>Manage bookings and payments via the digital platform</li>
+                <li>Access customer support and vehicle maintenance services</li>
+                <li>Participate in promotions and loyalty rewards programs</li>
               </ul>
               <p>
-                <strong>1.3 Quyền của nền tảng</strong>
+                <strong>1.3 Platform Rights</strong>
                 <br />
-                EV-Rental có quyền:
+                EV-Rental reserves the right to:
               </p>
               <ul className='list-disc pl-6 space-y-2'>
-                <li>
-                  Thay đổi, cập nhật, tạm dừng hoặc chấm dứt bất kỳ điều khoản
-                  và điều kiện nào bất cứ lúc nào
-                </li>
-                <li>
-                  Từ chối yêu cầu dịch vụ hoặc tạo tài khoản theo yêu cầu pháp
-                  lý
-                </li>
-                <li>
-                  Cập nhật dịch vụ và giá cả dựa trên điều kiện thị trường
-                </li>
+                <li>Modify, update, suspend, or terminate any terms and conditions at any time</li>
+                <li>Deny service requests or account creation where legally required</li>
+                <li>Update services and pricing based on market conditions</li>
               </ul>
             </AccordionSection>
 
             {/* Data Protection */}
             <AccordionSection
               id='data-protection'
-              title='Bảo vệ dữ liệu và Chính sách riêng tư'
+              title='Data Protection & Privacy Policy'
               sectionNumber={2}
               isExpanded={expandedSections['data-protection']}
               onToggle={toggleSection}
             >
               <p>
-                <strong>2.1 Thu thập và xử lý dữ liệu</strong>
+                <strong>2.1 Data Collection and Processing</strong>
                 <br />
-                EV-Rental cam kết bảo vệ dữ liệu cá nhân của người dùng. Chúng
-                tôi thu thập và xử lý thông tin sau:
+                EV-Rental is committed to protecting users’ personal data. We collect and process the following information:
               </p>
               <ul className='list-disc pl-6 space-y-2'>
-                <li>
-                  Dữ liệu định danh cá nhân (tên, số điện thoại, địa chỉ, ngày
-                  sinh)
-                </li>
-                <li>Thông tin đăng nhập tài khoản (email, mật khẩu)</li>
-                <li>
-                  Thông tin tài chính (phương thức thanh toán, lịch sử giao
-                  dịch)
-                </li>
-                <li>Dữ liệu sử dụng xe (lịch sử thuê, đánh giá, phản hồi)</li>
-                <li>Dữ liệu vị trí để theo dõi trạm và xe</li>
+                <li>Personal identifying data (name, phone number, address, date of birth)</li>
+                <li>Account login information (email, password)</li>
+                <li>Financial information (payment methods, transaction history)</li>
+                <li>Vehicle usage data (rental history, ratings, feedback)</li>
+                <li>Location data for station and vehicle tracking</li>
               </ul>
               <p>
-                <strong>2.2 Sử dụng dữ liệu</strong>
+                <strong>2.2 Use of Data</strong>
                 <br />
-                Dữ liệu của bạn được sử dụng để:
+                Your data is used to:
               </p>
               <ul className='list-disc pl-6 space-y-2'>
-                <li>Quản lý tài khoản và xác thực</li>
-                <li>Xử lý đặt xe và thanh toán</li>
-                <li>Cải thiện dịch vụ và hỗ trợ khách hàng</li>
-                <li>Giám sát an toàn và bảo mật</li>
-                <li>Tuân thủ pháp luật và yêu cầu kiểm toán</li>
+                <li>Manage accounts and authentication</li>
+                <li>Process bookings and payments</li>
+                <li>Improve services and customer support</li>
+                <li>Monitor safety and security</li>
+                <li>Comply with legal and audit requirements</li>
               </ul>
             </AccordionSection>
 
             {/* User Rights */}
             <AccordionSection
               id='user-rights'
-              title='Quyền và Trách nhiệm của Người dùng'
+              title='User Rights and Responsibilities'
               sectionNumber={3}
               isExpanded={expandedSections['user-rights']}
               onToggle={toggleSection}
             >
               <p>
-                <strong>3.1 Quyền của người dùng</strong>
+                <strong>3.1 User Rights</strong>
                 <br />
-                Người dùng đã đăng ký có quyền:
+                Registered users have the right to:
               </p>
               <ul className='list-disc pl-6 space-y-2'>
-                <li>Truy cập xe có sẵn và đặt chỗ</li>
-                <li>Nhận hỗ trợ kỹ thuật và hướng dẫn sử dụng nền tảng</li>
-                <li>Đưa ra phản hồi và gợi ý cải thiện dịch vụ</li>
-                <li>Yêu cầu cập nhật thông tin tài khoản và xóa dữ liệu</li>
-                <li>Được đối xử công bằng và dịch vụ không phân biệt đối xử</li>
+                <li>Access available vehicles and make bookings</li>
+                <li>Receive technical support and platform usage guidance</li>
+                <li>Provide feedback and suggestions to improve services</li>
+                <li>Request account information updates and data deletion</li>
+                <li>Be treated fairly with non-discriminatory service</li>
               </ul>
               <p>
-                <strong>3.2 Trách nhiệm của người dùng</strong>
+                <strong>3.2 User Responsibilities</strong>
                 <br />
-                Người dùng phải:
+                Users must:
               </p>
               <ul className='list-disc pl-6 space-y-2'>
-                <li>Duy trì bảo mật tài khoản và báo cáo truy cập trái phép</li>
-                <li>Cung cấp thông tin chính xác và trung thực</li>
-                <li>Tuân thủ tất cả luật pháp và quy định áp dụng</li>
-                <li>
-                  Sử dụng xe có trách nhiệm và trả xe trong tình trạng tốt
-                </li>
-                <li>Thanh toán tất cả phí và chi phí đúng hạn</li>
+                <li>Maintain account security and report unauthorized access</li>
+                <li>Provide accurate and truthful information</li>
+                <li>Comply with all applicable laws and regulations</li>
+                <li>Use vehicles responsibly and return them in good condition</li>
+                <li>Pay all fees and charges on time</li>
               </ul>
             </AccordionSection>
 
             {/* Account Management */}
             <AccordionSection
               id='account-management'
-              title='Quản lý Tài khoản và Bảo mật'
+              title='Account Management and Security'
               sectionNumber={4}
               isExpanded={expandedSections['account-management']}
               onToggle={toggleSection}
             >
               <p>
-                <strong>4.1 Tạo tài khoản</strong>
+                <strong>4.1 Account Creation</strong>
                 <br />
-                Để tạo tài khoản, người dùng phải:
+                To create an account, users must:
               </p>
               <ul className='list-disc pl-6 space-y-2'>
-                <li>Ít nhất 21 tuổi với bằng lái xe hợp lệ</li>
-                <li>Cung cấp thông tin cá nhân và liên lạc chính xác</li>
-                <li>Xác minh danh tính qua nộp tài liệu</li>
-                <li>Đồng ý với tất cả điều khoản và điều kiện</li>
+                <li>Be at least 21 years old with a valid driver’s license</li>
+                <li>Provide accurate personal and contact information</li>
+                <li>Verify identity by submitting required documents</li>
+                <li>Agree to all terms and conditions</li>
               </ul>
               <p>
-                <strong>4.2 Bảo mật tài khoản</strong>
+                <strong>4.2 Account Security</strong>
                 <br />
-                Người dùng có trách nhiệm:
+                Users are responsible for:
               </p>
               <ul className='list-disc pl-6 space-y-2'>
-                <li>Giữ bí mật thông tin đăng nhập</li>
-                <li>Đăng xuất sau mỗi phiên trên thiết bị dùng chung</li>
-                <li>Báo cáo ngay lập tức hoạt động tài khoản đáng ngờ</li>
-                <li>Cập nhật thông tin tài khoản khi có thay đổi</li>
+                <li>Keeping login credentials confidential</li>
+                <li>Signing out after each session on shared devices</li>
+                <li>Reporting suspicious account activity immediately</li>
+                <li>Updating account information when changes occur</li>
               </ul>
             </AccordionSection>
 
             {/* Vehicle Rental */}
             <AccordionSection
               id='vehicle-rental'
-              title='Điều khoản Thuê xe'
+              title='Vehicle Rental Terms'
               sectionNumber={5}
               isExpanded={expandedSections['vehicle-rental']}
               onToggle={toggleSection}
             >
               <p>
-                <strong>5.1 Loại xe và Tính khả dụng</strong>
+                <strong>5.1 Vehicle Types and Availability</strong>
                 <br />
-                EV-Rental cung cấp các loại xe điện khác nhau:
+                EV-Rental offers various electric vehicle types:
               </p>
               <ul className='list-disc pl-6 space-y-2'>
                 <li>Sedan, SUV, Hatchback, Coupe</li>
-                <li>Dung lượng pin và khả năng di chuyển khác nhau</li>
-                <li>
-                  Tính khả dụng của xe phụ thuộc vào nhu cầu và lịch bảo trì
-                </li>
+                <li>Different battery capacities and ranges</li>
+                <li>Availability varies based on demand and maintenance schedules</li>
               </ul>
               <p>
-                <strong>5.2 Yêu cầu thuê xe</strong>
+                <strong>5.2 Rental Requirements</strong>
                 <br />
-                Để thuê xe, người dùng phải:
+                To rent a vehicle, users must:
               </p>
               <ul className='list-disc pl-6 space-y-2'>
-                <li>Có tài khoản đang hoạt động, đã xác minh</li>
-                <li>Có bằng lái xe hợp lệ</li>
-                <li>Đáp ứng yêu cầu tuổi tối thiểu (21+)</li>
-                <li>Cung cấp phương thức thanh toán hợp lệ</li>
-                <li>Hoàn thành kiểm tra xe trước khi sử dụng</li>
+                <li>Have an active, verified account</li>
+                <li>Hold a valid driver’s license</li>
+                <li>Meet the minimum age requirement (21+)</li>
+                <li>Provide a valid payment method</li>
+                <li>Complete vehicle inspection before use</li>
               </ul>
             </AccordionSection>
 
             {/* Booking and Payment */}
             <AccordionSection
               id='booking-payment'
-              title='Chính sách Đặt xe và Thanh toán'
+              title='Booking and Payment Policy'
               sectionNumber={6}
               isExpanded={expandedSections['booking-payment']}
               onToggle={toggleSection}
             >
               <p>
-                <strong>6.1 Quy trình đặt xe</strong>
+                <strong>6.1 Booking Process</strong>
                 <br />
-                Đặt chỗ có thể được thực hiện qua nền tảng trước tối đa 30 ngày.
-                Đặt chỗ yêu cầu thanh toán ngay lập tức hoặc ủy quyền thanh toán
-                hợp lệ. Hủy bỏ phải được thực hiện ít nhất 2 giờ trước giờ nhận
-                xe. Không xuất hiện sẽ dẫn đến phí đầy đủ và có thể bị phạt tài
-                khoản.
+                Bookings can be made through the platform up to 30 days in advance.
+                Bookings require immediate payment or valid payment authorization.
+                Cancellations must be made at least 2 hours before the pickup time.
+                No-shows will result in full charges and may incur account penalties.
               </p>
               <p>
-                <strong>6.2 Phương thức thanh toán</strong>
+                <strong>6.2 Payment Methods</strong>
                 <br />
-                Các phương thức thanh toán được chấp nhận bao gồm:
+                Accepted payment methods include:
               </p>
               <ul className='list-disc pl-6 space-y-2'>
-                <li>Thẻ tín dụng (Visa, MasterCard, American Express)</li>
-                <li>Thẻ ghi nợ</li>
-                <li>Chuyển khoản ngân hàng</li>
-                <li>Ví điện tử (nếu có)</li>
-                <li>Thanh toán bằng tiền mặt tại một số địa điểm</li>
+                <li>Credit cards (Visa, MasterCard, American Express)</li>
+                <li>Debit cards</li>
+                <li>Bank transfer</li>
+                <li>E-wallets (where available)</li>
+                <li>Cash payments at select locations</li>
               </ul>
             </AccordionSection>
 
             {/* Out of Area Policy */}
             <AccordionSection
               id='out-of-area'
-              title='Chính sách Ngoài Khu vực của EV-Rental'
+              title='EV-Rental Out-of-Area Policy'
               sectionNumber={7}
               isExpanded={expandedSections['out-of-area']}
               onToggle={toggleSection}
             >
               <p>
-                Việc sử dụng xe chủ yếu dành cho Khu vực Đô thị Thành phố Hồ Chí
-                Minh. Việc di chuyển ra ngoài khu vực này được phép nhưng mang
-                theo rủi ro, trách nhiệm và phí bổ sung.
+                Vehicle usage is primarily intended for the Ho Chi Minh City Metropolitan Area.
+                Travel outside this area is permitted but carries additional risks,
+                responsibilities, and fees.
               </p>
               <p>
-                <strong>7.1 Yêu cầu Di chuyển</strong>
+                <strong>7.1 Travel Requirements</strong>
                 <br />
-                Thông báo trước cho EV-Rental là bắt buộc cho bất kỳ chuyến đi
-                nào ra ngoài Thành phố Hồ Chí Minh. Có thể yêu cầu tiền đặt cọc
-                bổ sung. Khách hàng thừa nhận và chịu trách nhiệm cá nhân và
-                trách nhiệm pháp lý tăng lên cho an toàn và bảo mật xe.
+                Advance notice to EV-Rental is required for any trip outside Ho Chi Minh City.
+                An additional deposit may be required. Customers acknowledge and assume
+                increased personal and legal responsibility for vehicle safety and security.
               </p>
               <p>
-                <strong>7.2 Hỗ trợ Khẩn cấp và Bên đường</strong>
+                <strong>7.2 Emergency and Roadside Assistance</strong>
                 <br />
-                Hỗ trợ khẩn cấp và hỗ trợ bên đường có thể bị hạn chế hoặc không
-                có sẵn ngoài khu vực dịch vụ được chỉ định. Phí bổ sung sẽ áp
-                dụng cho bất kỳ sự cố, phục hồi hoặc dịch vụ nào được yêu cầu
-                ngoài Thành phố Hồ Chí Minh. Phí phụ trội phản ứng khẩn cấp:
-                3.000.000 VNĐ cho các sự cố ngoài TP.HCM.
+                Emergency and roadside assistance may be limited or unavailable outside
+                designated service areas. Additional fees apply for incidents, recovery,
+                or services required outside Ho Chi Minh City. Emergency response surcharge:
+                VND 3,000,000 for incidents outside HCMC.
               </p>
             </AccordionSection>
 
             {/* Station Management */}
             <AccordionSection
               id='station-management'
-              title='Quản lý Trạm và Vận hành'
+              title='Station Management and Operations'
               sectionNumber={8}
               isExpanded={expandedSections['station-management']}
               onToggle={toggleSection}
             >
               <p>
-                <strong>8.1 Vị trí Trạm và Giờ hoạt động</strong>
+                <strong>8.1 Station Locations and Operating Hours</strong>
                 <br />
-                Các trạm được đặt chiến lược trong khu vực dịch vụ Thành phố Hồ
-                Chí Minh. Giờ hoạt động khác nhau theo địa điểm (24/7 hoặc giờ
-                hạn chế). Cập nhật trạng thái trạm có sẵn theo thời gian thực.
-                Thời gian bảo trì có thể ảnh hưởng đến tính khả dụng.
+                Stations are strategically located within the Ho Chi Minh City service area.
+                Operating hours vary by location (24/7 or limited hours). Real-time station
+                status updates are available. Maintenance windows may affect availability.
               </p>
               <p>
-                <strong>8.2 Nhận và Trả xe</strong>
+                <strong>8.2 Pickup and Return</strong>
                 <br />
-                Xe phải được nhận và trả tại các trạm được chỉ định trong Thành
-                phố Hồ Chí Minh. Yêu cầu trả cùng trạm trừ khi có thỏa thuận
-                khác. Trả trạm khác phải chịu phí bổ sung. Nhận/trả ngoài giờ có
-                sẵn tại một số địa điểm.
+                Vehicles must be picked up and returned at designated stations in Ho Chi Minh City.
+                Same-station return is required unless otherwise agreed. Cross-station returns
+                incur additional fees. After-hours pickup/return is available at select locations.
               </p>
             </AccordionSection>
 
             {/* Staff Management */}
             <AccordionSection
               id='staff-management'
-              title='Quản lý Nhân viên và Ủy quyền'
+              title='Staff Management and Authorization'
               sectionNumber={9}
               isExpanded={expandedSections['staff-management']}
               onToggle={toggleSection}
             >
               <p>
-                <strong>9.1 Vai trò và Trách nhiệm của Nhân viên</strong>
+                <strong>9.1 Staff Roles and Responsibilities</strong>
                 <br />
-                <strong>Nhân viên Admin:</strong> Truy cập hệ thống đầy đủ và
-                quản lý người dùng, quản lý trạm và xe, thực thi chính sách và
-                giải quyết tranh chấp, giám sát tài chính và báo cáo.
+                <strong>Admin Staff:</strong> Full system access; user management; station and vehicle management;
+                policy enforcement and dispute resolution; financial oversight and reporting.
               </p>
               <p>
-                <strong>Nhân viên Trạm:</strong> Kiểm tra xe và phối hợp bảo
-                trì, hỗ trợ và hỗ trợ khách hàng, quản lý vận hành trạm, báo cáo
-                sự cố và giải quyết.
+                <strong>Station Staff:</strong> Vehicle inspection and maintenance coordination; customer support and assistance;
+                station operations management; incident reporting and resolution.
               </p>
             </AccordionSection>
 
             {/* Vehicle Usage */}
             <AccordionSection
               id='vehicle-usage'
-              title='Hướng dẫn Sử dụng và An toàn Xe'
+              title='Vehicle Usage and Safety Guidelines'
               sectionNumber={10}
               isExpanded={expandedSections['vehicle-usage']}
               onToggle={toggleSection}
             >
               <p>
-                <strong>10.1 Yêu cầu Tài xế</strong>
+                <strong>10.1 Driver Requirements</strong>
                 <br />
-                Bằng lái xe hợp lệ được yêu cầu mọi lúc. Hạn chế tuổi: tối thiểu
-                21 tuổi. Tài xế quốc tế phải có tài liệu phù hợp. Sử dụng thương
-                mại yêu cầu ủy quyền đặc biệt.
+                A valid driver’s license is required at all times. Age restriction: minimum 21 years.
+                International drivers must hold appropriate documentation. Commercial use requires special authorization.
               </p>
               <p>
-                <strong>10.2 Vận hành Xe</strong>
+                <strong>10.2 Vehicle Operation</strong>
                 <br />
-                Số lượng hành khách tối đa theo quy định cho mỗi xe. Không hút
-                thuốc, thú cưng hoặc chất cấm. Dây an toàn bắt buộc cho tất cả
-                hành khách. Sử dụng điện thoại di động chỉ với thiết bị rảnh
-                tay.
+                Maximum passenger limits apply per vehicle. No smoking, pets, or prohibited substances.
+                Seat belts are mandatory for all passengers. Mobile phone use is permitted only with hands-free devices.
               </p>
             </AccordionSection>
 
             {/* Liability and Insurance */}
             <AccordionSection
               id='liability-insurance'
-              title='Trách nhiệm và Bảo hiểm'
+              title='Liability and Insurance'
               sectionNumber={11}
               isExpanded={expandedSections['liability-insurance']}
               onToggle={toggleSection}
             >
               <p>
-                <strong>11.1 Bảo hiểm</strong>
+                <strong>11.1 Insurance</strong>
                 <br />
-                Tất cả xe thuê bao gồm bảo hiểm toàn diện trong Thành phố Hồ Chí
-                Minh: Bảo hiểm toàn diện đầy đủ, bảo vệ trách nhiệm bên thứ ba,
-                bảo vệ trộm cắp và phá hoại, hỗ trợ khẩn cấp bên đường, dịch vụ
-                phục hồi xe, hỗ trợ phản ứng tai nạn.
+                All rentals include comprehensive insurance within Ho Chi Minh City:
+                Full comprehensive coverage; third-party liability protection; theft and vandalism coverage;
+                roadside emergency assistance; vehicle recovery services; accident response support.
               </p>
               <p>
-                <strong>11.2 Trách nhiệm Người dùng</strong>
+                <strong>11.2 User Responsibilities</strong>
                 <br />
-                Người dùng chịu trách nhiệm cho: Hư hỏng ngoài hao mòn bình
-                thường, vi phạm giao thông và phí phạt phát sinh trong thời gian
-                thuê, trộm cắp do sơ suất hoặc bảo mật không đúng cách, số lượng
-                hành khách vượt quá sức chứa xe.
+                Users are responsible for: Damage beyond normal wear and tear; traffic violations and fines incurred
+                during the rental period; theft due to negligence or improper security; exceeding vehicle passenger capacity.
               </p>
             </AccordionSection>
 
             {/* Dispute Resolution */}
             <AccordionSection
               id='dispute-resolution'
-              title='Giải quyết Tranh chấp'
+              title='Dispute Resolution'
               sectionNumber={12}
               isExpanded={expandedSections['dispute-resolution']}
               onToggle={toggleSection}
             >
               <p>
-                <strong>12.1 Khiếu nại Khách hàng</strong>
+                <strong>12.1 Customer Complaints</strong>
                 <br />
-                Khiếu nại nên được gửi: Qua hệ thống hỗ trợ của nền tảng, qua
-                email đến support@ev-rental.com, qua điện thoại trong giờ làm
-                việc, bằng văn bản đến trung tâm dịch vụ khách hàng của chúng
-                tôi.
+                Complaints should be submitted via: the platform support system; email to support@ev-rental.com;
+                phone during business hours; or in writing to the customer service center.
               </p>
               <p>
-                <strong>12.2 Quy trình Giải quyết</strong>
+                <strong>12.2 Resolution Process</strong>
                 <br />
-                Phản hồi ban đầu trong vòng 24 giờ, điều tra và tìm hiểu sự
-                thật, đề xuất giải pháp trong vòng 5 ngày làm việc, thực hiện
-                giải pháp đã thỏa thuận, theo dõi để đảm bảo hài lòng.
+                Initial response within 24 hours; investigation and fact-finding; proposed resolution within
+                5 business days; implementation of the agreed solution; follow-up to ensure satisfaction.
               </p>
             </AccordionSection>
 
             {/* Violation and Enforcement */}
             <AccordionSection
               id='violation-enforcement'
-              title='Vi phạm và Thực thi'
+              title='Violations and Enforcement'
               sectionNumber={13}
               isExpanded={expandedSections['violation-enforcement']}
               onToggle={toggleSection}
             >
               <p>
-                <strong>13.1 Phân loại Vi phạm</strong>
+                <strong>13.1 Violation Classification</strong>
                 <br />
-                <strong>Vi phạm Nhẹ:</strong> Trả muộn (lên đến 1 giờ), vấn đề
-                vệ sinh xe nhỏ, không báo cáo hư hỏng nhỏ.
+                <strong>Minor Violations:</strong> Late returns (up to 1 hour); minor vehicle cleanliness issues;
+                failure to report minor damage.
               </p>
               <p>
-                <strong>Vi phạm Nặng:</strong> Hư hỏng tài sản đáng kể, sử dụng
-                xe bất hợp pháp, gian lận hoặc cung cấp thông tin sai, vi phạm
-                an toàn.
+                <strong>Serious Violations:</strong> Significant property damage; illegal vehicle use; fraud or
+                providing false information; safety violations.
               </p>
               <p>
-                <strong>Vi phạm Nghiêm trọng:</strong> Hoạt động tội phạm sử
-                dụng xe, vi phạm nặng lặp lại, hành vi đe dọa đối với nhân viên,
-                hư hỏng hoặc trộm cắp có chủ ý.
+                <strong>Severe Violations:</strong> Criminal activities involving the vehicle; repeated serious violations;
+                threatening behavior toward staff; intentional damage or theft.
               </p>
             </AccordionSection>
 
             {/* General Terms */}
             <AccordionSection
               id='general-terms'
-              title='Điều khoản Chung'
+              title='General Terms'
               sectionNumber={14}
               isExpanded={expandedSections['general-terms']}
               onToggle={toggleSection}
             >
               <p>
-                <strong>14.1 Cập nhật Chính sách</strong>
+                <strong>14.1 Policy Updates</strong>
                 <br />
-                EV-Rental có quyền cập nhật các chính sách này bất cứ lúc nào.
-                Người dùng sẽ được thông báo về những thay đổi đáng kể thông
-                qua: Thông báo nền tảng, thông báo email, cập nhật trang web,
-                tin nhắn trong ứng dụng.
+                EV-Rental reserves the right to update these policies at any time.
+                Users will be notified of significant changes via: platform notifications; email notices;
+                website updates; and in-app messages.
               </p>
               <p>
-                <strong>14.3 Thông tin Liên hệ</strong>
+                <strong>14.3 Contact Information</strong>
                 <br />
-                Dịch vụ Khách hàng EV-Rental
+                EV-Rental Customer Service
                 <br />
                 Email: support@ev-rental.com
                 <br />
-                Điện thoại: 1900 EVRENTAL (1900 387 3682)
+                Phone: 1900 EVRENTAL (1900 387 3682)
                 <br />
                 Website: www.ev-rental.com
                 <br />
-                Địa chỉ: 100 Lê Lợi, Bến Nghé, Quận 1, Thành phố Hồ Chí Minh,
-                Việt Nam
+                Address: 100 Le Loi, Ben Nghe, District 1, Ho Chi Minh City,
+                Vietnam
               </p>
             </AccordionSection>
           </div>
