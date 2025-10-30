@@ -10,6 +10,7 @@ import { toast } from '../../shared/lib/toast';
 import { paymentService } from '../services/paymentService';
 
 import { useTranslation } from 'react-i18next';
+import { bookingService } from '../../booking/services/bookingService';
 
 export default function PaymentSuccessPage() {
   const [searchParams] = useSearchParams();
@@ -24,6 +25,7 @@ export default function PaymentSuccessPage() {
   const [isChecking, setIsChecking] = useState(true);
   const [paymentType, setPaymentType] = useState(paymentTypeParam || null);
   const { t } = useTranslation();
+  const [completionTriggered, setCompletionTriggered] = useState(false);
 
   const checkDepositAndFetchBooking = async () => {
     try {
@@ -90,6 +92,55 @@ export default function PaymentSuccessPage() {
     checkDepositAndFetchBooking();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingId, paymentId, paymentTypeParam]);
+
+  // Auto-complete booking after successful RENTAL_FEE payment (staff return flow)
+  useEffect(() => {
+    const shouldAttempt = paymentType === 'RENTAL_FEE' && !!booking && !completionTriggered;
+    if (!shouldAttempt) return;
+
+    let payload = null;
+    let storedBookingId = null;
+    let flag = null;
+    try {
+      flag = localStorage.getItem('completeAfterPay');
+      storedBookingId = localStorage.getItem('completionBookingId');
+      const raw = localStorage.getItem('completionPayload');
+      payload = raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      // Ignore localStorage errors
+    }
+
+    if (flag !== '1' || !storedBookingId || storedBookingId !== bookingId || !payload) {
+      return;
+    }
+
+    const doComplete = async () => {
+      try {
+        setCompletionTriggered(true);
+        const res = await bookingService.completeBooking(bookingId, payload);
+        const updated = res?.booking || null;
+        if (updated) {
+          setBooking(updated);
+          toast.success(t('staffReturnCar.toast.completeSuccess'));
+        } else {
+          toast.success(t('staffReturnCar.toast.completeSuccess'));
+        }
+      } catch (err) {
+        console.error('Auto complete after payment failed:', err);
+        // Optional: show a mild warning; staff can complete from dashboard
+        toast.error(t('staffReturnCar.toast.completeFail'));
+      } finally {
+        try {
+          localStorage.removeItem('completeAfterPay');
+          localStorage.removeItem('completionBookingId');
+          localStorage.removeItem('completionPayload');
+        } catch {}
+      }
+    };
+
+    doComplete();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paymentType, booking, bookingId, completionTriggered]);
 
   // Remove confirm complete handler
   // const handleConfirmComplete = async () => { /* removed */ };

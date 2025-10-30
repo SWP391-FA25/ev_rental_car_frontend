@@ -742,6 +742,23 @@ export default function ReturnCar() {
       );
 
       if (response?.paymentUrl) {
+        // Persist completion context so we can auto-complete after successful payment
+        try {
+          localStorage.setItem('completeAfterPay', '1');
+          localStorage.setItem(
+            'completionBookingId',
+            String(returnSummary.bookingId)
+          );
+          if (pendingCompletionPayload) {
+            localStorage.setItem(
+              'completionPayload',
+              JSON.stringify(pendingCompletionPayload)
+            );
+          }
+        } catch (e) {
+          console.warn('localStorage unavailable:', e);
+        }
+
         // Redirect to PayOS payment page
         window.location.href = response.paymentUrl;
       }
