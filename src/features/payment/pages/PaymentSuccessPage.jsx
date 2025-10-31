@@ -44,20 +44,40 @@ export default function PaymentSuccessPage() {
       }
 
       // If paymentId is available, also check payment status
-      if (paymentId) {
+      let resolvedType = paymentTypeParam || null;
+      if (!resolvedType) {
+        // Try localStorage context first (frontend-only classification)
+        try {
+          const lastType = localStorage.getItem('lastPaymentType');
+          const lastBooking = localStorage.getItem('lastBookingId');
+          const lastPid = localStorage.getItem('lastPaymentId');
+          if (
+            lastType &&
+            lastBooking &&
+            String(lastBooking) === String(bookingId) &&
+            (!paymentId || String(lastPid) === String(paymentId))
+          ) {
+            resolvedType = lastType;
+          }
+        } catch {}
+      }
+
+      if (paymentId && !resolvedType) {
         try {
           const statusRes = await paymentService.getPaymentStatus(paymentId);
-          setPaymentType(
-            statusRes?.data?.paymentType || paymentTypeParam || null
-          );
+          resolvedType = statusRes?.data?.paymentType || null;
         } catch (paymentError) {
           console.error('Failed to check payment status:', paymentError);
-          // Fallback to query param
-          if (paymentTypeParam) {
-            setPaymentType(paymentTypeParam);
-          }
         }
       }
+
+      setPaymentType(resolvedType || paymentTypeParam || null);
+      // Cleanup persisted context to avoid stale data
+      try {
+        localStorage.removeItem('lastPaymentType');
+        localStorage.removeItem('lastBookingId');
+        localStorage.removeItem('lastPaymentId');
+      } catch {}
     } catch (error) {
       console.error('Failed to check deposit status:', error);
 
