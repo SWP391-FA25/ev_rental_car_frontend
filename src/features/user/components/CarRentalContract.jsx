@@ -1,19 +1,47 @@
 'use client';
 
-import { useState, useEffect, useCallback } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../shared/components/ui/card"
-import { Button } from "../../shared/components/ui/button"
-import { Checkbox } from "../../shared/components/ui/checkbox"
-import { CheckCircle2, AlertCircle, FileText, Upload, Check } from "lucide-react"
-import { endpoints } from "../../shared/lib/endpoints"
-import { toast as notify } from '../../shared/lib/toast'
-import { apiClient } from '../../shared/lib/apiClient'
-import { useAuth } from '../../../app/providers/AuthProvider'
-import { Input } from "../../shared/components/ui/input"
-import { Label } from "../../shared/components/ui/label"
-import { Textarea } from "../../shared/components/ui/textarea"
+import { useState, useEffect, useCallback } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../shared/components/ui/card";
+import { Button } from "../../shared/components/ui/button";
+import { Checkbox } from "../../shared/components/ui/checkbox";
+import { CheckCircle2, AlertCircle, FileText, Upload, Check } from "lucide-react";
+import { endpoints } from "../../shared/lib/endpoints";
+import { toast as notify } from '../../shared/lib/toast';
+import { apiClient } from '../../shared/lib/apiClient';
+import { useAuth } from '../../../app/providers/AuthProvider';
+import { Input } from "../../shared/components/ui/input";
+import { Label } from "../../shared/components/ui/label";
+import { Textarea } from "../../shared/components/ui/textarea";
 
 export default function CarRentalContract({ bookingId, onStatusChange }) {
+  // Inspection state
+  const [inspection, setInspection] = useState(null);
+  const [loadingInspection, setLoadingInspection] = useState(false);
+  const [inspectionError, setInspectionError] = useState(null);
+
+  // Fetch inspection by bookingId
+  const fetchInspection = useCallback(async (bookingId) => {
+    if (!bookingId) return;
+    setLoadingInspection(true);
+    setInspectionError(null);
+    try {
+      // Giả sử API trả về { success, data: [inspection] } hoặc { success, data: inspection }
+      const res = await apiClient.get(`/api/inspections?bookingId=${bookingId}`);
+      const json = res?.data;
+      let ins = null;
+      if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+        ins = json.data[0];
+      } else if (json.success && json.data && typeof json.data === 'object') {
+        ins = json.data;
+      }
+      setInspection(ins);
+    } catch (err) {
+      setInspectionError('Không thể tải biên bản kiểm tra.');
+      setInspection(null);
+    } finally {
+      setLoadingInspection(false);
+    }
+  }, []);
   const { user } = useAuth()
   // local helper to emulate previous useToast({title,description,variant})
   const showToast = ({ title = '', description = '', variant = '' } = {}) => {
@@ -120,13 +148,15 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
 
       // Fetch contracts after getting booking
       await fetchContracts(id);
+      // Fetch inspection after getting booking
+      await fetchInspection(id);
     } catch (err) {
       console.error("fetchBookingDetails:", err);
       setError("Không thể tải thông tin booking. Vui lòng thử lại sau.");
     } finally {
       setLoadingBookings(false);
     }
-  }, [fetchContracts]);
+  }, [fetchContracts, fetchInspection]);
 
   // Fetch bookings for current user
   const fetchBookings = useCallback(async () => {
@@ -406,6 +436,110 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                 </Card>
               ))}
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Inspection Card Section */}
+      {selectedBooking && (
+        <Card className="border-slate-200 shadow-sm">
+          <CardHeader className="bg-white border-b border-slate-200">
+            <CardTitle className="text-slate-900">Biên Bản Kiểm Tra Xe</CardTitle>
+            <CardDescription>Thông tin biên bản kiểm tra xe cho booking này</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            {loadingInspection && <div className="text-sm text-slate-500">Đang tải biên bản kiểm tra...</div>}
+            {inspectionError && <div className="text-sm text-red-600">{inspectionError}</div>}
+            {!loadingInspection && !inspection && !inspectionError && (
+              <div className="text-center py-8 border-2 border-dashed border-slate-200 rounded-lg">
+                <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <p className="text-slate-500">Chưa có biên bản kiểm tra cho booking này</p>
+              </div>
+            )}
+            {inspection && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 text-sm text-slate-600">
+                  <div>
+                    <p className="text-slate-500">Loại kiểm tra</p>
+                    <p className="font-medium text-slate-900">{inspection.inspectionType || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Mức pin</p>
+                    <p className="font-medium text-slate-900">{inspection.batteryLevel ?? 'N/A'}%</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Tình trạng ngoại thất</p>
+                    <p className="font-medium text-slate-900">{inspection.exteriorCondition || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Tình trạng nội thất</p>
+                    <p className="font-medium text-slate-900">{inspection.interiorCondition || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Số km</p>
+                    <p className="font-medium text-slate-900">{inspection.mileage ?? 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Tình trạng lốp</p>
+                    <p className="font-medium text-slate-900">{inspection.tireCondition || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Phụ kiện đi kèm</p>
+                    <p className="font-medium text-slate-900">{Array.isArray(inspection.accessories) && inspection.accessories.length > 0 ? inspection.accessories.join(', ') : 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Ghi chú hư hỏng</p>
+                    <p className="font-medium text-slate-900">{inspection.damageNotes || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Ghi chú khác</p>
+                    <p className="font-medium text-slate-900">{inspection.notes || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Trạng thái hoàn thành</p>
+                    <p className="font-medium text-slate-900">{inspection.isCompleted ? 'Đã hoàn thành' : 'Chưa hoàn thành'}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Đã xác thực tài liệu</p>
+                    <p className="font-medium text-slate-900">{inspection.documentVerified ? 'Đã xác thực' : 'Chưa xác thực'}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Ngày tạo</p>
+                    <p className="font-medium text-slate-900">{inspection.createdAt ? new Date(inspection.createdAt).toLocaleString('vi-VN') : 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Ngày cập nhật</p>
+                    <p className="font-medium text-slate-900">{inspection.updatedAt ? new Date(inspection.updatedAt).toLocaleString('vi-VN') : 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Nhân viên kiểm tra</p>
+                    <p className="font-medium text-slate-900">{inspection.staffName || inspection.staff?.name || 'N/A'}</p>
+                  </div>
+                </div>
+                {inspection.images && inspection.images.length > 0 && (
+                  <div>
+                    <p className="text-slate-500 mb-2">Hình ảnh kiểm tra:</p>
+                    <div className="flex flex-wrap gap-3">
+                      {inspection.images.map((img, idx) => (
+                        <img key={idx} src={img.url || img.imageUrl || img} alt={`inspection-img-${idx}`} className="w-32 h-24 object-cover rounded border" />
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {inspection.imageUrl && (
+                  <div>
+                    <p className="text-slate-500 mb-2">Ảnh chính:</p>
+                    <img src={inspection.imageUrl} alt="inspection-main" className="w-48 h-32 object-cover rounded border" />
+                  </div>
+                )}
+                {inspection.thumbnailUrl && (
+                  <div>
+                    <p className="text-slate-500 mb-2">Thumbnail:</p>
+                    <img src={inspection.thumbnailUrl} alt="inspection-thumbnail" className="w-32 h-20 object-cover rounded border" />
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
