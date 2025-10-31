@@ -1,4 +1,4 @@
-import { MapPinIcon } from 'lucide-react';
+import { MapPinIcon, Sidebar } from 'lucide-react';
 import { useState } from 'react';
 import { StationMapModal } from './StationMapModal';
 import { Button } from './ui/button';
@@ -20,7 +20,6 @@ export function LocationDisplay({ location, stationName }) {
       const [lng, lat] = locationData.coordinates;
       return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
     }
-
     return 'Invalid location data';
   };
 

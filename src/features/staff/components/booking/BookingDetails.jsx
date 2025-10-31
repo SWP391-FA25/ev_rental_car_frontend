@@ -16,6 +16,13 @@ import { apiClient } from '../../../shared/lib/apiClient';
 import { endpoints } from '../../../shared/lib/endpoints';
 import { env } from '../../../shared/lib/env';
 
+const Row = ({ label, value, valueClass = 'text-gray-900' }) => (
+  <div className='flex justify-between px-4 py-2 text-gray-700'>
+    <span>{label}</span>
+    <span className={`font-medium ${valueClass}`}>{value}</span>
+  </div>
+);
+
 export function BookingDetails({ open, onOpenChange, booking }) {
   const { t } = useTranslation();
   // State for inspections (hooks must be unconditional)
@@ -24,12 +31,16 @@ export function BookingDetails({ open, onOpenChange, booking }) {
   const [inspectionsError, setInspectionsError] = useState('');
 
   // Helper to normalize and make absolute URLs (for evidence, images, etc.)
-  const makeAbsoluteUrl = (url) => {
+  const makeAbsoluteUrl = url => {
     if (!url) return null;
     const s = String(url).trim();
     if (!s) return null;
     if (/^https?:\/\//i.test(s) || s.startsWith('data:')) return s;
-    const path = s.startsWith('/') ? s : (s.startsWith('uploads') ? `/${s}` : null);
+    const path = s.startsWith('/')
+      ? s
+      : s.startsWith('uploads')
+      ? `/${s}`
+      : null;
     if (!path) return null;
     const base = env.apiBaseUrl.replace(/\/+$/, '');
     return `${base}${path}`;
@@ -58,7 +69,7 @@ export function BookingDetails({ open, onOpenChange, booking }) {
           (a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0)
         );
         const latest = sorted[0] || null;
-        
+
         // Debug log để kiểm tra dữ liệu inspection
         console.log('=== INSPECTION DEBUG ===');
         console.log('Booking ID:', booking.id);
@@ -68,10 +79,13 @@ export function BookingDetails({ open, onOpenChange, booking }) {
         if (latest) {
           console.log('Latest inspection images field:', latest.images);
           console.log('Latest inspection imageUrl field:', latest.imageUrl);
-          console.log('Latest inspection thumbnailUrl field:', latest.thumbnailUrl);
+          console.log(
+            'Latest inspection thumbnailUrl field:',
+            latest.thumbnailUrl
+          );
         }
         console.log('========================');
-        
+
         setInspections(latest ? [latest] : []);
       } catch (err) {
         setInspectionsError(
@@ -288,7 +302,9 @@ export function BookingDetails({ open, onOpenChange, booking }) {
           {/* Booking Notes */}
           {booking.notes && (
             <div className='space-y-4'>
-              <h3 className='text-lg font-semibold'>{t('booking.details.notes.title')}</h3>
+              <h3 className='text-lg font-semibold'>
+                {t('booking.details.notes.title')}
+              </h3>
               <div className='p-3 border rounded-md bg-muted/50'>
                 {booking.notes}
               </div>
@@ -310,360 +326,461 @@ export function BookingDetails({ open, onOpenChange, booking }) {
 
             {!loadingInspections && inspectionsError && (
               <div className='p-2 border rounded-md bg-red-50 text-red-600 min-h-[40px] flex items-center'>
-                {t('booking.details.inspections.loadFailed')}: {inspectionsError}
+                {t('booking.details.inspections.loadFailed')}:{' '}
+                {inspectionsError}
               </div>
             )}
 
-            {!loadingInspections && !inspectionsError && inspections.length === 0 && (
-              <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
-                {t('booking.details.inspections.empty')}
-              </div>
-            )}
+            {!loadingInspections &&
+              !inspectionsError &&
+              inspections.length === 0 && (
+                <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
+                  {t('booking.details.inspections.empty')}
+                </div>
+              )}
 
-            {!loadingInspections && !inspectionsError && inspections.length > 0 && (
-              <div className='space-y-3'>
-                {inspections.map(item => {
-                  const type = item?.inspectionType || item?.type || '';
-                  const statusText = item?.isCompleted
-                    ? t('booking.details.inspections.status.completed')
-                    : t('booking.details.inspections.status.pending');
-                  const odometer = item?.mileage ?? item?.odometer ?? null;
-                  const stationName =
-                    item?.station?.name || item?.stationName || booking?.station?.name || '';
-                  const staffName = item?.staff?.name || item?.staffName || '';
-                  const time = item?.createdAt || item?.time || item?.updatedAt || '';
-                  const damageNotes =
-                    item?.damageNotes || item?.incidentNotes || item?.notes || '';
-                  const battery = item?.batteryLevel ?? null;
-                  const exteriorCondition = item?.exteriorCondition || '';
-                  const interiorCondition = item?.interiorCondition || '';
-                  const tireCondition = item?.tireCondition || '';
-                  // Robustly normalize image URLs and make absolute when needed
-                  const makeAbsoluteUrl = (url) => {
-                    if (!url) return null;
-                    const s = String(url).trim();
-                    if (!s) return null;
-                    if (/^https?:\/\//i.test(s) || s.startsWith('data:')) return s;
-                    // Accept only paths that look like files (starts with '/' or 'uploads')
-                    const path = s.startsWith('/') ? s : (s.startsWith('uploads') ? `/${s}` : null);
-                    if (!path) return null;
-                    const base = env.apiBaseUrl.replace(/\/+$/, '');
-                    return `${base}${path}`;
-                  };
-                  
-                  // Collect all possible image URLs from different fields
-                  const allImageCandidates = [];
-                  
-                  // 1) From images array (Json field) — prefer original URL over thumbnail
-                  const rawImages = item?.images;
-                  if (Array.isArray(rawImages)) {
-                    rawImages.forEach((img) => {
-                      let candidate = null;
-                      if (typeof img === 'string') {
-                        candidate = img;
-                      } else if (img && typeof img === 'object') {
-                        candidate = img.url || img.data?.url || img.path || img.filePath || img.imageUrl || null;
-                        // Only fall back to thumbnail when no original URL exists
-                        if (!candidate) {
-                          candidate = img.thumbnailUrl || img.data?.thumbnailUrl || null;
+            {!loadingInspections &&
+              !inspectionsError &&
+              inspections.length > 0 && (
+                <div className='space-y-3'>
+                  {inspections.map(item => {
+                    const type = item?.inspectionType || item?.type || '';
+                    const statusText = item?.isCompleted
+                      ? t('booking.details.inspections.status.completed')
+                      : t('booking.details.inspections.status.pending');
+                    const odometer = item?.mileage ?? item?.odometer ?? null;
+                    const stationName =
+                      item?.station?.name ||
+                      item?.stationName ||
+                      booking?.station?.name ||
+                      '';
+                    const staffName =
+                      item?.staff?.name || item?.staffName || '';
+                    const time =
+                      item?.createdAt || item?.time || item?.updatedAt || '';
+                    const damageNotes =
+                      item?.damageNotes ||
+                      item?.incidentNotes ||
+                      item?.notes ||
+                      '';
+                    const battery = item?.batteryLevel ?? null;
+                    const exteriorCondition = item?.exteriorCondition || '';
+                    const interiorCondition = item?.interiorCondition || '';
+                    const tireCondition = item?.tireCondition || '';
+                    // Robustly normalize image URLs and make absolute when needed
+                    const makeAbsoluteUrl = url => {
+                      if (!url) return null;
+                      const s = String(url).trim();
+                      if (!s) return null;
+                      if (/^https?:\/\//i.test(s) || s.startsWith('data:'))
+                        return s;
+                      // Accept only paths that look like files (starts with '/' or 'uploads')
+                      const path = s.startsWith('/')
+                        ? s
+                        : s.startsWith('uploads')
+                        ? `/${s}`
+                        : null;
+                      if (!path) return null;
+                      const base = env.apiBaseUrl.replace(/\/+$/, '');
+                      return `${base}${path}`;
+                    };
+
+                    // Collect all possible image URLs from different fields
+                    const allImageCandidates = [];
+
+                    // 1) From images array (Json field) — prefer original URL over thumbnail
+                    const rawImages = item?.images;
+                    if (Array.isArray(rawImages)) {
+                      rawImages.forEach(img => {
+                        let candidate = null;
+                        if (typeof img === 'string') {
+                          candidate = img;
+                        } else if (img && typeof img === 'object') {
+                          candidate =
+                            img.url ||
+                            img.data?.url ||
+                            img.path ||
+                            img.filePath ||
+                            img.imageUrl ||
+                            null;
+                          // Only fall back to thumbnail when no original URL exists
+                          if (!candidate) {
+                            candidate =
+                              img.thumbnailUrl ||
+                              img.data?.thumbnailUrl ||
+                              null;
+                          }
                         }
-                      }
-                      if (candidate) allImageCandidates.push(candidate);
-                    });
-                  }
-                  
-                  // 2) From top-level imageUrl (String) — primary
-                  if (item?.imageUrl) {
-                    allImageCandidates.push(item.imageUrl);
-                  } else if (item?.thumbnailUrl) {
-                    // 3) Fallback to top-level thumbnailUrl only when imageUrl is absent
-                    allImageCandidates.push(item.thumbnailUrl);
-                  }
-                  
-                  // Process and deduplicate URLs
-                  const imageUrls = Array.from(
-                    new Set(
-                      allImageCandidates
-                        .map(candidate => makeAbsoluteUrl(candidate))
-                        .filter(Boolean)
-                    )
-                  );
-                  const noIncident = !damageNotes && imageUrls.length === 0 && exteriorCondition === 'GOOD' && interiorCondition === 'GOOD' && tireCondition === 'GOOD';
+                        if (candidate) allImageCandidates.push(candidate);
+                      });
+                    }
 
-                  return (
-                    <div
-                      key={item?.id || `${type}-${time}`}
-                      className='p-3 border rounded-md bg-muted/30'
-                    >
-                      <div className='flex flex-wrap justify-between gap-2'>
-                        <div className='flex items-center gap-2'>
-                          <Badge variant='outline'>
-                            {t('booking.details.inspections.item.id')}#{
-                              (item?.id || '')
-                                .toString()
-                                .substring(0, 8)
-                            }
+                    // 2) From top-level imageUrl (String) — primary
+                    if (item?.imageUrl) {
+                      allImageCandidates.push(item.imageUrl);
+                    } else if (item?.thumbnailUrl) {
+                      // 3) Fallback to top-level thumbnailUrl only when imageUrl is absent
+                      allImageCandidates.push(item.thumbnailUrl);
+                    }
+
+                    // Process and deduplicate URLs
+                    const imageUrls = Array.from(
+                      new Set(
+                        allImageCandidates
+                          .map(candidate => makeAbsoluteUrl(candidate))
+                          .filter(Boolean)
+                      )
+                    );
+                    const noIncident =
+                      !damageNotes &&
+                      imageUrls.length === 0 &&
+                      exteriorCondition === 'GOOD' &&
+                      interiorCondition === 'GOOD' &&
+                      tireCondition === 'GOOD';
+
+                    return (
+                      <div
+                        key={item?.id || `${type}-${time}`}
+                        className='p-3 border rounded-md bg-muted/30'
+                      >
+                        <div className='flex flex-wrap justify-between gap-2'>
+                          <div className='flex items-center gap-2'>
+                            <Badge variant='outline'>
+                              {t('booking.details.inspections.item.id')}#
+                              {(item?.id || '').toString().substring(0, 8)}
+                            </Badge>
+                            <Badge variant='secondary'>
+                              {t('booking.details.inspections.item.type')}
+                              :&nbsp;
+                              {type === 'CHECK_OUT'
+                                ? t('booking.details.inspections.type.checkout')
+                                : type === 'CHECK_IN'
+                                ? t('booking.details.inspections.type.checkin')
+                                : type || t('booking.details.na')}
+                            </Badge>
+                          </div>
+                          <Badge variant='default'>
+                            {t('booking.details.inspections.item.status')}:{' '}
+                            {statusText}
                           </Badge>
-                          <Badge variant='secondary'>
-                            {t('booking.details.inspections.item.type')}:&nbsp;
-                            {type === 'CHECK_OUT'
-                              ? t('booking.details.inspections.type.checkout')
-                              : type === 'CHECK_IN'
-                              ? t('booking.details.inspections.type.checkin')
-                              : type || t('booking.details.na')}
-                          </Badge>
                         </div>
-                        <Badge variant='default'>
-                          {t('booking.details.inspections.item.status')}: {statusText}
-                        </Badge>
-                      </div>
 
-                      <div className='grid grid-cols-1 md:grid-cols-2 gap-3 mt-3'>
-                        <div className='space-y-1'>
-                          <Label>{t('booking.details.inspections.item.odometer')}</Label>
-                          <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
-                            {typeof odometer === 'number' ? odometer : t('booking.details.na')}
-                          </div>
-                        </div>
-                        <div className='space-y-1'>
-                          <Label>{t('booking.details.inspections.item.station')}</Label>
-                          <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
-                            {stationName || t('booking.details.na')}
-                          </div>
-                        </div>
-                        <div className='space-y-1'>
-                          <Label>{t('booking.details.inspections.item.staff')}</Label>
-                          <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
-                            {staffName || t('booking.details.na')}
-                          </div>
-                        </div>
-                        <div className='space-y-1'>
-                          <Label>{t('booking.details.inspections.item.time')}</Label>
-                          <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
-                            {time ? formatDate(time) : t('booking.details.na')}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className='space-y-2 mt-3'>
-                        <Label>{t('booking.details.inspections.item.damageNotes')}</Label>
-                        <div className='p-2 border rounded-md bg-muted/50 min-h-[36px]'>
-                          {damageNotes
-                            ? damageNotes
-                            : (!damageNotes && imageUrls.length === 0 && exteriorCondition === 'GOOD' && interiorCondition === 'GOOD' && tireCondition === 'GOOD'
-                              ? t('booking.details.inspections.item.noIncidentAfterReturn')
-                              : t('booking.details.na'))}
-                        </div>
-                      </div>
-
-                      {/* Inspection summary */}
-                      {(battery !== null || exteriorCondition || interiorCondition || tireCondition) && (
-                        <div className='space-y-2 mt-3'>
-                          <Label>{t('booking.details.inspections.item.checklist')}</Label>
-                          <div className='grid grid-cols-1 md:grid-cols-2 gap-2'>
-                            <div className='p-2 border rounded-md bg-muted/40 flex items-center justify-between'>
-                              <span>{t('booking.details.inspections.item.battery')}</span>
-                              <Badge variant='outline' className={getBatteryBadgeClass(battery)}>
-                                {battery !== null ? `${battery}%` : t('booking.details.na')}
-                              </Badge>
-                            </div>
-                            <div className='p-2 border rounded-md bg-muted/40 flex items-center justify-between'>
-                              <span>{t('booking.details.inspections.item.exteriorCondition')}</span>
-                              <Badge variant='outline' className={getConditionBadgeClass(exteriorCondition)}>
-                                {exteriorCondition || t('booking.details.na')}
-                              </Badge>
-                            </div>
-                            <div className='p-2 border rounded-md bg-muted/40 flex items-center justify-between'>
-                              <span>{t('booking.details.inspections.item.interiorCondition')}</span>
-                              <Badge variant='outline' className={getConditionBadgeClass(interiorCondition)}>
-                                {interiorCondition || t('booking.details.na')}
-                              </Badge>
-                            </div>
-                            <div className='p-2 border rounded-md bg-muted/40 flex items-center justify-between'>
-                              <span>{t('booking.details.inspections.item.tireCondition')}</span>
-                              <Badge variant='outline' className={getConditionBadgeClass(tireCondition)}>
-                                {tireCondition || t('booking.details.na')}
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Inspection images */}
-                      {!noIncident && (
-                        <div className='space-y-2 mt-3'>
-                          <Label>{t('booking.details.inspections.item.images') || 'Inspection Images'}</Label>
-                          {imageUrls.length > 0 ? (
-                            <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2'>
-                              {imageUrls.map((url, idx) => (
-                                <div key={`${item?.id || 'img'}-${idx}`} className='rounded-md overflow-hidden border bg-muted/40'>
-                                  <img
-                                    src={url}
-                                    alt={`inspection-${idx + 1}`}
-                                    className='w-full h-24 object-cover'
-                                    loading='lazy'
-                                    onError={(e) => {
-                                      // Hide broken images gracefully
-                                      e.currentTarget.style.display = 'none';
-                                    }}
-                                  />
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
+                        <div className='grid grid-cols-1 md:grid-cols-2 gap-3 mt-3'>
+                          <div className='space-y-1'>
+                            <Label>
+                              {t('booking.details.inspections.item.odometer')}
+                            </Label>
                             <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
-                              {t('booking.details.na')}
+                              {typeof odometer === 'number'
+                                ? odometer
+                                : t('booking.details.na')}
                             </div>
-                          )}
+                          </div>
+                          <div className='space-y-1'>
+                            <Label>
+                              {t('booking.details.inspections.item.station')}
+                            </Label>
+                            <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
+                              {stationName || t('booking.details.na')}
+                            </div>
+                          </div>
+                          <div className='space-y-1'>
+                            <Label>
+                              {t('booking.details.inspections.item.staff')}
+                            </Label>
+                            <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
+                              {staffName || t('booking.details.na')}
+                            </div>
+                          </div>
+                          <div className='space-y-1'>
+                            <Label>
+                              {t('booking.details.inspections.item.time')}
+                            </Label>
+                            <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
+                              {time
+                                ? formatDate(time)
+                                : t('booking.details.na')}
+                            </div>
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+
+                        <div className='space-y-2 mt-3'>
+                          <Label>
+                            {t('booking.details.inspections.item.damageNotes')}
+                          </Label>
+                          <div className='p-2 border rounded-md bg-muted/50 min-h-[36px]'>
+                            {damageNotes
+                              ? damageNotes
+                              : !damageNotes &&
+                                imageUrls.length === 0 &&
+                                exteriorCondition === 'GOOD' &&
+                                interiorCondition === 'GOOD' &&
+                                tireCondition === 'GOOD'
+                              ? t(
+                                  'booking.details.inspections.item.noIncidentAfterReturn'
+                                )
+                              : t('booking.details.na')}
+                          </div>
+                        </div>
+
+                        {/* Inspection summary */}
+                        {(battery !== null ||
+                          exteriorCondition ||
+                          interiorCondition ||
+                          tireCondition) && (
+                          <div className='space-y-2 mt-3'>
+                            <Label>
+                              {t('booking.details.inspections.item.checklist')}
+                            </Label>
+                            <div className='grid grid-cols-1 md:grid-cols-2 gap-2'>
+                              <div className='p-2 border rounded-md bg-muted/40 flex items-center justify-between'>
+                                <span>
+                                  {t(
+                                    'booking.details.inspections.item.battery'
+                                  )}
+                                </span>
+                                <Badge
+                                  variant='outline'
+                                  className={getBatteryBadgeClass(battery)}
+                                >
+                                  {battery !== null
+                                    ? `${battery}%`
+                                    : t('booking.details.na')}
+                                </Badge>
+                              </div>
+                              <div className='p-2 border rounded-md bg-muted/40 flex items-center justify-between'>
+                                <span>
+                                  {t(
+                                    'booking.details.inspections.item.exteriorCondition'
+                                  )}
+                                </span>
+                                <Badge
+                                  variant='outline'
+                                  className={getConditionBadgeClass(
+                                    exteriorCondition
+                                  )}
+                                >
+                                  {exteriorCondition || t('booking.details.na')}
+                                </Badge>
+                              </div>
+                              <div className='p-2 border rounded-md bg-muted/40 flex items-center justify-between'>
+                                <span>
+                                  {t(
+                                    'booking.details.inspections.item.interiorCondition'
+                                  )}
+                                </span>
+                                <Badge
+                                  variant='outline'
+                                  className={getConditionBadgeClass(
+                                    interiorCondition
+                                  )}
+                                >
+                                  {interiorCondition || t('booking.details.na')}
+                                </Badge>
+                              </div>
+                              <div className='p-2 border rounded-md bg-muted/40 flex items-center justify-between'>
+                                <span>
+                                  {t(
+                                    'booking.details.inspections.item.tireCondition'
+                                  )}
+                                </span>
+                                <Badge
+                                  variant='outline'
+                                  className={getConditionBadgeClass(
+                                    tireCondition
+                                  )}
+                                >
+                                  {tireCondition || t('booking.details.na')}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Inspection images */}
+                        {!noIncident && (
+                          <div className='space-y-2 mt-3'>
+                            <Label>
+                              {t('booking.details.inspections.item.images') ||
+                                'Inspection Images'}
+                            </Label>
+                            {imageUrls.length > 0 ? (
+                              <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2'>
+                                {imageUrls.map((url, idx) => (
+                                  <div
+                                    key={`${item?.id || 'img'}-${idx}`}
+                                    className='rounded-md overflow-hidden border bg-muted/40'
+                                  >
+                                    <img
+                                      src={url}
+                                      alt={`inspection-${idx + 1}`}
+                                      className='w-full h-24 object-cover'
+                                      loading='lazy'
+                                      onError={e => {
+                                        // Hide broken images gracefully
+                                        e.currentTarget.style.display = 'none';
+                                      }}
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
+                                {t('booking.details.na')}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
           </div>
 
           {/* Pricing */}
-          <div className='space-y-4'>
-            <h3 className='text-lg font-semibold flex items-center gap-2'>
-              <CreditCard className='h-5 w-5' />
-              {t('booking.details.pricing.title')}
-            </h3>
+          <h3 className='font-semibold'>
+            {t('booking.details.pricing.title')}
+          </h3>
+          <div className='border border-green-200 rounded-2xl overflow-hidden shadow-sm bg-white'>
+            {/* Body */}
+            <div className='divide-y divide-green-100'>
+              <Row label='Base Price' value={formatPrice(booking.basePrice)} />
+              <Row
+                label='Insurance'
+                value={formatPrice(booking.insuranceAmount)}
+              />
+              <Row label='Tax' value={formatPrice(booking.taxAmount)} />
+              <Row
+                label='Discount'
+                value={`-${formatPrice(booking.discountAmount)}`}
+                valueClass='text-green-600 font-semibold'
+              />
+            </div>
 
-            <div className='space-y-2'>
-              <div className='flex justify-between p-2 border rounded-md'>
-                <span>{t('booking.details.pricing.basePrice')}:</span>
-                <span className='font-medium'>
-                  {formatPrice(booking.basePrice)}
-                </span>
-              </div>
-              <div className='flex justify-between p-2 border rounded-md'>
-                <span>{t('booking.details.pricing.insurance')}:</span>
-                <span className='font-medium'>
-                  {formatPrice(booking.insuranceAmount)}
-                </span>
-              </div>
-              <div className='flex justify-between p-2 border rounded-md'>
-                <span>{t('booking.details.pricing.tax')}:</span>
-                <span className='font-medium'>
-                  {formatPrice(booking.taxAmount)}
-                </span>
-              </div>
-              <div className='flex justify-between p-2 border rounded-md'>
-                <span>{t('booking.details.pricing.discount')}:</span>
-                <span className='font-medium text-green-600'>
-                  -{formatPrice(booking.discountAmount)}
-                </span>
-              </div>
-              <div className='flex justify-between p-2 border rounded-md bg-muted/50 font-bold'>
-                <span>{t('booking.details.pricing.totalAmount')}:</span>
-                <span>{formatPrice(booking.totalAmount)}</span>
-              </div>
-              <div className='flex justify-between p-2 border rounded-md'>
-                <span>{t('booking.details.pricing.deposit')}:</span>
-                <span className='font-medium'>
-                  {formatPrice(booking.depositAmount)}
-                </span>
-              </div>
+            {/* Deposit */}
+            <div className='flex justify-between px-4 py-2 border-t border-green-100'>
+              <span className='text-gray-700'>Deposit (Paid)</span>
+              <span className='text-gray-900 font-medium'>
+                {formatPrice(booking.depositAmount)}
+              </span>
+            </div>
+
+            {/* Total Amount */}
+            <div className='px-4 py-3 bg-green-100 flex justify-between items-center'>
+              <span className='text-green-800 font-semibold text-base'>
+                {t('booking.details.pricing.totalAmount')}
+              </span>
+              <span className='text-green-700 text-lg font-bold'>
+                {formatPrice(booking.totalAmount)}
+              </span>
             </div>
           </div>
 
-          {/* Payments */}
-          {booking.payments && booking.payments.length > 0 && (
-            <div className='space-y-4'>
-              <h3 className='text-lg font-semibold'>{t('booking.details.paymentHistory')}</h3>
-              <div className='space-y-2'>
-                {(() => {
-                  const list = Array.isArray(booking.payments)
-                    ? booking.payments
-                    : [];
-                  const latest = [...list]
-                    .sort((a, b) => {
-                      const da = new Date(
-                        a?.paymentDate || a?.updatedAt || a?.createdAt || 0
-                      ).getTime();
-                      const db = new Date(
-                        b?.paymentDate || b?.updatedAt || b?.createdAt || 0
-                      ).getTime();
-                      return db - da;
-                    })[0];
-                  if (!latest) return null;
-                  const payment = latest;
-                  return (
-                    <div
-                      key={payment.id}
-                      className='flex justify-between items-start p-3 border rounded-md gap-3'
-                    >
-                      <div className='flex-1 space-y-1'>
-                        <p className='font-medium'>
-                          {t('booking.details.payment')} #
-                          {payment.id.substring(0, 8)}
-                        </p>
-                        <p className='text-sm text-muted-foreground'>
-                          {t('booking.details.status')}: {payment.status}
-                        </p>
-                        {payment.paymentMethod && (
-                          <p className='text-sm text-muted-foreground'>
-                            Method: {payment.paymentMethod}
+          {/* Payment History */}
+          {booking.payments &&
+            booking.payments.length > 0 &&
+            (() => {
+              const list = Array.isArray(booking.payments)
+                ? booking.payments
+                : [];
+              const latest = [...list].sort((a, b) => {
+                const da = new Date(
+                  a?.paymentDate || a?.updatedAt || a?.createdAt || 0
+                ).getTime();
+                const db = new Date(
+                  b?.paymentDate || b?.updatedAt || b?.createdAt || 0
+                ).getTime();
+                return db - da;
+              })[0];
+              if (!latest) return null;
+              const payment = latest;
+
+              const getStatusStyle = status => {
+                switch (status?.toUpperCase()) {
+                  case 'PAID':
+                  case 'COMPLETED':
+                    return 'bg-green-100 text-green-700 border-green-200';
+                  case 'PENDING':
+                    return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+                  case 'FAILED':
+                    return 'bg-red-50 text-red-700 border-red-200';
+                  default:
+                    return 'bg-gray-50 text-gray-700 border-gray-200';
+                }
+              };
+
+              return (
+                <div className='space-y-3'>
+                  <h3 className='text-lg font-semibold'>
+                    {t('booking.details.paymentHistory')}
+                  </h3>
+
+                  <div className='bg-white border border-green-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200'>
+                    {/* Header */}
+                    <div className='bg-gradient-to-r from-green-500 to-green-600 px-4 py-3 flex justify-between items-center'>
+                      <div className='flex items-center gap-2'>
+                        <div className='bg-white/20 p-1.5 rounded-lg'>
+                          <CreditCard className='w-5 h-5 text-white' />
+                        </div>
+                        <div>
+                          <p className='text-white font-semibold text-sm'>
+                            {t('booking.details.payment')} #
+                            {payment.id.substring(0, 8)}
                           </p>
+                          <p className='text-white/80 text-xs'>
+                            {payment.paymentDate
+                              ? formatDate(payment.paymentDate)
+                              : 'N/A'}
+                          </p>
+                        </div>
+                      </div>
+                      <div
+                        className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusStyle(
+                          payment.status
+                        )}`}
+                      >
+                        {payment.status}
+                      </div>
+                    </div>
+
+                    {/* Body */}
+                    <div className='p-4 space-y-3'>
+                      <div className='bg-green-50 rounded-xl p-4 flex justify-between items-center'>
+                        <span className='text-sm text-green-700 font-medium'>
+                          Total Amount:
+                        </span>
+                        <span className='text-2xl font-bold text-green-800'>
+                          {formatPrice(payment.amount)}
+                        </span>
+                      </div>
+
+                      {/* Method & Type */}
+                      <div className='grid grid-cols-2 gap-3'>
+                        {payment.paymentMethod && (
+                          <div className='bg-green-50 rounded-lg p-3 border border-green-100'>
+                            <p className='text-xs text-green-700 mb-1'>
+                              Method
+                            </p>
+                            <p className='text-sm font-semibold text-green-900'>
+                              {payment.paymentMethod.replace(/_/g, ' ')}
+                            </p>
+                          </div>
                         )}
                         {payment.paymentType && (
-                          <p className='text-sm text-muted-foreground'>
-                            Type: {payment.paymentType}
-                          </p>
-                        )}
-                        {payment.transactionId && (
-                          <p className='text-sm text-muted-foreground font-mono'>
-                            Transaction ID: {payment.transactionId}
-                          </p>
-                        )}
-                        {payment.paymentDate && (
-                          <p className='text-sm text-muted-foreground'>
-                            Payment date: {formatDate(payment.paymentDate)}
-                          </p>
-                        )}
-
-                        {/* Cash evidence preview/link */}
-                        {payment.paymentMethod === 'CASH' && payment.evidenceUrl && (
-                          (() => {
-                            const evidenceUrl = makeAbsoluteUrl(payment.evidenceUrl);
-                            if (!evidenceUrl) return null;
-                            const isImage = /\.(png|jpe?g|gif|webp|bmp)$/i.test(evidenceUrl);
-                            return (
-                              <div className='mt-2 flex items-center gap-3'>
-                                <span className='text-xs text-muted-foreground'>Evidence:</span>
-                                <a
-                                  href={evidenceUrl}
-                                  target='_blank'
-                                  rel='noreferrer'
-                                  className='text-xs underline text-blue-600'
-                                >
-                                  Open
-                                </a>
-                                {isImage && (
-                                  <div className='rounded-md overflow-hidden border bg-muted/40'>
-                                    <img
-                                      src={evidenceUrl}
-                                      alt={`cash-evidence-${payment.id.substring(0, 8)}`}
-                                      className='w-20 h-14 object-cover'
-                                      loading='lazy'
-                                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })()
+                          <div className='bg-green-50 rounded-lg p-3 border border-green-100'>
+                            <p className='text-xs text-green-700 mb-1'>Type</p>
+                            <p className='text-sm font-semibold text-green-900'>
+                              {payment.paymentType.replace(/_/g, ' ')}
+                            </p>
+                          </div>
                         )}
                       </div>
-                      <p className='font-medium whitespace-nowrap'>{formatPrice(payment.amount)}</p>
                     </div>
-                  );
-                })()}
-              </div>
-            </div>
-          )}
+                  </div>
+                </div>
+              );
+            })()}
         </div>
 
         {/* Action Buttons */}

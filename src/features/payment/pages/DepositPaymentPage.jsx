@@ -69,6 +69,16 @@ export default function DepositPaymentPage() {
         return;
       }
 
+      // Persist payment context for cancel/success pages (frontend-only classification)
+      try {
+        localStorage.setItem('lastPaymentType', 'DEPOSIT');
+        localStorage.setItem('lastBookingId', String(bookingId));
+        const pid = result?.paymentId || result?.data?.paymentId;
+        if (pid) localStorage.setItem('lastPaymentId', String(pid));
+      } catch (e) {
+        console.warn('localStorage unavailable:', e);
+      }
+
       // Redirect to PayOS
       window.location.href = result.paymentUrl;
     } catch (error) {

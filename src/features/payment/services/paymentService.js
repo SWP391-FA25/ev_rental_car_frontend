@@ -42,11 +42,14 @@ export const paymentService = {
         description: description || `Rental Fee ${bookingId.substring(0, 8)}`,
       });
 
+      // PayOS yêu cầu số tiền là số nguyên > 0 (VND)
+      const normalizedAmount = Math.max(1, Math.round(Number(amount) || 0));
+
       const response = await apiClient.post(
         endpoints.payment.createRentalFee(),
         {
           bookingId,
-          amount,
+          amount: normalizedAmount,
           description: description || `Rental Fee ${bookingId.substring(0, 8)}`,
         }
       );
