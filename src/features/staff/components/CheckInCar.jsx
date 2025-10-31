@@ -97,11 +97,11 @@ export default function CheckInCar() {
                 setLoadingBookings(true);
                 const resData = await getAllBookings({ limit: 100 });
                 const list = (resData?.bookings || resData || []).filter(b => {
-                    const status = b.status || b.bookingStatus || '';
-                    // Show all CONFIRMED bookings (with or without inspection)
-                    return status === 'CONFIRMED';
+                    const status = (b.status || b.bookingStatus || '').toUpperCase();
+                    // Show all except canceled
+                    return status !== 'CANCELED' && status !== 'CANCELLED';
                 });
-                console.log('📋 Available bookings (CONFIRMED):', list.length);
+                console.log('📋 Available bookings (except canceled):', list.length);
                 setAvailableBookings(list);
             } catch (err) {
                 console.error('Fetch eligible bookings error', err);
@@ -222,6 +222,21 @@ export default function CheckInCar() {
         });
     }, [availableBookings, searchQuery]);
 
+    // Status helpers for badge
+    const getBookingStatus = (b) => (b?.status || b?.bookingStatus || '').toUpperCase();
+    const renderStatusBadge = (statusUpper) => {
+        if (!statusUpper) return null;
+        const cls =
+            statusUpper === 'CONFIRMED' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
+                statusUpper === 'IN_PROGRESS' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300' :
+                    statusUpper === 'COMPLETED' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
+                        statusUpper === 'PENDING' ? 'bg-slate-100 text-slate-700 dark:bg-slate-800/50 dark:text-slate-300' :
+                            'bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-300';
+        return (
+            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${cls}`}>{statusUpper}</span>
+        );
+    };
+
     // ✨ NEW: Fetch inspections for selected booking
     const fetchBookingInspections = async (bookingId) => {
         if (!bookingId) return;
@@ -240,10 +255,7 @@ export default function CheckInCar() {
                 setIsViewMode(true);
                 loadInspectionData(checkInInspection);
 
-                toast.info('📋 This booking has an existing inspection', {
-                    description: 'You can view, edit, or delete it.',
-                    duration: 4000,
-                });
+                // Remove noisy toast
             } else {
                 setBookingHasInspection(false);
                 setExistingInspection(null);
@@ -288,11 +300,7 @@ export default function CheckInCar() {
                 setBookingHasContract(true);
                 setExistingContract(latestContract);
 
-                const statusText = latestContract.status === 'COMPLETED' ? 'signed and uploaded' : 'created but not signed yet';
-                toast.info(`📄 Contract already exists for this booking`, {
-                    description: `Contract ${latestContract.contractNumber} is ${statusText}`,
-                    duration: 4000,
-                });
+                // Remove noisy toast
             } else {
                 setBookingHasContract(false);
                 setExistingContract(null);
@@ -478,74 +486,61 @@ export default function CheckInCar() {
             if (validFiles.length < imageFiles.length) {
                 const oversizedCount = imageFiles.length - validFiles.length;
                 console.warn(`⚠️ ${oversizedCount} file(s) exceed 10MB limit`);
-                toast.warning(`${oversizedCount} file(s) exceed 10MB limit and will be skipped`);
+                // Không hiển thị toast ở đây để tránh trùng lặp
             }
 
-            // ✅ Backend expects single file upload with field name 'image'
-            const uploadPromises = validFiles.map(async (file, index) => {
+            // ✅ Upload tuần tự để tránh ImageKit/Server quá tải (ReturnCar cũng làm tuần tự)
+            const uploadedUrls = [];
+            for (let index = 0; index < validFiles.length; index++) {
+                const file = validFiles[index];
                 try {
                     console.log(`📤 Uploading ${index + 1}/${validFiles.length}: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
 
-                    // Validate file type one more time before upload
                     if (!file.type.startsWith('image/')) {
                         console.warn(`⚠️ Skipping non-image file: ${file.name}`);
-                        return null;
+                        continue;
                     }
 
                     const formData = new FormData();
-                    formData.append('image', file); // ✅ Field name matches backend
+                    // Đính kèm tên file giống Postman để Multer giữ originalname
+                    formData.append('image', file, file.name);
 
                     console.log(`📡 POST ${endpoints.inspections.uploadImage(inspectionId)}`);
 
-                    const res = await apiClient.post(
-                        endpoints.inspections.uploadImage(inspectionId),
-                        formData,
-                        { headers: { 'Content-Type': 'multipart/form-data' } }
-                    );
+                    const tryUpload = async (attempt = 1) => {
+                        try {
+                            const res = await apiClient.post(
+                                endpoints.inspections.uploadImage(inspectionId),
+                                formData,
+                                { headers: { 'Content-Type': 'multipart/form-data' } }
+                            );
+                            return res;
+                        } catch (e) {
+                            const status = e?.response?.status;
+                            const shouldRetry = status >= 500 && status < 600 && attempt < 3;
+                            if (shouldRetry) {
+                                const delay = 500 * attempt;
+                                console.warn(`Retry upload (${attempt}) after ${delay}ms for`, file.name);
+                                await new Promise(r => setTimeout(r, delay));
+                                return tryUpload(attempt + 1);
+                            }
+                            throw e;
+                        }
+                    };
 
-                    console.log(`✅ Response for ${file.name}:`, res?.data);
-
-                    // ✅ Parse complete backend response
+                    const res = await tryUpload();
                     const responseData = res?.data?.data || res?.data;
                     if (responseData?.imageUrl) {
-                        console.log(`✅ Uploaded image ${index + 1}/${validFiles.length}:`, {
-                            url: responseData.imageUrl,
-                            fileId: responseData.fileId,
-                            totalImages: responseData.totalImages
-                        });
-                        return responseData.imageUrl;
+                        uploadedUrls.push(responseData.imageUrl);
+                        console.log(`✅ Uploaded image ${index + 1}/${validFiles.length}`);
                     } else {
                         console.error(`❌ No imageUrl in response for ${file.name}:`, responseData);
                     }
-                    return null;
                 } catch (uploadError) {
                     console.error(`❌ Failed to upload ${file.name}:`, uploadError);
-                    console.error(`❌ Error details:`, {
-                        message: uploadError?.message,
-                        response: uploadError?.response?.data,
-                        status: uploadError?.response?.status
-                    });
-
-                    const errorMsg = uploadError?.response?.data?.message || uploadError?.message;
-
-                    // Handle specific backend errors
-                    if (errorMsg?.includes('File size exceeds')) {
-                        toast.error(`${file.name}: File too large (max 10MB)`);
-                    } else if (errorMsg?.includes('Only image files')) {
-                        toast.error(`${file.name}: Only image files allowed`);
-                    } else if (errorMsg?.includes('Inspection not found')) {
-                        toast.error('Inspection not found. Please refresh and try again.');
-                    } else {
-                        toast.error(`Failed to upload ${file.name}: ${errorMsg}`);
-                    }
-                    return null;
+                    console.error('Details:', uploadError?.response?.data || uploadError?.message);
                 }
-            });
-
-            const results = await Promise.allSettled(uploadPromises);
-            const uploadedUrls = results
-                .filter(r => r.status === 'fulfilled' && r.value)
-                .map(r => r.value);
+            }
 
             console.log('📊 Upload results:', {
                 total: validFiles.length,
@@ -554,10 +549,7 @@ export default function CheckInCar() {
                 urls: uploadedUrls
             });
 
-            const failedCount = validFiles.length - uploadedUrls.length;
-            if (failedCount > 0) {
-                toast.warning(`${failedCount} image(s) failed to upload`);
-            }
+            // Không hiển thị toast ở đây để tránh trùng lặp
 
             return uploadedUrls;
         } catch (err) {
@@ -570,7 +562,7 @@ export default function CheckInCar() {
     // ✨ NEW: Remove specific image from inspection files
     const handleRemoveImage = (indexToRemove) => {
         setInspectionFiles(prev => prev.filter((_, index) => index !== indexToRemove));
-        toast.success('Image removed');
+        // Silent remove
     };
 
     const resetAllFields = () => {
@@ -598,29 +590,30 @@ export default function CheckInCar() {
         const mileageNum = Number(mileage);
         const id = booking?.id || bookingId;
 
-        const inspectionPayload = {
-            vehicleId: booking?.vehicle?.id || booking?.vehicleId,
-            staffId: user?.id,
-            bookingId: id,
-            inspectionType: inspectionType,
-            batteryLevel: batteryNum,
-            mileage: mileageNum,
-            exteriorCondition: exteriorCondition,
-            interiorCondition: interiorCondition,
-            tireCondition: tireCondition,
-            accessories: accessories === 'ALL_PRESENT' ? ['ALL_PRESENT'] : ['MISSING_ITEMS'],
-            damageNotes: damageNotes || undefined,
-            notes: notes || undefined,
-            documentVerified: documentVerified,
-            isCompleted: true,
-            images: [],
-        };
-
-        let createdInspection = null;
         let uploadedImageUrls = [];
-
+        let createdInspection = null;
         try {
-            setIsSubmitting(true); // Start submitting
+            setIsSubmitting(true);
+
+            // 1. Tạo inspection trước với images: []
+            const inspectionPayload = {
+                vehicleId: booking?.vehicle?.id || booking?.vehicleId,
+                staffId: user?.id,
+                bookingId: id,
+                inspectionType: inspectionType,
+                batteryLevel: batteryNum,
+                mileage: mileageNum,
+                exteriorCondition: exteriorCondition,
+                interiorCondition: interiorCondition,
+                tireCondition: tireCondition,
+                accessories: accessories === 'ALL_PRESENT' ? ['ALL_PRESENT'] : ['MISSING_ITEMS'],
+                damageNotes: damageNotes || undefined,
+                notes: notes || undefined,
+                documentVerified: documentVerified,
+                // Ban đầu tạo bản ghi dạng draft để upload ảnh
+                isCompleted: false,
+                images: [],
+            };
 
             try {
                 const inspectionRes = await apiClient.post(
@@ -634,74 +627,43 @@ export default function CheckInCar() {
                 throw insErr;
             }
 
-            if (inspectionFiles.length && createdInspection?.id) {
-                try {
-                    console.log('📸 Starting image upload for inspection:', createdInspection.id);
-                    console.log('📸 Number of files to upload:', inspectionFiles.length);
-                    uploadedImageUrls = await uploadInspectionImages(createdInspection.id);
-                    console.log('✅ Uploaded images:', uploadedImageUrls.length);
-                    console.log('✅ Image URLs:', uploadedImageUrls);
-
-                    if (uploadedImageUrls.length > 0) {
-                        toast.success(`${uploadedImageUrls.length} image(s) uploaded successfully`);
-                    } else {
-                        toast.warning('No images were uploaded. Check console for details.');
-                    }
-                } catch (uploadErr) {
-                    console.error('❌ Image upload failed:', uploadErr);
-                    console.error('❌ Error details:', {
-                        message: uploadErr?.message,
-                        response: uploadErr?.response?.data,
-                        status: uploadErr?.response?.status
-                    });
-                    toast.warn('Some images failed to upload. Check console for details.');
+            // 2. Upload images với inspectionId thật (dùng hàm trung tâm, có retry)
+            if (inspectionFiles.length > 0 && createdInspection?.id) {
+                uploadedImageUrls = await uploadInspectionImages(createdInspection.id);
+                if (!uploadedImageUrls.length) {
+                    console.warn('[CheckInCar] Không upload được ảnh nào, giữ inspection và yêu cầu thử lại.');
+                    return; // Không xóa inspection để tránh lỗi quyền
                 }
-            } else {
-                console.log('ℹ️ Skipping image upload:', {
-                    hasFiles: inspectionFiles.length > 0,
-                    hasInspectionId: !!createdInspection?.id,
-                    filesCount: inspectionFiles.length,
-                    inspectionId: createdInspection?.id
-                });
+                // Cập nhật lại inspection với danh sách imageUrl
+                await apiClient.put(
+                    endpoints.inspections.getById(createdInspection.id),
+                    { images: uploadedImageUrls, isCompleted: true }
+                );
             }
 
-            // ✨ Call Check-In API to update booking status to IN_PROGRESS
+            // 3. Check-in booking sau khi tạo inspection thành công
             try {
-                console.log('🚗 Calling check-in API for booking:', id);
-                const checkInRes = await apiClient.post(
+                const actualPickupLocation =
+                    (stations.find(s => s.id === selectedStation)?.name) ||
+                    booking?.station?.name ||
+                    '';
+                await apiClient.post(
                     endpoints.bookings.checkIn(id),
                     {
                         actualStartTime: new Date().toISOString(),
-                        staffId: user?.id,
-                        inspectionId: createdInspection?.id,
-                        stationId: selectedStation,
+                        actualPickupLocation,
+                        pickupOdometer: mileageNum,
+                        batteryLevel: batteryNum,
                     }
                 );
-                console.log('✅ Check-in successful:', checkInRes?.data);
-                toast.success('Check-in completed successfully', {
-                    description: 'Booking status updated to IN_PROGRESS, Vehicle status updated to RENTED',
-                    duration: 4000,
-                });
             } catch (checkInErr) {
-                console.error('❌ Check-in API failed:', checkInErr);
-                const checkInErrorMsg = checkInErr?.response?.data?.message || checkInErr?.message;
-                toast.error('Check-in failed', {
-                    description: checkInErrorMsg || 'Could not update booking status',
-                    duration: 5000,
-                });
-                // Don't throw - inspection already created, just log the error
+                console.warn('Check-in booking failed:', checkInErr);
+                toast.error(checkInErr?.response?.data?.message || checkInErr?.message || 'Check-in failed');
+                return;
             }
 
-            toast.success('Inspection created successfully');
-
-            const vehicleLabel =
-                booking?.vehicle?.name ||
-                booking?.vehicle?.licensePlate ||
-                '';
-            const customerName =
-                booking?.user?.name ||
-                booking?.renter?.name ||
-                '';
+            const customerName = booking?.user?.name || booking?.renter?.name || '';
+            const vehicleLabel = `${booking?.vehicle?.name || ''}${booking?.vehicle?.licensePlate ? ' • ' + booking.vehicle.licensePlate : ''}`.trim();
 
             setCheckInSummary({
                 bookingId: id,
@@ -715,13 +677,13 @@ export default function CheckInCar() {
             setCheckInSummaryOpen(true);
             resetAllFields();
 
-            // Refresh bookings list
+            // Refresh bookings list (except canceled)
             try {
                 setLoadingBookings(true);
                 const resData = await getAllBookings({ limit: 100 });
                 const list = (resData?.bookings || resData || []).filter(b => {
-                    const status = b.status || b.bookingStatus || '';
-                    return status === 'CONFIRMED';
+                    const status = (b.status || b.bookingStatus || '').toUpperCase();
+                    return status !== 'CANCELED' && status !== 'CANCELLED';
                 });
                 setAvailableBookings(list);
             } catch (err) {
@@ -984,7 +946,7 @@ export default function CheckInCar() {
                                         <div className='p-8 text-center'>
                                             <Search className='h-12 w-12 text-muted-foreground mx-auto mb-3' />
                                             <p className='text-sm text-muted-foreground'>
-                                                {searchQuery ? 'No bookings found matching your search' : 'No confirmed bookings available'}
+                                                {searchQuery ? 'No bookings found matching your search' : 'No bookings available'}
                                             </p>
                                         </div>
                                     ) : (
@@ -1057,6 +1019,7 @@ export default function CheckInCar() {
                                                                     {isSelected && (
                                                                         <Check className='h-5 w-5' />
                                                                     )}
+                                                                    {renderStatusBadge(getBookingStatus(b))}
                                                                     {hasInspection && (
                                                                         <span className='inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'>
                                                                             <Check className='h-3 w-3' />
