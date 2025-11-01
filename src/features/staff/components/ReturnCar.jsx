@@ -493,16 +493,9 @@ export default function ReturnCar() {
           inspectionType: 'CHECK_OUT',
           mileage: odo,
           batteryLevel: Math.min(100, Math.max(0, Math.round(batteryLevelNum))),
-          exteriorCondition: hasIncident
-            ? checklist.exterior
-              ? 'GOOD'
-              : 'POOR'
-            : 'GOOD',
-          interiorCondition: hasIncident
-            ? checklist.interior
-              ? 'GOOD'
-              : 'POOR'
-            : 'GOOD',
+          // ✅ FIX: Logic rõ ràng hơn
+          exteriorCondition: hasIncident && !checklist.exterior ? 'POOR' : 'GOOD',
+          interiorCondition: hasIncident && !checklist.interior ? 'POOR' : 'GOOD',
           tireCondition: tireCondition || undefined,
           damageNotes: hasIncident ? incidentNotes || undefined : undefined,
           notes: notes || undefined,
@@ -1276,7 +1269,7 @@ export default function ReturnCar() {
         </CardContent>
       </Card>
 
-      {/* Step 3 removed per request: b? t�nh to�n c?c v� ho�n ti?n */}
+      {/* Step 3 removed per request: b? t�nh to�n c?c v� ho�n ti�n */}
 
       {/* Step 4: C?p nh?t booking v� xe */}
       <Card>

@@ -1,46 +1,96 @@
 'use client';
 
-import {
-  AlertCircle,
-  Calendar,
-  Check,
-  CheckCircle2,
-  DollarSign,
-  Mail,
-  MapPin,
-  Phone,
-  User,
-  Zap,
-} from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
-import { Button } from '../../shared/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '../../shared/components/ui/card';
-import { Checkbox } from '../../shared/components/ui/checkbox';
+import { useState, useEffect, useCallback } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../shared/components/ui/card";
+import { Button } from "../../shared/components/ui/button";
+import { Checkbox } from "../../shared/components/ui/checkbox";
+import { CheckCircle2, AlertCircle, FileText, Upload, Check } from "lucide-react";
+import { endpoints } from "../../shared/lib/endpoints";
+import { toast as notify } from '../../shared/lib/toast';
+import { apiClient } from '../../shared/lib/apiClient';
+import { useAuth } from '../../../app/providers/AuthProvider';
+import { Input } from "../../shared/components/ui/input";
+import { Label } from "../../shared/components/ui/label";
+import { Textarea } from "../../shared/components/ui/textarea";
 
-export default function RentalContractPage() {
-  const [selectedBooking, setSelectedBooking] = useState(null);
-  const [bookings, setBookings] = useState(null);
-  const [loadingBookings, setLoadingBookings] = useState(false);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [error, setError] = useState(null);
+export default function CarRentalContract({ bookingId, onStatusChange }) {
+  const { user } = useAuth() // ← Di chuyển lên đầu
+
+  // Inspection state
+  const [inspection, setInspection] = useState(null);
+  const [loadingInspection, setLoadingInspection] = useState(false);
+  const [inspectionError, setInspectionError] = useState(null);
+
+  // Fetch inspection by bookingId
+  const fetchInspection = useCallback(async (bookingId) => {
+    if (!bookingId) return;
+    setLoadingInspection(true);
+    setInspectionError(null);
+    try {
+      // Sử dụng API dành cho RENTER
+      const res = await apiClient.get(endpoints.inspections.getByBookingRenter(bookingId));
+      const json = res?.data;
+      console.log('📋 Inspection API response:', json);
+      console.log('📋 json.data:', json?.data);
+      console.log('📋 json.data.inspections:', json?.data?.inspections);
+
+      let ins = null;
+      // Handle multiple response structures from backend
+      // Backend returns: { success: true, data: { inspections: [...] } }
+      if (json?.success && json?.data?.inspections && Array.isArray(json.data.inspections)) {
+        console.log('✅ Found inspections array, length:', json.data.inspections.length);
+        ins = json.data.inspections.length > 0 ? json.data.inspections[0] : null;
+      } else if (json?.success && Array.isArray(json?.data) && json.data.length > 0) {
+        console.log('✅ Found data as array');
+        ins = json.data[0];
+      } else if (json?.success && json?.data && typeof json.data === 'object' && json.data.id) {
+        console.log('✅ Found data as object with id');
+        ins = json.data;
+      } else if (Array.isArray(json) && json.length > 0) {
+        console.log('✅ Found json as array');
+        ins = json[0];
+      } else if (json && typeof json === 'object' && json.id) {
+        console.log('✅ Found json as object with id');
+        ins = json;
+      } else {
+        console.log('❌ No matching structure found');
+      }
+
+      console.log('✅ Parsed inspection:', ins);
+      setInspection(ins);
+    } catch (err) {
+      console.error('❌ Fetch inspection error:', err);
+      setInspectionError('Không thể tải biên bản kiểm tra.');
+      setInspection(null);
+    } finally {
+      setLoadingInspection(false);
+    }
+  }, []); // Không cần user vào dependency vì chỉ dùng API RENTER
+
+  // local helper to emulate previous useToast({title,description,variant})
+  const showToast = ({ title = '', description = '', variant = '' } = {}) => {
+    const message = title && description ? `${title} — ${description}` : title || description || '';
+    if (variant === 'destructive') {
+      notify.error(message || 'Lỗi', { autoClose: 5000 });
+    } else {
+      notify.success(message || 'Thành công', { autoClose: 4000 });
+    }
+  }
+
+  const [selectedBooking, setSelectedBooking] = useState(null)
+  const [bookings, setBookings] = useState(null)
+  const [loadingBookings, setLoadingBookings] = useState(false)
+  const [actionLoading, setActionLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [contracts, setContracts] = useState([])
+  const [loadingContracts, setLoadingContracts] = useState(false)
+  const [selectedFile, setSelectedFile] = useState(null)
+
   const [formData, setFormData] = useState({
-    notes: 'Minor scratch on left door, battery at 85%',
-    clauses: 'Return the vehicle before 18:00 today',
-    images: {
-      exterior: 'image_exterior.jpg',
-      interior: 'image_interior.jpg',
-      engine: 'image_engine.jpg',
-      damage: 'image_damage.jpg',
-      accessories: 'image_accessories.jpg',
-      odometer: 'image_odometer.jpg',
-    },
-  });
+    renterName: "",
+    witnessName: "",
+    notes: "",
+  })
 
   const [agreements, setAgreements] = useState({
     termsAccepted: false,
@@ -49,292 +99,352 @@ export default function RentalContractPage() {
     dataPrivacy: false,
   });
 
-  // Mock booking data (fallback)
-  const mockBookings = [
-    {
-      id: 1,
-      bookingCode: 'BK001',
-      renterName: 'Nguyễn Văn A',
-      renterPhone: '0912345678',
-      scooterModel: 'Xiaomi Mi 3',
-      rentalDate: '2024-10-20',
-      returnDate: '2024-10-22',
-      duration: '2 days',
-      price: '200,000 VND',
-      staff: {
-        id: 1,
-        name: 'Trần Thị B',
-        phone: '0987654321',
-        email: 'tranb@company.com',
-      },
-      station: {
-        id: 1,
-        name: 'Hanoi Station - Hoan Kiem',
-        address: '123 Trang Tien Street, Hoan Kiem, Hanoi',
-        phone: '024-1234-5678',
-      },
-    },
-    {
-      id: 2,
-      bookingCode: 'BK002',
-      renterName: 'Phạm Thị C',
-      renterPhone: '0923456789',
-      scooterModel: 'Xiaomi Mi 4 Pro',
-      rentalDate: '2024-10-21',
-      returnDate: '2024-10-23',
-      duration: '2 days',
-      price: '250,000 VND',
-      staff: {
-        id: 2,
-        name: 'Lê Văn D',
-        phone: '0976543210',
-        email: 'levand@company.com',
-      },
-      station: {
-        id: 2,
-        name: 'Hanoi Station - Ba Dinh',
-        address: '456 Dinh Tien Hoang Street, Ba Dinh, Hanoi',
-        phone: '024-8765-4321',
-      },
-    },
-    {
-      id: 3,
-      bookingCode: 'BK003',
-      renterName: 'Vũ Minh E',
-      renterPhone: '0934567890',
-      scooterModel: 'Xiaomi Mi 3',
-      rentalDate: '2024-10-22',
-      returnDate: '2024-10-24',
-      duration: '2 days',
-      price: '200,000 VND',
-      staff: {
-        id: 3,
-        name: 'Hoàng Anh F',
-        phone: '0965432109',
-        email: 'hoangf@company.com',
-      },
-      station: {
-        id: 1,
-        name: 'Hanoi Station - Hoan Kiem',
-        address: '123 Trang Tien Street, Hoan Kiem, Hanoi',
-        phone: '024-1234-5678',
-      },
-    },
-  ];
+  const [authUser, setAuthUser] = useState(null);
 
-  const imageCategories = [
-    {
-      id: 'exterior',
-      label: 'Exterior',
-      description: 'Outside views: doors, mirrors, corners',
-    },
-    {
-      id: 'interior',
-      label: 'Interior',
-      description: 'Interior, dashboard, steering wheel',
-    },
-    {
-      id: 'engine',
-      label: 'Motor & Battery',
-      description: 'Engine bay, battery, charging port',
-    },
-    {
-      id: 'damage',
-      label: 'Damages',
-      description: 'Scratches, dents, and damage spots',
-    },
-    {
-      id: 'accessories',
-      label: 'Accessories',
-      description: 'In-car accessories (charger, tools)',
-    },
-    {
-      id: 'odometer',
-      label: 'Odometer',
-      description: 'Current mileage reading',
-    },
-  ];
+  useEffect(() => {
+    const fetchAuthUser = async () => {
+      try {
+        const res = await fetch('/api/auth/me', {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        const result = await res.json();
+        setAuthUser(result.data?.user);
+      } catch (err) {
+        console.error('Failed to fetch auth user:', err);
+      }
+    };
 
-  // fetch bookings for current user (backend should infer user from session or token)
-  const fetchBookings = useCallback(async () => {
-    setLoadingBookings(true);
+    fetchAuthUser();
+  }, []);
+
+
+
+  // Fetch contracts for a specific booking
+  const fetchContracts = useCallback(async (bookingId) => {
+    if (!bookingId) return;
+
+    setLoadingContracts(true);
     setError(null);
     try {
-      const res = await fetch('/api/bookings?status=PENDING');
-      if (!res.ok) throw new Error(`Failed to load bookings (${res.status})`);
-      const json = await res.json();
-      // Expect backend to return { success, data: { bookings: [...], pagination } } or array
-      if (json && Array.isArray(json.data?.bookings)) {
-        setBookings(json.data.bookings);
+      const res = await apiClient.get(endpoints.contracts.getByBooking(bookingId));
+      const json = res?.data;
+
+      // Handle multiple response structures
+      if (json.success && Array.isArray(json.data)) {
+        setContracts(json.data);
+      } else if (json.success && json.data && typeof json.data === 'object') {
+        if (Array.isArray(json.data.contracts)) {
+          setContracts(json.data.contracts);
+        } else {
+          setContracts([json.data]);
+        }
       } else if (Array.isArray(json)) {
-        setBookings(json);
+        setContracts(json);
       } else {
-        // fallback to mock if unexpected shape
-        setBookings(mockBookings);
+        console.log("Unexpected contract data format:", json);
+        setContracts([]);
       }
     } catch (err) {
-      console.warn('fetchBookings error:', err);
-      setError('Unable to load bookings. Using offline data.');
-      setBookings(mockBookings);
+      console.error("fetchContracts error:", err);
+      setError("Không thể tải hợp đồng. Vui lòng thử lại sau.");
+      setContracts([]);
     } finally {
-      setLoadingBookings(false);
+      setLoadingContracts(false);
     }
   }, []);
 
+
+  // Fetch booking details if bookingId is provided
+  const fetchBookingDetails = useCallback(async (id) => {
+    if (!id) return;
+
+    setLoadingBookings(true);
+    setError(null);
+    try {
+      const res = await apiClient.get(`/api/bookings/${id}`);
+      const json = res?.data;
+      const booking = json?.data?.booking ?? json?.booking ?? json?.data ?? json;
+      setSelectedBooking(booking);
+
+      // Fetch contracts after getting booking
+      await fetchContracts(id);
+      // Fetch inspection after getting booking
+      await fetchInspection(id);
+    } catch (err) {
+      console.error("fetchBookingDetails:", err);
+      setError("Không thể tải thông tin booking. Vui lòng thử lại sau.");
+    } finally {
+      setLoadingBookings(false);
+    }
+  }, [fetchContracts, fetchInspection]);
+
+  // Fetch bookings for current user
+  const fetchBookings = useCallback(async () => {
+    console.log("fetchBookings called");
+
+    if (bookingId) {
+      console.log("bookingId provided, fetching booking details for:", bookingId);
+      fetchBookingDetails(bookingId);
+      return;
+    }
+
+    if (!user?.id) {
+      console.warn("User not logged in. Cannot fetch bookings.");
+      setError('Vui lòng đăng nhập để xem bookings');
+      setBookings([]);
+      return;
+    }
+
+    console.log("Fetching bookings for user ID:", user.id);
+    setLoadingBookings(true);
+    setError(null);
+
+    try {
+      const res = await apiClient.get(endpoints.bookings.getUserBookings(user.id));
+      console.log("API response:", res);
+      const json = res?.data;
+      console.log("Parsed JSON data:", json);
+
+      // Backend trả về { bookings: [...] } hoặc trực tiếp array
+      const list = json?.bookings ?? json?.data?.bookings ?? json?.data ?? json;
+      console.log("Extracted bookings list:", list);
+
+      // Lọc chỉ lấy bookings IN_PROGRESS
+      const inProgressBookings = (Array.isArray(list) ? list : []).filter(
+        b => (b.status || b.bookingStatus) === 'IN_PROGRESS'
+      );
+      console.log("Filtered in-progress bookings:", inProgressBookings);
+
+      setBookings(inProgressBookings);
+    } catch (err) {
+      console.error("fetchBookings error:", err);
+      setError("Không thể tải danh sách booking. Vui lòng thử lại sau.");
+      setBookings([]);
+    } finally {
+      console.log("fetchBookings completed");
+      setLoadingBookings(false);
+    }
+  }, [bookingId, fetchBookingDetails, user?.id]);
+
   useEffect(() => {
+    console.log("useEffect triggered: calling fetchBookings");
     fetchBookings();
   }, [fetchBookings]);
 
-  // fetch latest booking details
-  const fetchBookingDetails = async id => {
-    try {
-      const res = await fetch(`/api/bookings/${id}`);
-      if (!res.ok) throw new Error(`Booking ${id} not found`);
-      const json = await res.json();
-      // Expect json.data.booking or json.booking
-      const booking = json.data?.booking ?? json.booking ?? json;
-      setSelectedBooking(booking);
-    } catch (err) {
-      console.warn('fetchBookingDetails:', err);
-      // keep currently selected booking if fetch fails
-    }
-  };
 
-  const handleBookingSelect = booking => {
-    // attempt to fetch fresh details from backend
-    setSelectedBooking(booking); // optimistic
+  const handleBookingSelect = (booking) => {
+    setSelectedBooking(booking);
     fetchBookingDetails(booking.id);
-  };
+    fetchContracts(booking.id);
+  }
 
   const handleAgreementChange = (field, value) => {
     setAgreements(prev => ({
       ...prev,
       [field]: value,
     }));
-  };
+  }
 
-  const allAgreementsAccepted = Object.values(agreements).every(
-    v => v === true
-  );
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    // Clear error when user types
+    if (error) setError(null);
+  }
 
-  // sign contract -> request backend to change booking status to CONFIRMED
-  const handleSubmit = async () => {
-    if (!selectedBooking) {
-      alert('Please select a booking');
-      return;
-    }
-    if (!allAgreementsAccepted) {
-      alert('Please agree to all terms before signing the contract');
-      return;
-    }
-    setActionLoading(true);
-    try {
-      // Use updateBookingStatus endpoint: PATCH /api/bookings/:id/status { status: "CONFIRMED" }
-      const res = await fetch(`/api/bookings/${selectedBooking.id}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'CONFIRMED' }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        console.error('Failed to confirm booking:', res.status, body);
-        alert('Unable to sign the contract — please try again later.');
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+      if (!validTypes.includes(file.type)) {
+        showToast({
+          title: "Lỗi",
+          description: "File phải là JPEG, PNG hoặc PDF",
+          variant: "destructive",
+        });
+        e.target.value = ''; // Reset input
         return;
       }
-      const json = await res.json().catch(() => null);
-      const updated = json?.data?.booking ?? json?.booking ?? json;
-      // update UI
-      setSelectedBooking(updated);
-      // refresh bookings list to reflect changed status
-      fetchBookings();
-      alert('Electronic contract signed successfully!');
+
+      // Validate file size (10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        showToast({
+          title: "Lỗi",
+          description: "Kích thước file không được vượt quá 10MB",
+          variant: "destructive",
+        });
+        e.target.value = ''; // Reset input
+        return;
+      }
+
+      setSelectedFile(file);
+    }
+  }
+
+  const allAgreementsAccepted = Object.values(agreements).every((v) => v === true);
+
+  // Validate form data
+  const validateFormData = (data) => {
+    // Validation for upload (renterName & witnessName required)
+    if (!data.renterName || data.renterName.trim().length < 2 || data.renterName.length > 100) {
+      throw new Error('Tên người thuê phải từ 2-100 ký tự');
+    }
+    if (!data.witnessName || data.witnessName.trim().length < 2 || data.witnessName.length > 100) {
+      throw new Error('Tên người làm chứng phải từ 2-100 ký tự');
+    }
+
+    if (data.notes && data.notes.length > 500) {
+      throw new Error('Ghi chú không được vượt quá 500 ký tự');
+    }
+  }
+
+  // Upload signed contract
+  const handleUploadContract = async (contractId) => {
+    if (!selectedFile) {
+      showToast({
+        title: "Lỗi",
+        description: "Vui lòng chọn file hợp đồng đã ký",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setActionLoading(true);
+    setError(null);
+
+    try {
+      validateFormData(formData);
+
+      const formDataObj = new FormData();
+      formDataObj.append("file", selectedFile);
+      formDataObj.append("renterName", formData.renterName);
+      formDataObj.append("witnessName", formData.witnessName);
+      if (formData.notes) formDataObj.append("notes", formData.notes);
+
+      const res = await apiClient.post(endpoints.contracts.uploadSignedFile(contractId), formDataObj, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const successData = res?.data;
+      if (!successData) throw new Error('Failed to upload contract (no response)');
+
+      showToast({
+        title: "Thành công",
+        description: "Hợp đồng đã ký đã được tải lên thành công",
+      });
+
+      // Reset form
+      setSelectedFile(null);
+      setFormData({
+        renterName: "",
+        witnessName: "",
+        notes: "",
+      });
+
+      // Refresh contracts list
+      await fetchContracts(selectedBooking.id);
+
+      if (onStatusChange) onStatusChange();
     } catch (err) {
-      console.error('handleSubmit error:', err);
-      alert('An error occurred while signing the contract. Please try again.');
+      console.error("Upload contract error:", err);
+      showToast({
+        title: "Lỗi",
+        description: err.message || "Không thể tải lên hợp đồng. Vui lòng thử lại sau.",
+        variant: "destructive",
+      });
     } finally {
+      setActionLoading(false);
       setActionLoading(false);
     }
   };
 
-  return (
-    <main className='min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 px-4'>
-      <div className='max-w-6xl mx-auto'>
-        {/* Header */}
-        <div className='mb-8'>
-          <h1 className='text-4xl font-bold text-slate-900 mb-2'>
-            Electric Car Rental Contract
-          </h1>
-          <p className='text-slate-600'>
-            Please complete all steps to sign the electronic contract
-          </p>
-        </div>
+  const handleFinalSubmit = async () => {
+    if (!allAgreementsAccepted) {
+      showToast({
+        title: "Lỗi",
+        description: "Vui lòng đồng ý với tất cả các điều khoản",
+        variant: "destructive",
+      });
+      return;
+    }
 
-        {/* Step 1: Booking Selection */}
-        <Card className='mb-6 border-slate-200 shadow-sm'>
-          <CardHeader className='bg-white border-b border-slate-200'>
-            <div className='flex items-center gap-3'>
-              <div className='flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-semibold'>
-                1
-              </div>
-              <div>
-                <CardTitle className='text-slate-900'>Select Booking</CardTitle>
-                <CardDescription>
-                  Choose your rental booking
-                </CardDescription>
-              </div>
-            </div>
+    // Implementation for final contract submission
+    showToast({
+      title: "Thành công",
+      description: "Hợp đồng đã được ký thành công",
+    });
+  }
+
+  return (
+    <div className="space-y-8">
+      {/* Booking Selection Section */}
+      {!bookingId && (
+        <Card className="border-slate-200 shadow-sm">
+          <CardHeader className="bg-white border-b border-slate-200">
+            <CardTitle className="text-slate-900">Chọn Booking</CardTitle>
+            <CardDescription>Lựa chọn booking thuê xe của bạn</CardDescription>
           </CardHeader>
-          <CardContent className='pt-6'>
-            <div className='space-y-3'>
-              {loadingBookings && (
-                <div className='text-sm text-slate-500'>
-                  Loading bookings...
+          <CardContent className="pt-6">
+            <div className="space-y-3">
+              {loadingBookings && <div className="text-sm text-slate-500">Đang tải bookings...</div>}
+              {error && <div className="text-sm text-red-600">{error}</div>}
+              {bookings && bookings.length === 0 && (
+                <div className="text-center py-8">
+                  <p className="text-slate-500">Không có booking nào cần tạo hợp đồng</p>
                 </div>
               )}
-              {error && <div className='text-sm text-red-600'>{error}</div>}
-              {(bookings ?? mockBookings).map(booking => (
+              {bookings && bookings.length > 0 && bookings.map((booking, index) => (
                 <Card
                   key={booking.id}
-                  className={`p-4 cursor-pointer transition-all border-2 ${
-                    selectedBooking?.id === booking.id
-                      ? 'border-blue-600 bg-blue-50'
-                      : 'border-slate-200 hover:border-slate-300 bg-white'
-                  }`}
+                  className={`p-4 cursor-pointer transition-all border-2 ${selectedBooking?.id === booking.id
+                    ? 'border-blue-600 bg-blue-50'
+                    : 'border-slate-200 hover:border-slate-300 bg-white'
+                    }`}
                   onClick={() => handleBookingSelect(booking)}
                 >
-                  <div className='flex items-start justify-between'>
-                    <div className='flex-1'>
-                      <div className='flex items-center gap-2 mb-2'>
-                        <h3 className='font-semibold text-slate-900'>
-                          {booking.bookingCode}
-                        </h3>
-                        <span className='text-sm bg-blue-100 text-blue-700 px-2 py-1 rounded'>
-                          {booking.duration}
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="font-semibold text-slate-900">{booking.bookingCode || `Hồ sơ số ${index + 1}`}</h3>
+                        <span className="text-sm bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                          {booking.status}
                         </span>
                       </div>
                       <div className='grid grid-cols-2 gap-4 text-sm text-slate-600'>
                         <div>
-                          <p className='text-slate-500'>Customer</p>
-                          <p className='font-medium text-slate-900'>
-                            {booking.renterName}
+                          <p className="text-slate-500">Khách hàng</p>
+                          <p className="font-medium text-slate-900">{authUser?.name || booking.staff?.name}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-500">Nhân Viên Phụ Trách</p>
+                          <p className="font-medium text-slate-900">{booking.staff?.name}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-500">Địa Điểm</p>
+                          <p className="font-medium text-slate-900">{booking.station?.name}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-500">Xe</p>
+                          <p className="font-medium text-slate-900">{booking.vehicle?.brand} {booking.vehicle?.model}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-500">Ngày thuê</p>
+                          <p className="font-medium text-slate-900">
+                            {new Date(booking.createdAt || booking.rentalDate).toLocaleDateString('vi-VN')}
                           </p>
                         </div>
                         <div>
-                          <p className='text-slate-500'>Vehicle</p>
-                          <p className='font-medium text-slate-900'>
-                            {booking.scooterModel}
-                          </p>
-                        </div>
-                        <div>
-                          <p className='text-slate-500'>Rental date</p>
-                          <p className='font-medium text-slate-900'>
-                            {booking.rentalDate}
-                          </p>
-                        </div>
-                        <div>
-                          <p className='text-slate-500'>Price</p>
-                          <p className='font-medium text-slate-900'>
-                            {booking.price}
+                          <p className="text-slate-500">Giá</p>
+                          <p className="font-medium text-slate-900">
+                            {booking.totalAmount?.toLocaleString('vi-VN') || booking.price} VNĐ
                           </p>
                         </div>
                       </div>
@@ -352,582 +462,554 @@ export default function RentalContractPage() {
             </div>
           </CardContent>
         </Card>
+      )}
 
-        {selectedBooking && (
-          <>
-            {/* Step 2: Staff & Station Info */}
-            <div className='grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6'>
-              {/* Staff Info */}
-              <Card className='border-slate-200 shadow-sm'>
-                <CardHeader className='bg-white border-b border-slate-200'>
-                  <div className='flex items-center gap-3'>
-                    <div className='flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-semibold'>
-                      2
-                    </div>
-                    <div>
-                      <CardTitle className='text-slate-900'>
-                        Staff Information
-                      </CardTitle>
-                      <CardDescription>Assigned staff</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className='pt-6'>
-                  <div className='space-y-4'>
-                    <div className='flex items-start gap-4'>
-                      <div className='flex items-center justify-center w-12 h-12 rounded-full bg-blue-100'>
-                        <User className='w-6 h-6 text-blue-600' />
-                      </div>
-                      <div className='flex-1'>
-                        <p className='text-sm text-slate-500 mb-1'>
-                          Staff name
-                        </p>
-                        <p className='font-semibold text-slate-900'>
-                          {selectedBooking.staff.name}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className='flex items-start gap-4'>
-                      <div className='flex items-center justify-center w-12 h-12 rounded-full bg-green-100'>
-                        <Phone className='w-6 h-6 text-green-600' />
-                      </div>
-                      <div className='flex-1'>
-                        <p className='text-sm text-slate-500 mb-1'>
-                          Phone number
-                        </p>
-                        <p className='font-semibold text-slate-900'>
-                          {selectedBooking.staff.phone}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className='flex items-start gap-4'>
-                      <div className='flex items-center justify-center w-12 h-12 rounded-full bg-purple-100'>
-                        <Mail className='w-6 h-6 text-purple-600' />
-                      </div>
-                      <div className='flex-1'>
-                        <p className='text-sm text-slate-500 mb-1'>Email</p>
-                        <p className='font-semibold text-slate-900'>
-                          {selectedBooking.staff.email}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Rental Station Info */}
-              <Card className='border-slate-200 shadow-sm'>
-                <CardHeader className='bg-white border-b border-slate-200'>
-                  <div className='flex items-center gap-3'>
-                    <div className='flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-semibold'>
-                      3
-                    </div>
-                    <div>
-                      <CardTitle className='text-slate-900'>
-                        Rental Station
-                      </CardTitle>
-                      <CardDescription>Selected station</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className='pt-6'>
-                  <div className='space-y-4'>
-                    <div>
-                      <p className='text-sm text-slate-500 mb-2'>Station name</p>
-                      <p className='font-semibold text-slate-900 text-lg'>
-                        {selectedBooking.station.name}
-                      </p>
-                    </div>
-
-                    <div className='flex items-start gap-3'>
-                      <MapPin className='w-5 h-5 text-blue-600 mt-1 flex-shrink-0' />
-                      <div>
-                        <p className='text-sm text-slate-500 mb-1'>Address</p>
-                        <p className='text-slate-900'>
-                          {selectedBooking.station.address}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className='flex items-start gap-3'>
-                      <Phone className='w-5 h-5 text-green-600 mt-1 flex-shrink-0' />
-                      <div>
-                        <p className='text-sm text-slate-500 mb-1'>
-                          Phone number
-                        </p>
-                        <p className='font-semibold text-slate-900'>
-                          {selectedBooking.station.phone}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Step 3: Contract Details */}
-            <Card className='mb-6 border-slate-200 shadow-sm'>
-              <CardHeader className='bg-white border-b border-slate-200'>
-                <div className='flex items-center gap-3'>
-                  <div className='flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-semibold'>
-                    4
+      {/* Inspection Card Section */}
+      {selectedBooking && (
+        <Card className="border-slate-200 shadow-sm">
+          <CardHeader className="bg-white border-b border-slate-200">
+            <CardTitle className="text-slate-900">Biên Bản Kiểm Tra Xe</CardTitle>
+            <CardDescription>Thông tin biên bản kiểm tra xe cho booking này</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            {loadingInspection && <div className="text-sm text-slate-500">Đang tải biên bản kiểm tra...</div>}
+            {inspectionError && <div className="text-sm text-red-600">{inspectionError}</div>}
+            {!loadingInspection && !inspection && !inspectionError && (
+              <div className="text-center py-8 border-2 border-dashed border-slate-200 rounded-lg">
+                <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <p className="text-slate-500">Chưa có biên bản kiểm tra cho booking này</p>
+              </div>
+            )}
+            {inspection && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 text-sm text-slate-600">
+                  <div>
+                    <p className="text-slate-500">Loại kiểm tra</p>
+                    <p className="font-medium text-slate-900">{inspection.inspectionType || 'N/A'}</p>
                   </div>
                   <div>
-                    <CardTitle className='text-slate-900'>
-                      Contract Details
-                    </CardTitle>
-                    <CardDescription>
-                      Detailed information about the vehicle and contract
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className='pt-6'>
-                <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-                  <Card className='p-4 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200'>
-                    <div className='flex items-start gap-3'>
-                      <Calendar className='w-6 h-6 text-blue-600 mt-1' />
-                      <div>
-                        <p className='text-sm text-slate-600 mb-1'>
-                          Rental period
-                        </p>
-                        <p className='font-semibold text-slate-900'>
-                          {selectedBooking.rentalDate}
-                        </p>
-                        <p className='text-sm text-slate-600'>
-                          to {selectedBooking.returnDate}
-                        </p>
-                      </div>
-                    </div>
-                  </Card>
-
-                  <Card className='p-4 bg-gradient-to-br from-green-50 to-green-100 border-green-200'>
-                    <div className='flex items-start gap-3'>
-                      <Zap className='w-6 h-6 text-green-600 mt-1' />
-                      <div>
-                        <p className='text-sm text-slate-600 mb-1'>Model</p>
-                        <p className='font-semibold text-slate-900'>
-                          {selectedBooking.scooterModel}
-                        </p>
-                        <p className='text-sm text-slate-600'>
-                          {selectedBooking.duration}
-                        </p>
-                      </div>
-                    </div>
-                  </Card>
-
-                  <Card className='p-4 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200'>
-                    <div className='flex items-start gap-3'>
-                      <DollarSign className='w-6 h-6 text-purple-600 mt-1' />
-                      <div>
-                        <p className='text-sm text-slate-600 mb-1'>Rental price</p>
-                        <p className='font-semibold text-slate-900'>
-                          {selectedBooking.price}
-                        </p>
-                        <p className='text-sm text-slate-600'>Total</p>
-                      </div>
-                    </div>
-                  </Card>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Step 4: Images from Staff (Read-only) */}
-            <Card className='mb-6 border-slate-200 shadow-sm'>
-              <CardHeader className='bg-white border-b border-slate-200'>
-                <div className='flex items-center gap-3'>
-                  <div className='flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-semibold'>
-                    5
+                    <p className="text-slate-500">Mức pin</p>
+                    <p className="font-medium text-slate-900">{inspection.batteryLevel ?? 'N/A'}%</p>
                   </div>
                   <div>
-                    <CardTitle className='text-slate-900'>
-                      Inspection Images From Staff
-                    </CardTitle>
-                    <CardDescription>
-                      Vehicle condition images provided by staff (view only)
-                    </CardDescription>
+                    <p className="text-slate-500">Tình trạng ngoại thất</p>
+                    <p className="font-medium text-slate-900">{inspection.exteriorCondition || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Tình trạng nội thất</p>
+                    <p className="font-medium text-slate-900">{inspection.interiorCondition || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Số km</p>
+                    <p className="font-medium text-slate-900">{inspection.mileage ?? 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Tình trạng lốp</p>
+                    <p className="font-medium text-slate-900">{inspection.tireCondition || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Phụ kiện đi kèm</p>
+                    <p className="font-medium text-slate-900">{Array.isArray(inspection.accessories) && inspection.accessories.length > 0 ? inspection.accessories.join(', ') : 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Ghi chú hư hỏng</p>
+                    <p className="font-medium text-slate-900">{inspection.damageNotes || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Ghi chú khác</p>
+                    <p className="font-medium text-slate-900">{inspection.notes || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Trạng thái hoàn thành</p>
+                    <p className="font-medium text-slate-900">{inspection.isCompleted ? 'Đã hoàn thành' : 'Chưa hoàn thành'}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Đã xác thực tài liệu</p>
+                    <p className="font-medium text-slate-900">{inspection.documentVerified ? 'Đã xác thực' : 'Chưa xác thực'}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Ngày tạo</p>
+                    <p className="font-medium text-slate-900">{inspection.createdAt ? new Date(inspection.createdAt).toLocaleString('vi-VN') : 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Ngày cập nhật</p>
+                    <p className="font-medium text-slate-900">{inspection.updatedAt ? new Date(inspection.updatedAt).toLocaleString('vi-VN') : 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Nhân viên kiểm tra</p>
+                    <p className="font-medium text-slate-900">{inspection.staffName || inspection.staff?.name || 'N/A'}</p>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent className='pt-6'>
-                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-                  {imageCategories.map(category => (
-                    <Card
-                      key={category.id}
-                      className='overflow-hidden border-slate-200 hover:border-slate-300 transition-all'
-                    >
-                      <div className='aspect-square flex flex-col items-center justify-center p-4 relative group bg-slate-50'>
-                        {formData.images[category.id] ? (
-                          <div className='text-center'>
-                            <div className='text-green-600 mb-2'>
-                              <Check className='w-6 h-6' />
-                            </div>
-                            <p className='text-sm font-medium text-slate-900'>
-                              Uploaded
-                            </p>
-                            <p className='text-xs text-slate-500 mt-1'>
-                              Image from staff
+                {inspection.images && inspection.images.length > 0 && (
+                  <div>
+                    <p className="text-slate-500 mb-2">Hình ảnh kiểm tra:</p>
+                    <div className="flex flex-wrap gap-3">
+                      {inspection.images.map((img, idx) => (
+                        <img key={idx} src={img.url || img.imageUrl || img} alt={`inspection-img-${idx}`} className="w-32 h-24 object-cover rounded border" />
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {inspection.imageUrl && (
+                  <div>
+                    <p className="text-slate-500 mb-2">Ảnh chính:</p>
+                    <img src={inspection.imageUrl} alt="inspection-main" className="w-48 h-32 object-cover rounded border" />
+                  </div>
+                )}
+                {inspection.thumbnailUrl && (
+                  <div>
+                    <p className="text-slate-500 mb-2">Thumbnail:</p>
+                    <img src={inspection.thumbnailUrl} alt="inspection-thumbnail" className="w-32 h-20 object-cover rounded border" />
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Contract List Section */}
+      {selectedBooking && (
+        <Card className="border-slate-200 shadow-sm">
+          <CardHeader className="bg-white border-b border-slate-200">
+            <CardTitle className="text-slate-900">Hợp Đồng</CardTitle>
+            <CardDescription>Danh sách hợp đồng cho booking này</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            {loadingContracts && <div className="text-sm text-slate-500">Đang tải hợp đồng...</div>}
+            {error && <div className="text-sm text-red-600">{error}</div>}
+
+            {!loadingContracts && contracts.length === 0 && (
+              <div className="text-center py-8 border-2 border-dashed border-slate-200 rounded-lg">
+                <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <p className="text-slate-500">Chưa có hợp đồng nào cho booking này</p>
+                <p className="text-sm text-slate-400 mt-1">Hợp đồng sẽ được tạo bởi nhân viên</p>
+              </div>
+            )}
+
+            {contracts.length > 0 && (
+              <div className="space-y-4">
+                {contracts.map((contract) => (
+                  <Card key={contract.id} className="p-4 border-slate-200">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="font-semibold text-slate-900">{contract.contractNumber}</h3>
+                          <span className={`text-sm px-2 py-1 rounded ${contract.status === 'COMPLETED'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-amber-100 text-amber-700'
+                            }`}>
+                            {contract.status === 'COMPLETED' ? 'Đã hoàn thành' : 'Chờ ký'}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 text-sm text-slate-600">
+                          <div>
+                            <p className="text-slate-500">Ngày tạo</p>
+                            <p className="font-medium text-slate-900">
+                              {new Date(contract.createdAt).toLocaleDateString('vi-VN')}
                             </p>
                           </div>
-                        ) : (
-                          <div className='text-center'>
-                            <div className='text-slate-400 mb-2'>-</div>
-                            <p className='text-sm font-medium text-slate-500'>
-                              No image
-                            </p>
+                          {contract.renterName && (
+                            <div>
+                              <p className="text-slate-500">Người thuê</p>
+                              <p className="font-medium text-slate-900">{contract.renterName}</p>
+                            </div>
+                          )}
+                          {contract.status === 'COMPLETED' && contract.signedAt && (
+                            <>
+                              <div>
+                                <p className="text-slate-500">Ngày ký</p>
+                                <p className="font-medium text-slate-900">
+                                  {new Date(contract.signedAt).toLocaleDateString('vi-VN')}
+                                </p>
+                              </div>
+                              {contract.witnessName && (
+                                <div>
+                                  <p className="text-slate-500">Người làm chứng</p>
+                                  <p className="font-medium text-slate-900">{contract.witnessName}</p>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                        {contract.notes && (
+                          <div className="mt-2 text-sm">
+                            <p className="text-slate-500">Ghi chú:</p>
+                            <p className="text-slate-700">{contract.notes}</p>
                           </div>
                         )}
                       </div>
-                      <div className='p-3 bg-white'>
-                        <h3 className='font-semibold text-slate-900 text-sm'>
-                          {category.label}
-                        </h3>
-                        <p className='text-xs text-slate-500 mt-1'>
-                          {category.description}
-                        </p>
+                      <div className="flex flex-col gap-2 ml-4">
+                        {contract.status === 'CREATED' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const element = document.getElementById(`upload-form-${contract.id}`);
+                              if (element) element.scrollIntoView({ behavior: 'smooth' });
+                            }}
+                          >
+                            <Upload className="w-4 h-4 mr-2" />
+                            Tải lên
+                          </Button>
+                        )}
+                        {contract.status === 'COMPLETED' && contract.signedFileUrl && (
+                          <a
+                            href={contract.signedFileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium border border-slate-300 rounded-md hover:bg-slate-50"
+                          >
+                            <FileText className="w-4 h-4 mr-2" />
+                            Xem hợp đồng
+                          </a>
+                        )}
                       </div>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Step 5: Notes from Staff (Read-only) */}
-            <Card className='mb-6 border-slate-200 shadow-sm'>
-              <CardHeader className='bg-white border-b border-slate-200'>
-                <div className='flex items-center gap-3'>
-                  <div className='flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-semibold'>
-                    6
-                  </div>
-                  <div>
-                    <CardTitle className='text-slate-900'>
-                      Notes & Damages From Staff
-                    </CardTitle>
-                    <CardDescription>
-                      Staff notes (view only)
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className='pt-6'>
-                <div className='space-y-6'>
-                  <div>
-                    <label className='block text-sm font-semibold text-slate-900 mb-2'>
-                      Damage Notes
-                    </label>
-                    <div className='w-full px-4 py-3 border border-slate-300 rounded-lg bg-slate-50 text-slate-700 min-h-24'>
-                      {formData.notes || 'No notes'}
                     </div>
-                  </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
-                  <div>
-                    <label className='block text-sm font-semibold text-slate-900 mb-2'>
-                      Additional Notes
-                    </label>
-                    <div className='w-full px-4 py-3 border border-slate-300 rounded-lg bg-slate-50 text-slate-700 min-h-24'>
-                      {formData.clauses || 'No additional notes'}
-                    </div>
+      {/* Upload Contract Form */}
+      {selectedBooking && contracts.filter(c => c.status === 'CREATED').length > 0 && (
+        <Card className="border-slate-200 shadow-sm">
+          <CardHeader className="bg-white border-b border-slate-200">
+            <CardTitle className="text-slate-900">Tải lên hợp đồng đã ký</CardTitle>
+            <CardDescription>Vui lòng điền thông tin và tải lên file hợp đồng đã ký</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            {contracts.filter(c => c.status === 'CREATED').map((contract) => (
+              <div key={contract.id} id={`upload-form-${contract.id}`} className="space-y-4 mb-8 pb-8 border-b last:border-b-0">
+                <h3 className="font-semibold text-lg mb-4">Hợp đồng: {contract.contractNumber}</h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor={`renterName-${contract.id}`}>
+                      Tên người thuê <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id={`renterName-${contract.id}`}
+                      name="renterName"
+                      value={formData.renterName}
+                      onChange={handleInputChange}
+                      placeholder="Nguyễn Văn A (2-100 ký tự)"
+                      required
+                      minLength={2}
+                      maxLength={100}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor={`witnessName-${contract.id}`}>
+                      Tên người làm chứng <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id={`witnessName-${contract.id}`}
+                      name="witnessName"
+                      value={formData.witnessName}
+                      onChange={handleInputChange}
+                      placeholder="Trần Thị B (2-100 ký tự)"
+                      required
+                      minLength={2}
+                      maxLength={100}
+                    />
                   </div>
                 </div>
-              </CardContent>
-            </Card>
 
-            {/* Step 6: Contract Agreement */}
-            <Card className='mb-6 border-slate-200 shadow-sm'>
-              <CardHeader className='bg-white border-b border-slate-200'>
-                <div className='flex items-center gap-3'>
-                  <div className='flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-semibold'>
-                    7
+                <div className="space-y-2">
+                  <Label htmlFor={`notes-${contract.id}`}>Ghi chú</Label>
+                  <Textarea
+                    id={`notes-${contract.id}`}
+                    name="notes"
+                    value={formData.notes}
+                    onChange={handleInputChange}
+                    placeholder="Thêm ghi chú về hợp đồng (tối đa 500 ký tự)"
+                    rows={3}
+                    maxLength={500}
+                  />
+                  <p className="text-xs text-slate-500">{formData.notes.length}/500 ký tự</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor={`file-${contract.id}`}>
+                    File hợp đồng đã ký <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="flex items-center gap-4">
+                    <Input
+                      id={`file-${contract.id}`}
+                      type="file"
+                      onChange={handleFileChange}
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      required
+                    />
+                    <Button
+                      onClick={() => handleUploadContract(contract.id)}
+                      disabled={actionLoading || !selectedFile}
+                    >
+                      {actionLoading ? "Đang tải lên..." : "Tải lên"}
+                    </Button>
                   </div>
-                  <div>
-                    <CardTitle className='text-slate-900'>
-                      Electronic Contract Confirmation
-                    </CardTitle>
-                    <CardDescription>
-                      Please agree to all terms to sign the contract
-                    </CardDescription>
+                  <p className="text-xs text-slate-500">
+                    Chấp nhận file PDF, JPG, JPEG, PNG (tối đa 10MB)
+                  </p>
+                  {selectedFile && (
+                    <p className="text-xs text-green-600">
+                      Đã chọn: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                    </p>
+                  )}
+                </div>
+
+                <div className="pt-4 space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`terms-${contract.id}`}
+                      checked={agreements.termsAccepted}
+                      onCheckedChange={(checked) => handleAgreementChange('termsAccepted', checked)}
+                    />
+                    <Label htmlFor={`terms-${contract.id}`} className="text-sm cursor-pointer">
+                      Tôi đã đọc và đồng ý với các điều khoản và điều kiện
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`conditions-${contract.id}`}
+                      checked={agreements.conditionsAccepted}
+                      onCheckedChange={(checked) => handleAgreementChange('conditionsAccepted', checked)}
+                    />
+                    <Label htmlFor={`conditions-${contract.id}`} className="text-sm cursor-pointer">
+                      Tôi xác nhận thông tin cung cấp là chính xác
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`damage-${contract.id}`}
+                      checked={agreements.damageResponsibility}
+                      onCheckedChange={(checked) => handleAgreementChange('damageResponsibility', checked)}
+                    />
+                    <Label htmlFor={`damage-${contract.id}`} className="text-sm cursor-pointer">
+                      Tôi chịu trách nhiệm về mọi hư hỏng không được báo cáo
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`privacy-${contract.id}`}
+                      checked={agreements.dataPrivacy}
+                      onCheckedChange={(checked) => handleAgreementChange('dataPrivacy', checked)}
+                    />
+                    <Label htmlFor={`privacy-${contract.id}`} className="text-sm cursor-pointer">
+                      Tôi đồng ý với chính sách bảo mật dữ liệu
+                    </Label>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent className='pt-6'>
-                <div className='space-y-6'>
-                  {/* Contract Terms */}
-                  <Card className='border-slate-200'>
-                    <CardHeader className='bg-slate-50 border-b border-slate-200'>
-                      <CardTitle className='text-slate-900'>
-                        Contract Terms & Conditions
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className='pt-6'>
-                      <div className='space-y-4 mb-6 text-sm text-slate-700 max-h-48 overflow-y-auto'>
-                        <div>
-                          <h4 className='font-semibold text-slate-900 mb-2'>
-                            1. Rental Period
-                          </h4>
-                          <p>
-                            The rental period starts from the time of pickup at the station and ends when the vehicle is returned to the station. Any usage beyond the agreed period will be charged according to the applicable rate.
-                          </p>
-                        </div>
-                        <div>
-                          <h4 className='font-semibold text-slate-900 mb-2'>
-                            2. Vehicle Care Responsibility
-                          </h4>
-                          <p>
-                            The renter is responsible for maintaining the vehicle during the rental period. Any damage, loss, or harm occurring during the rental period will be the renter’s responsibility.
-                          </p>
-                        </div>
-                        <div>
-                          <h4 className='font-semibold text-slate-900 mb-2'>
-                            3. Usage Conditions
-                          </h4>
-                          <p>
-                            The vehicle may only be used for personal purposes. Subleasing and use for commercial or illegal activities are prohibited.
-                          </p>
-                        </div>
-                        <div>
-                          <h4 className='font-semibold text-slate-900 mb-2'>
-                            4. Insurance & Protection
-                          </h4>
-                          <p>
-                            The vehicle is covered by basic insurance. The renter may purchase additional coverage to increase protection. Any insurance claim must be reported within 24 hours.
-                          </p>
-                        </div>
-                        <div>
-                          <h4 className='font-semibold text-slate-900 mb-2'>
-                            5. Fees & Payment
-                          </h4>
-                          <p>
-                            Rental fees must be paid in full before pickup. Additional fees (overtime, damage, etc.) will be calculated and settled upon return.
-                          </p>
-                        </div>
-                      </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
-                      <div
-                        className='flex items-start gap-4 p-5 bg-gradient-to-r from-green-50 to-green-100 rounded-lg border-2 border-green-400 cursor-pointer hover:from-green-100 hover:to-green-200 transition-all duration-200'
-                        onClick={() =>
-                          handleAgreementChange(
-                            'termsAccepted',
-                            !agreements.termsAccepted
-                          )
-                        }
-                      >
-                        <Checkbox
-                          id='terms'
-                          checked={agreements.termsAccepted}
-                          onCheckedChange={checked =>
-                            handleAgreementChange(
-                              'termsAccepted',
-                              Boolean(checked)
-                            )
-                          }
-                          className='w-6 h-6 mt-1 flex-shrink-0 cursor-pointer'
-                        />
-                        <label
-                          htmlFor='terms'
-                          className='text-base text-slate-800 cursor-pointer flex-1'
-                        >
-                          <span className='font-bold text-green-900'>
-                            I agree to the terms & conditions
-                          </span>
-                          <span className='text-slate-700'>
-                            {' '}
-                            of this electric car rental contract
-                          </span>
-                        </label>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Damage Responsibility */}
-                  <Card className='border-slate-200'>
-                    <CardHeader className='bg-slate-50 border-b border-slate-200'>
-                      <CardTitle className='text-slate-900'>
-                        Damage Responsibility
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className='pt-6'>
-                      <div className='space-y-3 mb-6 text-sm text-slate-700'>
-                        <p>
-                          <span className='font-semibold text-slate-900'>
-                            The renter confirms that:
-                          </span>
-                        </p>
-                        <ul className='list-disc list-inside space-y-2 ml-2'>
-                          <li>Has carefully inspected the vehicle condition before pickup</li>
-                          <li>Has recorded all existing damages with photos</li>
-                          <li>Will be responsible for any new damages during the rental period</li>
-                          <li>Will immediately report any accidents or incidents</li>
-                        </ul>
-                      </div>
-
-                      <div
-                        className='flex items-start gap-4 p-5 bg-gradient-to-r from-green-50 to-green-100 rounded-lg border-2 border-green-400 cursor-pointer hover:from-green-100 hover:to-green-200 transition-all duration-200'
-                        onClick={() =>
-                          handleAgreementChange(
-                            'damageResponsibility',
-                            !agreements.damageResponsibility
-                          )
-                        }
-                      >
-                        <Checkbox
-                          id='damage'
-                          checked={agreements.damageResponsibility}
-                          onCheckedChange={checked =>
-                            handleAgreementChange(
-                              'damageResponsibility',
-                              Boolean(checked)
-                            )
-                          }
-                          className='w-6 h-6 mt-1 flex-shrink-0 cursor-pointer'
-                        />
-                        <label
-                          htmlFor='damage'
-                          className='text-base text-slate-800 cursor-pointer flex-1'
-                        >
-                          <span className='font-bold text-green-900'>
-                            I understand and accept responsibility
-                          </span>
-                          <span className='text-slate-700'>
-                            {' '}
-                            for any damages occurring during the rental period
-                          </span>
-                        </label>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Data Privacy */}
-                  <Card className='border-slate-200'>
-                    <CardHeader className='bg-slate-50 border-b border-slate-200'>
-                      <CardTitle className='text-slate-900'>
-                        Personal Data Protection
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className='pt-6'>
-                      <div className='space-y-3 mb-6 text-sm text-slate-700'>
-                        <p>
-                          Your personal data is processed in accordance with our data protection policy. We are committed to safeguarding your information and using it only for purposes related to the rental contract.
-                        </p>
-                      </div>
-
-                      <div
-                        className='flex items-start gap-4 p-5 bg-gradient-to-r from-green-50 to-green-100 rounded-lg border-2 border-green-400 cursor-pointer hover:from-green-100 hover:to-green-200 transition-all duration-200'
-                        onClick={() =>
-                          handleAgreementChange(
-                            'dataPrivacy',
-                            !agreements.dataPrivacy
-                          )
-                        }
-                      >
-                        <Checkbox
-                          id='privacy'
-                          checked={agreements.dataPrivacy}
-                          onCheckedChange={checked =>
-                            handleAgreementChange(
-                              'dataPrivacy',
-                              Boolean(checked)
-                            )
-                          }
-                          className='w-6 h-6 mt-1 flex-shrink-0 cursor-pointer'
-                        />
-                        <label
-                          htmlFor='privacy'
-                          className='text-base text-slate-800 cursor-pointer flex-1'
-                        >
-                          <span className='font-bold text-green-900'>
-                            I agree to the personal data protection policy
-                          </span>
-                          <span className='text-slate-700'>
-                            {' '}
-                            and allow processing of my data
-                          </span>
-                        </label>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Conditions */}
-                  <Card className='border-slate-200'>
-                    <CardHeader className='bg-slate-50 border-b border-slate-200'>
-                      <CardTitle className='text-slate-900'>
-                        Additional Conditions
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className='pt-6'>
-                      <div className='space-y-3 mb-6 text-sm text-slate-700'>
-                        <p>
-                          <span className='font-semibold text-slate-900'>
-                            Additional conditions:
-                          </span>
-                        </p>
-                        <ul className='list-disc list-inside space-y-2 ml-2'>
-                          <li>The vehicle must be returned at the agreed time and location</li>
-                          <li>The vehicle must be returned in clean condition</li>
-                          <li>The battery must be fully charged before return</li>
-                          <li>All additional fees must be paid before returning the vehicle</li>
-                        </ul>
-                      </div>
-
-                      <div
-                        className='flex items-start gap-4 p-5 bg-gradient-to-r from-green-50 to-green-100 rounded-lg border-2 border-green-400 cursor-pointer hover:from-green-100 hover:to-green-200 transition-all duration-200'
-                        onClick={() =>
-                          handleAgreementChange(
-                            'conditionsAccepted',
-                            !agreements.conditionsAccepted
-                          )
-                        }
-                      >
-                        <Checkbox
-                          id='conditions'
-                          checked={agreements.conditionsAccepted}
-                          onCheckedChange={checked =>
-                            handleAgreementChange(
-                              'conditionsAccepted',
-                              Boolean(checked)
-                            )
-                          }
-                          className='w-6 h-6 mt-1 flex-shrink-0 cursor-pointer'
-                        />
-                        <label
-                          htmlFor='conditions'
-                          className='text-base text-slate-800 cursor-pointer flex-1'
-                        >
-                          <span className='font-bold text-green-900'>
-                            I agree to all additional conditions
-                          </span>
-                          <span className='text-slate-700'>
-                            {' '}
-                            listed above
-                          </span>
-                        </label>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Warning */}
-                  <div className='flex gap-3 p-4 bg-red-50 rounded-lg border border-red-200'>
-                    <AlertCircle className='w-5 h-5 text-red-600 flex-shrink-0 mt-0.5' />
-                    <div className='text-sm text-red-800'>
-                      <p className='font-semibold mb-1'>Important notice:</p>
+      {/* Agreement Status & Final Submit */}
+      {selectedBooking && contracts.some(c => c.status === 'COMPLETED') && (
+        <Card className="border-slate-200 shadow-sm">
+          <CardHeader className="bg-white border-b border-slate-200">
+            <CardTitle className="text-slate-900">Xác Nhận Hợp Đồng Điện Tử</CardTitle>
+            <CardDescription>Vui lòng đồng ý với tất cả các điều khoản để hoàn tất</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="space-y-6">
+              {/* Contract Terms */}
+              <Card className="border-slate-200">
+                <CardHeader className="bg-slate-50 border-b border-slate-200">
+                  <CardTitle className="text-slate-900">Điều Khoản & Điều Kiện Hợp Đồng</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <div className="space-y-4 mb-6 text-sm text-slate-700 max-h-48 overflow-y-auto">
+                    <div>
+                      <h4 className="font-semibold text-slate-900 mb-2">1. Thời Hạn Thuê</h4>
                       <p>
-                        By signing this contract, you confirm that you have read,
-                        understood, and agreed to all terms and conditions. This contract
-                        is legally binding and you are legally responsible for any violations.
+                        Thời hạn thuê xe bắt đầu từ lúc nhận xe tại trạm và kết thúc khi trả xe tại trạm. Bất kỳ
+                        thời gian sử dụng vượt quá thời hạn sẽ bị tính phí theo giá quy định.
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-slate-900 mb-2">2. Trách Nhiệm Bảo Quản Xe</h4>
+                      <p>
+                        Người thuê chịu trách nhiệm bảo quản xe trong suốt thời gian thuê. Mọi hư hỏng, mất mát hoặc
+                        thiệt hại xảy ra trong thời gian thuê sẽ do người thuê chịu trách nhiệm.
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-slate-900 mb-2">3. Điều Kiện Sử Dụng</h4>
+                      <p>
+                        Xe chỉ được sử dụng cho mục đích cá nhân, không được cho thuê lại, không được sử dụng cho
+                        hoạt động thương mại hoặc bất hợp pháp.
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-slate-900 mb-2">4. Bảo Hiểm & Bảo Vệ</h4>
+                      <p>
+                        Xe được bảo hiểm cơ bản. Người thuê có thể mua bảo hiểm bổ sung để tăng mức bảo vệ. Mọi yêu
+                        cầu bảo hiểm phải được báo cáo trong vòng 24 giờ.
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-slate-900 mb-2">5. Phí & Thanh Toán</h4>
+                      <p>
+                        Phí thuê phải được thanh toán đầy đủ trước khi nhận xe. Các phí bổ sung (quá giờ, hư hỏng,
+                        v.v.) sẽ được tính toán và thanh toán khi trả xe.
                       </p>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
 
-            {/* Agreement Status */}
-            {allAgreementsAccepted && (
-              <Card className='mb-6 border-green-200 bg-green-50'>
-                <CardContent className='pt-6'>
-                  <div className='flex items-center gap-3'>
-                    <CheckCircle2 className='w-6 h-6 text-green-600 flex-shrink-0' />
+                  <div
+                    className="flex items-start gap-4 p-5 bg-gradient-to-r from-green-50 to-green-100 rounded-lg border-2 border-green-400 cursor-pointer hover:from-green-100 hover:to-green-200 transition-all duration-200"
+                    onClick={() => handleAgreementChange("termsAccepted", !agreements.termsAccepted)}
+                  >
+                    <Checkbox
+                      id="terms-final"
+                      checked={agreements.termsAccepted}
+                      onCheckedChange={(checked) => handleAgreementChange("termsAccepted", Boolean(checked))}
+                      className="w-6 h-6 mt-1 flex-shrink-0 cursor-pointer"
+                    />
+                    <label htmlFor="terms-final" className="text-base text-slate-800 cursor-pointer flex-1">
+                      <span className="font-bold text-green-900">Tôi đồng ý với các điều khoản & điều kiện</span>
+                      <span className="text-slate-700"> của hợp đồng thuê xe điện này</span>
+                    </label>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Damage Responsibility */}
+              <Card className="border-slate-200">
+                <CardHeader className="bg-slate-50 border-b border-slate-200">
+                  <CardTitle className="text-slate-900">Trách Nhiệm Về Hư Hỏng</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <div className="space-y-3 mb-6 text-sm text-slate-700">
+                    <p>
+                      <span className="font-semibold text-slate-900">Người thuê xác nhận rằng:</span>
+                    </p>
+                    <ul className="list-disc list-inside space-y-2 ml-2">
+                      <li>Đã kiểm tra kỹ tình trạng xe trước khi nhận</li>
+                      <li>Đã ghi lại tất cả các hư hỏng hiện có bằng ảnh</li>
+                      <li>Sẽ chịu trách nhiệm cho mọi hư hỏng mới xảy ra trong thời gian thuê</li>
+                      <li>Sẽ báo cáo ngay mọi tai nạn hoặc sự cố xảy ra</li>
+                    </ul>
+                  </div>
+
+                  <div
+                    className="flex items-start gap-4 p-5 bg-gradient-to-r from-green-50 to-green-100 rounded-lg border-2 border-green-400 cursor-pointer hover:from-green-100 hover:to-green-200 transition-all duration-200"
+                    onClick={() => handleAgreementChange("damageResponsibility", !agreements.damageResponsibility)}
+                  >
+                    <Checkbox
+                      id="damage-final"
+                      checked={agreements.damageResponsibility}
+                      onCheckedChange={(checked) => handleAgreementChange("damageResponsibility", Boolean(checked))}
+                      className="w-6 h-6 mt-1 flex-shrink-0 cursor-pointer"
+                    />
+                    <label htmlFor="damage-final" className="text-base text-slate-800 cursor-pointer flex-1">
+                      <span className="font-bold text-green-900">Tôi hiểu và chấp nhận trách nhiệm</span>
+                      <span className="text-slate-700"> về mọi hư hỏng xảy ra trong thời gian thuê</span>
+                    </label>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Data Privacy */}
+              <Card className="border-slate-200">
+                <CardHeader className="bg-slate-50 border-b border-slate-200">
+                  <CardTitle className="text-slate-900">Bảo Vệ Dữ Liệu Cá Nhân</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <div className="space-y-3 mb-6 text-sm text-slate-700">
+                    <p>
+                      Dữ liệu cá nhân của bạn sẽ được xử lý theo chính sách bảo vệ dữ liệu của chúng tôi. Chúng tôi
+                      cam kết bảo vệ thông tin của bạn và chỉ sử dụng nó cho mục đích liên quan đến hợp đồng thuê
+                      xe.
+                    </p>
+                  </div>
+
+                  <div
+                    className="flex items-start gap-4 p-5 bg-gradient-to-r from-green-50 to-green-100 rounded-lg border-2 border-green-400 cursor-pointer hover:from-green-100 hover:to-green-200 transition-all duration-200"
+                    onClick={() => handleAgreementChange("dataPrivacy", !agreements.dataPrivacy)}
+                  >
+                    <Checkbox
+                      id="privacy-final"
+                      checked={agreements.dataPrivacy}
+                      onCheckedChange={(checked) => handleAgreementChange("dataPrivacy", Boolean(checked))}
+                      className="w-6 h-6 mt-1 flex-shrink-0 cursor-pointer"
+                    />
+                    <label htmlFor="privacy-final" className="text-base text-slate-800 cursor-pointer flex-1">
+                      <span className="font-bold text-green-900">
+                        Tôi đồng ý với chính sách bảo vệ dữ liệu cá nhân
+                      </span>
+                      <span className="text-slate-700"> và cho phép xử lý dữ liệu của tôi</span>
+                    </label>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Conditions */}
+              <Card className="border-slate-200">
+                <CardHeader className="bg-slate-50 border-b border-slate-200">
+                  <CardTitle className="text-slate-900">Điều Kiện Khác</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <div className="space-y-3 mb-6 text-sm text-slate-700">
+                    <p>
+                      <span className="font-semibold text-slate-900">Các điều kiện bổ sung:</span>
+                    </p>
+                    <ul className="list-disc list-inside space-y-2 ml-2">
+                      <li>Xe phải được trả lại đúng thời gian và địa điểm quy định</li>
+                      <li>Xe phải được trả lại trong tình trạng sạch sẽ</li>
+                      <li>Bình pin phải được sạc đầy trước khi trả xe</li>
+                      <li>Mọi phí phát sinh phải được thanh toán trước khi trả xe</li>
+                    </ul>
+                  </div>
+
+                  <div
+                    className="flex items-start gap-4 p-5 bg-gradient-to-r from-green-50 to-green-100 rounded-lg border-2 border-green-400 cursor-pointer hover:from-green-100 hover:to-green-200 transition-all duration-200"
+                    onClick={() => handleAgreementChange("conditionsAccepted", !agreements.conditionsAccepted)}
+                  >
+                    <Checkbox
+                      id="conditions-final"
+                      checked={agreements.conditionsAccepted}
+                      onCheckedChange={(checked) => handleAgreementChange("conditionsAccepted", Boolean(checked))}
+                      className="w-6 h-6 mt-1 flex-shrink-0 cursor-pointer"
+                    />
+                    <label htmlFor="conditions-final" className="text-base text-slate-800 cursor-pointer flex-1">
+                      <span className="font-bold text-green-900">Tôi đồng ý với tất cả các điều kiện bổ sung</span>
+                      <span className="text-slate-700"> được liệt kê ở trên</span>
+                    </label>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Warning */}
+              <div className="flex gap-3 p-4 bg-red-50 rounded-lg border border-red-200">
+                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-red-800">
+                  <p className="font-semibold mb-1">Lưu ý quan trọng:</p>
+                  <p>
+                    Bằng cách ký hợp đồng này, bạn xác nhận rằng bạn đã đọc, hiểu và đồng ý với tất cả các điều
+                    khoản và điều kiện. Hợp đồng này có giá trị pháp lý và bạn chịu trách nhiệm pháp lý về các vi
+                    phạm.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Agreement status box */}
+            {allAgreementsAccepted ? (
+              <Card className="border-green-200 bg-green-50 mt-4">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0" />
                     <div>
                       <p className='font-semibold text-green-900'>
                         All terms accepted
@@ -939,20 +1021,14 @@ export default function RentalContractPage() {
                   </div>
                 </CardContent>
               </Card>
-            )}
-
-            {!allAgreementsAccepted && (
-              <Card className='mb-6 border-amber-200 bg-amber-50'>
-                <CardContent className='pt-6'>
-                  <div className='flex items-center gap-3'>
-                    <AlertCircle className='w-6 h-6 text-amber-600 flex-shrink-0' />
+            ) : (
+              <Card className="border-amber-200 bg-amber-50 mt-4">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-3">
+                    <AlertCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
                     <div>
-                      <p className='font-semibold text-amber-900'>
-                        Not all terms completed
-                      </p>
-                      <p className='text-sm text-amber-700'>
-                        Please agree to all terms before signing the contract
-                      </p>
+                      <p className="font-semibold text-amber-900">Chưa hoàn thành tất cả các điều khoản</p>
+                      <p className="text-sm text-amber-700">Vui lòng đồng ý với tất cả các điều khoản trước khi ký hợp đồng</p>
                     </div>
                   </div>
                 </CardContent>
@@ -960,30 +1036,36 @@ export default function RentalContractPage() {
             )}
 
             {/* Submit Button */}
-            <div className='flex gap-4 justify-end'>
-              <Button
-                variant='outline'
-                size='lg'
-                className='border-slate-300 text-slate-700 hover:bg-slate-50 bg-transparent'
-              >
-                Cancel
-              </Button>
-              <Button
-                size='lg'
-                onClick={handleSubmit}
-                disabled={!allAgreementsAccepted || actionLoading}
-                className={`text-white ${
-                  allAgreementsAccepted
-                    ? 'bg-blue-600 hover:bg-blue-700'
-                    : 'bg-slate-400 cursor-not-allowed'
-                }`}
-              >
-                {actionLoading ? 'Processing...' : 'Sign Electronic Contract'}
-              </Button>
-            </div>
-          </>
-        )}
-      </div>
-    </main>
-  );
+            {contracts.some(c => c.status === 'COMPLETED') && (
+              <div className="flex gap-4 justify-end mt-4">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="border-slate-300 text-slate-700 hover:bg-slate-50 bg-transparent"
+                  onClick={() => {
+                    if (window.confirm('Bạn có chắc chắn muốn hủy?')) {
+                      window.history.back();
+                    }
+                  }}
+                >
+                  Hủy
+                </Button>
+                <Button
+                  size="lg"
+                  onClick={handleFinalSubmit}
+                  disabled={!allAgreementsAccepted || actionLoading}
+                  className={`text-white ${allAgreementsAccepted
+                    ? "bg-blue-600 hover:bg-blue-700"
+                    : "bg-slate-400 cursor-not-allowed"
+                    }`}
+                >
+                  {actionLoading ? "Đang xử lý..." : "Ký Hợp Đồng Điện Tử"}
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  )
 }

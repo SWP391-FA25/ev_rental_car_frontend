@@ -16,6 +16,12 @@ apiClient.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // Nếu payload là FormData, bỏ Content-Type mặc định để axios tự thêm boundary
+    if (config.data instanceof FormData) {
+      if (config.headers && config.headers['Content-Type']) {
+        delete config.headers['Content-Type'];
+      }
+    }
     return config;
   },
   error => Promise.reject(error)

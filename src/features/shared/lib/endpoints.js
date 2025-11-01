@@ -8,6 +8,8 @@ export const endpoints = {
     logout: () => '/api/auth/logout',
     me: () => '/api/auth/me',
   },
+
+
   staffs: {
     getAll: () => '/api/staffs',
     getById: id => `/api/staffs/${id}`,
@@ -47,6 +49,7 @@ export const endpoints = {
     upload: () => '/api/documents/upload',
     myDocuments: () => '/api/documents/my-documents',
     getAll: () => '/api/documents/all',
+    getByUserId: userId => `/api/documents/user/${userId}`,
     delete: id => `/api/documents/${id}`,
     verify: id => `/api/documents/${id}/verify`,
   },
@@ -101,8 +104,7 @@ export const endpoints = {
     getAll: () => `/api/inspections`,
     getById: id => `/api/inspections/${id}`,
     getByBooking: bookingId => `/api/inspections/booking/${bookingId}`,
-    getByBookingRenter: bookingId =>
-      `/api/inspections/booking/${bookingId}/renter`,
+    getByBookingRenter: bookingId => `/api/inspections/booking/${bookingId}/renter`,
     getByVehicle: vehicleId => `/api/inspections/vehicle/${vehicleId}`,
     getByStaff: staffId => `/api/inspections/staff/${staffId}`,
     create: () => '/api/inspections',
@@ -118,5 +120,24 @@ export const endpoints = {
     getStatus: paymentId => `/api/payos/status/${paymentId}`,
     createCashPayment: () => '/api/payments/cash-payment',
     uploadCashEvidence: () => '/api/payments/cash-payment/evidence',
+  },
+  contracts: {
+    // 🧾 Tạo hợp đồng mới (Staff/Admin)
+    create: () => '/api/contracts',
+
+    // 📤 Upload file hợp đồng đã ký (Staff/Admin)
+    uploadSignedFile: (contractId) => `/api/contracts/${contractId}/upload`,
+
+    // 🔍 Lấy chi tiết hợp đồng theo ID
+    getById: (contractId) => `/api/contracts/${contractId}`,
+
+    // 📚 Lấy danh sách hợp đồng theo booking ID
+    getByBooking: (bookingId) => `/api/contracts/booking/${bookingId}`,
+
+    // 📋 Lấy toàn bộ hợp đồng (Staff/Admin)
+    getAll: () => '/api/contracts',
+
+    // 📊 Lấy thống kê hợp đồng (Staff/Admin)
+    getStats: () => '/api/contracts/stats/overview',
   },
 };
