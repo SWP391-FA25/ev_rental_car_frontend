@@ -14,6 +14,8 @@ import { Label } from "../../shared/components/ui/label";
 import { Textarea } from "../../shared/components/ui/textarea";
 
 export default function CarRentalContract({ bookingId, onStatusChange }) {
+  const { user } = useAuth() // ← Di chuyển lên đầu
+
   // Inspection state
   const [inspection, setInspection] = useState(null);
   const [loadingInspection, setLoadingInspection] = useState(false);
@@ -25,24 +27,46 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
     setLoadingInspection(true);
     setInspectionError(null);
     try {
-      // Giả sử API trả về { success, data: [inspection] } hoặc { success, data: inspection }
-      const res = await apiClient.get(`/api/inspections?bookingId=${bookingId}`);
+      // Sử dụng API dành cho RENTER
+      const res = await apiClient.get(endpoints.inspections.getByBookingRenter(bookingId));
       const json = res?.data;
+      console.log('📋 Inspection API response:', json);
+      console.log('📋 json.data:', json?.data);
+      console.log('📋 json.data.inspections:', json?.data?.inspections);
+
       let ins = null;
-      if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+      // Handle multiple response structures from backend
+      // Backend returns: { success: true, data: { inspections: [...] } }
+      if (json?.success && json?.data?.inspections && Array.isArray(json.data.inspections)) {
+        console.log('✅ Found inspections array, length:', json.data.inspections.length);
+        ins = json.data.inspections.length > 0 ? json.data.inspections[0] : null;
+      } else if (json?.success && Array.isArray(json?.data) && json.data.length > 0) {
+        console.log('✅ Found data as array');
         ins = json.data[0];
-      } else if (json.success && json.data && typeof json.data === 'object') {
+      } else if (json?.success && json?.data && typeof json.data === 'object' && json.data.id) {
+        console.log('✅ Found data as object with id');
         ins = json.data;
+      } else if (Array.isArray(json) && json.length > 0) {
+        console.log('✅ Found json as array');
+        ins = json[0];
+      } else if (json && typeof json === 'object' && json.id) {
+        console.log('✅ Found json as object with id');
+        ins = json;
+      } else {
+        console.log('❌ No matching structure found');
       }
+
+      console.log('✅ Parsed inspection:', ins);
       setInspection(ins);
     } catch (err) {
+      console.error('❌ Fetch inspection error:', err);
       setInspectionError('Không thể tải biên bản kiểm tra.');
       setInspection(null);
     } finally {
       setLoadingInspection(false);
     }
-  }, []);
-  const { user } = useAuth()
+  }, []); // Không cần user vào dependency vì chỉ dùng API RENTER
+
   // local helper to emulate previous useToast({title,description,variant})
   const showToast = ({ title = '', description = '', variant = '' } = {}) => {
     const message = title && description ? `${title} — ${description}` : title || description || '';
@@ -189,13 +213,13 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
       const list = json?.bookings ?? json?.data?.bookings ?? json?.data ?? json;
       console.log("Extracted bookings list:", list);
 
-      // Lọc chỉ lấy bookings CONFIRMED
-      const confirmedBookings = (Array.isArray(list) ? list : []).filter(
-        b => (b.status || b.bookingStatus) === 'CONFIRMED'
+      // Lọc chỉ lấy bookings IN_PROGRESS
+      const inProgressBookings = (Array.isArray(list) ? list : []).filter(
+        b => (b.status || b.bookingStatus) === 'IN_PROGRESS'
       );
-      console.log("Filtered confirmed bookings:", confirmedBookings);
+      console.log("Filtered in-progress bookings:", inProgressBookings);
 
-      setBookings(confirmedBookings);
+      setBookings(inProgressBookings);
     } catch (err) {
       console.error("fetchBookings error:", err);
       setError("Không thể tải danh sách booking. Vui lòng thử lại sau.");

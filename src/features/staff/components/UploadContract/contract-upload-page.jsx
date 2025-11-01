@@ -18,9 +18,9 @@ export function ContractUploadPage() {
 	const [error, setError] = useState(null)
 	const [searchTerm, setSearchTerm] = useState("")
 	const [filterStatus, setFilterStatus] = useState("all")
-	// Backend only has: CREATED, COMPLETED
+	// Backend only has: COMPLETED
 	// Frontend adds "NO_CONTRACT" for bookings without contract
-	const statusOptions = ["all", "NO_CONTRACT", "CREATED", "COMPLETED"]
+	const statusOptions = ["all", "NO_CONTRACT", "COMPLETED"] // Không còn CREATED
 	const [showUploadModal, setShowUploadModal] = useState(false)
 	const [selectedContract, setSelectedContract] = useState(null)
 	const [page, setPage] = useState(1)
@@ -247,19 +247,18 @@ export function ContractUploadPage() {
 			contract?.vehicle?.licensePlate?.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			contract?.vehicle?.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			contract?.vehicle?.model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			contract?.station?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-
-		const matchesStatus = filterStatus === "all" || contract?.contractStatus === filterStatus
-
-		return matchesSearch && matchesStatus
+			contract?.station?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+		// Không còn trạng thái CREATED
+		const matchesStatus = filterStatus === "all"
+			? contract?.contractStatus !== "CREATED"
+			: contract?.contractStatus === filterStatus;
+		return matchesSearch && matchesStatus;
 	})
 
 	const getStatusIcon = (status) => {
 		switch (status) {
 			case "COMPLETED":
 				return <CheckCircle className="w-5 h-5 text-green-600" />
-			case "CREATED":
-				return <Clock className="w-5 h-5 text-blue-600" />
 			case "NO_CONTRACT":
 				return <AlertCircle className="w-5 h-5 text-amber-600" />
 			default:
@@ -271,8 +270,6 @@ export function ContractUploadPage() {
 		switch (status) {
 			case "COMPLETED":
 				return "Đã hoàn thành"
-			case "CREATED":
-				return "Chờ tải file"
 			case "NO_CONTRACT":
 				return "Chưa tạo"
 			default:
@@ -284,8 +281,6 @@ export function ContractUploadPage() {
 		switch (status) {
 			case "COMPLETED":
 				return "bg-green-50 text-green-700 border-green-200"
-			case "CREATED":
-				return "bg-blue-50 text-blue-700 border-blue-200"
 			case "NO_CONTRACT":
 				return "bg-amber-50 text-amber-700 border-amber-200"
 			default:
@@ -375,17 +370,7 @@ export function ContractUploadPage() {
 						>
 							Chưa tạo
 						</Button>
-						<Button
-							variant={filterStatus === "CREATED" ? "default" : "outline"}
-							onClick={() => setFilterStatus("CREATED")}
-							className={
-								filterStatus === "CREATED"
-									? "bg-blue-600 hover:bg-blue-700 text-white"
-									: "border-slate-300 text-slate-700 hover:bg-slate-50"
-							}
-						>
-							Chờ tải file
-						</Button>
+						{/* Đã xóa nút Chờ tải file */}
 						<Button
 							variant={filterStatus === "COMPLETED" ? "default" : "outline"}
 							onClick={() => setFilterStatus("COMPLETED")}
@@ -458,7 +443,7 @@ export function ContractUploadPage() {
 													>
 														<Eye className="w-4 h-4" />
 													</Button>
-													{(contract?.contractStatus === "NO_CONTRACT" || contract?.contractStatus === "CREATED") && (
+													{contract?.contractStatus === "NO_CONTRACT" && (
 														<Button
 															variant="ghost"
 															size="sm"
@@ -508,12 +493,6 @@ export function ContractUploadPage() {
 							<p className="text-sm text-slate-600">Chưa tạo</p>
 							<p className="text-2xl font-bold text-amber-600">
 								{contracts.filter((c) => c?.contractStatus === "NO_CONTRACT").length}
-							</p>
-						</div>
-						<div>
-							<p className="text-sm text-slate-600">Chờ tải file</p>
-							<p className="text-2xl font-bold text-blue-600">
-								{contracts.filter((c) => c?.contractStatus === "CREATED").length}
 							</p>
 						</div>
 						<div>
@@ -597,7 +576,6 @@ export function ContractUploadPage() {
 									<X className="w-6 h-6" />
 								</button>
 							</div>
-
 							<div className="space-y-6">
 								{/* Booking Info */}
 								<div>
@@ -638,7 +616,6 @@ export function ContractUploadPage() {
 										</div>
 									</div>
 								</div>
-
 								{/* Dates */}
 								<div>
 									<h3 className="text-lg font-semibold text-slate-900 mb-4">Thời gian</h3>
@@ -654,12 +631,11 @@ export function ContractUploadPage() {
 									</div>
 								</div>
 							</div>
-
 							<div className="flex gap-3 mt-6">
 								<Button onClick={() => setShowDetailModal(false)} variant="outline" className="flex-1 border-slate-300">
 									Đóng
 								</Button>
-								{(selectedContract?.contractStatus === "NO_CONTRACT" || selectedContract?.contractStatus === "CREATED") && (
+								{selectedContract?.contractStatus === "NO_CONTRACT" && (
 									<Button
 										onClick={() => {
 											setShowDetailModal(false)
@@ -676,6 +652,7 @@ export function ContractUploadPage() {
 					</Card>
 				</div>
 			)}
+			{/* Kết thúc Detail Modal */}
 		</div>
-	)
+	);
 }
