@@ -16,52 +16,99 @@ import { Textarea } from "../../shared/components/ui/textarea";
 export default function CarRentalContract({ bookingId, onStatusChange }) {
   const { user } = useAuth() // ← Di chuyển lên đầu
 
-  // Inspection state
-  const [inspection, setInspection] = useState(null);
+  // Inspection state - Lưu MẢNG inspections thay vì 1 cái
+  const [inspections, setInspections] = useState([]);
   const [loadingInspection, setLoadingInspection] = useState(false);
   const [inspectionError, setInspectionError] = useState(null);
 
-  // Fetch inspection by bookingId
+  // Fetch ALL CHECK_IN inspections by bookingId
   const fetchInspection = useCallback(async (bookingId) => {
     if (!bookingId) return;
     setLoadingInspection(true);
     setInspectionError(null);
     try {
+      console.log('🔍 Fetching inspections for bookingId:', bookingId);
       // Sử dụng API dành cho RENTER
       const res = await apiClient.get(endpoints.inspections.getByBookingRenter(bookingId));
       const json = res?.data;
-      console.log('📋 Inspection API response:', json);
+      console.log('📋 Full API response:', res);
+      console.log('📋 Response data (json):', json);
+      console.log('📋 json type:', typeof json);
+      console.log('📋 json keys:', json ? Object.keys(json) : 'null');
+      console.log('📋 json.success:', json?.success);
       console.log('📋 json.data:', json?.data);
+      console.log('📋 json.data type:', typeof json?.data);
       console.log('📋 json.data.inspections:', json?.data?.inspections);
+      console.log('📋 json stringified:', JSON.stringify(json, null, 2));
 
-      let ins = null;
+      let allInspections = [];
       // Handle multiple response structures from backend
-      // Backend returns: { success: true, data: { inspections: [...] } }
-      if (json?.success && json?.data?.inspections && Array.isArray(json.data.inspections)) {
-        console.log('✅ Found inspections array, length:', json.data.inspections.length);
-        ins = json.data.inspections.length > 0 ? json.data.inspections[0] : null;
-      } else if (json?.success && Array.isArray(json?.data) && json.data.length > 0) {
-        console.log('✅ Found data as array');
-        ins = json.data[0];
-      } else if (json?.success && json?.data && typeof json.data === 'object' && json.data.id) {
-        console.log('✅ Found data as object with id');
-        ins = json.data;
-      } else if (Array.isArray(json) && json.length > 0) {
-        console.log('✅ Found json as array');
-        ins = json[0];
-      } else if (json && typeof json === 'object' && json.id) {
-        console.log('✅ Found json as object with id');
-        ins = json;
-      } else {
-        console.log('❌ No matching structure found');
+
+      console.log('🔍 Checking response structure...');
+      console.log('🔍 Has success property?', 'success' in (json || {}));
+      console.log('🔍 Has data property?', 'data' in (json || {}));
+      console.log('🔍 Has inspections property?', 'inspections' in (json || {}));
+      console.log('🔍 json.inspections type:', Array.isArray(json?.inspections) ? 'array' : typeof json?.inspections);
+
+      // Priority 1: Direct { inspections: [...] } structure (ACTUAL BACKEND RESPONSE)
+      if (json && 'inspections' in json && Array.isArray(json.inspections)) {
+        console.log('✅ Branch 1: Direct inspections array in json.inspections');
+        allInspections = json.inspections;
+      }
+      // Priority 2: Standard backend response { success: true, data: { inspections: [...] } }
+      else if (json?.success === true && json?.data?.inspections) {
+        console.log('✅ Branch 2: Standard response with success and data.inspections');
+        allInspections = Array.isArray(json.data.inspections) ? json.data.inspections : [json.data.inspections];
+      }
+      // Priority 3: Response has 'success' and 'data' properties at top level
+      else if (json && typeof json === 'object' && 'success' in json && 'data' in json) {
+        console.log('✅ Branch 3: Has success and data properties');
+        if (json.data?.inspections) {
+          allInspections = Array.isArray(json.data.inspections) ? json.data.inspections : [json.data.inspections];
+        } else if (Array.isArray(json.data)) {
+          allInspections = json.data;
+        } else if (json.data && typeof json.data === 'object') {
+          allInspections = [json.data];
+        }
+      }
+      // Priority 4: Direct inspection object (has id and bookingId)
+      else if (json && typeof json === 'object' && json.id && json.bookingId) {
+        console.log('✅ Branch 4: Direct inspection object with id and bookingId');
+        allInspections = [json];
+      }
+      // Priority 5: Array of inspections
+      else if (Array.isArray(json)) {
+        console.log('✅ Branch 5: Direct array of inspections');
+        allInspections = json;
+      }
+      // Fallback
+      else {
+        console.log('❌ No matching structure found!');
+        console.log('❌ json type:', typeof json);
+        console.log('❌ json keys:', json ? Object.keys(json).join(', ') : 'none');
       }
 
-      console.log('✅ Parsed inspection:', ins);
-      setInspection(ins);
+      console.log('📊 All inspections extracted:', allInspections);
+      console.log('📊 All inspections length:', allInspections.length);
+      console.log('📊 All inspections content:', JSON.stringify(allInspections, null, 2));
+
+      // 🔥 LỌC CHỈ LẤY INSPECTION TYPE = CHECK_IN
+      const checkInInspections = allInspections.filter(
+        ins => {
+          console.log('🔍 Filtering inspection:', ins?.id, 'type:', ins?.inspectionType);
+          return ins && ins.inspectionType === 'CHECK_IN';
+        }
+      );
+
+      console.log('✅ Total inspections:', allInspections.length);
+      console.log('✅ CHECK_IN inspections found:', checkInInspections.length);
+      console.log('✅ CHECK_IN inspections data:', checkInInspections);
+      setInspections(checkInInspections);
     } catch (err) {
       console.error('❌ Fetch inspection error:', err);
+      console.error('❌ Error details:', err.response?.data || err.message);
       setInspectionError('Không thể tải biên bản kiểm tra.');
-      setInspection(null);
+      setInspections([]);
     } finally {
       setLoadingInspection(false);
     }
@@ -237,6 +284,15 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
 
 
   const handleBookingSelect = (booking) => {
+    // Toggle: Click lần 2 vào cùng booking → Deselect & Hide info
+    if (selectedBooking?.id === booking.id) {
+      setSelectedBooking(null);
+      setInspections([]);
+      setContracts([]);
+      return;
+    }
+
+    // Select new booking
     setSelectedBooking(booking);
     fetchBookingDetails(booking.id);
     fetchContracts(booking.id);
@@ -464,104 +520,292 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
         </Card>
       )}
 
-      {/* Inspection Card Section */}
+      {/* Inspection Card Section - Hiển thị TẤT CẢ CHECK_IN inspections */}
       {selectedBooking && (
         <Card className="border-slate-200 shadow-sm">
           <CardHeader className="bg-white border-b border-slate-200">
-            <CardTitle className="text-slate-900">Biên Bản Kiểm Tra Xe</CardTitle>
-            <CardDescription>Thông tin biên bản kiểm tra xe cho booking này</CardDescription>
+            <CardTitle className="flex items-center gap-2 text-slate-900">
+              <FileText className="w-5 h-5" />
+              Biên Bản Kiểm Tra Xe (Nhận Xe)
+            </CardTitle>
+            <CardDescription>
+              Danh sách các biên bản kiểm tra khi nhận xe cho booking này
+              {inspections.length > 0 && (
+                <span className="ml-2 text-blue-600 font-medium">({inspections.length} biên bản)</span>
+              )}
+            </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
-            {loadingInspection && <div className="text-sm text-slate-500">Đang tải biên bản kiểm tra...</div>}
-            {inspectionError && <div className="text-sm text-red-600">{inspectionError}</div>}
-            {!loadingInspection && !inspection && !inspectionError && (
-              <div className="text-center py-8 border-2 border-dashed border-slate-200 rounded-lg">
-                <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                <p className="text-slate-500">Chưa có biên bản kiểm tra cho booking này</p>
+            {loadingInspection && (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <span className="ml-3 text-sm text-slate-500">Đang tải biên bản kiểm tra...</span>
               </div>
             )}
-            {inspection && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 text-sm text-slate-600">
-                  <div>
-                    <p className="text-slate-500">Loại kiểm tra</p>
-                    <p className="font-medium text-slate-900">{inspection.inspectionType || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500">Mức pin</p>
-                    <p className="font-medium text-slate-900">{inspection.batteryLevel ?? 'N/A'}%</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500">Tình trạng ngoại thất</p>
-                    <p className="font-medium text-slate-900">{inspection.exteriorCondition || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500">Tình trạng nội thất</p>
-                    <p className="font-medium text-slate-900">{inspection.interiorCondition || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500">Số km</p>
-                    <p className="font-medium text-slate-900">{inspection.mileage ?? 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500">Tình trạng lốp</p>
-                    <p className="font-medium text-slate-900">{inspection.tireCondition || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500">Phụ kiện đi kèm</p>
-                    <p className="font-medium text-slate-900">{Array.isArray(inspection.accessories) && inspection.accessories.length > 0 ? inspection.accessories.join(', ') : 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500">Ghi chú hư hỏng</p>
-                    <p className="font-medium text-slate-900">{inspection.damageNotes || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500">Ghi chú khác</p>
-                    <p className="font-medium text-slate-900">{inspection.notes || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500">Trạng thái hoàn thành</p>
-                    <p className="font-medium text-slate-900">{inspection.isCompleted ? 'Đã hoàn thành' : 'Chưa hoàn thành'}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500">Đã xác thực tài liệu</p>
-                    <p className="font-medium text-slate-900">{inspection.documentVerified ? 'Đã xác thực' : 'Chưa xác thực'}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500">Ngày tạo</p>
-                    <p className="font-medium text-slate-900">{inspection.createdAt ? new Date(inspection.createdAt).toLocaleString('vi-VN') : 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500">Ngày cập nhật</p>
-                    <p className="font-medium text-slate-900">{inspection.updatedAt ? new Date(inspection.updatedAt).toLocaleString('vi-VN') : 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500">Nhân viên kiểm tra</p>
-                    <p className="font-medium text-slate-900">{inspection.staffName || inspection.staff?.name || 'N/A'}</p>
-                  </div>
-                </div>
-                {inspection.images && inspection.images.length > 0 && (
-                  <div>
-                    <p className="text-slate-500 mb-2">Hình ảnh kiểm tra:</p>
-                    <div className="flex flex-wrap gap-3">
-                      {inspection.images.map((img, idx) => (
-                        <img key={idx} src={img.url || img.imageUrl || img} alt={`inspection-img-${idx}`} className="w-32 h-24 object-cover rounded border" />
-                      ))}
+            {inspectionError && (
+              <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+                <p className="text-sm text-red-600">{inspectionError}</p>
+              </div>
+            )}
+            {!loadingInspection && inspections.length === 0 && !inspectionError && (
+              <div className="text-center py-8 border-2 border-dashed border-slate-200 rounded-lg">
+                <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <p className="text-slate-500">Chưa có biên bản kiểm tra CHECK_IN cho booking này</p>
+                <p className="text-xs text-slate-400 mt-1">Biên bản sẽ được tạo khi bạn nhận xe</p>
+              </div>
+            )}
+
+            {/* Render TẤT CẢ inspections */}
+            {inspections.length > 0 && (
+              <div className="space-y-6">
+                {inspections.map((inspection, index) => (
+                  <div key={inspection.id || index} className="border border-slate-200 rounded-lg p-6 bg-white hover:shadow-md transition-shadow">
+                    {/* Header với trạng thái */}
+                    <div className="flex items-center justify-between pb-4 border-b mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                          🚗 Nhận xe #{index + 1}
+                        </div>
+                        {inspection.isCompleted && (
+                          <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium">
+                            <CheckCircle2 className="w-3 h-3" />
+                            Đã hoàn thành
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Thông tin chính - Grid 3 cột */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                      {/* Số km */}
+                      <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <p className="text-xs text-slate-500 mb-1">Số Km</p>
+                        <p className="text-2xl font-bold text-slate-900">
+                          {inspection.mileage ?? 'N/A'}
+                          {inspection.mileage && <span className="text-sm font-normal text-slate-500 ml-1">km</span>}
+                        </p>
+                      </div>
+
+                      {/* Mức pin */}
+                      <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <p className="text-xs text-slate-500 mb-1">Mức Pin</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-2xl font-bold text-slate-900">
+                            {inspection.batteryLevel ?? 'N/A'}
+                            {inspection.batteryLevel != null && <span className="text-sm font-normal text-slate-500">%</span>}
+                          </p>
+                          {inspection.batteryLevel != null && (
+                            <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full transition-all ${inspection.batteryLevel >= 80 ? 'bg-green-500' :
+                                  inspection.batteryLevel >= 50 ? 'bg-yellow-500' :
+                                    inspection.batteryLevel >= 20 ? 'bg-orange-500' : 'bg-red-500'
+                                  }`}
+                                style={{ width: `${inspection.batteryLevel}%` }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Nhân viên */}
+                      <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <p className="text-xs text-slate-500 mb-1">Nhân viên kiểm tra</p>
+                        <p className="text-lg font-semibold text-slate-900">
+                          {inspection.staffName || inspection.staff?.name || 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Tình trạng xe */}
+                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4">
+                      <h4 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-blue-600" />
+                        Tình trạng xe
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {/* Ngoại thất */}
+                        <div>
+                          <p className="text-xs text-slate-600 mb-1">Ngoại thất</p>
+                          <div className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${inspection.exteriorCondition === 'GOOD' ? 'bg-green-100 text-green-700' :
+                            inspection.exteriorCondition === 'FAIR' ? 'bg-yellow-100 text-yellow-700' :
+                              inspection.exteriorCondition === 'POOR' ? 'bg-red-100 text-red-700' :
+                                'bg-slate-100 text-slate-700'
+                            }`}>
+                            {inspection.exteriorCondition === 'GOOD' && '✓ Tốt'}
+                            {inspection.exteriorCondition === 'FAIR' && '~ Khá'}
+                            {inspection.exteriorCondition === 'POOR' && '✗ Kém'}
+                            {!inspection.exteriorCondition && 'N/A'}
+                          </div>
+                        </div>
+
+                        {/* Nội thất */}
+                        <div>
+                          <p className="text-xs text-slate-600 mb-1">Nội thất</p>
+                          <div className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${inspection.interiorCondition === 'GOOD' ? 'bg-green-100 text-green-700' :
+                            inspection.interiorCondition === 'FAIR' ? 'bg-yellow-100 text-yellow-700' :
+                              inspection.interiorCondition === 'POOR' ? 'bg-red-100 text-red-700' :
+                                'bg-slate-100 text-slate-700'
+                            }`}>
+                            {inspection.interiorCondition === 'GOOD' && '✓ Tốt'}
+                            {inspection.interiorCondition === 'FAIR' && '~ Khá'}
+                            {inspection.interiorCondition === 'POOR' && '✗ Kém'}
+                            {!inspection.interiorCondition && 'N/A'}
+                          </div>
+                        </div>
+
+                        {/* Lốp xe */}
+                        <div>
+                          <p className="text-xs text-slate-600 mb-1">Tình trạng lốp</p>
+                          <div className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${inspection.tireCondition === 'GOOD' ? 'bg-green-100 text-green-700' :
+                            inspection.tireCondition === 'FAIR' ? 'bg-yellow-100 text-yellow-700' :
+                              inspection.tireCondition === 'POOR' ? 'bg-red-100 text-red-700' :
+                                'bg-slate-100 text-slate-700'
+                            }`}>
+                            {inspection.tireCondition === 'GOOD' && '✓ Tốt'}
+                            {inspection.tireCondition === 'FAIR' && '~ Khá'}
+                            {inspection.tireCondition === 'POOR' && '✗ Kém'}
+                            {!inspection.tireCondition && 'N/A'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Ghi chú hư hỏng (nếu có) */}
+                    {inspection.damageNotes && (
+                      <div className="bg-red-50 p-4 rounded-lg border border-red-200 mb-4">
+                        <h4 className="font-semibold text-red-900 mb-2 flex items-center gap-2">
+                          <AlertCircle className="w-4 h-4" />
+                          Ghi chú hư hỏng
+                        </h4>
+                        <p className="text-sm text-red-800">{inspection.damageNotes}</p>
+                      </div>
+                    )}
+
+                    {/* Ghi chú khác */}
+                    {inspection.notes && (
+                      <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-4">
+                        <h4 className="font-semibold text-slate-900 mb-2">Ghi chú</h4>
+                        <p className="text-sm text-slate-700">{inspection.notes}</p>
+                      </div>
+                    )}
+
+                    {/* Phụ kiện */}
+                    {Array.isArray(inspection.accessories) && inspection.accessories.length > 0 && (
+                      <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-4">
+                        <h4 className="font-semibold text-slate-900 mb-2">Phụ kiện đi kèm</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {inspection.accessories.map((accessory, idx) => (
+                            <span key={idx} className="px-3 py-1 bg-white border border-slate-300 rounded-full text-xs text-slate-700">
+                              {accessory}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Hình ảnh kiểm tra */}
+                    {inspection.images && inspection.images.length > 0 && (
+                      <div className="mb-4">
+                        <h4 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                          📷 Hình ảnh kiểm tra ({inspection.images.length})
+                        </h4>
+                        {/* Warning message */}
+                        <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                          <p className="text-xs text-amber-800">
+                            ⚠️ <strong>Lưu ý:</strong> Nếu ảnh hiển thị tối/đen, vui lòng <strong>click vào ảnh</strong> để xem trong tab mới hoặc liên hệ nhân viên để cập nhật ảnh rõ hơn.
+                          </p>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          {inspection.images.map((img, idx) => {
+                            // Extract image URL - prioritize thumbnailUrl for preview
+                            const thumbnailUrl = img?.thumbnailUrl || img?.url || img?.imageUrl || (typeof img === 'string' ? img : '');
+                            const fullUrl = img?.url || img?.imageUrl || img?.thumbnailUrl || (typeof img === 'string' ? img : '');
+
+                            console.log(`🖼️ Image ${idx}:`, { thumbnailUrl, fullUrl, img });
+
+                            // Add white background transformation for ImageKit
+                            let previewUrl = thumbnailUrl;
+                            if (thumbnailUrl.includes('imagekit.io')) {
+                              // Add transformation: resize + white background
+                              previewUrl = `${thumbnailUrl}?tr=w-400,h-300,bg-FFFFFF`;
+                            }
+
+                            return (
+                              <div key={idx} className="relative group bg-white rounded-lg overflow-hidden border border-slate-200">
+                                <img
+                                  src={previewUrl}
+                                  alt={`Ảnh kiểm tra ${idx + 1}`}
+                                  className="w-full h-32 object-contain cursor-pointer hover:shadow-lg transition-shadow"
+                                  style={{ minHeight: '128px', maxHeight: '128px', backgroundColor: '#ffffff' }}
+                                  onClick={() => {
+                                    if (fullUrl) {
+                                      window.open(fullUrl, '_blank');
+                                    }
+                                  }}
+                                  onLoad={(e) => {
+                                    console.log('✅ Image loaded successfully:', previewUrl);
+                                    console.log('   - Natural width:', e.target.naturalWidth);
+                                    console.log('   - Natural height:', e.target.naturalHeight);
+
+                                    // Check if image is actually black/empty
+                                    if (e.target.naturalWidth === 0 || e.target.naturalHeight === 0) {
+                                      console.error('❌ Image loaded but has 0 dimensions!');
+                                    }
+                                  }}
+                                  onError={(e) => {
+                                    console.error('❌ Image load error:', previewUrl);
+                                    console.error('   - Error event:', e);
+                                    // Show error placeholder
+                                    e.target.style.display = 'none';
+                                    const errorDiv = document.createElement('div');
+                                    errorDiv.className = 'w-full h-32 flex items-center justify-center bg-red-50 border border-red-200 rounded-lg cursor-pointer';
+                                    errorDiv.onclick = () => window.open(fullUrl, '_blank');
+                                    errorDiv.innerHTML = `
+                                      <div class="text-center p-2">
+                                        <p class="text-red-600 text-xs font-medium">⚠️ Không tải được ảnh</p>
+                                        <p class="text-blue-500 text-xs mt-1">Click để xem trong tab mới</p>
+                                      </div>
+                                    `;
+                                    e.target.parentElement.appendChild(errorDiv);
+                                  }}
+                                />
+                                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all flex items-center justify-center pointer-events-none">
+                                  <span className="text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none">
+                                    🔍 Xem lớn
+                                  </span>
+                                </div>
+                                {/* Debug badge */}
+                                <div className="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-[10px] px-1 rounded">
+                                  #{idx + 1}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Thông tin bổ sung */}
+                    <div className="pt-4 border-t grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-slate-500">
+                      <div>
+                        <span className="font-medium">Ngày tạo:</span>{' '}
+                        {inspection.createdAt ? new Date(inspection.createdAt).toLocaleString('vi-VN') : 'N/A'}
+                      </div>
+                      <div>
+                        <span className="font-medium">Cập nhật lần cuối:</span>{' '}
+                        {inspection.updatedAt ? new Date(inspection.updatedAt).toLocaleString('vi-VN') : 'N/A'}
+                      </div>
+                      <div>
+                        <span className="font-medium">Xác thực tài liệu:</span>{' '}
+                        <span className={inspection.documentVerified ? 'text-green-600' : 'text-amber-600'}>
+                          {inspection.documentVerified ? '✓ Đã xác thực' : '⏳ Chưa xác thực'}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                )}
-                {inspection.imageUrl && (
-                  <div>
-                    <p className="text-slate-500 mb-2">Ảnh chính:</p>
-                    <img src={inspection.imageUrl} alt="inspection-main" className="w-48 h-32 object-cover rounded border" />
-                  </div>
-                )}
-                {inspection.thumbnailUrl && (
-                  <div>
-                    <p className="text-slate-500 mb-2">Thumbnail:</p>
-                    <img src={inspection.thumbnailUrl} alt="inspection-thumbnail" className="w-32 h-20 object-cover rounded border" />
-                  </div>
-                )}
+                ))}
               </div>
             )}
           </CardContent>
@@ -761,74 +1005,28 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                     </p>
                   )}
                 </div>
-
-                <div className="pt-4 space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`terms-${contract.id}`}
-                      checked={agreements.termsAccepted}
-                      onCheckedChange={(checked) => handleAgreementChange('termsAccepted', checked)}
-                    />
-                    <Label htmlFor={`terms-${contract.id}`} className="text-sm cursor-pointer">
-                      Tôi đã đọc và đồng ý với các điều khoản và điều kiện
-                    </Label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`conditions-${contract.id}`}
-                      checked={agreements.conditionsAccepted}
-                      onCheckedChange={(checked) => handleAgreementChange('conditionsAccepted', checked)}
-                    />
-                    <Label htmlFor={`conditions-${contract.id}`} className="text-sm cursor-pointer">
-                      Tôi xác nhận thông tin cung cấp là chính xác
-                    </Label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`damage-${contract.id}`}
-                      checked={agreements.damageResponsibility}
-                      onCheckedChange={(checked) => handleAgreementChange('damageResponsibility', checked)}
-                    />
-                    <Label htmlFor={`damage-${contract.id}`} className="text-sm cursor-pointer">
-                      Tôi chịu trách nhiệm về mọi hư hỏng không được báo cáo
-                    </Label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`privacy-${contract.id}`}
-                      checked={agreements.dataPrivacy}
-                      onCheckedChange={(checked) => handleAgreementChange('dataPrivacy', checked)}
-                    />
-                    <Label htmlFor={`privacy-${contract.id}`} className="text-sm cursor-pointer">
-                      Tôi đồng ý với chính sách bảo mật dữ liệu
-                    </Label>
-                  </div>
-                </div>
               </div>
             ))}
           </CardContent>
         </Card>
       )}
 
-      {/* Agreement Status & Final Submit */}
+      {/* Review-Only Section - Không có action buttons */}
       {selectedBooking && contracts.some(c => c.status === 'COMPLETED') && (
         <Card className="border-slate-200 shadow-sm">
           <CardHeader className="bg-white border-b border-slate-200">
-            <CardTitle className="text-slate-900">Xác Nhận Hợp Đồng Điện Tử</CardTitle>
-            <CardDescription>Vui lòng đồng ý với tất cả các điều khoản để hoàn tất</CardDescription>
+            <CardTitle className="text-slate-900">Điều Khoản Hợp Đồng (Chỉ Xem)</CardTitle>
+            <CardDescription>Thông tin điều khoản và điều kiện của hợp đồng thuê xe</CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
             <div className="space-y-6">
-              {/* Contract Terms */}
+              {/* Contract Terms - Read Only */}
               <Card className="border-slate-200">
                 <CardHeader className="bg-slate-50 border-b border-slate-200">
                   <CardTitle className="text-slate-900">Điều Khoản & Điều Kiện Hợp Đồng</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
-                  <div className="space-y-4 mb-6 text-sm text-slate-700 max-h-48 overflow-y-auto">
+                  <div className="space-y-4 text-sm text-slate-700 max-h-96 overflow-y-auto">
                     <div>
                       <h4 className="font-semibold text-slate-900 mb-2">1. Thời Hạn Thuê</h4>
                       <p>
@@ -865,32 +1063,16 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                       </p>
                     </div>
                   </div>
-
-                  <div
-                    className="flex items-start gap-4 p-5 bg-gradient-to-r from-green-50 to-green-100 rounded-lg border-2 border-green-400 cursor-pointer hover:from-green-100 hover:to-green-200 transition-all duration-200"
-                    onClick={() => handleAgreementChange("termsAccepted", !agreements.termsAccepted)}
-                  >
-                    <Checkbox
-                      id="terms-final"
-                      checked={agreements.termsAccepted}
-                      onCheckedChange={(checked) => handleAgreementChange("termsAccepted", Boolean(checked))}
-                      className="w-6 h-6 mt-1 flex-shrink-0 cursor-pointer"
-                    />
-                    <label htmlFor="terms-final" className="text-base text-slate-800 cursor-pointer flex-1">
-                      <span className="font-bold text-green-900">Tôi đồng ý với các điều khoản & điều kiện</span>
-                      <span className="text-slate-700"> của hợp đồng thuê xe điện này</span>
-                    </label>
-                  </div>
                 </CardContent>
               </Card>
 
-              {/* Damage Responsibility */}
+              {/* Damage Responsibility - Read Only */}
               <Card className="border-slate-200">
                 <CardHeader className="bg-slate-50 border-b border-slate-200">
                   <CardTitle className="text-slate-900">Trách Nhiệm Về Hư Hỏng</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
-                  <div className="space-y-3 mb-6 text-sm text-slate-700">
+                  <div className="space-y-3 text-sm text-slate-700">
                     <p>
                       <span className="font-semibold text-slate-900">Người thuê xác nhận rằng:</span>
                     </p>
@@ -901,66 +1083,32 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                       <li>Sẽ báo cáo ngay mọi tai nạn hoặc sự cố xảy ra</li>
                     </ul>
                   </div>
-
-                  <div
-                    className="flex items-start gap-4 p-5 bg-gradient-to-r from-green-50 to-green-100 rounded-lg border-2 border-green-400 cursor-pointer hover:from-green-100 hover:to-green-200 transition-all duration-200"
-                    onClick={() => handleAgreementChange("damageResponsibility", !agreements.damageResponsibility)}
-                  >
-                    <Checkbox
-                      id="damage-final"
-                      checked={agreements.damageResponsibility}
-                      onCheckedChange={(checked) => handleAgreementChange("damageResponsibility", Boolean(checked))}
-                      className="w-6 h-6 mt-1 flex-shrink-0 cursor-pointer"
-                    />
-                    <label htmlFor="damage-final" className="text-base text-slate-800 cursor-pointer flex-1">
-                      <span className="font-bold text-green-900">Tôi hiểu và chấp nhận trách nhiệm</span>
-                      <span className="text-slate-700"> về mọi hư hỏng xảy ra trong thời gian thuê</span>
-                    </label>
-                  </div>
                 </CardContent>
               </Card>
 
-              {/* Data Privacy */}
+              {/* Data Privacy - Read Only */}
               <Card className="border-slate-200">
                 <CardHeader className="bg-slate-50 border-b border-slate-200">
                   <CardTitle className="text-slate-900">Bảo Vệ Dữ Liệu Cá Nhân</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
-                  <div className="space-y-3 mb-6 text-sm text-slate-700">
+                  <div className="space-y-3 text-sm text-slate-700">
                     <p>
                       Dữ liệu cá nhân của bạn sẽ được xử lý theo chính sách bảo vệ dữ liệu của chúng tôi. Chúng tôi
                       cam kết bảo vệ thông tin của bạn và chỉ sử dụng nó cho mục đích liên quan đến hợp đồng thuê
                       xe.
                     </p>
                   </div>
-
-                  <div
-                    className="flex items-start gap-4 p-5 bg-gradient-to-r from-green-50 to-green-100 rounded-lg border-2 border-green-400 cursor-pointer hover:from-green-100 hover:to-green-200 transition-all duration-200"
-                    onClick={() => handleAgreementChange("dataPrivacy", !agreements.dataPrivacy)}
-                  >
-                    <Checkbox
-                      id="privacy-final"
-                      checked={agreements.dataPrivacy}
-                      onCheckedChange={(checked) => handleAgreementChange("dataPrivacy", Boolean(checked))}
-                      className="w-6 h-6 mt-1 flex-shrink-0 cursor-pointer"
-                    />
-                    <label htmlFor="privacy-final" className="text-base text-slate-800 cursor-pointer flex-1">
-                      <span className="font-bold text-green-900">
-                        Tôi đồng ý với chính sách bảo vệ dữ liệu cá nhân
-                      </span>
-                      <span className="text-slate-700"> và cho phép xử lý dữ liệu của tôi</span>
-                    </label>
-                  </div>
                 </CardContent>
               </Card>
 
-              {/* Conditions */}
+              {/* Additional Conditions - Read Only */}
               <Card className="border-slate-200">
                 <CardHeader className="bg-slate-50 border-b border-slate-200">
                   <CardTitle className="text-slate-900">Điều Kiện Khác</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
-                  <div className="space-y-3 mb-6 text-sm text-slate-700">
+                  <div className="space-y-3 text-sm text-slate-700">
                     <p>
                       <span className="font-semibold text-slate-900">Các điều kiện bổ sung:</span>
                     </p>
@@ -971,29 +1119,13 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                       <li>Mọi phí phát sinh phải được thanh toán trước khi trả xe</li>
                     </ul>
                   </div>
-
-                  <div
-                    className="flex items-start gap-4 p-5 bg-gradient-to-r from-green-50 to-green-100 rounded-lg border-2 border-green-400 cursor-pointer hover:from-green-100 hover:to-green-200 transition-all duration-200"
-                    onClick={() => handleAgreementChange("conditionsAccepted", !agreements.conditionsAccepted)}
-                  >
-                    <Checkbox
-                      id="conditions-final"
-                      checked={agreements.conditionsAccepted}
-                      onCheckedChange={(checked) => handleAgreementChange("conditionsAccepted", Boolean(checked))}
-                      className="w-6 h-6 mt-1 flex-shrink-0 cursor-pointer"
-                    />
-                    <label htmlFor="conditions-final" className="text-base text-slate-800 cursor-pointer flex-1">
-                      <span className="font-bold text-green-900">Tôi đồng ý với tất cả các điều kiện bổ sung</span>
-                      <span className="text-slate-700"> được liệt kê ở trên</span>
-                    </label>
-                  </div>
                 </CardContent>
               </Card>
 
-              {/* Warning */}
-              <div className="flex gap-3 p-4 bg-red-50 rounded-lg border border-red-200">
-                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                <div className="text-sm text-red-800">
+              {/* Info Notice */}
+              <div className="flex gap-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-blue-800">
                   <p className="font-semibold mb-1">Lưu ý quan trọng:</p>
                   <p>
                     Bằng cách ký hợp đồng này, bạn xác nhận rằng bạn đã đọc, hiểu và đồng ý với tất cả các điều
@@ -1003,66 +1135,6 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                 </div>
               </div>
             </div>
-
-            {/* Agreement status box */}
-            {allAgreementsAccepted ? (
-              <Card className="border-green-200 bg-green-50 mt-4">
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-3">
-                    <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0" />
-                    <div>
-                      <p className='font-semibold text-green-900'>
-                        All terms accepted
-                      </p>
-                      <p className='text-sm text-green-700'>
-                        You are ready to sign the electronic contract
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card className="border-amber-200 bg-amber-50 mt-4">
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-3">
-                    <AlertCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
-                    <div>
-                      <p className="font-semibold text-amber-900">Chưa hoàn thành tất cả các điều khoản</p>
-                      <p className="text-sm text-amber-700">Vui lòng đồng ý với tất cả các điều khoản trước khi ký hợp đồng</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Submit Button */}
-            {contracts.some(c => c.status === 'COMPLETED') && (
-              <div className="flex gap-4 justify-end mt-4">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="border-slate-300 text-slate-700 hover:bg-slate-50 bg-transparent"
-                  onClick={() => {
-                    if (window.confirm('Bạn có chắc chắn muốn hủy?')) {
-                      window.history.back();
-                    }
-                  }}
-                >
-                  Hủy
-                </Button>
-                <Button
-                  size="lg"
-                  onClick={handleFinalSubmit}
-                  disabled={!allAgreementsAccepted || actionLoading}
-                  className={`text-white ${allAgreementsAccepted
-                    ? "bg-blue-600 hover:bg-blue-700"
-                    : "bg-slate-400 cursor-not-allowed"
-                    }`}
-                >
-                  {actionLoading ? "Đang xử lý..." : "Ký Hợp Đồng Điện Tử"}
-                </Button>
-              </div>
-            )}
           </CardContent>
         </Card>
       )}

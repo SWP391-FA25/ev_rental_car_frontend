@@ -269,8 +269,16 @@ export default function CheckInCar() {
         }
     };
 
-    // ✨ NEW: Load inspection data into form
+    // ✨ NEW: Load inspection data into form (including existing images)
     const loadInspectionData = (inspection) => {
+        console.log('🔍 Loading inspection data:', inspection);
+        console.log('📝 Notes values:', {
+            damageNotes: inspection.damageNotes,
+            notes: inspection.notes,
+            batteryLevel: inspection.batteryLevel,
+            mileage: inspection.mileage
+        });
+
         setExteriorCondition(inspection.exteriorCondition || 'GOOD');
         setInteriorCondition(inspection.interiorCondition || 'GOOD');
         setTireCondition(inspection.tireCondition || 'GOOD');
@@ -284,6 +292,47 @@ export default function CheckInCar() {
         setDamageNotes(inspection.damageNotes || '');
         setNotes(inspection.notes || '');
         setDocumentVerified(inspection.documentVerified || false);
+
+        console.log('✅ State set:', {
+            batteryLevel: inspection.batteryLevel ? String(inspection.batteryLevel) : '',
+            mileage: inspection.mileage ? String(inspection.mileage) : '',
+            damageNotes: inspection.damageNotes || '',
+            notes: inspection.notes || ''
+        });
+
+        // ✨ Load existing images as preview
+        // Backend can return: images (array of objects) OR imageUrls (array of strings)
+        let existingPreviews = [];
+
+        if (inspection.images && Array.isArray(inspection.images) && inspection.images.length > 0) {
+            // Format: images: [{url: '...', fileName: '...', uploadedAt: '...'}, ...]
+            console.log('📸 Found images array:', inspection.images.length);
+            existingPreviews = inspection.images.map((img, idx) => ({
+                url: img.url || img,
+                name: img.fileName || `Existing Image ${idx + 1}`,
+                isExisting: true
+            }));
+        } else if (inspection.imageUrls && Array.isArray(inspection.imageUrls) && inspection.imageUrls.length > 0) {
+            // Format: imageUrls: ['url1', 'url2', ...]
+            console.log('📸 Found imageUrls array:', inspection.imageUrls.length);
+            existingPreviews = inspection.imageUrls.map((url, idx) => ({
+                url,
+                name: `Existing Image ${idx + 1}`,
+                isExisting: true
+            }));
+        } else if (inspection.imageUrl) {
+            // Single image fallback
+            console.log('📸 Found single imageUrl');
+            existingPreviews = [{
+                url: inspection.imageUrl,
+                name: 'Existing Image',
+                isExisting: true
+            }];
+        }
+
+        console.log('✅ Loaded existing previews:', existingPreviews.length);
+        setInspectionPreviews(existingPreviews);
+        setInspectionFiles([]); // Clear new files when loading existing
     };
 
     // ✨ NEW: Fetch contracts for selected booking
@@ -429,11 +478,13 @@ export default function CheckInCar() {
             return;
         }
 
-        const currentCount = inspectionFiles.length;
-        const newCount = currentCount + files.length;
+        // ✨ Calculate total including existing images
+        const existingImagesCount = inspectionPreviews.filter(p => p.isExisting).length;
+        const currentNewCount = inspectionFiles.length;
+        const totalAfterUpload = existingImagesCount + currentNewCount + files.length;
 
-        if (newCount > 10) {
-            toast.error(`Maximum 10 images allowed. You have ${currentCount}, trying to add ${files.length}`);
+        if (totalAfterUpload > 10) {
+            toast.error(`Maximum 10 images allowed. You have ${existingImagesCount} existing + ${currentNewCount} new. Can only add ${10 - existingImagesCount - currentNewCount} more.`);
             return;
         }
 
@@ -448,15 +499,20 @@ export default function CheckInCar() {
     };
 
     useEffect(() => {
-        const urls = inspectionFiles
+        // ✨ Combine existing images + new file uploads
+        const existingImages = inspectionPreviews.filter(p => p.isExisting);
+        const newFileUrls = inspectionFiles
             .filter(f => f && f.type && f.type.startsWith('image/'))
-            .map(f => ({ url: URL.createObjectURL(f), name: f.name }));
-        setInspectionPreviews(urls);
+            .map(f => ({ url: URL.createObjectURL(f), name: f.name, isExisting: false }));
+
+        setInspectionPreviews([...existingImages, ...newFileUrls]);
+
         return () => {
-            urls.forEach(u => {
-                try {
-                    URL.revokeObjectURL(u.url);
-                } catch { }
+            // Cleanup only new file URLs (not existing image URLs)
+            newFileUrls.forEach(p => {
+                if (p.url.startsWith('blob:')) {
+                    URL.revokeObjectURL(p.url);
+                }
             });
         };
     }, [inspectionFiles]);
@@ -559,10 +615,26 @@ export default function CheckInCar() {
         }
     };
 
-    // ✨ NEW: Remove specific image from inspection files
+    // ✨ NEW: Remove specific image from preview (existing or new)
     const handleRemoveImage = (indexToRemove) => {
-        setInspectionFiles(prev => prev.filter((_, index) => index !== indexToRemove));
-        // Silent remove
+        const imageToRemove = inspectionPreviews[indexToRemove];
+
+        if (imageToRemove.isExisting) {
+            // Remove from preview only (existing images)
+            setInspectionPreviews(prev => prev.filter((_, index) => index !== indexToRemove));
+            toast.info('Existing image removed from view. It will remain unless you upload new ones.');
+        } else {
+            // Remove from new files array
+            const newFilesOnlyPreviews = inspectionPreviews.filter(p => !p.isExisting);
+            const indexInNewFiles = newFilesOnlyPreviews.findIndex((_, i) => {
+                const actualIndex = inspectionPreviews.filter(p => p.isExisting).length + i;
+                return actualIndex === indexToRemove;
+            });
+
+            if (indexInNewFiles !== -1) {
+                setInspectionFiles(prev => prev.filter((_, index) => index !== indexInNewFiles));
+            }
+        }
     };
 
     const resetAllFields = () => {
@@ -582,6 +654,7 @@ export default function CheckInCar() {
         setNotes('');
         setDocumentVerified(false);
         setInspectionFiles([]);
+        setInspectionPreviews([]);
         setSelectedStation('');
     };
 
@@ -1355,6 +1428,17 @@ export default function CheckInCar() {
                                 <div className='mt-3 grid grid-cols-2 md:grid-cols-3 gap-2'>
                                     {inspectionPreviews.map((p, idx) => (
                                         <div key={idx} className='border rounded overflow-hidden relative group'>
+                                            {/* ✨ Badge to indicate existing vs new image */}
+                                            {p.isExisting && (
+                                                <div className='absolute top-1 left-1 z-10 bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full font-medium shadow'>
+                                                    Existing
+                                                </div>
+                                            )}
+                                            {!p.isExisting && (
+                                                <div className='absolute top-1 left-1 z-10 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full font-medium shadow'>
+                                                    New
+                                                </div>
+                                            )}
                                             <img
                                                 src={p.url}
                                                 alt={p.name}
@@ -1366,7 +1450,7 @@ export default function CheckInCar() {
                                                     type='button'
                                                     onClick={() => handleRemoveImage(idx)}
                                                     className='absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg'
-                                                    title='Remove image'
+                                                    title={p.isExisting ? 'Remove from view (will keep existing)' : 'Remove new image'}
                                                 >
                                                     <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                                                         <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
@@ -1378,7 +1462,7 @@ export default function CheckInCar() {
                                 </div>
                             )}
                             <p className='text-xs text-muted-foreground mt-1'>
-                                {inspectionFiles.length}/10 images • Max 10MB per image
+                                {inspectionPreviews.filter(p => p.isExisting).length} existing + {inspectionFiles.length} new = {inspectionPreviews.filter(p => p.isExisting).length + inspectionFiles.length}/10 images • Max 10MB per image
                             </p>
                         </div>
                         <div>
