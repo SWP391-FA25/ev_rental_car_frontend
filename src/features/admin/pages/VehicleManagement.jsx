@@ -58,6 +58,7 @@ export default function VehicleManagement() {
   // Vehicle status options
   const VEHICLE_STATUS = [
     { value: 'AVAILABLE', label: t('vehicle.status.available') },
+    { value: 'RESERVED', label: ('Reserved') },
     { value: 'RENTED', label: t('vehicle.status.rented') },
     { value: 'PENDING', label: t('vehicle.status.pending') },
     { value: 'MAINTENANCE', label: t('vehicle.status.maintenance') },
@@ -341,6 +342,8 @@ export default function VehicleManagement() {
     switch (status) {
       case 'AVAILABLE':
         return 'default';
+      case 'RESERVED':
+        return 'secondary';
       case 'RENTED':
         return 'secondary';
       case 'PENDING':
@@ -837,7 +840,7 @@ export default function VehicleManagement() {
                   <TableCell>{getFuelTypeLabel(vehicle.fuelType)}</TableCell>
                   <TableCell>
                     {vehicle.fuelType === 'ELECTRIC' ||
-                    vehicle.fuelType === 'HYBRID'
+                      vehicle.fuelType === 'HYBRID'
                       ? `${vehicle.batteryLevel}%`
                       : t('vehicle.table.na')}
                   </TableCell>

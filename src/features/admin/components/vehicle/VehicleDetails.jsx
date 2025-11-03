@@ -27,6 +27,7 @@ import { Badge } from './../../../shared/components/ui/badge';
 // Vehicle status options
 const VEHICLE_STATUS = [
   { value: 'AVAILABLE', label: 'Available' },
+  { value: 'RESERVED', label: 'Reserved' },
   { value: 'RENTED', label: 'Rented' },
   { value: 'MAINTENANCE', label: 'Maintenance' },
   { value: 'OUT_OF_SERVICE', label: 'Out of Service' },
@@ -136,12 +137,12 @@ export function VehicleDetails({
         const list = Array.isArray(payload?.data?.inspections)
           ? payload.data.inspections
           : Array.isArray(payload?.inspections)
-          ? payload.inspections
-          : Array.isArray(payload)
-          ? payload
-          : Array.isArray(payload?.items)
-          ? payload.items
-          : [];
+            ? payload.inspections
+            : Array.isArray(payload)
+              ? payload
+              : Array.isArray(payload?.items)
+                ? payload.items
+                : [];
 
         const normalized = (list || [])
           .map(insp => ({ ...insp, images: normalizeInspectionImages(insp) }))
@@ -314,6 +315,8 @@ export function VehicleDetails({
     switch (status) {
       case 'AVAILABLE':
         return 'default';
+      case 'RESERVED':
+        return 'secondary';
       case 'RENTED':
         return 'secondary';
       case 'MAINTENANCE':
@@ -359,10 +362,10 @@ export function VehicleDetails({
     const rawList = Array.isArray(insp.images)
       ? insp.images
       : Array.isArray(insp.imageList)
-      ? insp.imageList
-      : insp.images?.data && Array.isArray(insp.images?.data)
-      ? insp.images.data
-      : [];
+        ? insp.imageList
+        : insp.images?.data && Array.isArray(insp.images?.data)
+          ? insp.images.data
+          : [];
 
     const collected = [];
     for (const img of rawList) {
@@ -608,7 +611,7 @@ export function VehicleDetails({
                 ) : (
                   <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                     {vehicle.fuelType === 'ELECTRIC' ||
-                    vehicle.fuelType === 'HYBRID'
+                      vehicle.fuelType === 'HYBRID'
                       ? `${vehicle.batteryLevel}%`
                       : 'N/A'}
                   </div>
@@ -647,13 +650,6 @@ export function VehicleDetails({
                 <Label>Station</Label>
                 <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                   {vehicle.station?.name || 'N/A'}
-                </div>
-              </div>
-
-              <div className='space-y-2'>
-                <Label>Vehicle ID</Label>
-                <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center font-mono text-sm'>
-                  {vehicle.id}
                 </div>
               </div>
             </div>

@@ -1,9 +1,6 @@
 import * as React from 'react';
 import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
-
 import axios from 'axios';
-import { endpoints } from '../../shared/lib/endpoints';
-
 import {
   Card,
   CardContent,
@@ -30,15 +27,10 @@ import {
 import { useIsMobile } from '../hooks/use-mobile';
 import { useTranslation } from 'react-i18next';
 
-
 const chartConfig = {
   desktop: {
-    label: 'New Users',
+    label: 'Completed Bookings',
     color: 'hsl(var(--chart-1))',
-  },
-  mobile: {
-    label: 'Active Users',
-    color: 'hsl(var(--chart-2))',
   },
 };
 
@@ -46,8 +38,8 @@ export function ChartAreaInteractive() {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
   const [timeRange, setTimeRange] = React.useState('30d');
-  const [chartData, setChartData] = React.useState([]);
-  const [loading, setLoading] = React.useState(false);
+  const [completedChartData, setCompletedChartData] = React.useState([]);
+  const [loadingCompletedChart, setLoadingCompletedChart] = React.useState(false);
 
   React.useEffect(() => {
     if (isMobile) {
@@ -56,52 +48,88 @@ export function ChartAreaInteractive() {
   }, [isMobile]);
 
   React.useEffect(() => {
-    async function fetchChartData() {
-      setLoading(true);
+    async function fetchCompletedChartData() {
+      setLoadingCompletedChart(true);
       try {
-        const renterRes = await axios.get(endpoints.renters.getAll(), { withCredentials: true });
-        const renters = renterRes.data.data.renters || [];
-        // Lọc theo timeRange
+        const res = await axios.get('/api/bookings');
+        const bookings = res.data?.data?.bookings || res.data?.bookings || res.data || [];
+
         const now = new Date();
         let days = 30;
         if (timeRange === '90d') days = 90;
         if (timeRange === '7d') days = 7;
         const startDate = new Date(now);
         startDate.setDate(now.getDate() - days);
-        const filtered = renters.filter(u => {
-          if (!u.createdAt) return false;
-          const d = new Date(u.createdAt);
-          return d >= startDate && d <= now;
+
+        const filtered = bookings.filter(b => {
+          const completedDate = b.actualEndDate || b.endTime || b.createdAt;
+          if (!completedDate) return false;
+          const d = new Date(completedDate);
+          return (b.status || b.bookingStatus) === 'COMPLETED' && d >= startDate && d <= now;
         });
-        // Gom nhóm theo ngày
+
+        // Fill in all dates in range with 0 by default
         const dateMap = {};
-        filtered.forEach(u => {
-          const d = new Date(u.createdAt).toISOString().slice(0, 10);
-          if (!dateMap[d]) dateMap[d] = { date: d, desktop: 0 };
-          dateMap[d].desktop++;
+        for (let i = 0; i <= days; i++) {
+          const d = new Date(startDate);
+          d.setDate(startDate.getDate() + i);
+          const key = d.toISOString().slice(0, 10);
+          dateMap[key] = { date: key, completed: 0 };
+        }
+
+        // Count completed bookings per day
+        filtered.forEach(b => {
+          const d = new Date(b.actualEndDate || b.endTime || b.createdAt).toISOString().slice(0, 10);
+          if (dateMap[d]) {
+            dateMap[d].completed++;
+          }
         });
-        // Chuyển thành mảng, sort theo ngày
+
         const chartArr = Object.values(dateMap).sort((a, b) => a.date.localeCompare(b.date));
-        setChartData(chartArr);
+        console.log('Completed Bookings Chart Data:', chartArr);
+        setCompletedChartData(chartArr);
       } catch (err) {
-        // handle error
+        console.error('Error fetching completed bookings chart:', err);
       } finally {
-        setLoading(false);
+        setLoadingCompletedChart(false);
       }
     }
-    fetchChartData();
+
+    fetchCompletedChartData();
   }, [timeRange]);
+
+  const CustomCompletedTooltip = ({ active, payload, label }) => {
+    if (!active || !payload || !payload.length) return null;
+
+    const value = payload[0].value;
+    const date = new Date(label);
+    const formattedDate = `${date.getDate().toString().padStart(2, '0')}-${(date.getMonth() + 1)
+      .toString()
+      .padStart(2, '0')}-${date.getFullYear()}`;
+    return (
+      <div className="rounded-md border bg-background p-2 shadow-sm">
+        <div className="text-sm font-medium text-muted-foreground">
+          {formattedDate}
+        </div>
+        <div className="text-sm font-medium text-foreground">
+          Bookings completed: <span className="text-sm font-bold text-foreground">{value}</span>
+        </div>
+      </div>
+    );
+  };
+
 
   return (
     <Card className='@container/card'>
       <CardHeader className='relative'>
-        <CardTitle>{t('admin.dashboard.userActivity.title')}</CardTitle>
+        <CardTitle>Bookings</CardTitle>
         <CardDescription>
-          <span className='@[540px]/card:block hidden'>
-            {t('admin.dashboard.userActivity.subtitleLong')}
-          </span>
-          <span className='@[540px]/card:hidden'>{t('admin.dashboard.userActivity.subtitleShort')}</span>
+          Bookings have been completed
+          {timeRange === '90d' && ' over the past 3 months'}
+          {timeRange === '30d' && ' in the last 30 days'}
+          {timeRange === '7d' && ' in the last 7 days'}
         </CardDescription>
+
         <div className='absolute right-4 top-4'>
           <ToggleGroup
             type='single'
@@ -121,10 +149,7 @@ export function ChartAreaInteractive() {
             </ToggleGroupItem>
           </ToggleGroup>
           <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger
-              className='@[767px]/card:hidden flex w-40'
-              aria-label='Select a value'
-            >
+            <SelectTrigger className='@[767px]/card:hidden flex w-40' aria-label='Select a value'>
               <SelectValue placeholder={t('admin.dashboard.userActivity.filter.last3Months')} />
             </SelectTrigger>
             <SelectContent className='rounded-xl'>
@@ -142,35 +167,12 @@ export function ChartAreaInteractive() {
         </div>
       </CardHeader>
       <CardContent className='px-2 pt-4 sm:px-6 sm:pt-6'>
-        <ChartContainer
-          config={chartConfig}
-          className='aspect-auto h-[250px] w-full'
-        >
-          <AreaChart data={chartData}>
+        <ChartContainer config={chartConfig} className='aspect-auto h-[250px] w-full'>
+          <AreaChart data={completedChartData}>
             <defs>
               <linearGradient id='fillDesktop' x1='0' y1='0' x2='0' y2='1'>
-                <stop
-                  offset='5%'
-                  stopColor='var(--color-desktop)'
-                  stopOpacity={1.0}
-                />
-                <stop
-                  offset='95%'
-                  stopColor='var(--color-desktop)'
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-              <linearGradient id='fillMobile' x1='0' y1='0' x2='0' y2='1'>
-                <stop
-                  offset='5%'
-                  stopColor='var(--color-mobile)'
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset='95%'
-                  stopColor='var(--color-mobile)'
-                  stopOpacity={0.1}
-                />
+                <stop offset='5%' stopColor='var(--color-desktop)' stopOpacity={1.0} />
+                <stop offset='95%' stopColor='var(--color-desktop)' stopOpacity={0.1} />
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} />
@@ -185,36 +187,21 @@ export function ChartAreaInteractive() {
                 return date.toLocaleDateString('en-US', {
                   month: 'short',
                   day: 'numeric',
-                });
+                }); // → "Oct 30"
               }}
+
             />
             <ChartTooltip
               cursor={false}
-              content={
-                <ChartTooltipContent
-                  labelFormatter={value => {
-                    return new Date(value).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                    });
-                  }}
-                  indicator='dot'
-                />
-              }
+              content={<CustomCompletedTooltip />}
             />
+
+
             <Area
-              dataKey='mobile'
-              type='natural'
-              fill='url(#fillMobile)'
-              stroke='var(--color-mobile)'
-              stackId='a'
-            />
-            <Area
-              dataKey='desktop'
+              dataKey='completed'
               type='natural'
               fill='url(#fillDesktop)'
               stroke='var(--color-desktop)'
-              stackId='a'
             />
           </AreaChart>
         </ChartContainer>
