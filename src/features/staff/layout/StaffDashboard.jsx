@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
+import RevenueAreaChart from '../components/RevenueAreaChart';
 import { Button } from '../../shared/components/ui/button';
 import {
   Card,
@@ -17,10 +18,21 @@ import {
   CardTitle,
 } from '../../shared/components/ui/card';
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../../shared/components/ui/table';
+import { Badge } from '../../shared/components/ui/badge';
+import { formatCurrency } from '../../shared/lib/utils';
+import {
   SidebarInset,
   SidebarProvider,
 } from '../../shared/components/ui/sidebar';
 import { endpoints } from '../../shared/lib/endpoints';
+import { apiClient } from '../../shared/lib/apiClient';
 import { NotificationPreferences } from '../components/NotificationPreferences';
 import BookingManagement from '../components/booking-management';
 import VehicleManagement from '../components/car-management';
@@ -116,360 +128,387 @@ import { ContractUploadPage } from '../components/UploadContract/contract-upload
 //   },
 // ];
 
-const mockStationData = [
-  {
-    id: 'STATION001',
-    name: 'Downtown Station',
-    address: '123 Main St, New York, NY 10001',
-    coordinates: { lat: 40.7128, lng: -74.006 },
-    capacity: 20,
-    availableSpots: 12,
-    chargingPorts: 15,
-    activeChargingPorts: 8,
-    staff: ['John Smith', 'Maria Garcia'],
-    operatingHours: '24/7',
-    status: 'Active',
-    amenities: ['WiFi', 'Restrooms', 'Vending Machines', 'Waiting Area'],
-  },
-  {
-    id: 'STATION002',
-    name: 'Airport Station',
-    address: '456 Airport Rd, Queens, NY 11430',
-    coordinates: { lat: 40.6892, lng: -74.1745 },
-    capacity: 35,
-    availableSpots: 22,
-    chargingPorts: 25,
-    activeChargingPorts: 13,
-    staff: ['Sarah Johnson', 'David Kim'],
-    operatingHours: '5:00 AM - 11:00 PM',
-    status: 'Active',
-    amenities: ['WiFi', 'Restrooms', 'Food Court', 'Shuttle Service'],
-  },
-  {
-    id: 'STATION003',
-    name: 'Mall Station',
-    address: '789 Shopping Center Dr, Brooklyn, NY 11201',
-    coordinates: { lat: 40.7282, lng: -73.7949 },
-    capacity: 15,
-    availableSpots: 8,
-    chargingPorts: 12,
-    activeChargingPorts: 4,
-    staff: ['Mike Chen'],
-    operatingHours: '10:00 AM - 10:00 PM',
-    status: 'Maintenance',
-    amenities: ['WiFi', 'Restrooms', 'Shopping', 'Food Court'],
-  },
-];
-
-const mockCustomerData = [
-  {
-    id: 'CUST001',
-    name: 'Alice Johnson',
-    email: 'alice.johnson@email.com',
-    phone: '+1-555-0123',
-    licenseNumber: 'NY123456789',
-    licenseExpiry: '2026-08-15',
-    membershipType: 'Premium',
-    joinDate: '2023-03-15',
-    totalBookings: 28,
-    status: 'Active',
-    currentBooking: {
-      id: 'BOOK001',
-      car: 'Tesla Model 3 (EV-123-ABC)',
-      startTime: '2024-01-20T09:00:00Z',
-      endTime: '2024-01-22T18:00:00Z',
-    },
-    verificationStatus: {
-      identity: 'Verified',
-      license: 'Verified',
-      payment: 'Verified',
-    },
-  },
-  {
-    id: 'CUST002',
-    name: 'Bob Wilson',
-    email: 'bob.wilson@email.com',
-    phone: '+1-555-0456',
-    licenseNumber: 'NY987654321',
-    licenseExpiry: '2025-12-20',
-    membershipType: 'Standard',
-    joinDate: '2023-07-22',
-    totalBookings: 15,
-    status: 'Pending Check-in',
-    currentBooking: null,
-    verificationStatus: {
-      identity: 'Verified',
-      license: 'Pending',
-      payment: 'Verified',
-    },
-  },
-];
-
-const mockPaymentData = [
-  {
-    id: 'PAY001',
-    bookingId: 'BOOK001',
-    customer: 'Alice Johnson',
-    amount: 245.5,
-    currency: 'USD',
-    method: 'Credit Card',
-    status: 'Completed',
-    transactionDate: '2024-01-20T09:15:00Z',
-    dueDate: '2024-01-22T18:00:00Z',
-    description: 'Tesla Model 3 rental - 3 days',
-    breakdown: {
-      baseRate: 180.0,
-      insurance: 45.0,
-      taxes: 20.5,
-    },
-  },
-  {
-    id: 'PAY002',
-    bookingId: 'BOOK002',
-    customer: 'Bob Wilson',
-    amount: 120.75,
-    currency: 'USD',
-    method: 'Debit Card',
-    status: 'Pending',
-    transactionDate: '2024-01-21T14:30:00Z',
-    dueDate: '2024-01-23T12:00:00Z',
-    description: 'Nissan Leaf rental - 2 days',
-    breakdown: {
-      baseRate: 90.0,
-      insurance: 22.5,
-      taxes: 8.25,
-    },
-  },
-  {
-    id: 'PAY003',
-    bookingId: 'BOOK003',
-    customer: 'Carol Davis',
-    amount: 89.99,
-    currency: 'USD',
-    method: 'Digital Wallet',
-    status: 'Failed',
-    transactionDate: '2024-01-19T16:45:00Z',
-    dueDate: '2024-01-21T10:00:00Z',
-    description: 'BMW i3 rental - 1 day',
-    breakdown: {
-      baseRate: 70.0,
-      insurance: 15.0,
-      taxes: 4.99,
-    },
-  },
-];
+// Removed mock data: stations, customers, and payments
 
 export default function StaffDashboard() {
   const [activeTab, setActiveTab] = React.useState('dashboard');
   const { t } = useTranslation();
   const [carData, setCarData] = React.useState([]);
   const [staffData, setStaffData] = React.useState(null);
+  const [analytics, setAnalytics] = React.useState({
+    revenue: 0,
+    rentedCount: 0,
+  });
+  const [popularVehicles, setPopularVehicles] = React.useState([]);
+  const [activeCustomersCount, setActiveCustomersCount] = React.useState(0);
+  const [monthlyRevenue, setMonthlyRevenue] = React.useState(Array(12).fill(0));
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = React.useState(currentYear);
 
   // Fetch vehicles
   React.useEffect(() => {
-    fetch(endpoints.vehicles.getAll())
-      .then(res => res.json())
-      .then(json => {
-        if (json.success && json.data && Array.isArray(json.data.vehicles)) {
-          setCarData(json.data.vehicles);
+    const loadVehicles = async () => {
+      try {
+        const res = await apiClient.get(endpoints.vehicles.getAll());
+        if (res.success && Array.isArray(res.data?.vehicles)) {
+          setCarData(res.data.vehicles);
+        } else {
+          setCarData([]);
         }
-      });
+      } catch (err) {
+        setCarData([]);
+      }
+    };
+    loadVehicles();
   }, []);
 
   // Fetch staff info (current logged-in user)
   React.useEffect(() => {
-    fetch(endpoints.auth.me())
-      .then(res => res.json())
-      .then(json => {
-        if (json.success && json.data && json.data.user) {
-          setStaffData(json.data.user);
+    const loadMe = async () => {
+      try {
+        const res = await apiClient.get(endpoints.auth.me());
+        if (res.success && res.data?.user) {
+          setStaffData(res.data.user);
         }
-      });
+      } catch (_) {}
+    };
+    loadMe();
   }, []);
 
-  const renderDashboard = () => (
-    <div className='space-y-6'>
-      <div>
-        <h1 className='text-2xl font-bold'>{t('dashboard.title')}</h1>
-        <p className='text-muted-foreground'>
-          {/* {t('dashboard.welcome', {
-            name: mockStaffData[0].name,
-            shift: mockStaffData[0].shift,
-          })} */}
-          {t('dashboard.welcome', {
-            name: staffData?.name || '',
-            shift: '', // No shift info from API, leave blank or add if available
-          })}
-        </p>
-      </div>
+  // Try to fetch booking analytics for revenue and counts; fallback to local compute
+  React.useEffect(() => {
+    const loadAnalytics = async () => {
+      try {
+        const startOfYear = new Date(selectedYear, 0, 1);
+        const endOfRange =
+          selectedYear === currentYear
+            ? new Date()
+            : new Date(selectedYear, 11, 31, 23, 59, 59);
+        const res = await apiClient.get(endpoints.bookings.getAnalytics(), {
+          params: {
+            startDate: startOfYear.toISOString(),
+            endDate: endOfRange.toISOString(),
+          },
+        });
+        const summary = res?.data?.summary || {};
+        const statusBreakdown = res?.data?.statusBreakdown || {};
+        const popularRaw = Array.isArray(res?.data?.popularVehicles)
+          ? res.data.popularVehicles
+          : [];
+        const popular = [...popularRaw].sort(
+          (a, b) => (b.bookingCount || 0) - (a.bookingCount || 0)
+        );
+        setAnalytics({
+          revenue: summary.totalRevenue || 0,
+          rentedCount: statusBreakdown.in_progress || 0,
+        });
+        setPopularVehicles(popular);
+      } catch (_) {}
+    };
+    loadAnalytics();
+  }, [selectedYear]);
 
-      {/* Stats Cards */}
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
-              {t('dashboard.availableCars')}
-            </CardTitle>
-            <Car className='h-4 w-4 text-muted-foreground' />
-          </CardHeader>
-          <CardContent>
-            {/* <div className='text-2xl font-bold'>
-              {mockCarData.filter(car => car.status === 'Available').length}
-            </div> */}
-            <div className='text-2xl font-bold'>
-              {carData.filter(car => car.status === 'AVAILABLE').length}
-            </div>
-            <p className='text-xs text-muted-foreground'>
-              {t('dashboard.availableCarsSub')}
+  // Active customers via renters API
+  React.useEffect(() => {
+    const loadRenters = async () => {
+      try {
+        const res = await apiClient.get(endpoints.renters.getAll());
+        const renters = Array.isArray(res?.data?.renters)
+          ? res.data.renters
+          : [];
+        const active = renters.filter(r => r.accountStatus === 'ACTIVE').length;
+        setActiveCustomersCount(active);
+      } catch (_) {
+        setActiveCustomersCount(0);
+      }
+    };
+    loadRenters();
+  }, []);
+
+  // Real-time monthly revenue from completed bookings (frontend-only aggregation with pagination)
+  React.useEffect(() => {
+    const fetchAllCompletedBookings = async () => {
+      const bookingsAll = [];
+      try {
+        let page = 1;
+        const limit = 100;
+        while (true) {
+          const res = await apiClient.get(endpoints.bookings.getAll(), {
+            params: {
+              status: 'COMPLETED',
+              page,
+              limit,
+              // Optional range to reduce payload (backend filters by startTime)
+              startDate: new Date(selectedYear, 0, 1).toISOString(),
+              endDate:
+                selectedYear === currentYear
+                  ? new Date().toISOString()
+                  : new Date(selectedYear, 11, 31, 23, 59, 59).toISOString(),
+            },
+          });
+          const pageBookings = Array.isArray(res?.data?.bookings)
+            ? res.data.bookings
+            : [];
+          bookingsAll.push(...pageBookings);
+          const pagination = res?.data?.pagination;
+          const currentPage = Number(pagination?.currentPage || page);
+          const totalPages = Number(pagination?.totalPages || page);
+          if (currentPage >= totalPages || pageBookings.length === 0) break;
+          page += 1;
+        }
+      } catch (_) {
+        return [];
+      }
+      return bookingsAll;
+    };
+
+    const loadMonthlyRevenue = async () => {
+      try {
+        const bookings = await fetchAllCompletedBookings();
+        const months = Array(12).fill(0);
+        const year = selectedYear;
+        bookings.forEach(b => {
+          const dt = new Date(
+            b.actualEndTime || b.endTime || b.updatedAt || b.createdAt
+          );
+          if (dt.getFullYear() === year) {
+            const idx = dt.getMonth();
+            months[idx] += Number(b.totalAmount || 0);
+          }
+        });
+        setMonthlyRevenue(months);
+        // Also set total revenue from computed months to keep analytics consistent on UI
+        setAnalytics(prev => ({
+          ...prev,
+          revenue: months.reduce((a, b) => a + b, 0),
+        }));
+      } catch (_) {
+        setMonthlyRevenue(Array(12).fill(0));
+      }
+    };
+
+    loadMonthlyRevenue();
+
+    const intervalId = setInterval(loadMonthlyRevenue, 60_000); // refresh mỗi 60s
+    return () => clearInterval(intervalId);
+  }, [selectedYear]);
+
+  const renderDashboard = () => {
+    // Prepare chart data usage
+    const points = monthlyRevenue;
+
+    // Top 5 cars from booking analytics popularVehicles
+    const topVehicles = popularVehicles.slice(0, 5);
+    const topMax = Math.max(1, ...topVehicles.map(v => v.bookingCount || 0));
+
+    const availableCars = carData.filter(
+      v => (v.status || '').toUpperCase() === 'AVAILABLE'
+    );
+
+    return (
+      <div className='space-y-6'>
+        {/* Greeting */}
+        <div className='flex items-center justify-between'>
+          <div>
+            <h1 className='text-2xl font-bold'>
+              {`Good Morning, ${staffData?.name || 'Teams'}`}
+            </h1>
+            <p className='text-muted-foreground text-sm'>
+              Welcome back, you have 0 new messages
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
-              {t('dashboard.activeRentals')}
-            </CardTitle>
-            <Car className='h-4 w-4 text-muted-foreground' />
-          </CardHeader>
-          <CardContent>
-            {/* <div className='text-2xl font-bold'>
-              {mockCarData.filter(car => car.status === 'Rented').length}
-            </div> */}
-            <div className='text-2xl font-bold'>
-              {carData.filter(car => car.status === 'RENTED').length}
-            </div>
-            <p className='text-xs text-muted-foreground'>
-              {t('dashboard.activeRentalsSub')}
-            </p>
-          </CardContent>
-        </Card>
+        {/* Metric Cards */}
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+              <CardTitle className='text-sm font-medium'>
+                Total Revenue
+              </CardTitle>
+              <Car className='h-4 w-4 text-muted-foreground' />
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold'>
+                {formatCurrency(analytics.revenue || 0, 'VND')}
+              </div>
+              <p className='text-xs text-emerald-600'>+5%</p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
-              {t('dashboard.maintenance')}
-            </CardTitle>
-            <Wrench className='h-4 w-4 text-muted-foreground' />
-          </CardHeader>
-          <CardContent>
-            {/* <div className='text-2xl font-bold'>
-              {mockCarData.filter(car => car.status === 'Maintenance').length}
-            </div> */}
-            <div className='text-2xl font-bold'>
-              {carData.filter(car => car.status === 'MAINTENANCE').length}
-            </div>
-            <p className='text-xs text-muted-foreground'>
-              {t('dashboard.maintenanceSub')}
-            </p>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+              <CardTitle className='text-sm font-medium'>
+                Active Customers
+              </CardTitle>
+              <Users className='h-4 w-4 text-muted-foreground' />
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold'>{activeCustomersCount}</div>
+              <p className='text-xs text-emerald-600'>+3%</p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
-              {t('dashboard.pendingVerifications')}
-            </CardTitle>
-            <FileText className='h-4 w-4 text-muted-foreground' />
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold'>12</div>
-            <p className='text-xs text-muted-foreground'>
-              {t('dashboard.pendingVerificationsSub')}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+              <CardTitle className='text-sm font-medium'>
+                No. Car Rented Out
+              </CardTitle>
+              <CarFront className='h-4 w-4 text-muted-foreground' />
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold'>
+                {analytics.rentedCount ||
+                  carData.filter(
+                    v => (v.status || '').toUpperCase() === 'RENTED'
+                  ).length}
+              </div>
+              <p className='text-xs text-emerald-600'>+5%</p>
+            </CardContent>
+          </Card>
 
-      {/* Quick Actions */}
-      <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+              <CardTitle className='text-sm font-medium'>Maintenance</CardTitle>
+              <Wrench className='h-4 w-4 text-muted-foreground' />
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold'>
+                {
+                  carData.filter(
+                    v => (v.status || '').toUpperCase() === 'MAINTENANCE'
+                  ).length
+                }
+              </div>
+              <p className='text-xs text-amber-600'>+1%</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Middle: Revenue + Right column */}
+        <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
+          {/* Revenue card */}
+          <Card className='lg:col-span-2'>
+            <CardHeader className='flex flex-row items-center justify-between'>
+              <div>
+                <CardTitle>Revenue</CardTitle>
+                <p className='text-sm text-muted-foreground'>
+                  {formatCurrency(analytics.revenue || 0, 'VND')}
+                </p>
+              </div>
+              <div className='flex items-center gap-2'>
+                <select
+                  className='border rounded px-2 py-1 text-sm bg-background'
+                  value={selectedYear}
+                  onChange={e => setSelectedYear(parseInt(e.target.value))}
+                >
+                  <option value={currentYear}>{currentYear}</option>
+                  <option value={currentYear - 1}>{currentYear - 1}</option>
+                  <option value={currentYear - 2}>{currentYear - 2}</option>
+                </select>
+                <Button variant='outline' size='sm'>
+                  Jan–Dec {selectedYear}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className='px-2 pt-4 sm:px-6 sm:pt-6'>
+              <RevenueAreaChart monthlyRevenue={monthlyRevenue} />
+            </CardContent>
+          </Card>
+
+          {/* Right column: Top 5 */}
+          <div className='space-y-6'>
+            <Card>
+              <CardHeader>
+                <CardTitle>Top 5 Car Rented Out</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className='space-y-3'>
+                  {topVehicles.length ? (
+                    topVehicles.map(v => (
+                      <div key={v.vehicleId} className='space-y-1'>
+                        <div className='flex justify-between text-sm'>
+                          <span>{v.model}</span>
+                          <span>{v.bookingCount}</span>
+                        </div>
+                        <div className='h-2 bg-muted rounded'>
+                          <div
+                            className='h-2 bg-primary rounded'
+                            style={{
+                              width: `${
+                                ((v.bookingCount || 0) / topMax) * 100
+                              }%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className='text-sm text-muted-foreground'>
+                      No rented cars yet
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Available Cars Table */}
         <Card>
           <CardHeader>
-            <CardTitle>{t('dashboard.quickActions')}</CardTitle>
-          </CardHeader>
-          <CardContent className='grid grid-cols-2 gap-3'>
-            <Button onClick={() => setActiveTab('bookings')}>
-              Manage Bookings
-            </Button>
-            <Button variant='outline' onClick={() => setActiveTab('cars')}>
-              {t('dashboard.manageCars')}
-            </Button>
-            <Button variant='outline' onClick={() => setActiveTab('customers')}>
-              {t('dashboard.customerService')}
-            </Button>
-            <Button variant='outline' onClick={() => setActiveTab('payments')}>
-              {t('dashboard.processPayments')}
-            </Button>
-            <Button variant='outline' onClick={() => setActiveTab('returnCar')}>
-              {t('staff.returnCar.quickAction')}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Recent Activity */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('dashboard.recentActivity')}</CardTitle>
+            <CardTitle>Available Cars</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className='space-y-4'>
-              <div className='flex items-center'>
-                <div className='ml-4 space-y-1'>
-                  <p className='text-sm font-medium'>
-                    {t('dashboard.newBookingConfirmed')}
-                  </p>
-                  <p className='text-sm text-muted-foreground'>
-                    {t('dashboard.bookingDetails', {
-                      customer: 'Alice Johnson',
-                      car: 'Tesla Model 3',
-                    })}
-                  </p>
-                </div>
-                <div className='ml-auto text-sm text-muted-foreground'>
-                  10m ago
-                </div>
-              </div>
-              <div className='flex items-center'>
-                <div className='ml-4 space-y-1'>
-                  <p className='text-sm font-medium'>
-                    {t('dashboard.documentVerified')}
-                  </p>
-                  <p className='text-sm text-muted-foreground'>
-                    {t('dashboard.documentDetails', {
-                      customer: 'John Doe',
-                      document: "driver's license",
-                    })}
-                  </p>
-                </div>
-                <div className='ml-auto text-sm text-muted-foreground'>
-                  25m ago
-                </div>
-              </div>
-              <div className='flex items-center'>
-                <div className='ml-4 space-y-1'>
-                  <p className='text-sm font-medium'>
-                    {t('dashboard.carReturned')}
-                  </p>
-                  <p className='text-sm text-muted-foreground'>
-                    {t('dashboard.carReturnDetails', {
-                      car: 'Nissan Leaf',
-                      location: 'Downtown Station',
-                    })}
-                  </p>
-                </div>
-                <div className='ml-auto text-sm text-muted-foreground'>
-                  1h ago
-                </div>
-              </div>
-            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Brand/Model</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>License Plate</TableHead>
+                  <TableHead className='text-right'>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {availableCars.map(v => (
+                  <TableRow key={v.id} className='hover:bg-muted/50'>
+                    <TableCell className='font-medium'>
+                      {`${v.brand || ''} ${v.model || ''}`.trim() ||
+                        v.name ||
+                        '—'}
+                    </TableCell>
+                    <TableCell>{v.type || '—'}</TableCell>
+                    <TableCell>{v.licensePlate || '—'}</TableCell>
+                    <TableCell className='text-right'>
+                      <Badge
+                        variant='outline'
+                        className='text-emerald-700 border-emerald-200'
+                      >
+                        Available
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {availableCars.length === 0 && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={4}
+                      className='text-center text-muted-foreground'
+                    >
+                      No available cars
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    );
+  };
   const renderCheckIn = () => {
     return <CheckInCar />;
-  }
+  };
   const renderCars = () => {
     return <VehicleManagement />;
   };
@@ -598,13 +637,8 @@ export default function StaffDashboard() {
   return (
     <SidebarProvider>
       <StaffSidebar
-        // staff={mockStaffData[0]}
-        // cars={mockCarData}
         staff={staffData}
         cars={carData}
-        stations={mockStationData}
-        customers={mockCustomerData}
-        payments={mockPaymentData}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         // Use explicit label if provided, otherwise fallback to i18n key

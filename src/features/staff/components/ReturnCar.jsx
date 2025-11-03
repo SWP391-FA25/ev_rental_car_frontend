@@ -38,6 +38,7 @@ import {
 } from '@/features/shared/components/ui/select';
 import { Combobox } from '@/features/shared/components/ui/combobox';
 import { stationService } from '../../cars/services/stationService';
+import { toast } from '../../shared/lib/toast';
 import { formatCurrency } from '@/features/shared/lib/utils';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { CreditCard } from 'lucide-react';
@@ -733,14 +734,56 @@ export default function ReturnCar() {
         returnSummary.totalAmount,
         `Rental Fee ${returnSummary.bookingId.slice(-8)}`
       );
+      // Support multiple response shapes from backend
+      const payUrl =
+        response?.checkoutUrl ||
+        response?.paymentUrl ||
+        response?.data?.data?.checkoutUrl ||
+        response?.data?.paymentUrl;
 
-      if (response?.paymentUrl) {
+      if (payUrl) {
+        // Persist completion context so we can auto-complete after successful payment
+        try {
+          localStorage.setItem('completeAfterPay', '1');
+          localStorage.setItem(
+            'completionBookingId',
+            String(returnSummary.bookingId)
+          );
+          // Persist basic payment context for success/cancel pages
+          localStorage.setItem('lastPaymentType', 'RENTAL_FEE');
+          localStorage.setItem('lastBookingId', String(returnSummary.bookingId));
+          const pid =
+            response?.paymentId ||
+            response?.data?.data?.paymentId ||
+            response?.data?.paymentId ||
+            response?.id;
+          if (pid) {
+            localStorage.setItem('lastPaymentId', String(pid));
+          }
+          if (pendingCompletionPayload) {
+            localStorage.setItem(
+              'completionPayload',
+              JSON.stringify(pendingCompletionPayload)
+            );
+          }
+        } catch (e) {
+          console.warn('localStorage unavailable:', e);
+        }
+
         // Redirect to PayOS payment page
-        window.location.href = response.paymentUrl;
+        window.location.href = payUrl;
+      } else {
+        // No payment URL returned — surface error to user
+        const msg =
+          (response?.message || response?.data?.message || 'Không nhận được link thanh toán từ máy chủ');
+        toast.error(`${msg}. Vui lòng thử lại hoặc kiểm tra quyền đăng nhập.`);
       }
     } catch (error) {
       console.error('Payment creation failed:', error);
-      // You can add toast ntion here if needed
+      const serverMsg = error?.response?.data?.message || error?.message;
+      toast.error(
+        `Tạo link thanh toán thất bại: ${serverMsg || 'Lỗi không xác định'}`
+      );
     } finally {
       setPaymentLoading(false);
     }
@@ -820,9 +863,14 @@ export default function ReturnCar() {
 
       // Reset form sau khi hoàn tất
       resetAllFields();
+
+      // Toast báo hoàn tất thành công
+      toast.success(t('staffReturnCar.toast.completeSuccess'));
     } catch (e) {
       const serverMsg = e?.response?.data?.message || e?.message;
       setCompleteError(serverMsg || t('staffReturnCar.toast.completeFail'));
+      // Toast báo lỗi khi hoàn tất thất bại
+      toast.error(serverMsg || t('staffReturnCar.toast.completeFail'));
     }
   };
 
