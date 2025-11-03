@@ -49,7 +49,7 @@ const getStatusBadgeVariant = status => {
 const getStatusLabel = status => {
   switch (status) {
     case 'PENDING':
-      return 'Awaiting confirmation';
+      return 'Pending';
     case 'CONFIRMED':
       return 'Confirmed';
     case 'IN_PROGRESS':
@@ -158,12 +158,12 @@ export default function BookingsContent() {
       const list = Array.isArray(payload?.data?.inspections)
         ? payload.data.inspections
         : Array.isArray(payload?.inspections)
-        ? payload.inspections
-        : Array.isArray(payload)
-        ? payload
-        : Array.isArray(payload?.items)
-        ? payload.items
-        : [];
+          ? payload.inspections
+          : Array.isArray(payload)
+            ? payload
+            : Array.isArray(payload?.items)
+              ? payload.items
+              : [];
       const sorted = [...list].sort(
         (a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0)
       );
@@ -503,19 +503,19 @@ export default function BookingsContent() {
           {!selectedBookingForInspection ? (
             <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
               Please select a trip to view inspection.
-          </div>
+            </div>
           ) : inspectionLoading ? (
-          <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
+            <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
               Loading inspection report...
-          </div>
+            </div>
           ) : inspectionError ? (
-          <div className='p-2 border rounded-md bg-red-50 text-red-600 min-h-[40px] flex items-center'>
+            <div className='p-2 border rounded-md bg-red-50 text-red-600 min-h-[40px] flex items-center'>
               {inspectionError}
-          </div>
+            </div>
           ) : inspectionItems.length === 0 ? (
-          <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
+            <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
               No inspection report available.
-          </div>
+            </div>
           ) : (
             <div className='space-y-3'>
               {inspectionItems.map(item => {

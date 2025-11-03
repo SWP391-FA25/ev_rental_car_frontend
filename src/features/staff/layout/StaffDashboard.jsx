@@ -44,6 +44,7 @@ import { StaffHeader } from '../components/staff-header';
 import { StaffSidebar } from '../components/staff-sidebar';
 import StationManagement from '../components/station-management';
 import ReturnCar from '../components/ReturnCar';
+import { ContractUploadPage } from '../components/UploadContract/contract-upload-page';
 
 // const mockStaffData = [
 //   {
@@ -530,6 +531,9 @@ export default function StaffDashboard() {
   const renderReturnCar = () => {
     return <ReturnCar />;
   };
+  const renderUploadContract = () => {
+    return <ContractUploadPage />;
+  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -549,6 +553,8 @@ export default function StaffDashboard() {
         return renderBookings();
       case 'returnCar':
         return renderReturnCar();
+      case 'uploadContract':
+        return renderUploadContract();
       case 'documents':
         return <DocumentVerification />;
       case 'notifications':
@@ -614,13 +620,12 @@ export default function StaffDashboard() {
           id: 'documents',
           label: 'Document Verification',
         },
+        {
+          id: 'uploadContract',
+          label: 'Upload User Contract', // ✅ Hiển thị tên rõ ràng hơn
+        },
       ],
     },
-    // {
-    //   id: 'payments',
-    //   label: 'Payments',
-    //   icon: <CreditCard className='h-4 w-4' />,
-    // },
     {
       id: 'notifications',
       label: 'Notifications',
@@ -636,7 +641,15 @@ export default function StaffDashboard() {
         cars={carData}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        menuItems={menuItems}
+        // Use explicit label if provided, otherwise fallback to i18n key
+        menuItems={menuItems.map(item => ({
+          ...item,
+          label: item.label ?? t(`staffSidebar.${item.id}`),
+          items: item.items?.map(subItem => ({
+            ...subItem,
+            label: subItem.label ?? t(`staffSidebar.${subItem.id}`),
+          })),
+        }))}
       />
       <SidebarInset>
         {/* Header có thêm Language Toggle */}
