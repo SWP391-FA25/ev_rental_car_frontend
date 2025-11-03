@@ -342,7 +342,7 @@ const DocumentVerification = ({ userId, onVerificationUpdated }) => {
       if (!res.ok) {
         const body = await res.json().catch(() => null);
         console.error('verifyDocument failed:', res.status, body);
-        alert('Xác minh thất bại. Vui lòng thử lại.');
+        alert('Verification failed. Please try again.');
         return;
       }
       // success: update local state (mark document as verified or remove from pending)
@@ -351,10 +351,10 @@ const DocumentVerification = ({ userId, onVerificationUpdated }) => {
       setDocuments(prev =>
         prev.map(d => (d.id === id ? { ...d, ...updatedDoc } : d))
       );
-      alert('Xác minh tài liệu thành công.');
+      alert('Document verified successfully.');
     } catch (err) {
       console.error('verifyDocument error:', err);
-      alert('Có lỗi khi xác minh. Vui lòng thử lại.');
+      alert('An error occurred during verification. Please try again.');
     } finally {
       setVerifyingId(null);
     }

@@ -39,13 +39,13 @@ export default function ChangePassword() {
 
     // Validation
     if (formData.newPassword !== formData.confirmPassword) {
-      alert('Mật khẩu mới và xác nhận mật khẩu không khớp');
+      alert('New password and confirmation do not match');
       setIsLoading(false);
       return;
     }
 
     if (formData.newPassword.length < 6) {
-      alert('Mật khẩu mới phải có ít nhất 6 ký tự');
+      alert('New password must be at least 6 characters');
       setIsLoading(false);
       return;
     }
@@ -60,14 +60,14 @@ export default function ChangePassword() {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      alert('Đổi mật khẩu thành công!');
+      alert('Password changed successfully!');
       setFormData({
         currentPassword: '',
         newPassword: '',
         confirmPassword: '',
       });
     } catch {
-      alert('Có lỗi xảy ra khi đổi mật khẩu');
+      alert('An error occurred while changing password');
     } finally {
       setIsLoading(false);
     }
@@ -78,17 +78,17 @@ export default function ChangePassword() {
       {/* Header */}
       <div className='mb-8'>
         <h1 className='text-2xl font-bold text-foreground mb-2'>
-          Đổi mật khẩu
+          Change Password
         </h1>
         <p className='text-sm text-muted-foreground'>
-          Vui lòng nhập mật khẩu hiện tại của bạn để thay đổi mật khẩu
+          Please enter your current password to change password
         </p>
       </div>
 
       {/* Form Card */}
       <div className='bg-card rounded-lg border border-border p-6 shadow-sm'>
         <h2 className='text-lg font-semibold text-card-foreground mb-6'>
-          Nhập mật khẩu
+          Enter Password
         </h2>
 
         <form onSubmit={handleSubmit} className='space-y-6'>
@@ -98,7 +98,7 @@ export default function ChangePassword() {
               htmlFor='current-password'
               className='text-sm font-medium text-muted-foreground'
             >
-              Mật khẩu hiện tại
+              Current password
             </Label>
             <div className='relative'>
               <Input
@@ -108,7 +108,7 @@ export default function ChangePassword() {
                 onChange={e =>
                   handleInputChange('currentPassword', e.target.value)
                 }
-                placeholder='Nhập mật khẩu hiện tại'
+                placeholder='Enter current password'
                 className='pr-10'
                 required
               />
@@ -132,7 +132,7 @@ export default function ChangePassword() {
               htmlFor='new-password'
               className='text-sm font-medium text-muted-foreground'
             >
-              Mật khẩu mới
+              New password
             </Label>
             <div className='relative'>
               <Input
@@ -140,7 +140,7 @@ export default function ChangePassword() {
                 type={showPasswords.new ? 'text' : 'password'}
                 value={formData.newPassword}
                 onChange={e => handleInputChange('newPassword', e.target.value)}
-                placeholder='Nhập mật khẩu mới'
+                placeholder='Enter new password'
                 className='pr-10'
                 required
               />
@@ -164,7 +164,7 @@ export default function ChangePassword() {
               htmlFor='confirm-password'
               className='text-sm font-medium text-muted-foreground'
             >
-              Xác nhận mật khẩu mới
+              Confirm new password
             </Label>
             <div className='relative'>
               <Input
@@ -174,7 +174,7 @@ export default function ChangePassword() {
                 onChange={e =>
                   handleInputChange('confirmPassword', e.target.value)
                 }
-                placeholder='Nhập lại mật khẩu mới'
+                placeholder='Re-enter new password'
                 className='pr-10'
                 required
               />
@@ -195,7 +195,7 @@ export default function ChangePassword() {
           {/* Submit Button */}
           <div className='flex justify-end pt-4'>
             <Button type='submit' disabled={isLoading} className='px-8'>
-              {isLoading ? 'Đang xử lý...' : 'Xác nhận'}
+              {isLoading ? 'Processing...' : 'Confirm'}
             </Button>
           </div>
         </form>
