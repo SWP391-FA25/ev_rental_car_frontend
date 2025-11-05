@@ -76,7 +76,7 @@ export function ContractUploadForm({ bookingId, contractId, onSuccess, onCancel,
 
     // Authorization check
     if (!user || (user.role !== 'STAFF' && user.role !== 'ADMIN')) {
-      toast.error("Bạn không có quyền truy cập chức năng này")
+      toast.error("You do not have permission to access this feature")
       return
     }
 
@@ -85,7 +85,7 @@ export function ContractUploadForm({ bookingId, contractId, onSuccess, onCancel,
     }
 
     if (!bookingId) {
-      toast.error("Không tìm thấy Booking ID")
+      toast.error("Booking ID not found")
       return
     }
 
@@ -121,13 +121,13 @@ export function ContractUploadForm({ bookingId, contractId, onSuccess, onCancel,
         if (!createResponse.ok || !createData.success) {
           // Handle specific errors
           if (createResponse.status === 400) {
-            throw new Error(createData.message || 'Booking không hợp lệ hoặc đã có hợp đồng')
+      throw new Error(createData.message || 'Invalid booking or contract already exists')
           } else if (createResponse.status === 403) {
-            throw new Error('Bạn không có quyền tạo hợp đồng')
+      throw new Error('You do not have permission to create a contract')
           } else if (createResponse.status === 404) {
             throw new Error('Không tìm thấy booking')
           } else {
-            throw new Error(createData.message || 'Không thể tạo hợp đồng')
+      throw new Error(createData.message || 'Failed to create contract')
           }
         }
 
@@ -160,13 +160,13 @@ export function ContractUploadForm({ bookingId, contractId, onSuccess, onCancel,
         if (uploadResponse.status === 400) {
           throw new Error(uploadData.message || 'Dữ liệu không hợp lệ hoặc file không đúng định dạng')
         } else if (uploadResponse.status === 403) {
-          throw new Error('Bạn không có quyền tải lên hợp đồng')
+      throw new Error('You do not have permission to upload the contract')
         } else if (uploadResponse.status === 404) {
-          throw new Error('Không tìm thấy hợp đồng')
+      throw new Error('Contract not found')
         } else if (uploadResponse.status === 409) {
-          throw new Error('Hợp đồng đã được tải lên trước đó')
+      throw new Error('Contract already uploaded')
         } else {
-          throw new Error(uploadData.message || 'Không thể tải lên file hợp đồng')
+      throw new Error(uploadData.message || 'Failed to upload contract file')
         }
       }
 
@@ -188,7 +188,7 @@ export function ContractUploadForm({ bookingId, contractId, onSuccess, onCancel,
       }
     } catch (error) {
       console.error('❌ Upload error:', error)
-      toast.error(error.message || "Có lỗi xảy ra. Vui lòng thử lại.")
+      toast.error(error.message || "An error occurred. Please try again.")
     } finally {
       setLoading(false)
     }

@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '../../../shared/components/ui/button';
 import { Input } from '../../../shared/components/ui/input';
 import { Label } from '../../../shared/components/ui/label';
 import { Textarea } from '../../../shared/components/ui/textarea';
+import { Combobox } from '../../../shared/components/ui/combobox';
+import { stationService } from '@/features/cars/services/stationService';
 
 export function BookingCompleteForm({ onSubmit, onCancel, loading = false }) {
   const [formData, setFormData] = useState({
@@ -17,11 +19,43 @@ export function BookingCompleteForm({ onSubmit, onCancel, loading = false }) {
 
   const [errors, setErrors] = useState({});
 
+  const [stations, setStations] = useState([]);
+  const [loadingStations, setLoadingStations] = useState(false);
+  const [selectedReturnStationId, setSelectedReturnStationId] = useState('');
+
+  useEffect(() => {
+    const loadStations = async () => {
+      setLoadingStations(true);
+      try {
+        const response = await stationService.getAllStations();
+        const list =
+          response?.data?.stations ||
+          response?.data ||
+          response?.stations ||
+          [];
+        setStations(Array.isArray(list) ? list : []);
+      } catch (e) {
+        // keep stations empty on failure
+      } finally {
+        setLoadingStations(false);
+      }
+    };
+    loadStations();
+  }, []);
+
   const validateForm = () => {
     const newErrors = {};
 
     if (!formData.actualEndTime) {
       newErrors.actualEndTime = 'Actual end time is required';
+    }
+
+    const loc = (formData.actualReturnLocation || '').trim();
+    if (!loc) {
+      newErrors.actualReturnLocation = 'Return location is required';
+    } else if (loc.length < 3) {
+      newErrors.actualReturnLocation =
+        'Return location must be at least 3 characters';
     }
 
     if (formData.rating && (formData.rating < 1 || formData.rating > 5)) {
@@ -47,8 +81,17 @@ export function BookingCompleteForm({ onSubmit, onCancel, loading = false }) {
     }
 
     try {
+      // Chuẩn hóa thời gian thành ISO8601 để khớp validator backend
+      const endISO = formData.actualEndTime
+        ? new Date(formData.actualEndTime).toISOString()
+        : new Date().toISOString();
+      // Chuẩn hóa tên trạm: trim để tránh lỗi khoảng trắng
+      const location = (formData.actualReturnLocation || '').trim();
+
       const submitData = {
         ...formData,
+        actualEndTime: endISO,
+        actualReturnLocation: location,
         returnOdometer: formData.returnOdometer
           ? parseFloat(formData.returnOdometer)
           : undefined,
@@ -99,14 +142,33 @@ export function BookingCompleteForm({ onSubmit, onCancel, loading = false }) {
         {/* Return Location */}
         <div className='space-y-2'>
           <Label htmlFor='actualReturnLocation'>Return Location</Label>
-          <Input
-            id='actualReturnLocation'
-            value={formData.actualReturnLocation}
-            onChange={e =>
-              handleInputChange('actualReturnLocation', e.target.value)
-            }
-            placeholder='Where was the vehicle returned?'
+          <Combobox
+            value={selectedReturnStationId}
+            onValueChange={value => {
+              setSelectedReturnStationId(value);
+              const selected = stations.find(
+                s => String(s.id) === String(value)
+              );
+              const stationName = selected?.name ? String(selected.name).trim() : '';
+              handleInputChange('actualReturnLocation', stationName);
+            }}
+            placeholder='Select return station'
+            searchPlaceholder='Search station by name/address/code'
+            disabled={loadingStations}
+            options={stations.map(station => ({
+              value: String(station.id),
+              label: station.name || station.address || String(station.id),
+              searchText: [station.name, station.address, station.code]
+                .filter(Boolean)
+                .join(' '),
+            }))}
+            className={errors.actualReturnLocation ? 'border-red-500' : ''}
           />
+          {errors.actualReturnLocation && (
+            <p className='text-sm text-red-500'>
+              {errors.actualReturnLocation}
+            </p>
+          )}
         </div>
 
         {/* Return Odometer */}

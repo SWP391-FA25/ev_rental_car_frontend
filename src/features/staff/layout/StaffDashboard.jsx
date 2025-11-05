@@ -6,11 +6,11 @@ import {
   LayoutDashboard,
   Users,
   Wrench,
+  TrendingUp,
 } from 'lucide-react';
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
-import RevenueAreaChart from '../components/RevenueAreaChart';
-import { Button } from '../../shared/components/ui/button';
+import { ChartBarDefault } from '../../admin/components/barchart-revenue';
 import {
   Card,
   CardContent,
@@ -139,11 +139,15 @@ export default function StaffDashboard() {
     revenue: 0,
     rentedCount: 0,
   });
+  const [revenueGrowth, setRevenueGrowth] = React.useState(0);
   const [popularVehicles, setPopularVehicles] = React.useState([]);
   const [activeCustomersCount, setActiveCustomersCount] = React.useState(0);
   const [monthlyRevenue, setMonthlyRevenue] = React.useState(Array(12).fill(0));
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = React.useState(currentYear);
+  const [activeCustomersGrowth, setActiveCustomersGrowth] = React.useState(0);
+  const [rentedGrowth, setRentedGrowth] = React.useState(0);
+  const [maintenanceGrowth, setMaintenanceGrowth] = React.useState(0);
 
   // Fetch vehicles
   React.useEffect(() => {
@@ -160,6 +164,93 @@ export default function StaffDashboard() {
       }
     };
     loadVehicles();
+  }, []);
+
+  // Compute revenue growth (%): compare current month vs last month from COMPLETED bookings
+  React.useEffect(() => {
+    const computeRevenueGrowth = async () => {
+      try {
+        const now = new Date();
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const lastMonthStart = new Date(
+          now.getFullYear(),
+          now.getMonth() - 1,
+          1
+        );
+        const lastMonthEnd = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          0,
+          23,
+          59,
+          59
+        );
+
+        let page = 1;
+        const limit = 100;
+        const all = [];
+        while (true) {
+          const res = await apiClient.get(endpoints.bookings.getAll(), {
+            params: {
+              status: 'COMPLETED',
+              page,
+              limit,
+              startDate: lastMonthStart.toISOString(),
+              endDate: now.toISOString(),
+            },
+          });
+          const pageBookings = Array.isArray(res?.data?.bookings)
+            ? res.data.bookings
+            : [];
+          all.push(...pageBookings);
+          const pagination = res?.data?.pagination;
+          const currentPage = Number(pagination?.currentPage || page);
+          const totalPages = Number(pagination?.totalPages || page);
+          if (currentPage >= totalPages || pageBookings.length === 0) break;
+          page += 1;
+        }
+
+        const getDate = b =>
+          new Date(b.actualEndTime || b.endTime || b.updatedAt || b.createdAt);
+
+        const monthRevenue = all
+          .filter(b => {
+            const d = getDate(b);
+            return d >= monthStart && d <= now;
+          })
+          .reduce((sum, b) => {
+            const base = Number(b.basePrice || 0);
+            const insurance = Number(b.insuranceAmount || 0);
+            const discount = Number(b.discountAmount || 0);
+            return sum + (base + insurance - discount);
+          }, 0);
+
+        const lastMonthRevenue = all
+          .filter(b => {
+            const d = getDate(b);
+            return d >= lastMonthStart && d <= lastMonthEnd;
+          })
+          .reduce((sum, b) => {
+            const base = Number(b.basePrice || 0);
+            const insurance = Number(b.insuranceAmount || 0);
+            const discount = Number(b.discountAmount || 0);
+            return sum + (base + insurance - discount);
+          }, 0);
+
+        const growth =
+          lastMonthRevenue === 0
+            ? monthRevenue > 0
+              ? 100
+              : 0
+            : Math.round(
+                ((monthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100
+              );
+        setRevenueGrowth(growth);
+      } catch (_) {
+        setRevenueGrowth(0);
+      }
+    };
+    computeRevenueGrowth();
   }, []);
 
   // Fetch staff info (current logged-in user)
@@ -198,15 +289,54 @@ export default function StaffDashboard() {
         const popular = [...popularRaw].sort(
           (a, b) => (b.bookingCount || 0) - (a.bookingCount || 0)
         );
-        setAnalytics({
-          revenue: summary.totalRevenue || 0,
+        setAnalytics(prev => ({
+          ...prev,
+          revenue: summary.totalRevenue || prev.revenue || 0,
           rentedCount: statusBreakdown.in_progress || 0,
-        });
+        }));
         setPopularVehicles(popular);
       } catch (_) {}
     };
     loadAnalytics();
   }, [selectedYear]);
+
+  // Compute total revenue for the card using Admin formula across all COMPLETED bookings
+  React.useEffect(() => {
+    const computeTotalRevenue = async () => {
+      try {
+        let page = 1;
+        const limit = 100;
+        let total = 0;
+        while (true) {
+          const res = await apiClient.get(endpoints.bookings.getAll(), {
+            params: {
+              status: 'COMPLETED',
+              page,
+              limit,
+            },
+          });
+          const pageBookings = Array.isArray(res?.data?.bookings)
+            ? res.data.bookings
+            : [];
+          total += pageBookings.reduce((sum, b) => {
+            const base = Number(b.basePrice || 0);
+            const insurance = Number(b.insuranceAmount || 0);
+            const discount = Number(b.discountAmount || 0);
+            return sum + (base + insurance - discount);
+          }, 0);
+          const pagination = res?.data?.pagination;
+          const currentPage = Number(pagination?.currentPage || page);
+          const totalPages = Number(pagination?.totalPages || page);
+          if (currentPage >= totalPages || pageBookings.length === 0) break;
+          page += 1;
+        }
+        setAnalytics(prev => ({ ...prev, revenue: total }));
+      } catch (_) {
+        // keep current revenue
+      }
+    };
+    computeTotalRevenue();
+  }, []);
 
   // Active customers via renters API
   React.useEffect(() => {
@@ -224,6 +354,103 @@ export default function StaffDashboard() {
     };
     loadRenters();
   }, []);
+
+  // Growth for Active Customers and Rented using IN_PROGRESS bookings month-over-month
+  React.useEffect(() => {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+
+    const fetchRange = async (start, end) => {
+      let page = 1;
+      const limit = 100;
+      const all = [];
+      while (true) {
+        const res = await apiClient.get(endpoints.bookings.getAll(), {
+          params: {
+            status: 'IN_PROGRESS',
+            page,
+            limit,
+            startDate: start.toISOString(),
+            endDate: end.toISOString(),
+          },
+        });
+        const pageBookings = Array.isArray(res?.data?.bookings)
+          ? res.data.bookings
+          : [];
+        all.push(...pageBookings);
+        const pagination = res?.data?.pagination;
+        const currentPage = Number(pagination?.currentPage || page);
+        const totalPages = Number(pagination?.totalPages || page);
+        if (currentPage >= totalPages || pageBookings.length === 0) break;
+        page += 1;
+      }
+      return all;
+    };
+
+    const run = async () => {
+      try {
+        const current = await fetchRange(monthStart, now);
+        const last = await fetchRange(lastMonthStart, lastMonthEnd);
+
+        // Active customers growth: distinct renterId/customerId
+        const getCustomerId = b => b.renterId || b.customerId || b.userId;
+        const currentActiveCustomers = new Set(
+          current.map(getCustomerId).filter(Boolean)
+        ).size;
+        const lastActiveCustomers = new Set(
+          last.map(getCustomerId).filter(Boolean)
+        ).size;
+        const growthActive =
+          lastActiveCustomers === 0
+            ? currentActiveCustomers > 0 ? 100 : 0
+            : Math.round(
+                ((currentActiveCustomers - lastActiveCustomers) /
+                  lastActiveCustomers) * 100
+              );
+        setActiveCustomersGrowth(growthActive);
+
+        // Rented growth: number of IN_PROGRESS bookings
+        const currentRented = current.length;
+        const lastRented = last.length;
+        const growthRented =
+          lastRented === 0
+            ? currentRented > 0 ? 100 : 0
+            : Math.round(((currentRented - lastRented) / lastRented) * 100);
+        setRentedGrowth(growthRented);
+      } catch (_) {
+        setActiveCustomersGrowth(0);
+        setRentedGrowth(0);
+      }
+    };
+    run();
+  }, []);
+
+  // Maintenance growth: compare MAINTENANCE cars updated/serviced month-over-month
+  React.useEffect(() => {
+    try {
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+
+      const getDate = v => new Date(v.updatedAt || v.lastService || 0);
+      const isMaint = v => (v.status || '').toUpperCase() === 'MAINTENANCE';
+
+      const currentMaint = carData.filter(
+        v => isMaint(v) && getDate(v) >= monthStart && getDate(v) <= now
+      ).length;
+      const lastMaint = carData.filter(
+        v => isMaint(v) && getDate(v) >= lastMonthStart && getDate(v) <= lastMonthEnd
+      ).length;
+      const growth =
+        lastMaint === 0 ? (currentMaint > 0 ? 100 : 0) : Math.round(((currentMaint - lastMaint) / lastMaint) * 100);
+      setMaintenanceGrowth(growth);
+    } catch (_) {
+      setMaintenanceGrowth(0);
+    }
+  }, [carData]);
 
   // Real-time monthly revenue from completed bookings (frontend-only aggregation with pagination)
   React.useEffect(() => {
@@ -273,15 +500,14 @@ export default function StaffDashboard() {
           );
           if (dt.getFullYear() === year) {
             const idx = dt.getMonth();
-            months[idx] += Number(b.totalAmount || 0);
+            const base = Number(b.basePrice || 0);
+            const insurance = Number(b.insuranceAmount || 0);
+            const discount = Number(b.discountAmount || 0);
+            const revenue = base + insurance - discount;
+            months[idx] += revenue;
           }
         });
         setMonthlyRevenue(months);
-        // Also set total revenue from computed months to keep analytics consistent on UI
-        setAnalytics(prev => ({
-          ...prev,
-          revenue: months.reduce((a, b) => a + b, 0),
-        }));
       } catch (_) {
         setMonthlyRevenue(Array(12).fill(0));
       }
@@ -332,7 +558,21 @@ export default function StaffDashboard() {
               <div className='text-2xl font-bold'>
                 {formatCurrency(analytics.revenue || 0, 'VND')}
               </div>
-              <p className='text-xs text-emerald-600'>+5%</p>
+              <div
+                className={`flex items-center gap-1 text-xs ${
+                  revenueGrowth >= 0 ? 'text-emerald-600' : 'text-red-600'
+                }`}
+              >
+                <TrendingUp size={12} />
+                <span>
+                  {revenueGrowth > 0
+                    ? `+${revenueGrowth}%`
+                    : `${revenueGrowth}%`}
+                </span>
+              </div>
+              <p className='mt-1 text-[11px] text-muted-foreground'>
+                Total revenue from booking
+              </p>
             </CardContent>
           </Card>
 
@@ -345,7 +585,21 @@ export default function StaffDashboard() {
             </CardHeader>
             <CardContent>
               <div className='text-2xl font-bold'>{activeCustomersCount}</div>
-              <p className='text-xs text-emerald-600'>+3%</p>
+              <div
+                className={`flex items-center gap-1 text-xs ${
+                  activeCustomersGrowth >= 0 ? 'text-emerald-600' : 'text-red-600'
+                }`}
+              >
+                <TrendingUp size={12} />
+                <span>
+                  {activeCustomersGrowth > 0
+                    ? `+${activeCustomersGrowth}%`
+                    : `${activeCustomersGrowth}%`}
+                </span>
+              </div>
+              <p className='mt-1 text-[11px] text-muted-foreground'>
+                Currently renting
+              </p>
             </CardContent>
           </Card>
 
@@ -363,7 +617,19 @@ export default function StaffDashboard() {
                     v => (v.status || '').toUpperCase() === 'RENTED'
                   ).length}
               </div>
-              <p className='text-xs text-emerald-600'>+5%</p>
+              <div
+                className={`flex items-center gap-1 text-xs ${
+                  rentedGrowth >= 0 ? 'text-emerald-600' : 'text-red-600'
+                }`}
+              >
+                <TrendingUp size={12} />
+                <span>
+                  {rentedGrowth > 0 ? `+${rentedGrowth}%` : `${rentedGrowth}%`}
+                </span>
+              </div>
+              <p className='mt-1 text-[11px] text-muted-foreground'>
+                Total number of cars currently rented out
+              </p>
             </CardContent>
           </Card>
 
@@ -380,41 +646,31 @@ export default function StaffDashboard() {
                   ).length
                 }
               </div>
-              <p className='text-xs text-amber-600'>+1%</p>
+              <div
+                className={`flex items-center gap-1 text-xs ${
+                  maintenanceGrowth >= 0 ? 'text-amber-600' : 'text-red-600'
+                }`}
+              >
+                <TrendingUp size={12} />
+                <span>
+                  {maintenanceGrowth > 0
+                    ? `+${maintenanceGrowth}%`
+                    : `${maintenanceGrowth}%`}
+                </span>
+              </div>
+              <p className='mt-1 text-[11px] text-muted-foreground'>
+                Total number of cars currently in maintenance
+              </p>
             </CardContent>
           </Card>
         </div>
 
         {/* Middle: Revenue + Right column */}
         <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
-          {/* Revenue card */}
-          <Card className='lg:col-span-2'>
-            <CardHeader className='flex flex-row items-center justify-between'>
-              <div>
-                <CardTitle>Revenue</CardTitle>
-                <p className='text-sm text-muted-foreground'>
-                  {formatCurrency(analytics.revenue || 0, 'VND')}
-                </p>
-              </div>
-              <div className='flex items-center gap-2'>
-                <select
-                  className='border rounded px-2 py-1 text-sm bg-background'
-                  value={selectedYear}
-                  onChange={e => setSelectedYear(parseInt(e.target.value))}
-                >
-                  <option value={currentYear}>{currentYear}</option>
-                  <option value={currentYear - 1}>{currentYear - 1}</option>
-                  <option value={currentYear - 2}>{currentYear - 2}</option>
-                </select>
-                <Button variant='outline' size='sm'>
-                  Jan–Dec {selectedYear}
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className='px-2 pt-4 sm:px-6 sm:pt-6'>
-              <RevenueAreaChart monthlyRevenue={monthlyRevenue} />
-            </CardContent>
-          </Card>
+          {/* Revenue chart reused from Admin */}
+          <div className='lg:col-span-2'>
+            <ChartBarDefault />
+          </div>
 
           {/* Right column: Top 5 */}
           <div className='space-y-6'>

@@ -32,7 +32,7 @@ export function ContractUploadPage() {
 	// Authorization check
 	useEffect(() => {
 		if (!user || (user.role !== 'STAFF' && user.role !== 'ADMIN')) {
-			toast.error("Bạn không có quyền truy cập trang này")
+  toast.error("You do not have permission to access this page")
 			// Optionally redirect to home or another page
 		}
 	}, [user])
@@ -207,7 +207,7 @@ export function ContractUploadPage() {
 		} catch (err) {
 			console.error('Fetch error:', err)
 			setError(err?.message || 'Failed to load data')
-			toast.error('Không thể tải dữ liệu')
+  toast.error('Failed to load data')
 			setContracts([])
 		} finally {
 			setLoading(false)
