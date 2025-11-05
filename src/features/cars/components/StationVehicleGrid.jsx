@@ -156,10 +156,7 @@ const StationVehicleGrid = ({
                 alt={vehicle.name}
                 className='w-full h-full object-cover'
               />
-              <div className='absolute bottom-3 right-3 bg-black/80 text-white px-3 py-1 rounded-lg'>
-                <span className='text-lg font-bold'>${vehicle.price}</span>
-                <span className='text-sm'>/{vehicle.period}</span>
-              </div>
+
               {!vehicle.available && (
                 <div className='absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded text-xs font-medium'>
                   Unavailable
