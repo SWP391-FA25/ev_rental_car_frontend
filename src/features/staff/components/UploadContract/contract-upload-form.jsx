@@ -171,7 +171,7 @@ export function ContractUploadForm({ bookingId, contractId, onSuccess, onCancel,
       }
 
       console.log('✅ Contract uploaded and completed successfully')
-      toast.success("Tải lên hợp đồng thành công!")
+      // ✅ Removed duplicate toast - parent component will show the success message
 
       // Reset form
       setFormData({
