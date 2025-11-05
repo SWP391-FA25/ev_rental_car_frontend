@@ -47,12 +47,10 @@ export default function UserManagement() {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isDocVerifyOpen, setIsDocVerifyOpen] = useState(false);
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
-  const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [userToSuspend, setUserToSuspend] = useState(null);
   const [userToDelete, setUserToDelete] = useState(null);
 
-  const { users, loading, createUser, suspendUser, deleteUser, fetchUsers } =
+  const { users, loading, createUser, updateUser, deleteUser, fetchUsers } =
     useUsers();
 
   // Pagination state: 10 users per page
@@ -94,8 +92,6 @@ export default function UserManagement() {
     switch (status) {
       case 'ACTIVE':
         return 'default';
-      case 'SUSPENDED':
-        return 'secondary';
       case 'BANNED':
         return 'destructive';
       default:
@@ -144,10 +140,10 @@ export default function UserManagement() {
         </div>
         <div className='rounded-lg border p-4'>
           <div className='text-2xl font-bold'>
-            {users.filter(u => u.accountStatus === 'SUSPENDED').length}
+            {users.filter(u => u.accountStatus === 'BANNED').length}
           </div>
           <div className='text-sm text-muted-foreground'>
-            {t('userManagement.stats.suspendedUsers')}
+            Banned Users
           </div>
         </div>
       </div>
@@ -179,9 +175,6 @@ export default function UserManagement() {
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setFilterStatus('active')}>
               {t('userManagement.badges.active')}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFilterStatus('suspended')}>
-              {t('userManagement.badges.suspended')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setFilterStatus('banned')}>
               Banned
@@ -251,15 +244,6 @@ export default function UserManagement() {
                         </DropdownMenuItem> */}
                         <DropdownMenuItem
                           onClick={() => {
-                            setUserToSuspend(user.id);
-                            setSuspendDialogOpen(true);
-                          }}
-                          className='text-orange-600'
-                        >
-                          {t('userManagement.action.suspend')}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
                             setUserToDelete(user.id);
                             setDeleteDialogOpen(true);
                           }}
@@ -314,6 +298,10 @@ export default function UserManagement() {
         isOpen={isDetailsOpen}
         onClose={() => setIsDetailsOpen(false)}
         userId={selectedUserId}
+        onUserUpdated={(updatedUser) => {
+          // Refresh the users list after update
+          fetchUsers();
+        }}
       />
 
       {/* Document Verification
@@ -346,22 +334,6 @@ export default function UserManagement() {
       />
 
       {/* Confirm */}
-      <ConfirmDialog
-        open={suspendDialogOpen}
-        onOpenChange={setSuspendDialogOpen}
-        title={t('common.suspend')}
-        description={t('userManagement.confirmSuspend')}
-        onConfirm={() => {
-          if (userToSuspend) {
-            suspendUser(userToSuspend);
-            setUserToSuspend(null);
-          }
-        }}
-        confirmText={t('common.suspend')}
-        cancelText={t('common.cancel')}
-        confirmVariant='destructive'
-      />
-
       <ConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}

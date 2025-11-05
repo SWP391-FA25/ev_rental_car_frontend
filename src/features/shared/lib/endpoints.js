@@ -7,10 +7,10 @@ export const endpoints = {
     login: () => '/api/auth/login',
     logout: () => '/api/auth/logout',
     me: () => '/api/auth/me',
+    changePassword: () => '/api/auth/change-password',
   },
 
-
-  staffs: {
+  staff: {
     getAll: () => '/api/staffs',
     getById: id => `/api/staffs/${id}`,
     create: () => '/api/staffs',

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { CheckCircle, TrendingUp } from 'lucide-react';
+import { CheckCircle, TrendingUp, TrendingDown } from 'lucide-react';
 import { ChartAreaInteractive } from '../components/chart-area-interactive';
 import { ChartBarDefault } from '../components/barchart-revenue';
 
@@ -230,12 +230,12 @@ const Dashboard = () => {
               </p>
             </div>
             <div className={`flex items-center gap-1 text-sm ${stats.growthBookings >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}>
-              <TrendingUp size={16} />
+              {stats.growthBookings >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
               <span>{stats.growthBookings > 0 ? `+${stats.growthBookings}%` : `${stats.growthBookings || 0}%`}</span>
             </div>
           </div>
           <p className="text-xs flex items-center gap-1" style={{ color: 'var(--muted-foreground)' }}>
-            <TrendingUp size={12} />
+            {stats.growthBookings >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
             Tổng số booking tháng này
           </p>
           <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>New bookings: +{stats.newBookings || 0}</p>
@@ -250,12 +250,12 @@ const Dashboard = () => {
               </p>
             </div>
             <div className={`flex items-center gap-1 text-sm ${stats.growthActive >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}>
-              <TrendingUp size={16} />
+              {stats.growthActive >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
               <span>{stats.growthActive > 0 ? `+${stats.growthActive}%` : `${stats.growthActive || 0}%`}</span>
             </div>
           </div>
           <p className="text-xs flex items-center gap-1" style={{ color: 'var(--muted-foreground)' }}>
-            <TrendingUp size={12} />
+            {stats.growthActive >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
             Đang trong quá trình thuê
           </p>
           <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>{stats.activeBookings} active bookings</p>
@@ -270,12 +270,12 @@ const Dashboard = () => {
               </p>
             </div>
             <div className={`flex items-center gap-1 text-sm ${stats.revenueGrowth >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}>
-              <TrendingUp size={16} />
+              {stats.revenueGrowth >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
               <span>{stats.revenueGrowth > 0 ? `+${stats.revenueGrowth}%` : `${stats.revenueGrowth || 0}%`}</span>
             </div>
           </div>
           <p className="text-xs flex items-center gap-1" style={{ color: 'var(--muted-foreground)' }}>
-            <TrendingUp size={12} />
+            {stats.revenueGrowth >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
             Tổng doanh thu từ booking hoàn thành
           </p>
           <div className="mt-2 space-y-1">
@@ -292,7 +292,7 @@ const Dashboard = () => {
               </p>
             </div>
             <div className={`flex items-center gap-1 text-sm ${stats.growthCompleted >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}>
-              <TrendingUp size={16} />
+              {stats.growthCompleted >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
               <span>{stats.growthCompleted > 0 ? `+${stats.growthCompleted}%` : `${stats.growthCompleted || 0}%`}</span>
             </div>
           </div>

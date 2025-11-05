@@ -42,8 +42,6 @@ export default function CheckInCar() {
     const [booking, setBooking] = useState(null);
     const [availableBookings, setAvailableBookings] = useState([]);
     const [loadingBookings, setLoadingBookings] = useState(false);
-    const [stations, setStations] = useState([]);
-    const [loadingStations, setLoadingStations] = useState(false);
     const [selectedStation, setSelectedStation] = useState('');
 
     // 🔍 Search states
@@ -91,17 +89,78 @@ export default function CheckInCar() {
     const [existingContract, setExistingContract] = useState(null);
     const [loadingContract, setLoadingContract] = useState(false);
 
+    // ✨ Staff assignment state
+    const [staffAssignment, setStaffAssignment] = useState(null);
+    const [loadingAssignment, setLoadingAssignment] = useState(true);
+
+    // Fetch staff assignment first
+    useEffect(() => {
+        const fetchStaffAssignment = async () => {
+            if (!user?.id) return;
+
+            try {
+                setLoadingAssignment(true);
+                // ✅ Optimized: Get assignment for specific staff only
+                const response = await apiClient.get(
+                    endpoints.assignments.getByStaffId(user.id)
+                );
+
+                if (response.success) {
+                    // Check if assignment exists in response
+                    const assignment = response.data.assignment || response.data;
+
+                    if (assignment && assignment.station) {
+                        setStaffAssignment(assignment);
+                        console.log('✅ Staff assigned to station:', assignment.station?.name);
+                    } else {
+                        console.warn('⚠️ Staff not assigned to any station');
+                        toast.error('You are not assigned to any station. Please contact admin.');
+                    }
+                } else {
+                    console.warn('⚠️ No assignment found for staff');
+                    toast.error('You are not assigned to any station. Please contact admin.');
+                }
+            } catch (error) {
+                console.error('Error fetching staff assignment:', error);
+                // If 404, staff has no assignment
+                if (error.response?.status === 404) {
+                    toast.error('You are not assigned to any station. Please contact admin.');
+                } else {
+                    toast.error('Failed to load station assignment');
+                }
+            } finally {
+                setLoadingAssignment(false);
+            }
+        };
+
+        fetchStaffAssignment();
+    }, [user]);
+
     useEffect(() => {
         const fetchEligibleBookings = async () => {
+            if (!staffAssignment?.station?.id) {
+                console.log('⏳ Waiting for staff assignment...');
+                return;
+            }
+
             try {
                 setLoadingBookings(true);
                 const resData = await getAllBookings({ limit: 100 });
-                const list = (resData?.bookings || resData || []).filter(b => {
+                const allBookings = resData?.bookings || resData || [];
+
+                // Filter by staff's assigned station
+                const list = allBookings.filter(b => {
                     const status = (b.status || b.bookingStatus || '').toUpperCase();
-                    // Show all except canceled
-                    return status !== 'CANCELED' && status !== 'CANCELLED';
+                    const bookingStationId = b.station?.id || b.stationId;
+
+                    // Show bookings that:
+                    // 1. Not canceled
+                    // 2. Belong to staff's assigned station
+                    return (status !== 'CANCELED' && status !== 'CANCELLED') &&
+                        (bookingStationId === staffAssignment.station.id);
                 });
-                console.log('📋 Available bookings (except canceled):', list.length);
+
+                console.log('📋 Available bookings for station', staffAssignment.station.name + ':', list.length);
                 setAvailableBookings(list);
             } catch (err) {
                 console.error('Fetch eligible bookings error', err);
@@ -110,7 +169,7 @@ export default function CheckInCar() {
             }
         };
         fetchEligibleBookings();
-    }, [getAllBookings]);
+    }, [getAllBookings, staffAssignment]);
 
     // ✨ Click outside to close dropdown
     useEffect(() => {
@@ -129,30 +188,12 @@ export default function CheckInCar() {
         };
     }, [isSearchOpen]);
 
+    // Auto-set station from booking (no manual selection)
     useEffect(() => {
-        const fetchStations = async () => {
-            try {
-                setLoadingStations(true);
-                const response = await apiClient.get(endpoints.stations.getAll());
-                const stationsList = Array.isArray(response?.data) ? response.data :
-                    Array.isArray(response?.data?.stations) ? response.data.stations : [];
-                setStations(stationsList);
-
-                if (booking && booking?.station?.id) {
-                    setSelectedStation(booking.station.id);
-                } else if (stationsList.length > 0) {
-                    setSelectedStation(stationsList[0].id);
-                }
-            } catch (err) {
-                console.error('Fetch stations error', err);
-    toast.error('Failed to load stations');
-                setStations([]);
-            } finally {
-                setLoadingStations(false);
-            }
-        };
-
-        fetchStations();
+        if (booking?.station?.id) {
+            setSelectedStation(booking.station.id);
+            console.log('🏢 Station set from booking:', booking.station.name);
+        }
     }, [booking]);
 
     const handleSelectBooking = async value => {
@@ -962,12 +1003,41 @@ export default function CheckInCar() {
     const isContractNotCompleted = !bookingHasContract || existingContract?.status !== 'COMPLETED';
     const isSubmitDisabled = isSubmitting || !booking || (bookingHasInspection && !isEditMode) || isContractNotCompleted;
 
+    // Show loading state while fetching staff assignment
+    if (loadingAssignment) {
+        return (
+            <div className='flex items-center justify-center min-h-[400px]'>
+                <div className='text-center space-y-3'>
+                    <div className='h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto' />
+                    <p className='text-sm text-muted-foreground'>Loading staff assignment...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Show error if staff not assigned to any station
+    if (!staffAssignment) {
+        return (
+            <div className='flex items-center justify-center min-h-[400px]'>
+                <div className='text-center space-y-4 max-w-md'>
+                    <div className='text-6xl'>🚫</div>
+                    <div>
+                        <h3 className='text-lg font-semibold'>No Station Assignment</h3>
+                        <p className='text-sm text-muted-foreground mt-2'>
+                            You are not assigned to any station. Please contact your administrator to assign you to a station before performing check-ins.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className='space-y-6'>
             <div>
                 <h2 className='text-xl font-semibold'>Check-In Car (Staff)</h2>
                 <p className='text-sm text-muted-foreground'>
-                    Inspect vehicle condition and hand over keys to customer
+                    Inspect vehicle condition and hand over keys to customer • Station: {staffAssignment.station?.name || 'Unknown'}
                 </p>
             </div>
 
@@ -1286,29 +1356,24 @@ export default function CheckInCar() {
                     <CardTitle>Vehicle Inspection Checklist</CardTitle>
                 </CardHeader>
                 <CardContent className='space-y-4'>
-
-
+                    {/* Station Info - Display only (from booking) */}
                     <div>
                         <Label className='block mb-2'>
-                            Địa điểm nhận xe <span className='text-red-500'>*</span>
+                            Return Station <span className='text-red-500'>*</span>
                         </Label>
-                        <Select value={selectedStation} onValueChange={setSelectedStation} disabled={loadingStations}>
-                            <SelectTrigger>
-                                <SelectValue placeholder='Chọn địa điểm nhận xe...' />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {loadingStations && (
-                                    <div className='px-2 py-1 text-sm text-muted-foreground'>
-                                        Đang tải danh sách trạm...
-                                    </div>
-                                )}
-                                {stations.map(station => (
-                                    <SelectItem key={station.id} value={station.id}>
-                                        {station.name} - {station.address}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <div className='p-3 border rounded-md bg-muted/50'>
+                            {booking?.station ? (
+                                <div>
+                                    <p className='font-medium'>{booking.station.name}</p>
+                                    <p className='text-sm text-muted-foreground'>{booking.station.address}</p>
+                                </div>
+                            ) : (
+                                <p className='text-sm text-muted-foreground'>Select a booking first</p>
+                            )}
+                        </div>
+                        <p className='text-xs text-muted-foreground mt-1'>
+                            Station is determined by the booking and cannot be changed
+                        </p>
                     </div>
 
                     <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
