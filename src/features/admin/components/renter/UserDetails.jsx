@@ -9,6 +9,13 @@ import {
   CardHeader,
   CardTitle,
 } from '../../../shared/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../../shared/components/ui/select';
 import { toast } from '../../../shared/lib/toast';
 import documentService from '../../../shared/services/documentService';
 
@@ -42,6 +49,7 @@ export default function UserDetails({
     email: '',
     phone: '',
     address: '',
+    accountStatus: '',
   });
   const [loading, setLoading] = useState(false);
   const [verifiedDocs, setVerifiedDocs] = useState({
@@ -76,6 +84,7 @@ export default function UserDetails({
             email: u.email || '',
             phone: u.phone || '',
             address: u.address || '',
+            accountStatus: u.accountStatus || 'ACTIVE',
           });
         }
       });
@@ -157,6 +166,7 @@ export default function UserDetails({
             email: u.email || '',
             phone: u.phone || '',
             address: u.address || '',
+            accountStatus: u.accountStatus || 'ACTIVE',
           });
         }
 
@@ -188,6 +198,7 @@ export default function UserDetails({
       name: form.name?.trim() || '',
       phone: form.phone?.trim() || '',
       address: form.address?.trim() || '',
+      accountStatus: form.accountStatus || 'ACTIVE',
     };
     setLoading(true);
     setIsSaving(true);
@@ -288,9 +299,26 @@ export default function UserDetails({
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div className='space-y-2'>
                 <Label htmlFor='status'>{t('userDetails.labels.status')}</Label>
-                <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
-                  <Badge variant='default'>{user.accountStatus}</Badge>
-                </div>
+                {editMode ? (
+                  <Select
+                    value={form.accountStatus}
+                    onValueChange={(value) => setForm({ ...form, accountStatus: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ACTIVE">ACTIVE</SelectItem>
+                      <SelectItem value="BANNED">BANNED</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
+                    <Badge variant={user.accountStatus === 'ACTIVE' ? 'default' : 'destructive'}>
+                      {user.accountStatus}
+                    </Badge>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -334,8 +362,8 @@ export default function UserDetails({
               s === 'Verified'
                 ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
                 : s === 'Failed'
-                ? 'bg-rose-100 text-rose-700 border-rose-200'
-                : 'bg-amber-100 text-amber-800 border-amber-200';
+                  ? 'bg-rose-100 text-rose-700 border-rose-200'
+                  : 'bg-amber-100 text-amber-800 border-amber-200';
 
             const getImageUrl = doc =>
               doc?.thumbnailUrl || doc?.fileUrl || doc?.url || null;
@@ -359,7 +387,7 @@ export default function UserDetails({
                   </CardHeader>
                   <CardContent>
                     {identity === 'Verified' &&
-                    getImageUrl(verifiedDocs.identity) ? (
+                      getImageUrl(verifiedDocs.identity) ? (
                       <img
                         src={getImageUrl(verifiedDocs.identity)}
                         alt='ID Document'
@@ -392,7 +420,7 @@ export default function UserDetails({
                   </CardHeader>
                   <CardContent>
                     {license === 'Verified' &&
-                    getImageUrl(verifiedDocs.license) ? (
+                      getImageUrl(verifiedDocs.license) ? (
                       <img
                         src={getImageUrl(verifiedDocs.license)}
                         alt='License Document'

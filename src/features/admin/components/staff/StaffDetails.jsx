@@ -89,7 +89,6 @@ export function StaffDetails({
     switch (status) {
       case 'ACTIVE':
         return 'default';
-      case 'SUSPENDED':
       case 'BANNED':
         return 'destructive';
       default:
@@ -245,9 +244,6 @@ export function StaffDetails({
                     <SelectContent>
                       <SelectItem value='ACTIVE'>
                         {t('staffDetails.statusOptions.active')}
-                      </SelectItem>
-                      <SelectItem value='SUSPENDED'>
-                        {t('staffDetails.statusOptions.suspended')}
                       </SelectItem>
                       <SelectItem value='BANNED'>
                         {t('staffDetails.statusOptions.banned')}

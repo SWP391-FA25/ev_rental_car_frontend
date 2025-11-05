@@ -1,6 +1,7 @@
 import AdminDashboard from '@/features/admin/layout/AdminDashboard.jsx';
 import Dashboard from '@/features/admin/pages/Dashboard.jsx';
 import NotificationManagement from '@/features/admin/pages/NotificationManagement.jsx';
+import Profile from '@/features/admin/pages/Profile.jsx';
 import PromotionManagement from '@/features/admin/pages/PromotionManagement.jsx';
 import Settings from '@/features/admin/pages/Settings.jsx';
 import StaffManagement from '@/features/admin/pages/StaffManagement.jsx';
@@ -67,6 +68,7 @@ export const router = createBrowserRouter([
           { path: 'promotions', element: <PromotionManagement /> },
           { path: 'notifications', element: <NotificationManagement /> },
           { path: 'settings', element: <Settings /> },
+          { path: 'profile', element: <Profile /> },
         ],
       },
       {
@@ -78,6 +80,9 @@ export const router = createBrowserRouter([
             </RoleBasedRoute>
           </PrivateRoutes>
         ),
+        children: [
+          { path: 'profile', element: <Profile /> },
+        ],
       },
       {
         path: '/user',

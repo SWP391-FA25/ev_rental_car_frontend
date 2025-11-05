@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import { Upload, FileText, Download, Eye, CheckCircle, Clock, X, Calendar, AlertCircle } from "lucide-react"
 import { Button } from "../../../shared/components/ui/button"
 import { Card } from "../../../shared/components/ui/card"
@@ -13,6 +14,7 @@ import { useAuth } from "../../../../app/providers/AuthProvider"
 
 export function ContractUploadPage() {
 	const { user } = useAuth()
+	const navigate = useNavigate()
 	const [contracts, setContracts] = useState([])
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState(null)
@@ -227,7 +229,14 @@ export function ContractUploadPage() {
 		await fetchContracts()
 		setShowUploadModal(false)
 		setSelectedContract(null)
-		toast.success('Tải lên hợp đồng thành công!')
+		toast.success('Tải lên hợp đồng thành công! Chuyển sang trang Check-In...', {
+			duration: 2000,
+		})
+
+		// ✅ Navigate to CheckInCar page after 1.5 seconds
+		setTimeout(() => {
+			navigate('/staff?tab=check-in')
+		}, 1500)
 	}
 
 	const handleViewDetails = (contract) => {
