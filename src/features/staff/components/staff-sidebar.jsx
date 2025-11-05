@@ -54,6 +54,15 @@ import {
 } from '../../shared/components/ui/sidebar';
 import { apiClient } from '../../shared/lib/apiClient';
 import { endpoints } from '../../shared/lib/endpoints';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '../../shared/components/ui/dialog';
+import StaffProfileContent from './StaffProfileContent';
+import StaffSettingsContent from './StaffSettingsContent';
 
 const data = {
   staff: {
@@ -349,6 +358,8 @@ function StaffQuickStats({ cars, stations, customers, payments }) {
 function StaffUser({ staff }) {
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const [openProfile, setOpenProfile] = React.useState(false);
+  const [openSettings, setOpenSettings] = React.useState(false);
   const handleLogout = async () => {
     try {
       await apiClient.post(endpoints.auth.logout());
@@ -360,40 +371,15 @@ function StaffUser({ staff }) {
     }
   };
   return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size='lg'
-              className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
-            >
-              <Avatar className='h-8 w-8 rounded-lg'>
-                <AvatarImage src={staff.avatar} alt={staff.name} />
-                <AvatarFallback className='rounded-lg'>
-                  {staff.name
-                    .split(' ')
-                    .map(n => n[0])
-                    .join('')}
-                </AvatarFallback>
-              </Avatar>
-              <div className='grid flex-1 text-left text-sm leading-tight'>
-                <span className='truncate font-semibold'>{staff.name}</span>
-                <span className='truncate text-xs text-muted-foreground'>
-                  {staff.role}
-                </span>
-              </div>
-              <ChevronUp className='ml-auto size-4' />
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            className='w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg z-50'
-            side='bottom'
-            align='end'
-            sideOffset={4}
-          >
-            <DropdownMenuLabel className='p-0 font-normal'>
-              <div className='flex items-center gap-2 px-1 py-1.5 text-left text-sm'>
+    <>
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <SidebarMenuButton
+                size='lg'
+                className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
+              >
                 <Avatar className='h-8 w-8 rounded-lg'>
                   <AvatarImage src={staff.avatar} alt={staff.name} />
                   <AvatarFallback className='rounded-lg'>
@@ -406,35 +392,86 @@ function StaffUser({ staff }) {
                 <div className='grid flex-1 text-left text-sm leading-tight'>
                   <span className='truncate font-semibold'>{staff.name}</span>
                   <span className='truncate text-xs text-muted-foreground'>
-                    {staff.email}
+                    {staff.role}
                   </span>
                 </div>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuItem>
-              <User2 className='mr-2 h-4 w-4' />
-              <span>Profile</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Calendar className='mr-2 h-4 w-4' />
-              <span>Schedule</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Settings className='mr-2 h-4 w-4' />
-              <span>Settings</span>
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleLogout}>
-            <span className='mr-2 h-4 w-4' />
-            <span>Logout</span>
-          </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </SidebarMenuItem>
-    </SidebarMenu>
+                <ChevronUp className='ml-auto size-4' />
+              </SidebarMenuButton>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              className='w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg z-50'
+              side='bottom'
+              align='end'
+              sideOffset={4}
+            >
+              <DropdownMenuLabel className='p-0 font-normal'>
+                <div className='flex items-center gap-2 px-1 py-1.5 text-left text-sm'>
+                  <Avatar className='h-8 w-8 rounded-lg'>
+                    <AvatarImage src={staff.avatar} alt={staff.name} />
+                    <AvatarFallback className='rounded-lg'>
+                      {staff.name
+                        .split(' ')
+                        .map(n => n[0])
+                        .join('')}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className='grid flex-1 text-left text-sm leading-tight'>
+                    <span className='truncate font-semibold'>{staff.name}</span>
+                    <span className='truncate text-xs text-muted-foreground'>
+                      {staff.email}
+                    </span>
+                  </div>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem onClick={() => setOpenProfile(true)}>
+                  <User2 className='mr-2 h-4 w-4' />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setOpenSettings(true)}>
+                  <Settings className='mr-2 h-4 w-4' />
+                  <span>Settings</span>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout}>
+                <span className='mr-2 h-4 w-4' />
+                <span>Logout</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </SidebarMenuItem>
+      </SidebarMenu>
+
+      {/* Profile Dialog */}
+      <Dialog open={openProfile} onOpenChange={setOpenProfile}>
+        <DialogContent className='w-[95vw] max-w-[900px] max-h-[90vh] overflow-y-auto'>
+          <DialogHeader>
+            <div className='flex items-center gap-2'>
+              <User2 className='h-5 w-5 text-primary' />
+              <DialogTitle>Staff Profile</DialogTitle>
+            </div>
+            <DialogDescription>View and update your personal information</DialogDescription>
+          </DialogHeader>
+          <StaffProfileContent />
+        </DialogContent>
+      </Dialog>
+
+      {/* Settings Dialog */}
+      <Dialog open={openSettings} onOpenChange={setOpenSettings}>
+        <DialogContent className='w-[95vw] max-w-[900px] max-h-[90vh] overflow-y-auto'>
+          <DialogHeader>
+            <div className='flex items-center gap-2'>
+              <Settings className='h-5 w-5 text-primary' />
+              <DialogTitle>System Settings</DialogTitle>
+            </div>
+            <DialogDescription>Customize your system experience</DialogDescription>
+          </DialogHeader>
+          <StaffSettingsContent />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

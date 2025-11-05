@@ -145,7 +145,7 @@ export default function CheckInCar() {
                 }
             } catch (err) {
                 console.error('Fetch stations error', err);
-                toast.error('Không thể tải danh sách trạm');
+    toast.error('Failed to load stations');
                 setStations([]);
             } finally {
                 setLoadingStations(false);
