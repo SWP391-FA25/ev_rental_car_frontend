@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import { useBooking } from '../../booking/hooks/useBooking';
+import { useStaffBooking } from '../hooks/useStaffBooking';
 import { Button } from '../../shared/components/ui/button';
 import {
   Card,
@@ -45,6 +46,7 @@ import {
 export default function CheckInCar() {
   const { t } = useTranslation();
   const { getAllBookings, getBookingById } = useBooking();
+  const { stations } = useStaffBooking();
   const { user } = useAuth();
 
   const [bookingId, setBookingId] = useState('');
@@ -895,13 +897,9 @@ export default function CheckInCar() {
       // 3. Check-in booking sau khi tạo inspection thành công
       try {
         const actualPickupLocation =
-          stations.find(s => s.id === selectedStation)?.name ||
+          stations?.find?.(s => s.id === selectedStation)?.name ||
           booking?.station?.name ||
           '';
-        console.log(
-          '📍 Actual pickup location for check-in:',
-          actualPickupLocation
-        );
         await apiClient.post(endpoints.bookings.checkIn(id), {
           actualStartTime: new Date().toISOString(),
           actualPickupLocation,
@@ -972,11 +970,6 @@ export default function CheckInCar() {
       toast.warning('Please select a booking');
       return;
     }
-
-    console.log(
-      '🔍 Validating inspection submission for booking ID:',
-      booking.station
-    );
 
     if (!user?.id) {
       toast.error('Staff information is missing');
@@ -1626,7 +1619,7 @@ export default function CheckInCar() {
             <div className='p-3 border rounded-md bg-muted/50'>
               {booking?.station ? (
                 <div>
-                  <p className='font-medium'>{booking.station.name}</p>
+                  i<p className='font-medium'>{booking.station.name}</p>
                   <p className='text-sm text-muted-foreground'>
                     {booking.station.address}
                   </p>
