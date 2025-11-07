@@ -1,3 +1,4 @@
+import { useAuth } from '@/app/providers/AuthProvider';
 import { useBooking } from '@/features/booking/hooks/useBooking';
 import {
   calculateCompletePricing,
@@ -26,6 +27,7 @@ import {
   AlertCircle,
   ArrowLeft,
   Fuel,
+  Mail,
   MapPin,
   RefreshCw,
   Settings,
@@ -73,6 +75,7 @@ const transformVehicleData = vehicle => {
 export default function CarDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { getVehicleById, error } = useVehicles();
   const { createBooking, loading: bookingLoading } = useBooking();
   const [car, setCar] = useState(null);
@@ -204,7 +207,18 @@ export default function CarDetailPage() {
 
   const estimatedPrice = calculateEstimatedPrice();
 
+  // Check if email is verified for RENTER role
+  const isEmailVerified = user?.verifyStatus === 'VERIFIED';
+  const isRenterUnverified = user?.role === 'RENTER' && !isEmailVerified;
+
   const handleBooking = async () => {
+    // Check if user is RENTER and email is not verified
+    if (isRenterUnverified) {
+      toast.error('Please verify your email before making a booking');
+      navigate('/verify-email');
+      return;
+    }
+
     // Validate booking data before proceeding
     const validation = validateBookingData(selectedDates, car);
 
@@ -613,15 +627,38 @@ export default function CarDetailPage() {
 
                 <Button
                   className='w-full'
-                  disabled={!car.available || bookingLoading}
+                  disabled={
+                    !car.available || bookingLoading || isRenterUnverified
+                  }
                   onClick={handleBooking}
                 >
                   {bookingLoading ? 'Creating Booking...' : 'Book Now'}
                 </Button>
 
-                <div className='text-xs text-muted-foreground text-center'>
-                  Pay deposit to secure your booking
-                </div>
+                {isRenterUnverified && (
+                  <Alert
+                    variant='default'
+                    className='mt-3 border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950'
+                  >
+                    <Mail className='h-4 w-4 text-amber-600 dark:text-amber-400' />
+                    <AlertDescription className='flex flex-col gap-2 text-amber-800 dark:text-amber-200'>
+                      <span>
+                        You need to verify your email before making a booking.
+                      </span>
+                      <Link to='/verify-email'>
+                        <Button variant='outline' size='sm' className='w-full'>
+                          Verify Email
+                        </Button>
+                      </Link>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {!isRenterUnverified && (
+                  <div className='text-xs text-muted-foreground text-center'>
+                    Pay deposit to secure your booking
+                  </div>
+                )}
               </div>
             </Card>
           </div>

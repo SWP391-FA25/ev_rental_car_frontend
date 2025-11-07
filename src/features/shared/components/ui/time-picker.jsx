@@ -26,6 +26,8 @@ export function TimePicker({
   className,
   ...props
 }) {
+  const [open, setOpen] = React.useState(false);
+
   // Generate time options (24-hour format)
   const timeOptions = React.useMemo(() => {
     const options = [];
@@ -49,8 +51,13 @@ export function TimePicker({
     return `${displayHour}:${minutes} ${ampm}`;
   };
 
+  const handleSelect = time => {
+    onChange(time);
+    setOpen(false);
+  };
+
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant='outline'
@@ -67,7 +74,7 @@ export function TimePicker({
         </Button>
       </PopoverTrigger>
       <PopoverContent className='w-auto p-2' align='start'>
-        <Select value={value} onValueChange={onChange}>
+        <Select value={value} onValueChange={handleSelect}>
           <SelectTrigger className='w-[180px]'>
             <SelectValue placeholder='Select time' />
           </SelectTrigger>
