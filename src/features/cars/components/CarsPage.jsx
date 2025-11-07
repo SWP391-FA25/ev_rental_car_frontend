@@ -1,3 +1,4 @@
+import { useAuth } from '@/app/providers/AuthProvider';
 import Footer from '@/features/shared/components/homepage/Footer';
 import Navbar from '@/features/shared/components/homepage/Navbar';
 import { Alert, AlertDescription } from '@/features/shared/components/ui/alert';
@@ -71,6 +72,7 @@ export default function CarsPage() {
   const [viewMode, setViewMode] = useState('all'); // 'all' or 'location'
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const toolbarRef = useRef(null);
   const { vehicles, loading, error, fetchVehicles } = useVehicles();
@@ -126,6 +128,14 @@ export default function CarsPage() {
   const handleLocationSelect = location => {
     setLocation(location);
     setViewMode('location');
+  };
+
+  const handleBookNow = vehicleId => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    navigate(`/cars/${vehicleId}`);
   };
 
   // Handle URL search parameters
@@ -198,7 +208,7 @@ export default function CarsPage() {
             </div>
           </div>
           {viewMode === 'all' && (
-            <div className='grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4'>
+            <div className='grid gap-3 sm:grid-cols-1 lg:grid-cols-3'>
               <Input
                 placeholder='Search by name, type, location...'
                 value={query}
@@ -214,17 +224,6 @@ export default function CarsPage() {
                   <SelectItem value='SEDAN'>Sedan</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={transmission} onValueChange={setTransmission}>
-                <SelectTrigger>
-                  <SelectValue placeholder='Transmission' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='all'>All Transmissions</SelectItem>
-                  <SelectItem value='Automatic'>Automatic</SelectItem>
-                  <SelectItem value='Semi-Automatic'>Semi-Automatic</SelectItem>
-                  <SelectItem value='Manual'>Manual</SelectItem>
-                </SelectContent>
-              </Select>
               <div className='flex gap-2'>
                 <Select value={fuel} onValueChange={setFuel}>
                   <SelectTrigger>
@@ -232,8 +231,8 @@ export default function CarsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value='all'>All Fuels</SelectItem>
-                    <SelectItem value='Electric'>Electric</SelectItem>
-                    <SelectItem value='Hybrid'>Hybrid</SelectItem>
+                    <SelectItem value='ELECTRIC'>Electric</SelectItem>
+                    <SelectItem value='HYBRID'>Hybrid</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button variant='outline' onClick={resetFilters}>
@@ -404,9 +403,7 @@ export default function CarsPage() {
                           size='sm'
                           variant='default'
                           disabled={!vehicle.available}
-                          onClick={() => {
-                            navigate(`/cars/${vehicle.id}`);
-                          }}
+                          onClick={() => handleBookNow(vehicle.id)}
                         >
                           {vehicle.available ? 'Book now' : 'Unavailable'}
                         </Button>
