@@ -18,27 +18,68 @@ export function SimpleAssignmentForm({
   onCancel,
   loading = false,
 }) {
-  const [unassignedStaff, setUnassignedStaff] = useState([]);
+  const [assignments, setAssignments] = useState([]);
+  const [availableStaff, setAvailableStaff] = useState([]);
   const [selectedStaffId, setSelectedStaffId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
 
-  // Fetch unassigned staff
+  // Fetch all staff and assignments
   useEffect(() => {
-    const fetchUnassignedStaff = async () => {
+    const fetchData = async () => {
+      if (!stationId) return;
+
       try {
-        const response = await apiClient.get(
-          endpoints.assignments.getUnassignedStaff()
+        setIsFetching(true);
+
+        // Fetch all staff
+        const staffResponse = await apiClient.get(endpoints.staff.getAll());
+        const staffData =
+          staffResponse.data?.staff ||
+          staffResponse.data?.data?.staff ||
+          staffResponse.data ||
+          [];
+
+        // Fetch all assignments
+        const assignmentsResponse = await apiClient.get(
+          endpoints.assignments.getAll()
         );
-        if (response.success) {
-          setUnassignedStaff(response.data.staff || []);
-        }
+        const assignmentsData =
+          assignmentsResponse.data?.assignments ||
+          assignmentsResponse.data?.data?.assignments ||
+          assignmentsResponse.data ||
+          [];
+        setAssignments(assignmentsData);
+
+        // Get staff IDs already assigned to this station
+        const assignedStaffIds = assignmentsData
+          .filter(
+            assignment =>
+              assignment.station?.id === stationId ||
+              assignment.stationId === stationId
+          )
+          .map(
+            assignment =>
+              assignment.user?.id || assignment.userId || assignment.staffId
+          )
+          .filter(Boolean);
+
+        // Filter out staff already assigned to this station
+        const available = staffData.filter(
+          staff => !assignedStaffIds.includes(staff.id)
+        );
+
+        setAvailableStaff(available);
       } catch (error) {
-        console.error('Error fetching unassigned staff:', error);
+        console.error('Error fetching data:', error);
+        toast.error('Failed to load staff data');
+      } finally {
+        setIsFetching(false);
       }
     };
 
-    fetchUnassignedStaff();
-  }, []);
+    fetchData();
+  }, [stationId]);
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -59,6 +100,18 @@ export function SimpleAssignmentForm({
         toast.success('Staff assigned successfully');
         onSuccess?.(response.data.assignment);
 
+        // Update assignments state with new assignment
+        const newAssignment = response.data.assignment;
+        if (newAssignment) {
+          setAssignments(prev => [...prev, newAssignment]);
+        }
+
+        // Remove assigned staff from available list
+        setAvailableStaff(prev =>
+          prev.filter(staff => staff.id !== selectedStaffId)
+        );
+        setSelectedStaffId('');
+
         // Dispatch event to notify other components
         window.dispatchEvent(new CustomEvent('assignmentChanged'));
       }
@@ -69,6 +122,26 @@ export function SimpleAssignmentForm({
     }
   };
 
+  // Create map of staff to their assigned stations (for display)
+  const staffAssignmentsMap = {};
+  assignments.forEach(assignment => {
+    const staffId =
+      assignment.user?.id || assignment.userId || assignment.staffId;
+    const stationName = assignment.station?.name || '';
+    if (staffId && stationName) {
+      if (!staffAssignmentsMap[staffId]) {
+        staffAssignmentsMap[staffId] = [];
+      }
+      // Only add stations that are not the current station
+      if (
+        assignment.station?.id !== stationId &&
+        assignment.stationId !== stationId
+      ) {
+        staffAssignmentsMap[staffId].push(stationName);
+      }
+    }
+  });
+
   return (
     <form onSubmit={handleSubmit} className='space-y-4'>
       <div className='space-y-2'>
@@ -76,21 +149,41 @@ export function SimpleAssignmentForm({
         <Select
           value={selectedStaffId}
           onValueChange={setSelectedStaffId}
-          disabled={loading || isLoading}
+          disabled={loading || isLoading || isFetching}
         >
-          <SelectTrigger>
-            <SelectValue placeholder='Choose a staff member' />
+          <SelectTrigger className='w-full'>
+            <SelectValue
+              placeholder={
+                isFetching ? 'Loading staff...' : 'Choose a staff member'
+              }
+            />
           </SelectTrigger>
-          <SelectContent>
-            {unassignedStaff.map(staff => (
-              <SelectItem key={staff.id} value={staff.id}>
-                {staff.name} - {staff.email}
-              </SelectItem>
-            ))}
+          <SelectContent className='min-w-[500px]'>
+            {availableStaff.map(staff => {
+              const assignedStations = staffAssignmentsMap[staff.id] || [];
+              const hasOtherAssignments = assignedStations.length > 0;
+              const displayText = hasOtherAssignments
+                ? `${staff.name} - ${
+                    staff.email
+                  } (Assigned to: ${assignedStations.join(', ')})`
+                : `${staff.name} - ${staff.email}`;
+              return (
+                <SelectItem key={staff.id} value={staff.id}>
+                  <span className='whitespace-normal break-words'>
+                    {displayText}
+                  </span>
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
-        {unassignedStaff.length === 0 && (
-          <p className='text-sm text-gray-500'>No unassigned staff available</p>
+        {!isFetching && availableStaff.length === 0 && (
+          <p className='text-sm text-muted-foreground'>
+            All staff members are already assigned to this station
+          </p>
+        )}
+        {isFetching && (
+          <p className='text-sm text-muted-foreground'>Loading staff data...</p>
         )}
       </div>
 

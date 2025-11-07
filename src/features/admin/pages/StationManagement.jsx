@@ -481,7 +481,7 @@ export default function StationManagement() {
 
       {/* Assign Staff Dialog */}
       <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
-        <DialogContent className='max-w-md'>
+        <DialogContent className='max-w-2xl'>
           <DialogHeader>
             <DialogTitle>
               {t('station.management.assignDialog.title')}
