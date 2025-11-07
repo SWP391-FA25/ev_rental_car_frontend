@@ -52,7 +52,7 @@ const BookingManagement = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingAssignment, setLoadingAssignment] = useState(false);
-  const [staffStationId, setStaffStationId] = useState(null);
+  const [staffStationIds, setStaffStationIds] = useState([]);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
@@ -73,6 +73,8 @@ const BookingManagement = () => {
     const fetchStaffAssignment = async () => {
       // Only fetch assignment for STAFF role
       if (user?.role !== 'STAFF' || !user?.id) {
+        setStaffStationIds([]);
+        setLoadingAssignment(false);
         return;
       }
 
@@ -83,17 +85,39 @@ const BookingManagement = () => {
         );
 
         if (response.success) {
-          const assignment = response.data.assignment || response.data;
-          if (assignment && assignment.station) {
-            setStaffStationId(assignment.station.id);
-            console.log(
-              '✅ Staff assigned to station:',
-              assignment.station.name
-            );
-          } else {
+          const payload = response?.data;
+          // Support both list and single assignment response shapes
+          let raw = [];
+          if (Array.isArray(payload?.assignments)) {
+            raw = payload.assignments;
+          } else if (
+            payload?.assignment &&
+            typeof payload.assignment === 'object'
+          ) {
+            raw = [payload.assignment];
+          } else if (Array.isArray(payload)) {
+            raw = payload;
+          } else if (Array.isArray(payload?.items)) {
+            raw = payload.items;
+          }
+
+          const ids = raw
+            .map(a => a?.station?.id ?? a?.stationId)
+            .filter(Boolean)
+            .map(id => String(id));
+          const uniqueIds = Array.from(new Set(ids));
+          setStaffStationIds(uniqueIds);
+
+          if (uniqueIds.length === 0) {
             console.warn('⚠️ Staff not assigned to any station');
             toast.error(
               'You are not assigned to any station. Please contact admin.'
+            );
+          } else {
+            console.log(
+              '✅ Staff assigned to stations:',
+              uniqueIds.length,
+              uniqueIds
             );
           }
         }
@@ -101,6 +125,7 @@ const BookingManagement = () => {
         console.error('Error fetching staff assignment:', error);
         // If 404, staff has no assignment
         if (error.status === 404 || error.response?.status === 404) {
+          setStaffStationIds([]);
           toast.error(
             'You are not assigned to any station. Please contact admin.'
           );
@@ -125,9 +150,10 @@ const BookingManagement = () => {
           limit: '20',
         });
 
-        // Add stationId filter for STAFF only
-        if (user?.role === 'STAFF' && staffStationId) {
-          params.append('stationId', staffStationId);
+        // Add stationIds filter for STAFF only
+        if (user?.role === 'STAFF' && staffStationIds.length > 0) {
+          // Pass stationIds as comma-separated string
+          params.append('stationIds', staffStationIds.join(','));
         }
 
         if (status && status !== 'ALL') params.append('status', status);
@@ -148,7 +174,7 @@ const BookingManagement = () => {
         setLoading(false);
       }
     },
-    [t, user, staffStationId]
+    [t, user, staffStationIds]
   );
 
   // Fetch booking details
@@ -359,7 +385,7 @@ const BookingManagement = () => {
       fetchBookings(1, searchTerm, statusFilter);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [staffStationId, loadingAssignment, user?.role]);
+  }, [staffStationIds, loadingAssignment, user?.role]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -383,7 +409,7 @@ const BookingManagement = () => {
   if (
     user?.role === 'STAFF' &&
     !loadingAssignment &&
-    !staffStationId &&
+    staffStationIds.length === 0 &&
     !loading
   ) {
     return (
