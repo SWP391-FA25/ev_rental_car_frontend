@@ -1,12 +1,10 @@
 import {
-  Ban,
   Car,
   CheckCircle,
   Clock,
   CreditCard,
   Eye,
   Filter,
-  MoreVertical,
   RefreshCw,
   Search,
   XCircle,
@@ -618,75 +616,13 @@ const BookingManagement = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant='ghost' className='h-8 w-8 p-0'>
-                          <MoreVertical className='h-4 w-4' />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align='end'>
-                        <DropdownMenuItem
-                          onClick={() => fetchBookingDetails(booking.id)}
-                        >
-                          <Eye className='mr-2 h-4 w-4' />
-                          {t('booking.actions.viewDetails')}
-                        </DropdownMenuItem>
-                        {/* {booking.status === 'PENDING' && (
-                          <DropdownMenuItem
-                            onClick={() => confirmBooking(booking.id)}
-                            className='text-green-600'
-                          >
-                            <CheckCircle className='mr-2 h-4 w-4' />
-                            Confirm Booking
-                          </DropdownMenuItem>
-                        )} */}
-                        {/* {booking.status === 'PENDING' &&
-                          booking.depositStatus !== 'PAID' && (
-                            <DropdownMenuItem
-                              disabled
-                              className='text-muted-foreground'
-                            >
-                              <Clock className='mr-2 h-4 w-4' />
-                              {t('booking.actions.waitingForDeposit')}
-                            </DropdownMenuItem>
-                          )} */}
-                        {/* {booking.status === 'CONFIRMED' && (
-                          <DropdownMenuItem
-                            onClick={() => startRental(booking.id)}
-                            className='text-blue-600'
-                          >
-                            <Car className='mr-2 h-4 w-4' />
-                            {t('booking.actions.startRental')}
-                          </DropdownMenuItem>
-                        )}
-                        {booking.status === 'IN_PROGRESS' && (
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setSelectedBooking(booking);
-                              setIsCompleteDialogOpen(true);
-                            }}
-                            className='text-green-600'
-                          >
-                            <CheckCircle className='mr-2 h-4 w-4' />
-                            {t('booking.actions.completeRental')}
-                          </DropdownMenuItem>
-                        )} */}
-                        {!['COMPLETED', 'CANCELLED', 'CONFIRMED'].includes(
-                          booking.status
-                        ) && (
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setBookingToCancel(booking.id);
-                              setCancelDialogOpen(true);
-                            }}
-                            className='text-red-600'
-                          >
-                            <Ban className='mr-2 h-4 w-4' />
-                            {t('booking.actions.cancelBooking')}
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      onClick={() => fetchBookingDetails(booking.id)}
+                    >
+                      <Eye className='h-4 w-4' />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
