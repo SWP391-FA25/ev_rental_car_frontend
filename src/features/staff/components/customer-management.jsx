@@ -1139,7 +1139,7 @@ function CustomerSupport() {
                     setCurrentPage(p => Math.min(totalPages, p + 1))
                   }
                 >
-                  Sau
+                  Next
                   <ChevronRight className='ml-1 h-4 w-4' />
                 </Button>
               </div>

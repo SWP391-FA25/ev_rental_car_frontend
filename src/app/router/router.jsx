@@ -1,6 +1,7 @@
 import AdminDashboard from '@/features/admin/layout/AdminDashboard.jsx';
 import Dashboard from '@/features/admin/pages/Dashboard.jsx';
 import NotificationManagement from '@/features/admin/pages/NotificationManagement.jsx';
+import Profile from '@/features/admin/pages/Profile.jsx';
 import PromotionManagement from '@/features/admin/pages/PromotionManagement.jsx';
 import Settings from '@/features/admin/pages/Settings.jsx';
 import StaffManagement from '@/features/admin/pages/StaffManagement.jsx';
@@ -22,6 +23,7 @@ import Home from '@/features/shared/components/Home.jsx';
 import { NotificationPage } from '@/features/shared/components/NotificationPage';
 import PolicyPage from '@/features/shared/components/PolicyPage.jsx';
 import StaffDashboard from '@/features/staff/layout/StaffDashboard.jsx';
+import StaffProfileLayout from '@/features/staff/layout/StaffProfileLayout.jsx';
 import { createBrowserRouter } from 'react-router-dom';
 import VehicleManagement from '../../features/admin/pages/VehicleManagement';
 import UserPage from '../../features/user/layout/UserPage';
@@ -67,6 +69,7 @@ export const router = createBrowserRouter([
           { path: 'promotions', element: <PromotionManagement /> },
           { path: 'notifications', element: <NotificationManagement /> },
           { path: 'settings', element: <Settings /> },
+          { path: 'profile', element: <Profile /> },
         ],
       },
       {
@@ -78,6 +81,9 @@ export const router = createBrowserRouter([
             </RoleBasedRoute>
           </PrivateRoutes>
         ),
+        children: [
+          { path: 'profile', element: <Profile /> },
+        ],
       },
       {
         path: '/user',
@@ -105,6 +111,16 @@ export const router = createBrowserRouter([
           <PrivateRoutes>
             <RoleBasedRoute allowedRoles={['RENTER']}>
               <UserProfileLayout />
+            </RoleBasedRoute>
+          </PrivateRoutes>
+        ),
+      },
+      {
+        path: '/staff/profile',
+        element: (
+          <PrivateRoutes>
+            <RoleBasedRoute allowedRoles={['STAFF']}>
+              <StaffProfileLayout />
             </RoleBasedRoute>
           </PrivateRoutes>
         ),

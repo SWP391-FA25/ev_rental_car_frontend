@@ -6,7 +6,6 @@ import {
   FileTextIcon,
   LayoutDashboardIcon,
   PercentIcon,
-  SettingsIcon,
   UsersIcon,
 } from 'lucide-react';
 
@@ -62,11 +61,6 @@ const data = {
       url: '/admin/notifications',
       icon: BellIcon,
     },
-    {
-      title: 'Settings',
-      url: '/admin/settings',
-      icon: SettingsIcon,
-    },
   ],
 };
 
@@ -84,8 +78,7 @@ export function AppSidebar(props) {
       'Station Management': 'stationManagement',
       'Vehicals Management': 'vehiclesManagement',
       'Promotion Management': 'promotionManagement',
-      'Notification Management': 'notificationManagement', // This key doesn't exist in the locale file
-      Settings: 'settings',
+      'Notification Management': 'notificationManagement',
     };
 
     const key = translationKeyMap[item.title];

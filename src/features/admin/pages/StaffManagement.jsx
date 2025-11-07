@@ -43,9 +43,7 @@ export default function StaffManagement() {
   const [showStaffForm, setShowStaffForm] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [showStaffDetails, setShowStaffDetails] = useState(false);
-  const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [staffToSuspend, setStaffToSuspend] = useState(null);
   const [staffToDelete, setStaffToDelete] = useState(null);
   const [staffToUnassign, setStaffToUnassign] = useState(null);
   const [unassignDialogOpen, setUnassignDialogOpen] = useState(false);
@@ -105,7 +103,6 @@ export default function StaffManagement() {
     switch (status) {
       case 'ACTIVE':
         return 'default';
-      case 'SUSPENDED':
       case 'BANNED':
         return 'destructive';
       default:
@@ -118,24 +115,44 @@ export default function StaffManagement() {
     return 'outline';
   };
 
-  const handleSuspendStaff = async id => {
-    try {
-      await softDeleteStaff(id);
-      toast.success(t('staffManagement.messages.suspended'));
-      setSelectedStaff(prev =>
-        prev && prev.id === id ? { ...prev, accountStatus: 'SUSPENDED' } : prev
-      );
-    } catch (err) {
-      toast.error(t('staffManagement.messages.errorSuspend'));
-    }
-  };
-
   const handleDeleteStaff = async id => {
     try {
+      // Check if staff has assignment
+      const assignment = getStaffAssignment(id);
+
+      if (assignment) {
+        // If staff is assigned, show warning and unassign first
+        const confirmUnassign = window.confirm(
+          'This staff is currently assigned to a station. They must be unassigned before deletion. Do you want to unassign and delete?'
+        );
+
+        if (confirmUnassign) {
+          // Unassign first
+          try {
+            await apiClient.delete(endpoints.assignments.delete(assignment.id));
+            console.log('✅ Staff unassigned successfully');
+            await loadAssignments(); // Reload assignments
+          } catch (unassignErr) {
+            console.error('Failed to unassign staff:', unassignErr);
+            toast.error('Failed to unassign staff: ' + (unassignErr?.response?.data?.message || unassignErr?.message));
+            return; // Stop deletion if unassign fails
+          }
+        } else {
+          return; // User cancelled
+        }
+      }
+
+      // Now delete the staff
       await deleteStaff(id);
       toast.success(t('staffManagement.messages.deleted'));
+      await loadAssignments(); // Reload assignments after delete
     } catch (err) {
-      toast.error(t('staffManagement.messages.errorDelete'));
+      console.error('Delete staff error:', err);
+      // Show specific error message from backend
+      const errorMessage = err?.response?.data?.message ||
+        err?.message ||
+        t('staffManagement.messages.errorDelete');
+      toast.error(errorMessage);
     }
   };
 
@@ -241,12 +258,6 @@ export default function StaffManagement() {
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setFilterStatus('banned')}>
               {t('staffManagement.table.banned')}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFilterStatus('suspended')}>
-              {t('staffManagement.table.suspended')}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFilterStatus('admin')}>
-              Admin
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -390,15 +401,6 @@ export default function StaffManagement() {
                         )}
                         <DropdownMenuItem
                           onClick={() => {
-                            setStaffToSuspend(staffItem.id);
-                            setSuspendDialogOpen(true);
-                          }}
-                          className='text-orange-600'
-                        >
-                          {t('staffManagement.actions.suspend')}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
                             setStaffToDelete(staffItem.id);
                             setDeleteDialogOpen(true);
                           }}
@@ -468,22 +470,6 @@ export default function StaffManagement() {
       />
 
       {/* Confirm Dialogs */}
-      <ConfirmDialog
-        open={suspendDialogOpen}
-        onOpenChange={setSuspendDialogOpen}
-        title={t('staffManagement.dialogs.suspend.title')}
-        description={t('staffManagement.dialogs.suspend.description')}
-        onConfirm={() => {
-          if (staffToSuspend) {
-            handleSuspendStaff(staffToSuspend);
-            setStaffToSuspend(null);
-          }
-        }}
-        confirmText={t('staffManagement.dialogs.suspend.confirm')}
-        cancelText={t('staffManagement.dialogs.suspend.cancel')}
-        confirmVariant='destructive'
-      />
-
       <ConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}

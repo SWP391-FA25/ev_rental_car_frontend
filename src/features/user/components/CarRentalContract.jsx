@@ -118,9 +118,9 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
   const showToast = ({ title = '', description = '', variant = '' } = {}) => {
     const message = title && description ? `${title} — ${description}` : title || description || '';
     if (variant === 'destructive') {
-      notify.error(message || 'Lỗi', { autoClose: 5000 });
+      notify.error(message || 'Error', { autoClose: 5000 });
     } else {
-      notify.success(message || 'Thành công', { autoClose: 4000 });
+      notify.success(message || 'Success', { autoClose: 4000 });
     }
   }
 
