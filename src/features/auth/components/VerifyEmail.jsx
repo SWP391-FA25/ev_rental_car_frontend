@@ -1,6 +1,6 @@
 import { useAuth } from '@/app/providers/AuthProvider';
 import { ArrowLeft, CheckCircle2, Mail, XCircle } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '../../shared/components/ui/button';
 import {
@@ -22,6 +22,7 @@ export default function VerifyEmail() {
   const [isSending, setIsSending] = useState(false);
   const { user, verifyUser } = useAuth();
   const navigate = useNavigate();
+  const hasVerifiedRef = useRef(false); // Track if verification has been attempted
 
   const handleVerifyToken = useCallback(
     async verifyToken => {
@@ -31,9 +32,17 @@ export default function VerifyEmail() {
       try {
         const res = await apiClient.get(endpoints.email.verify(verifyToken));
 
-        if (res?.success && res?.message === 'Email verified successfully') {
+        if (res?.success) {
+          // Handle both success cases: "Email verified successfully" and "Email is already verified"
           setVerificationStatus('success');
-          toast.success('Email verified successfully!', {
+
+          // Show appropriate toast message based on response
+          const toastMessage =
+            res?.message === 'Email is already verified'
+              ? 'Your email is already verified!'
+              : 'Email verified successfully!';
+
+          toast.success(toastMessage, {
             position: 'top-center',
             autoClose: 3000,
           });
@@ -70,12 +79,14 @@ export default function VerifyEmail() {
     [user, navigate, verifyUser]
   );
 
-  // Auto-verify if token is present in URL
+  // Auto-verify if token is present in URL (only once)
   useEffect(() => {
-    if (token) {
+    if (token && !hasVerifiedRef.current && verificationStatus === 'idle') {
+      hasVerifiedRef.current = true;
       handleVerifyToken(token);
     }
-  }, [token, handleVerifyToken]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, verificationStatus]);
 
   const handleSendVerification = async () => {
     if (!user) {
