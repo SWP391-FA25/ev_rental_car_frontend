@@ -1,6 +1,7 @@
-import { Briefcase, Edit, Star } from 'lucide-react';
-import { useState } from 'react';
+import { Edit } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../app/providers/AuthProvider';
 import {
   Avatar,
   AvatarFallback,
@@ -23,6 +24,7 @@ import { toast } from '../../shared/lib/toast';
 
 export default function ProfileContent({ user }) {
   const navigate = useNavigate();
+  const { verifyUser } = useAuth();
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [profileData, setProfileData] = useState({
@@ -30,7 +32,7 @@ export default function ProfileContent({ user }) {
     email: user?.email || '',
     phone: user?.phone || '',
     address: user?.address || '',
-    gender: 'Nam',
+    gender: user?.gender || 'Nam',
     birthDate: '',
     facebook: '',
     google: user?.name || '',
@@ -49,11 +51,43 @@ export default function ProfileContent({ user }) {
     ? new Date(user.createdAt).toLocaleDateString('en-US')
     : '09/28/2025';
 
+  // Sync profileData with user prop when it changes
+  useEffect(() => {
+    if (user) {
+      setProfileData(prev => ({
+        ...prev,
+        fullName: user.name || prev.fullName,
+        email: user.email || prev.email,
+        phone: user.phone || prev.phone,
+        address: user.address || prev.address,
+        gender: user.gender || prev.gender,
+        google: user.name || prev.google,
+      }));
+    }
+  }, [user]);
+
   const handleProfileInputChange = (field, value) => {
     setProfileData(prev => ({
       ...prev,
       [field]: value,
     }));
+  };
+
+  const handleCancelEdit = () => {
+    // Reset profileData to original user values
+    if (user) {
+      setProfileData({
+        fullName: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        address: user.address || '',
+        gender: user.gender || 'Nam',
+        birthDate: '',
+        facebook: '',
+        google: user.name || '',
+      });
+    }
+    setIsEditingProfile(false);
   };
 
   const handleSaveProfile = async () => {
@@ -88,17 +122,25 @@ export default function ProfileContent({ user }) {
         toast.success('Profile updated successfully');
         setIsEditingProfile(false);
 
-        // Update local user data if parent component provides update function
-        if (user.onUpdate) {
-          user.onUpdate(response.data.renter);
+        // Update local profileData with response data
+        if (response.data?.renter) {
+          setProfileData(prev => ({
+            ...prev,
+            fullName: response.data.renter.name || prev.fullName,
+            phone: response.data.renter.phone || prev.phone,
+            address: response.data.renter.address || prev.address,
+          }));
         }
+
+        // Refresh user data from API
+        await verifyUser();
       } else {
         toast.error(response.message || 'Update failed');
       }
     } catch (error) {
       console.error('Error updating profile:', error);
       toast.error(
-        error.response?.data?.message || 'An error occurred while updating information'
+        error.message || 'An error occurred while updating information'
       );
     } finally {
       setIsSaving(false);
@@ -125,14 +167,6 @@ export default function ProfileContent({ user }) {
             Edit
           </Button>
         </div>
-
-        {/* Trip Counter */}
-        <div className='flex items-center gap-2 bg-card px-4 py-2 rounded-lg border border-border shadow-sm'>
-          <Briefcase className='h-5 w-5 text-primary' />
-          <span className='text-sm font-medium text-card-foreground'>
-            0 trips
-          </span>
-        </div>
       </div>
       <VerificationBanner />
 
@@ -157,11 +191,6 @@ export default function ProfileContent({ user }) {
             <p className='text-sm text-muted-foreground mb-4'>
               Joined: {joinDate}
             </p>
-
-            {/* Points Badge */}
-            <Badge className='flex items-center gap-1'>
-              <Star className='h-3 w-3' />0 points
-            </Badge>
           </div>
 
           {/* Personal Details */}
@@ -323,7 +352,7 @@ export default function ProfileContent({ user }) {
                 </Button>
                 <Button
                   variant='outline'
-                  onClick={() => setIsEditingProfile(false)}
+                  onClick={handleCancelEdit}
                   className='flex-1'
                   disabled={isSaving}
                 >

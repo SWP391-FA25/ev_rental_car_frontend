@@ -244,10 +244,7 @@ export default function PaymentSuccessPage() {
               {/* Booking Details */}
               <div className='space-y-3 text-sm text-left'>
                 <div className='flex justify-between items-center'>
-                  <span className='text-muted-foreground'>
-                    {t('payment.success.bookingIdLabel')}
-                  </span>
-                  <span className='font-mono'>{booking.id}</span>
+                  <span className='text-muted-foreground'></span>
                 </div>
 
                 <div className='flex justify-between items-center'>

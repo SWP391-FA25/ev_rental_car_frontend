@@ -35,6 +35,14 @@ export const useLocation = () => {
 
     navigator.geolocation.getCurrentPosition(
       position => {
+        console.log(
+          '📍 Coordinates:',
+          position.coords.latitude,
+          position.coords.longitude
+        );
+        console.log('🎯 Accuracy:', position.coords.accuracy, 'meters');
+        console.log('🔋 Altitude accuracy:', position.coords.altitudeAccuracy);
+        console.log('⏱️ Timestamp:', new Date(position.timestamp));
         const location = {
           type: 'Point',
           coordinates: [position.coords.longitude, position.coords.latitude],
@@ -93,7 +101,7 @@ export const useLocation = () => {
       {
         enableHighAccuracy: true,
         timeout: 15000, // Increased timeout
-        maximumAge: 300000, // 5 minutes
+        maximumAge: 0,
       }
     );
   }, []);

@@ -1,25 +1,15 @@
 import { useAuth } from '@/app/providers/AuthProvider';
-import {
-  Briefcase,
-  CheckSquare,
-  FileText,
-  Gift,
-  Heart,
-  Lock,
-  LogOut,
-  MapPin,
-  User,
-} from 'lucide-react';
+import { Briefcase, FileText, Lock, LogOut, User } from 'lucide-react';
 
 const menuItems = [
   { id: 'profile', label: 'My Account', icon: User },
   { id: 'documents', label: 'Personal Documents', icon: FileText },
   { id: 'contracts', label: 'Rental Contracts', icon: FileText },
-  { id: 'favorites', label: 'Favorite Cars', icon: Heart },
+  // { id: 'favorites', label: 'Favorite Cars', icon: Heart },
   { id: 'trips', label: 'My Trips', icon: Briefcase },
-  { id: 'longterm', label: 'Long-term Rentals', icon: CheckSquare },
-  { id: 'gifts', label: 'Gifts', icon: Gift },
-  { id: 'addresses', label: 'My Addresses', icon: MapPin },
+  // { id: 'longterm', label: 'Long-term Rentals', icon: CheckSquare },
+  // { id: 'gifts', label: 'Gifts', icon: Gift },
+  // { id: 'addresses', label: 'My Addresses', icon: MapPin },
   { id: 'password', label: 'Change Password', icon: Lock },
 ];
 
@@ -45,14 +35,16 @@ export default function UserSidebar({ activeTab, setActiveTab }) {
               <li key={item.id}>
                 <button
                   onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${isActive
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
+                    isActive
                       ? 'bg-primary/10 text-primary border-l-4 border-primary'
                       : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                    }`}
+                  }`}
                 >
                   <Icon
-                    className={`h-5 w-5 ${isActive ? 'text-primary' : 'text-muted-foreground'
-                      }`}
+                    className={`h-5 w-5 ${
+                      isActive ? 'text-primary' : 'text-muted-foreground'
+                    }`}
                   />
                   <span className='font-medium'>{item.label}</span>
                 </button>

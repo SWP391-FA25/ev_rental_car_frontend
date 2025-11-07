@@ -393,12 +393,7 @@ export default function StationManagement() {
                         <EyeIcon className='mr-2 h-4 w-4' />
                         {t('station.management.actions.view')}
                       </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => openAssignDialog(station)}
-                      >
-                        <UsersIcon className='mr-2 h-4 w-4' />
-                        {t('station.management.actions.assign')}
-                      </DropdownMenuItem>
+
                       <DropdownMenuItem
                         className='text-red-600'
                         onClick={() => {

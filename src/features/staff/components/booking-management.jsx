@@ -1,20 +1,19 @@
 import {
-  Ban,
   Car,
   CheckCircle,
   Clock,
   CreditCard,
   Eye,
   Filter,
-  MoreVertical,
   RefreshCw,
   Search,
   XCircle,
 } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from '../../shared/lib/toast';
 
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../../app/providers/AuthProvider';
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
 import { ConfirmDialog } from '../../shared/components/ui/confirm-dialog';
@@ -49,17 +48,16 @@ import { CreateBookingDialog } from './booking/CreateBookingDialog';
 
 const BookingManagement = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingAssignment, setLoadingAssignment] = useState(false);
+  const [staffStationId, setStaffStationId] = useState(null);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
-  const [isCompletionSummaryOpen, setIsCompletionSummaryOpen] = useState(false);
-  const [completionSummaryBookingId, setCompletionSummaryBookingId] =
-    useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
-  const [depositFilter, setDepositFilter] = useState('ALL');
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState(null);
   const [pagination, setPagination] = useState({
@@ -68,10 +66,58 @@ const BookingManagement = () => {
     totalItems: 0,
     itemsPerPage: 20,
   });
+  const searchTimeoutRef = useRef(null);
+
+  // Fetch staff assignment
+  useEffect(() => {
+    const fetchStaffAssignment = async () => {
+      // Only fetch assignment for STAFF role
+      if (user?.role !== 'STAFF' || !user?.id) {
+        return;
+      }
+
+      try {
+        setLoadingAssignment(true);
+        const response = await apiClient.get(
+          endpoints.assignments.getByStaffId(user.id)
+        );
+
+        if (response.success) {
+          const assignment = response.data.assignment || response.data;
+          if (assignment && assignment.station) {
+            setStaffStationId(assignment.station.id);
+            console.log(
+              '✅ Staff assigned to station:',
+              assignment.station.name
+            );
+          } else {
+            console.warn('⚠️ Staff not assigned to any station');
+            toast.error(
+              'You are not assigned to any station. Please contact admin.'
+            );
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching staff assignment:', error);
+        // If 404, staff has no assignment
+        if (error.status === 404 || error.response?.status === 404) {
+          toast.error(
+            'You are not assigned to any station. Please contact admin.'
+          );
+        } else {
+          toast.error('Failed to load station assignment');
+        }
+      } finally {
+        setLoadingAssignment(false);
+      }
+    };
+
+    fetchStaffAssignment();
+  }, [user]);
 
   // Fetch bookings
   const fetchBookings = useCallback(
-    async (page = 1) => {
+    async (page = 1, search = '', status = 'ALL') => {
       try {
         setLoading(true);
         const params = new URLSearchParams({
@@ -79,19 +125,19 @@ const BookingManagement = () => {
           limit: '20',
         });
 
-        if (statusFilter && statusFilter !== 'ALL')
-          params.append('status', statusFilter);
-        if (depositFilter && depositFilter !== 'ALL')
-          params.append('depositStatus', depositFilter);
-        if (searchTerm) params.append('search', searchTerm);
+        // Add stationId filter for STAFF only
+        if (user?.role === 'STAFF' && staffStationId) {
+          params.append('stationId', staffStationId);
+        }
+
+        if (status && status !== 'ALL') params.append('status', status);
+        if (search && search.trim()) params.append('search', search.trim());
 
         const response = await apiClient.get(
           endpoints.bookings.getAll() + `?${params.toString()}`
         );
 
         if (response.success) {
-          console.log(response.data.bookings);
-
           setBookings(response.data.bookings);
           setPagination(response.data.pagination);
         }
@@ -102,65 +148,27 @@ const BookingManagement = () => {
         setLoading(false);
       }
     },
-    [statusFilter, depositFilter, searchTerm]
+    [t, user, staffStationId]
   );
 
   // Fetch booking details
-  const fetchBookingDetails = useCallback(async bookingId => {
-    try {
-      const response = await apiClient.get(
-        endpoints.bookings.getById(bookingId)
-      );
-      if (response.success) {
-        setSelectedBooking(response.data.booking);
-        setIsDetailsOpen(true);
-      }
-    } catch (error) {
-      console.error('Error fetching booking details:', error);
-      toast.error(t('booking.messages.detailsFailed'));
-    }
-  }, []);
-
-  // Smart status progression actions
-  const confirmBooking = async bookingId => {
-    try {
-      const response = await apiClient.patch(
-        endpoints.bookings.updateStatus(bookingId),
-        { status: 'CONFIRMED', notes: 'Booking confirmed by staff' }
-      );
-
-      if (response.success) {
-        toast.success(t('booking.messages.confirmSuccess'));
-        fetchBookings(pagination.currentPage);
-        if (isDetailsOpen) {
-          fetchBookingDetails(selectedBooking.id);
+  const fetchBookingDetails = useCallback(
+    async bookingId => {
+      try {
+        const response = await apiClient.get(
+          endpoints.bookings.getById(bookingId)
+        );
+        if (response.success) {
+          setSelectedBooking(response.data.booking);
+          setIsDetailsOpen(true);
         }
+      } catch (error) {
+        console.error('Error fetching booking details:', error);
+        toast.error(t('booking.messages.detailsFailed'));
       }
-    } catch (error) {
-      console.error('Error confirming booking:', error);
-      toast.error(t('booking.messages.confirmFailed'));
-    }
-  };
-
-  const startRental = async bookingId => {
-    try {
-      const response = await apiClient.patch(
-        endpoints.bookings.updateStatus(bookingId),
-        { status: 'IN_PROGRESS', notes: 'Rental started by staff' }
-      );
-
-      if (response.success) {
-        toast.success(t('booking.messages.startSuccess'));
-        fetchBookings(pagination.currentPage);
-        if (isDetailsOpen) {
-          fetchBookingDetails(selectedBooking.id);
-        }
-      }
-    } catch (error) {
-      console.error('Error starting rental:', error);
-      toast.error(t('booking.messages.startFailed'));
-    }
-  };
+    },
+    [t]
+  );
 
   // Complete booking
   const completeBooking = async formData => {
@@ -175,7 +183,7 @@ const BookingManagement = () => {
       if (response.success) {
         toast.success(t('booking.messages.completeSuccess'));
         setIsCompleteDialogOpen(false);
-        fetchBookings(pagination.currentPage);
+        fetchBookings(pagination.currentPage, searchTerm, statusFilter);
         if (isDetailsOpen) {
           fetchBookingDetails(selectedBooking.id);
         }
@@ -196,7 +204,7 @@ const BookingManagement = () => {
 
       if (response.success) {
         toast.success(t('booking.messages.cancelSuccess'));
-        fetchBookings(pagination.currentPage);
+        fetchBookings(pagination.currentPage, searchTerm, statusFilter);
         if (isDetailsOpen) {
           setIsDetailsOpen(false);
         }
@@ -207,15 +215,38 @@ const BookingManagement = () => {
     }
   };
 
-  // Handle search
-  const handleSearch = useCallback(() => {
-    fetchBookings(1);
-  }, [fetchBookings]);
+  // Handle search input change with debouncing
+  const handleSearchChange = value => {
+    setSearchTerm(value);
+
+    // Clear existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    // Set new timeout for debounced search
+    searchTimeoutRef.current = setTimeout(() => {
+      setPagination(prev => ({ ...prev, currentPage: 1 }));
+      fetchBookings(1, value, statusFilter);
+    }, 500); // 500ms debounce
+  };
+
+  // Handle search on Enter key
+  const handleSearchKeyPress = e => {
+    if (e.key === 'Enter') {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+      setPagination(prev => ({ ...prev, currentPage: 1 }));
+      fetchBookings(1, searchTerm, statusFilter);
+    }
+  };
 
   // Handle status filter change
   const handleStatusFilterChange = value => {
     setStatusFilter(value);
-    fetchBookings(1);
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
+    fetchBookings(1, searchTerm, value);
   };
 
   // Get status badge
@@ -311,15 +342,70 @@ const BookingManagement = () => {
     return formatCurrency(amount, 'VND');
   };
 
-  // Effects
+  // Initial load - wait for assignment if STAFF
   useEffect(() => {
-    fetchBookings();
-  }, [fetchBookings]);
+    // For STAFF: wait until assignment is loaded (or failed to load)
+    // For ADMIN: fetch immediately
+    if (user?.role === 'ADMIN') {
+      fetchBookings(1, searchTerm, statusFilter);
+    } else if (user?.role === 'STAFF') {
+      // Only fetch bookings after assignment is loaded
+      if (!loadingAssignment) {
+        // If staff has no assignment, still try to fetch (will show empty state)
+        fetchBookings(1, searchTerm, statusFilter);
+      }
+    } else {
+      // Default: fetch bookings
+      fetchBookings(1, searchTerm, statusFilter);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [staffStationId, loadingAssignment, user?.role]);
 
-  if (loading) {
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Show loading state while fetching assignment (for STAFF) or bookings
+  if (loading || (user?.role === 'STAFF' && loadingAssignment)) {
     return (
       <div className='flex items-center justify-center h-64'>
         <div className='text-lg'>{t('booking.messages.loading')}</div>
+      </div>
+    );
+  }
+
+  // Show message if STAFF has no assignment
+  if (
+    user?.role === 'STAFF' &&
+    !loadingAssignment &&
+    !staffStationId &&
+    !loading
+  ) {
+    return (
+      <div className='space-y-6'>
+        <div className='flex items-center justify-between'>
+          <div>
+            <h1 className='text-3xl font-bold tracking-tight'>
+              {t('booking.title')}
+            </h1>
+            <p className='text-muted-foreground'>{t('booking.subtitle')}</p>
+          </div>
+        </div>
+        <div className='flex items-center justify-center h-64'>
+          <div className='text-center'>
+            <p className='text-lg text-muted-foreground mb-2'>
+              You are not assigned to any station.
+            </p>
+            <p className='text-sm text-muted-foreground'>
+              Please contact administrator to get assigned to a station.
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -338,11 +424,13 @@ const BookingManagement = () => {
           <CreateBookingDialog
             onBookingCreated={() => {
               // Refresh bookings list after creating new booking
-              fetchBookings(pagination.currentPage);
+              fetchBookings(pagination.currentPage, searchTerm, statusFilter);
             }}
           />
           <Button
-            onClick={() => fetchBookings(pagination.currentPage)}
+            onClick={() =>
+              fetchBookings(pagination.currentPage, searchTerm, statusFilter)
+            }
             variant='outline'
           >
             <RefreshCw className='h-4 w-4 mr-2' />
@@ -358,8 +446,8 @@ const BookingManagement = () => {
           <Input
             placeholder={t('booking.filters.searchPlaceholder')}
             value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            onKeyPress={e => e.key === 'Enter' && handleSearch()}
+            onChange={e => handleSearchChange(e.target.value)}
+            onKeyPress={handleSearchKeyPress}
             className='pl-10'
           />
         </div>
@@ -411,68 +499,6 @@ const BookingManagement = () => {
               onClick={() => handleStatusFilterChange('CANCELLED')}
             >
               {t('booking.status.cancelled')}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant='outline'>
-              <CreditCard className='mr-2 h-4 w-4' />
-              {t('booking.filters.depositLabel')}:{' '}
-              {depositFilter === 'ALL'
-                ? t('booking.filters.depositAll')
-                : depositFilter === 'PENDING'
-                ? t('booking.filters.deposit.pendingPayment')
-                : t(
-                    `booking.depositStatus.${
-                      { PAID: 'paid', FAILED: 'failed', REFUNDED: 'refunded' }[
-                        depositFilter
-                      ]
-                    }`
-                  )}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem
-              onClick={() => {
-                setDepositFilter('ALL');
-                fetchBookings(1);
-              }}
-            >
-              {t('booking.filters.depositAll')}
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                setDepositFilter('PENDING');
-                fetchBookings(1);
-              }}
-            >
-              {t('booking.filters.deposit.pendingPayment')}
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                setDepositFilter('PAID');
-                fetchBookings(1);
-              }}
-            >
-              {t('booking.filters.deposit.paid')}
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                setDepositFilter('FAILED');
-                fetchBookings(1);
-              }}
-            >
-              {t('booking.filters.deposit.failed')}
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                setDepositFilter('REFUNDED');
-                fetchBookings(1);
-              }}
-            >
-              {t('booking.filters.deposit.refunded')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -618,75 +644,13 @@ const BookingManagement = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant='ghost' className='h-8 w-8 p-0'>
-                          <MoreVertical className='h-4 w-4' />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align='end'>
-                        <DropdownMenuItem
-                          onClick={() => fetchBookingDetails(booking.id)}
-                        >
-                          <Eye className='mr-2 h-4 w-4' />
-                          {t('booking.actions.viewDetails')}
-                        </DropdownMenuItem>
-                        {/* {booking.status === 'PENDING' && (
-                          <DropdownMenuItem
-                            onClick={() => confirmBooking(booking.id)}
-                            className='text-green-600'
-                          >
-                            <CheckCircle className='mr-2 h-4 w-4' />
-                            Confirm Booking
-                          </DropdownMenuItem>
-                        )} */}
-                        {/* {booking.status === 'PENDING' &&
-                          booking.depositStatus !== 'PAID' && (
-                            <DropdownMenuItem
-                              disabled
-                              className='text-muted-foreground'
-                            >
-                              <Clock className='mr-2 h-4 w-4' />
-                              {t('booking.actions.waitingForDeposit')}
-                            </DropdownMenuItem>
-                          )} */}
-                        {/* {booking.status === 'CONFIRMED' && (
-                          <DropdownMenuItem
-                            onClick={() => startRental(booking.id)}
-                            className='text-blue-600'
-                          >
-                            <Car className='mr-2 h-4 w-4' />
-                            {t('booking.actions.startRental')}
-                          </DropdownMenuItem>
-                        )}
-                        {booking.status === 'IN_PROGRESS' && (
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setSelectedBooking(booking);
-                              setIsCompleteDialogOpen(true);
-                            }}
-                            className='text-green-600'
-                          >
-                            <CheckCircle className='mr-2 h-4 w-4' />
-                            {t('booking.actions.completeRental')}
-                          </DropdownMenuItem>
-                        )} */}
-                        {!['COMPLETED', 'CANCELLED', 'CONFIRMED'].includes(
-                          booking.status
-                        ) && (
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setBookingToCancel(booking.id);
-                              setCancelDialogOpen(true);
-                            }}
-                            className='text-red-600'
-                          >
-                            <Ban className='mr-2 h-4 w-4' />
-                            {t('booking.actions.cancelBooking')}
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      onClick={() => fetchBookingDetails(booking.id)}
+                    >
+                      <Eye className='h-4 w-4' />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -708,7 +672,13 @@ const BookingManagement = () => {
             <Button
               variant='outline'
               size='sm'
-              onClick={() => fetchBookings(pagination.currentPage - 1)}
+              onClick={() =>
+                fetchBookings(
+                  pagination.currentPage - 1,
+                  searchTerm,
+                  statusFilter
+                )
+              }
               disabled={pagination.currentPage <= 1}
             >
               {t('booking.pagination.previous')}
@@ -716,7 +686,13 @@ const BookingManagement = () => {
             <Button
               variant='outline'
               size='sm'
-              onClick={() => fetchBookings(pagination.currentPage + 1)}
+              onClick={() =>
+                fetchBookings(
+                  pagination.currentPage + 1,
+                  searchTerm,
+                  statusFilter
+                )
+              }
               disabled={pagination.currentPage >= pagination.totalPages}
             >
               {t('booking.pagination.next')}
