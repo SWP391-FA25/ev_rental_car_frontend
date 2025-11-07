@@ -103,7 +103,7 @@ export const useStaffBooking = () => {
       setPromotions(response.data.promotions || []);
     } catch (err) {
       console.error('Error fetching promotions:', err);
-      toast.error('Failed to load promotions');
+      // toast.error('Failed to load promotions');
     } finally {
       setLoadingPromotions(false);
     }

@@ -47,11 +47,11 @@ export default function VehicleManagement() {
 
   // Vehicle status options
   const VEHICLE_STATUS = [
-    { value: 'AVAILABLE', label: t('vehicle.status.available') },
-    { value: 'RENTED', label: t('vehicle.status.rented') },
-    { value: 'PENDING', label: t('vehicle.status.pending') },
-    { value: 'MAINTENANCE', label: t('vehicle.status.maintenance') },
-    { value: 'OUT_OF_SERVICE', label: t('vehicle.status.outOfService') },
+    { value: 'AVAILABLE', label: 'Available' },
+    { value: 'RENTED', label: 'Rented' },
+    { value: 'PENDING', label: 'Pending' },
+    { value: 'MAINTENANCE', label: 'Maintenance' },
+    { value: 'OUT_OF_SERVICE', label: 'Out of Service' },
   ];
 
   // Vehicle types
