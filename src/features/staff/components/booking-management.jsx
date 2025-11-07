@@ -13,6 +13,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from '../../shared/lib/toast';
 
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../../app/providers/AuthProvider';
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
 import { ConfirmDialog } from '../../shared/components/ui/confirm-dialog';
@@ -47,8 +48,11 @@ import { CreateBookingDialog } from './booking/CreateBookingDialog';
 
 const BookingManagement = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingAssignment, setLoadingAssignment] = useState(false);
+  const [staffStationId, setStaffStationId] = useState(null);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
@@ -64,6 +68,53 @@ const BookingManagement = () => {
   });
   const searchTimeoutRef = useRef(null);
 
+  // Fetch staff assignment
+  useEffect(() => {
+    const fetchStaffAssignment = async () => {
+      // Only fetch assignment for STAFF role
+      if (user?.role !== 'STAFF' || !user?.id) {
+        return;
+      }
+
+      try {
+        setLoadingAssignment(true);
+        const response = await apiClient.get(
+          endpoints.assignments.getByStaffId(user.id)
+        );
+
+        if (response.success) {
+          const assignment = response.data.assignment || response.data;
+          if (assignment && assignment.station) {
+            setStaffStationId(assignment.station.id);
+            console.log(
+              '✅ Staff assigned to station:',
+              assignment.station.name
+            );
+          } else {
+            console.warn('⚠️ Staff not assigned to any station');
+            toast.error(
+              'You are not assigned to any station. Please contact admin.'
+            );
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching staff assignment:', error);
+        // If 404, staff has no assignment
+        if (error.status === 404 || error.response?.status === 404) {
+          toast.error(
+            'You are not assigned to any station. Please contact admin.'
+          );
+        } else {
+          toast.error('Failed to load station assignment');
+        }
+      } finally {
+        setLoadingAssignment(false);
+      }
+    };
+
+    fetchStaffAssignment();
+  }, [user]);
+
   // Fetch bookings
   const fetchBookings = useCallback(
     async (page = 1, search = '', status = 'ALL') => {
@@ -73,6 +124,11 @@ const BookingManagement = () => {
           page: page.toString(),
           limit: '20',
         });
+
+        // Add stationId filter for STAFF only
+        if (user?.role === 'STAFF' && staffStationId) {
+          params.append('stationId', staffStationId);
+        }
 
         if (status && status !== 'ALL') params.append('status', status);
         if (search && search.trim()) params.append('search', search.trim());
@@ -92,7 +148,7 @@ const BookingManagement = () => {
         setLoading(false);
       }
     },
-    [t]
+    [t, user, staffStationId]
   );
 
   // Fetch booking details
@@ -286,11 +342,24 @@ const BookingManagement = () => {
     return formatCurrency(amount, 'VND');
   };
 
-  // Initial load
+  // Initial load - wait for assignment if STAFF
   useEffect(() => {
-    fetchBookings(1, searchTerm, statusFilter);
+    // For STAFF: wait until assignment is loaded (or failed to load)
+    // For ADMIN: fetch immediately
+    if (user?.role === 'ADMIN') {
+      fetchBookings(1, searchTerm, statusFilter);
+    } else if (user?.role === 'STAFF') {
+      // Only fetch bookings after assignment is loaded
+      if (!loadingAssignment) {
+        // If staff has no assignment, still try to fetch (will show empty state)
+        fetchBookings(1, searchTerm, statusFilter);
+      }
+    } else {
+      // Default: fetch bookings
+      fetchBookings(1, searchTerm, statusFilter);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [staffStationId, loadingAssignment, user?.role]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -301,10 +370,42 @@ const BookingManagement = () => {
     };
   }, []);
 
-  if (loading) {
+  // Show loading state while fetching assignment (for STAFF) or bookings
+  if (loading || (user?.role === 'STAFF' && loadingAssignment)) {
     return (
       <div className='flex items-center justify-center h-64'>
         <div className='text-lg'>{t('booking.messages.loading')}</div>
+      </div>
+    );
+  }
+
+  // Show message if STAFF has no assignment
+  if (
+    user?.role === 'STAFF' &&
+    !loadingAssignment &&
+    !staffStationId &&
+    !loading
+  ) {
+    return (
+      <div className='space-y-6'>
+        <div className='flex items-center justify-between'>
+          <div>
+            <h1 className='text-3xl font-bold tracking-tight'>
+              {t('booking.title')}
+            </h1>
+            <p className='text-muted-foreground'>{t('booking.subtitle')}</p>
+          </div>
+        </div>
+        <div className='flex items-center justify-center h-64'>
+          <div className='text-center'>
+            <p className='text-lg text-muted-foreground mb-2'>
+              You are not assigned to any station.
+            </p>
+            <p className='text-sm text-muted-foreground'>
+              Please contact administrator to get assigned to a station.
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
