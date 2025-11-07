@@ -32,7 +32,16 @@ import { apiClient } from '../../shared/lib/apiClient';
 import { endpoints } from '../../shared/lib/endpoints';
 import { toast } from '../../shared/lib/toast';
 import { formatCurrency } from '../../shared/lib/utils';
-import { Search, X, Check, Calendar, User, Car } from 'lucide-react';
+// import { useStaffBooking } from '../hooks/useStaffBooking';
+import {
+  Search,
+  X,
+  Check,
+  Calendar,
+  User,
+  Car,
+  ChevronsUp,
+} from 'lucide-react';
 
 export default function CheckInCar() {
   const { t } = useTranslation();
@@ -1610,7 +1619,7 @@ export default function CheckInCar() {
             <div className='p-3 border rounded-md bg-muted/50'>
               {booking?.station ? (
                 <div>
-                  i<p className='font-medium'>{booking.station.name}</p>
+                  <p className='font-medium'>{booking.station.name}</p>
                   <p className='text-sm text-muted-foreground'>
                     {booking.station.address}
                   </p>
