@@ -36,6 +36,8 @@ import {
   TableRow,
 } from '../../../shared/components/ui/table';
 import { Textarea } from '../../../shared/components/ui/textarea';
+import { apiClient } from '../../../shared/lib/apiClient';
+import { endpoints } from '../../../shared/lib/endpoints';
 import { useTranslation } from 'react-i18next';
 
 // Station status options (label resolved via i18n inside component)

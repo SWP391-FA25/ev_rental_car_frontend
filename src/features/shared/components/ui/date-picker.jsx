@@ -22,8 +22,15 @@ export function DatePicker({
   className,
   ...props
 }) {
+  const [open, setOpen] = React.useState(false);
+
+  const handleSelect = date => {
+    onChange(date);
+    setOpen(false);
+  };
+
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant='outline'
@@ -43,7 +50,7 @@ export function DatePicker({
         <Calendar
           mode='single'
           selected={value}
-          onSelect={onChange}
+          onSelect={handleSelect}
           disabled={date => {
             if (minDate) {
               return date < minDate;
