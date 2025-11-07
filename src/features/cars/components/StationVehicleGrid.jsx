@@ -1,3 +1,4 @@
+import { useAuth } from '@/app/providers/AuthProvider';
 import { Alert, AlertDescription } from '@/features/shared/components/ui/alert';
 import { Button } from '@/features/shared/components/ui/button';
 import {
@@ -47,6 +48,15 @@ const StationVehicleGrid = ({
   error = null,
 }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handleBookNow = vehicleId => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    navigate(`/cars/${vehicleId}`);
+  };
 
   if (loading) {
     return (
@@ -195,9 +205,7 @@ const StationVehicleGrid = ({
                   size='sm'
                   variant='default'
                   disabled={!vehicle.available}
-                  onClick={() => {
-                    navigate(`/cars/${vehicle.id}`);
-                  }}
+                  onClick={() => handleBookNow(vehicle.id)}
                 >
                   {vehicle.available ? 'Book now' : 'Unavailable'}
                 </Button>
