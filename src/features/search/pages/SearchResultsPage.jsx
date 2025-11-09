@@ -1,3 +1,4 @@
+import { useAuth } from '@/app/providers/AuthProvider';
 import Footer from '@/features/shared/components/homepage/Footer';
 import Navbar from '@/features/shared/components/homepage/Navbar';
 import { Button } from '@/features/shared/components/ui/button';
@@ -18,16 +19,25 @@ import {
 } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-
 export default function SearchResultsPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { searchResults } = location.state || {};
   const toolbarRef = useRef(null);
+  const { user } = useAuth();
 
   // Handle back navigation
   const handleBack = () => {
     navigate(-1);
+  };
+
+  // Handle Booking
+  const handleBooking = async vehicleId => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    navigate(`/cars/${vehicleId}`);
   };
 
   // Format date range
@@ -189,9 +199,7 @@ export default function SearchResultsPage() {
                       <Button
                         size='sm'
                         variant='default'
-                        onClick={() => {
-                          navigate(`/cars/${vehicle.id}`);
-                        }}
+                        onClick={() => handleBooking(vehicle.id)}
                       >
                         Book now
                       </Button>

@@ -205,10 +205,39 @@ export default function StationManagement() {
     setAssignDialogOpen(true);
   };
 
-  const handleAssignmentSuccess = () => {
+  const handleAssignmentSuccess = async () => {
     setAssignDialogOpen(false);
+    const assignedStationId = stationToAssign?.id;
     setStationToAssign(null);
-    loadStations();
+    
+    // Refresh stations list
+    await loadStations();
+    
+    // Refresh the assigned station to get updated staff assignments
+    if (assignedStationId) {
+      try {
+        const response = await apiClient.get(
+          endpoints.stations.getById(assignedStationId)
+        );
+        if (response && response.success) {
+          const updatedStation = response.data.station;
+          
+          // Update station in the stations list
+          setStations(prev =>
+            prev.map(station =>
+              station.id === assignedStationId ? updatedStation : station
+            )
+          );
+          
+          // If StationDetails is open for this station, refresh it
+          if (selectedStation && selectedStation.id === assignedStationId) {
+            setSelectedStation(updatedStation);
+          }
+        }
+      } catch (error) {
+        console.error('Error refreshing station after assignment:', error);
+      }
+    }
   };
 
   const filteredStations = stations.filter(station => {
@@ -481,7 +510,7 @@ export default function StationManagement() {
 
       {/* Assign Staff Dialog */}
       <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
-        <DialogContent className='max-w-md'>
+        <DialogContent className='max-w-2xl'>
           <DialogHeader>
             <DialogTitle>
               {t('station.management.assignDialog.title')}

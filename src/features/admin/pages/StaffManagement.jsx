@@ -17,6 +17,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../../shared/components/ui/dropdown-menu';
 import { Input } from '../../shared/components/ui/input';
@@ -96,8 +97,12 @@ export default function StaffManagement() {
   });
 
   // Helpers
-  const getStaffAssignment = staffId =>
-    assignments.find(assignment => assignment.userId === staffId);
+  const getStaffAssignments = staffId =>
+    assignments.filter(
+      assignment =>
+        assignment.userId === staffId ||
+        assignment.user?.id === staffId
+    );
 
   const getStatusBadgeVariant = status => {
     switch (status) {
@@ -117,24 +122,38 @@ export default function StaffManagement() {
 
   const handleDeleteStaff = async id => {
     try {
-      // Check if staff has assignment
-      const assignment = getStaffAssignment(id);
+      // Check if staff has any assignments
+      const staffAssignments = getStaffAssignments(id);
 
-      if (assignment) {
+      if (staffAssignments.length > 0) {
         // If staff is assigned, show warning and unassign first
+        const stationCount = staffAssignments.length;
+        const stationText =
+          stationCount === 1 ? 'station' : 'stations';
         const confirmUnassign = window.confirm(
-          'This staff is currently assigned to a station. They must be unassigned before deletion. Do you want to unassign and delete?'
+          `This staff is currently assigned to ${stationCount} ${stationText}. They must be unassigned before deletion. Do you want to unassign all and delete?`
         );
 
         if (confirmUnassign) {
-          // Unassign first
+          // Unassign all assignments
           try {
-            await apiClient.delete(endpoints.assignments.delete(assignment.id));
-            console.log('✅ Staff unassigned successfully');
+            for (const assignment of staffAssignments) {
+              await apiClient.delete(
+                endpoints.assignments.delete(assignment.id)
+              );
+            }
+            console.log(
+              `✅ Staff unassigned from ${stationCount} ${stationText} successfully`
+            );
             await loadAssignments(); // Reload assignments
+            window.dispatchEvent(new CustomEvent('assignmentChanged'));
           } catch (unassignErr) {
             console.error('Failed to unassign staff:', unassignErr);
-            toast.error('Failed to unassign staff: ' + (unassignErr?.response?.data?.message || unassignErr?.message));
+            toast.error(
+              'Failed to unassign staff: ' +
+                (unassignErr?.response?.data?.message ||
+                  unassignErr?.message)
+            );
             return; // Stop deletion if unassign fails
           }
         } else {
@@ -149,7 +168,8 @@ export default function StaffManagement() {
     } catch (err) {
       console.error('Delete staff error:', err);
       // Show specific error message from backend
-      const errorMessage = err?.response?.data?.message ||
+      const errorMessage =
+        err?.response?.data?.message ||
         err?.message ||
         t('staffManagement.messages.errorDelete');
       toast.error(errorMessage);
@@ -348,19 +368,28 @@ export default function StaffManagement() {
                   </TableCell>
                   <TableCell>
                     {(() => {
-                      const assignment = getStaffAssignment(staffItem.id);
-                      return assignment ? (
-                        <div className='flex items-center gap-2'>
-                          <MapPinIcon className='h-4 w-4 text-gray-500' />
-                          <span className='text-sm'>
-                            {assignment.station?.name ||
-                              t('staffManagement.table.unknownStation')}
-                          </span>
+                      const staffAssignments = getStaffAssignments(staffItem.id);
+                      if (staffAssignments.length === 0) {
+                        return (
+                          <Badge variant='outline' className='text-gray-500'>
+                            {t('staffManagement.table.unassigned')}
+                          </Badge>
+                        );
+                      }
+                      return (
+                        <div className='flex flex-wrap items-center gap-2'>
+                          {staffAssignments.map(assignment => (
+                            <Badge
+                              key={assignment.id}
+                              variant='default'
+                              className='flex items-center gap-1'
+                            >
+                              <MapPinIcon className='h-3 w-3' />
+                              {assignment.station?.name ||
+                                t('staffManagement.table.unknownStation')}
+                            </Badge>
+                          ))}
                         </div>
-                      ) : (
-                        <Badge variant='outline' className='text-gray-500'>
-                          {t('staffManagement.table.unassigned')}
-                        </Badge>
                       );
                     })()}
                   </TableCell>
@@ -386,19 +415,48 @@ export default function StaffManagement() {
                         >
                           {t('staffManagement.actions.viewDetails')}
                         </DropdownMenuItem>
-                        {getStaffAssignment(staffItem.id) && (
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setStaffToUnassign(
-                                getStaffAssignment(staffItem.id).id
-                              );
-                              setUnassignDialogOpen(true);
-                            }}
-                            className='text-blue-600'
-                          >
-                            {t('staffManagement.actions.unassign')}
-                          </DropdownMenuItem>
-                        )}
+                        {(() => {
+                          const staffAssignments = getStaffAssignments(
+                            staffItem.id
+                          );
+                          if (staffAssignments.length > 0) {
+                            return (
+                              <>
+                                <DropdownMenuSeparator />
+                                {staffAssignments.length === 1 ? (
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setStaffToUnassign(
+                                        staffAssignments[0].id
+                                      );
+                                      setUnassignDialogOpen(true);
+                                    }}
+                                    className='text-blue-600'
+                                  >
+                                    {t('staffManagement.actions.unassign')}
+                                  </DropdownMenuItem>
+                                ) : (
+                                  staffAssignments.map(assignment => (
+                                    <DropdownMenuItem
+                                      key={assignment.id}
+                                      onClick={() => {
+                                        setStaffToUnassign(assignment.id);
+                                        setUnassignDialogOpen(true);
+                                      }}
+                                      className='text-blue-600'
+                                    >
+                                      {t('staffManagement.actions.unassign')} -{' '}
+                                      {assignment.station?.name ||
+                                        t('staffManagement.table.unknownStation')}
+                                    </DropdownMenuItem>
+                                  ))
+                                )}
+                              </>
+                            );
+                          }
+                          return null;
+                        })()}
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem
                           onClick={() => {
                             setStaffToDelete(staffItem.id);

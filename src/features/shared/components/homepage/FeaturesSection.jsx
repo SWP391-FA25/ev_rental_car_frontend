@@ -6,7 +6,6 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useVehicles } from '../../../cars/hooks/useVehicles';
 import { vehicleService } from '../../../cars/services/vehicleService';
-import { formatCurrency } from '../../lib/utils';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardTitle } from '../ui/card';
 import {
@@ -266,11 +265,6 @@ export default function FeaturesSection() {
                           alt={vehicle.name}
                           className='w-full h-full object-cover'
                         />
-                        <div className='absolute bottom-3 right-3 bg-black/80 text-white px-3 py-1 rounded-lg'>
-                          <span className='text-lg font-bold'>
-                            {formatCurrency(vehicle.price)}
-                          </span>
-                        </div>
                       </div>
 
                       <CardContent className='p-4'>

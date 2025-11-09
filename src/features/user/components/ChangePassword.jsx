@@ -1,6 +1,9 @@
 import { Button } from '@/features/shared/components/ui/button';
 import { Input } from '@/features/shared/components/ui/input';
 import { Label } from '@/features/shared/components/ui/label';
+import { apiClient } from '@/features/shared/lib/apiClient';
+import { endpoints } from '@/features/shared/lib/endpoints';
+import { toast } from '@/features/shared/lib/toast';
 import { Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 
@@ -39,35 +42,37 @@ export default function ChangePassword() {
 
     // Validation
     if (formData.newPassword !== formData.confirmPassword) {
-      alert('New password and confirmation do not match');
+      toast.error('New password and confirmation do not match');
       setIsLoading(false);
       return;
     }
 
-    if (formData.newPassword.length < 6) {
-      alert('New password must be at least 6 characters');
+    if (formData.newPassword.length < 8) {
+      toast.error('New password must be at least 8 characters');
       setIsLoading(false);
       return;
     }
 
     try {
-      // TODO: Implement API call to change password
-      console.log('Changing password:', {
+      const response = await apiClient.put(endpoints.auth.changePassword(), {
         currentPassword: formData.currentPassword,
         newPassword: formData.newPassword,
       });
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      alert('Password changed successfully!');
-      setFormData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      });
-    } catch {
-      alert('An error occurred while changing password');
+      if (response?.success) {
+        toast.success('Password changed successfully!');
+        setFormData({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+        });
+      } else {
+        toast.error(response?.message || 'Failed to change password');
+      }
+    } catch (error) {
+      toast.error(
+        error?.message || 'An error occurred while changing password'
+      );
     } finally {
       setIsLoading(false);
     }

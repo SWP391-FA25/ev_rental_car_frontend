@@ -1,3 +1,4 @@
+import { useAuth } from '@/app/providers/AuthProvider';
 import { bookingService } from '@/features/booking/services/bookingService';
 import { calculateCompletePricing } from '@/features/booking/utils/pricingUtils';
 import { apiClient } from '@/features/shared/lib/apiClient';
@@ -8,6 +9,7 @@ import { toast } from '../../shared/lib/toast';
 
 export const useStaffBooking = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -33,7 +35,14 @@ export const useStaffBooking = () => {
   const [loadingStations, setLoadingStations] = useState(false);
   const [loadingVehicles, setLoadingVehicles] = useState(false);
   const [loadingPromotions, setLoadingPromotions] = useState(false);
+  // Initialize loadingAssignment to true for STAFF to prevent fetching stations before assignments are loaded
+  const [loadingAssignment, setLoadingAssignment] = useState(
+    user?.role === 'STAFF'
+  );
   const [submitting, setSubmitting] = useState(false);
+
+  // Assignment state
+  const [assignedStationIds, setAssignedStationIds] = useState([]);
 
   // Error state
   const [error, setError] = useState(null);
@@ -67,6 +76,57 @@ export const useStaffBooking = () => {
     }
   }, []);
 
+  // Fetch staff assignments
+  const fetchStaffAssignments = useCallback(async () => {
+    // Only fetch for STAFF role
+    if (user?.role !== 'STAFF' || !user?.id) {
+      setAssignedStationIds([]);
+      setLoadingAssignment(false);
+      return;
+    }
+
+    try {
+      setLoadingAssignment(true);
+      const response = await apiClient.get(
+        endpoints.assignments.getByStaffId(user.id)
+      );
+
+      const payload = response?.data;
+      // Support both list and single assignment response shapes
+      let raw = [];
+      if (Array.isArray(payload?.assignments)) {
+        raw = payload.assignments;
+      } else if (payload?.assignment && typeof payload.assignment === 'object') {
+        raw = [payload.assignment];
+      } else if (Array.isArray(payload)) {
+        raw = payload;
+      } else if (Array.isArray(payload?.items)) {
+        raw = payload.items;
+      }
+
+      const ids = raw
+        .map(a => a?.station?.id ?? a?.stationId)
+        .filter(Boolean)
+        .map(id => String(id));
+      const uniqueIds = Array.from(new Set(ids));
+      setAssignedStationIds(uniqueIds);
+
+      if (!uniqueIds.length) {
+        console.warn('Staff not assigned to any station');
+      }
+    } catch (err) {
+      console.error('Error fetching staff assignments:', err);
+      // If 404, staff has no assignment
+      if (err.status === 404 || err.response?.status === 404) {
+        setAssignedStationIds([]);
+      } else {
+        toast.error('Failed to load staff assignments');
+      }
+    } finally {
+      setLoadingAssignment(false);
+    }
+  }, [user]);
+
   // Fetch active stations
   const fetchStations = useCallback(async () => {
     try {
@@ -86,6 +146,18 @@ export const useStaffBooking = () => {
         stationsArray = response.data;
       }
 
+      // Filter stations based on staff assignments
+      // If user is STAFF and has assignments, only show assigned stations
+      // If user is ADMIN or has no assignments, show all stations
+      if (user?.role === 'STAFF' && assignedStationIds.length > 0) {
+        stationsArray = stationsArray.filter(station =>
+          assignedStationIds.includes(String(station.id))
+        );
+      } else if (user?.role === 'STAFF' && assignedStationIds.length === 0) {
+        // Staff with no assignments should see empty list
+        stationsArray = [];
+      }
+
       setStations(stationsArray);
     } catch (err) {
       console.error('Error fetching stations:', err);
@@ -93,7 +165,7 @@ export const useStaffBooking = () => {
     } finally {
       setLoadingStations(false);
     }
-  }, []);
+  }, [user, assignedStationIds]);
 
   // Fetch active promotions
   const fetchPromotions = useCallback(async () => {
@@ -103,7 +175,7 @@ export const useStaffBooking = () => {
       setPromotions(response.data.promotions || []);
     } catch (err) {
       console.error('Error fetching promotions:', err);
-      toast.error('Failed to load promotions');
+      // toast.error('Failed to load promotions');
     } finally {
       setLoadingPromotions(false);
     }
@@ -161,12 +233,25 @@ export const useStaffBooking = () => {
     []
   );
 
+  // Fetch staff assignments first (for STAFF role)
+  useEffect(() => {
+    fetchStaffAssignments();
+  }, [fetchStaffAssignments]);
+
   // Load initial data
   useEffect(() => {
     fetchRenters();
-    fetchStations();
     fetchPromotions();
-  }, [fetchRenters, fetchStations, fetchPromotions]);
+  }, [fetchRenters, fetchPromotions]);
+
+  // Fetch stations after assignments are loaded (for STAFF) or immediately (for ADMIN)
+  useEffect(() => {
+    // For STAFF: wait until assignment is loaded
+    // For ADMIN or other roles: fetch immediately
+    if (user?.role !== 'STAFF' || !loadingAssignment) {
+      fetchStations();
+    }
+  }, [fetchStations, user, loadingAssignment, assignedStationIds]);
 
   // Auto-fetch vehicles when station and time range are selected
   useEffect(() => {
