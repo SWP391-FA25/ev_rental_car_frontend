@@ -3,6 +3,7 @@ import {
   BarChartIcon,
   BellIcon,
   Building2Icon,
+  CalendarIcon,
   FileTextIcon,
   LayoutDashboardIcon,
   PercentIcon,
@@ -30,6 +31,11 @@ const data = {
       title: 'Dashboard',
       url: '/admin',
       icon: LayoutDashboardIcon,
+    },
+    {
+      title: 'Booking Management',
+      url: '/admin/bookings',
+      icon: CalendarIcon,
     },
     {
       title: 'User Management',
@@ -73,12 +79,14 @@ export function AppSidebar(props) {
     // Map the item title to the correct translation key
     const translationKeyMap = {
       Dashboard: 'dashboard',
+      'Booking Management': 'bookingManagement',
       'User Management': 'userManagement',
       'Staff Management': 'staffManagement',
       'Station Management': 'stationManagement',
       'Vehicals Management': 'vehiclesManagement',
       'Promotion Management': 'promotionManagement',
       'Notification Management': 'notificationManagement',
+      'Booking Management': 'bookingManagement',
     };
 
     const key = translationKeyMap[item.title];

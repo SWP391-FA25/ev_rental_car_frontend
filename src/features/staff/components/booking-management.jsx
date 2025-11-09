@@ -15,6 +15,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from '../../shared/lib/toast';
 
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../../app/providers/AuthProvider';
 import { Badge } from '../../shared/components/ui/badge';
 import { Button } from '../../shared/components/ui/button';
 import { ConfirmDialog } from '../../shared/components/ui/confirm-dialog';
@@ -49,6 +50,7 @@ import { CreateBookingDialog } from './booking/CreateBookingDialog';
 
 const BookingManagement = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedBooking, setSelectedBooking] = useState(null);
@@ -335,12 +337,14 @@ const BookingManagement = () => {
           <p className='text-muted-foreground'>{t('booking.subtitle')}</p>
         </div>
         <div className='flex items-center gap-3'>
-          <CreateBookingDialog
-            onBookingCreated={() => {
-              // Refresh bookings list after creating new booking
-              fetchBookings(pagination.currentPage);
-            }}
-          />
+          {user?.role === 'STAFF' && (
+            <CreateBookingDialog
+              onBookingCreated={() => {
+                // Refresh bookings list after creating new booking
+                fetchBookings(pagination.currentPage);
+              }}
+            />
+          )}
           <Button
             onClick={() => fetchBookings(pagination.currentPage)}
             variant='outline'
@@ -371,16 +375,15 @@ const BookingManagement = () => {
               {statusFilter === 'ALL'
                 ? t('booking.filters.statusAll')
                 : t(
-                    `booking.status.${
-                      {
-                        PENDING: 'pending',
-                        CONFIRMED: 'confirmed',
-                        IN_PROGRESS: 'inProgress',
-                        COMPLETED: 'completed',
-                        CANCELLED: 'cancelled',
-                      }[statusFilter]
-                    }`
-                  )}
+                  `booking.status.${{
+                    PENDING: 'pending',
+                    CONFIRMED: 'confirmed',
+                    IN_PROGRESS: 'inProgress',
+                    COMPLETED: 'completed',
+                    CANCELLED: 'cancelled',
+                  }[statusFilter]
+                  }`
+                )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
@@ -423,12 +426,11 @@ const BookingManagement = () => {
               {depositFilter === 'ALL'
                 ? t('booking.filters.depositAll')
                 : depositFilter === 'PENDING'
-                ? t('booking.filters.deposit.pendingPayment')
-                : t(
-                    `booking.depositStatus.${
-                      { PAID: 'paid', FAILED: 'failed', REFUNDED: 'refunded' }[
-                        depositFilter
-                      ]
+                  ? t('booking.filters.deposit.pendingPayment')
+                  : t(
+                    `booking.depositStatus.${{ PAID: 'paid', FAILED: 'failed', REFUNDED: 'refunded' }[
+                    depositFilter
+                    ]
                     }`
                   )}
             </Button>
@@ -674,17 +676,17 @@ const BookingManagement = () => {
                         {!['COMPLETED', 'CANCELLED', 'CONFIRMED'].includes(
                           booking.status
                         ) && (
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setBookingToCancel(booking.id);
-                              setCancelDialogOpen(true);
-                            }}
-                            className='text-red-600'
-                          >
-                            <Ban className='mr-2 h-4 w-4' />
-                            {t('booking.actions.cancelBooking')}
-                          </DropdownMenuItem>
-                        )}
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setBookingToCancel(booking.id);
+                                setCancelDialogOpen(true);
+                              }}
+                              className='text-red-600'
+                            >
+                              <Ban className='mr-2 h-4 w-4' />
+                              {t('booking.actions.cancelBooking')}
+                            </DropdownMenuItem>
+                          )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

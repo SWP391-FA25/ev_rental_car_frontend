@@ -159,17 +159,35 @@ export default function CheckInCar() {
         const resData = await getAllBookings({ limit: 100 });
         const allBookings = resData?.bookings || resData || [];
 
+        console.log('🔍 Total bookings from API:', allBookings.length);
+        console.log('👤 Staff assigned to station:', {
+          stationId: staffAssignment.station.id,
+          stationName: staffAssignment.station.name,
+        });
+
         // Filter by staff's assigned station
         const list = allBookings.filter(b => {
           const status = (b.status || b.bookingStatus || '').toUpperCase();
           const bookingStationId = b.station?.id || b.stationId;
 
+          // Debug each booking
+          const isConfirmed = status === 'CONFIRMED';
+          const isSameStation = bookingStationId === staffAssignment.station.id;
+
+          console.log(`📦 Booking ${b.id || b.bookingCode}:`, {
+            status,
+            isConfirmed,
+            bookingStationId,
+            bookingStationName: b.station?.name,
+            isSameStation,
+            willShow: isConfirmed && isSameStation
+          });
+
           // Show bookings that:
-          // 1. Not canceled
+          // 1. Status is CONFIRMED only
           // 2. Belong to staff's assigned station
           return (
-            status !== 'CANCELED' &&
-            status !== 'CANCELLED' &&
+            status === 'CONFIRMED' &&
             bookingStationId === staffAssignment.station.id
           );
         });
@@ -300,12 +318,12 @@ export default function CheckInCar() {
       statusUpper === 'CONFIRMED'
         ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
         : statusUpper === 'IN_PROGRESS'
-        ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
-        : statusUpper === 'COMPLETED'
-        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-        : statusUpper === 'PENDING'
-        ? 'bg-slate-100 text-slate-700 dark:bg-slate-800/50 dark:text-slate-300'
-        : 'bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-300';
+          ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
+          : statusUpper === 'COMPLETED'
+            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+            : statusUpper === 'PENDING'
+              ? 'bg-slate-100 text-slate-700 dark:bg-slate-800/50 dark:text-slate-300'
+              : 'bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-300';
     return (
       <span
         className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${cls}`}
@@ -615,8 +633,7 @@ export default function CheckInCar() {
 
     if (totalAfterUpload > 10) {
       toast.error(
-        `Maximum 10 images allowed. You have ${existingImagesCount} existing + ${currentNewCount} new. Can only add ${
-          10 - existingImagesCount - currentNewCount
+        `Maximum 10 images allowed. You have ${existingImagesCount} existing + ${currentNewCount} new. Can only add ${10 - existingImagesCount - currentNewCount
         } more.`
       );
       return;
@@ -901,18 +918,17 @@ export default function CheckInCar() {
         console.warn('Check-in booking failed:', checkInErr);
         toast.error(
           checkInErr?.response?.data?.message ||
-            checkInErr?.message ||
-            'Check-in failed'
+          checkInErr?.message ||
+          'Check-in failed'
         );
         return;
       }
 
       const customerName = booking?.user?.name || booking?.renter?.name || '';
-      const vehicleLabel = `${booking?.vehicle?.name || ''}${
-        booking?.vehicle?.licensePlate
-          ? ' • ' + booking.vehicle.licensePlate
-          : ''
-      }`.trim();
+      const vehicleLabel = `${booking?.vehicle?.name || ''}${booking?.vehicle?.licensePlate
+        ? ' • ' + booking.vehicle.licensePlate
+        : ''
+        }`.trim();
 
       setCheckInSummary({
         bookingId: id,
@@ -1285,11 +1301,10 @@ export default function CheckInCar() {
                             <button
                               key={b.id}
                               onClick={() => handleSelectBooking(b.id)}
-                              className={`w-full text-left p-4 rounded-md transition-all ${
-                                isSelected
-                                  ? 'bg-primary text-primary-foreground'
-                                  : 'hover:bg-accent'
-                              }`}
+                              className={`w-full text-left p-4 rounded-md transition-all ${isSelected
+                                ? 'bg-primary text-primary-foreground'
+                                : 'hover:bg-accent'
+                                }`}
                             >
                               <div className='flex items-start justify-between gap-3'>
                                 <div className='flex-1 space-y-2'>
@@ -1298,11 +1313,10 @@ export default function CheckInCar() {
                                     <div className='flex items-center gap-1.5'>
                                       <User className='h-3.5 w-3.5' />
                                       <span
-                                        className={`font-semibold text-sm ${
-                                          isSelected
-                                            ? 'text-primary-foreground'
-                                            : 'text-foreground'
-                                        }`}
+                                        className={`font-semibold text-sm ${isSelected
+                                          ? 'text-primary-foreground'
+                                          : 'text-foreground'
+                                          }`}
                                       >
                                         {b.user?.name ||
                                           b.customer?.name ||
@@ -1321,20 +1335,18 @@ export default function CheckInCar() {
                                     <div className='flex items-center gap-1.5'>
                                       <Car className='h-3.5 w-3.5' />
                                       <span
-                                        className={`text-sm ${
-                                          isSelected
-                                            ? 'text-primary-foreground'
-                                            : 'text-foreground'
-                                        }`}
+                                        className={`text-sm ${isSelected
+                                          ? 'text-primary-foreground'
+                                          : 'text-foreground'
+                                          }`}
                                       >
                                         {b.vehicle?.name || 'Vehicle'}
                                         {b.vehicle?.licensePlate && (
                                           <span
-                                            className={`font-mono ml-1.5 px-1.5 py-0.5 rounded text-xs ${
-                                              isSelected
-                                                ? 'bg-primary-foreground/20 text-primary-foreground'
-                                                : 'bg-muted text-muted-foreground'
-                                            }`}
+                                            className={`font-mono ml-1.5 px-1.5 py-0.5 rounded text-xs ${isSelected
+                                              ? 'bg-primary-foreground/20 text-primary-foreground'
+                                              : 'bg-muted text-muted-foreground'
+                                              }`}
                                           >
                                             {b.vehicle.licensePlate}
                                           </span>
@@ -1345,11 +1357,10 @@ export default function CheckInCar() {
 
                                   {/* Date & Code */}
                                   <div
-                                    className={`flex items-center gap-3 text-xs ${
-                                      isSelected
-                                        ? 'text-primary-foreground/80'
-                                        : 'text-muted-foreground'
-                                    }`}
+                                    className={`flex items-center gap-3 text-xs ${isSelected
+                                      ? 'text-primary-foreground/80'
+                                      : 'text-muted-foreground'
+                                      }`}
                                   >
                                     <div className='flex items-center gap-1.5'>
                                       <Calendar className='h-3 w-3' />
@@ -2168,8 +2179,8 @@ export default function CheckInCar() {
             {isEditMode
               ? 'Update Inspection'
               : isViewMode
-              ? 'View Inspection'
-              : 'Complete Check-In'}
+                ? 'View Inspection'
+                : 'Complete Check-In'}
           </CardTitle>
         </CardHeader>
         <CardContent className='flex items-center justify-between gap-3'>
@@ -2178,8 +2189,8 @@ export default function CheckInCar() {
               {isEditMode
                 ? 'Modify the inspection details and save changes.'
                 : isViewMode
-                ? 'Viewing existing inspection record. Click Edit to modify.'
-                : 'Review all information and complete vehicle check-in process.'}
+                  ? 'Viewing existing inspection record. Click Edit to modify.'
+                  : 'Review all information and complete vehicle check-in process.'}
             </p>
           </div>
           <div className='flex gap-2'>
@@ -2198,8 +2209,8 @@ export default function CheckInCar() {
                 {isSubmitting
                   ? 'Processing...'
                   : isEditMode
-                  ? 'Save Changes'
-                  : 'Complete Check-In'}
+                    ? 'Save Changes'
+                    : 'Complete Check-In'}
               </Button>
             )}
           </div>
