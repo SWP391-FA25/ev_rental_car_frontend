@@ -151,8 +151,8 @@ export default function StaffManagement() {
             console.error('Failed to unassign staff:', unassignErr);
             toast.error(
               'Failed to unassign staff: ' +
-                (unassignErr?.response?.data?.message ||
-                  unassignErr?.message)
+              (unassignErr?.response?.data?.message ||
+                unassignErr?.message)
             );
             return; // Stop deletion if unassign fails
           }
@@ -303,6 +303,40 @@ export default function StaffManagement() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+      </div>
+
+      {/* Summary Stats */}
+      <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold'>{staff.length}</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('staffManagement.stats.total')}
+          </div>
+        </div>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold'>
+            {staff.filter(s => s.accountStatus === 'ACTIVE').length}
+          </div>
+          <div className='text-sm text-muted-foreground'>
+            {t('staffManagement.stats.active')}
+          </div>
+        </div>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold'>
+            {staff.filter(s => s.role === 'STAFF').length}
+          </div>
+          <div className='text-sm text-muted-foreground'>
+            {t('staffManagement.stats.staff')}
+          </div>
+        </div>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold'>
+            {staff.filter(s => s.role === 'ADMIN').length}
+          </div>
+          <div className='text-sm text-muted-foreground'>
+            {t('staffManagement.stats.admins')}
+          </div>
+        </div>
       </div>
 
       {/* Table */}
@@ -474,40 +508,6 @@ export default function StaffManagement() {
             )}
           </TableBody>
         </Table>
-      </div>
-
-      {/* Summary Stats */}
-      <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
-        <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>{staff.length}</div>
-          <div className='text-sm text-muted-foreground'>
-            {t('staffManagement.stats.total')}
-          </div>
-        </div>
-        <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>
-            {staff.filter(s => s.accountStatus === 'ACTIVE').length}
-          </div>
-          <div className='text-sm text-muted-foreground'>
-            {t('staffManagement.stats.active')}
-          </div>
-        </div>
-        <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>
-            {staff.filter(s => s.role === 'STAFF').length}
-          </div>
-          <div className='text-sm text-muted-foreground'>
-            {t('staffManagement.stats.staff')}
-          </div>
-        </div>
-        <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>
-            {staff.filter(s => s.role === 'ADMIN').length}
-          </div>
-          <div className='text-sm text-muted-foreground'>
-            {t('staffManagement.stats.admins')}
-          </div>
-        </div>
       </div>
 
       {/* Staff Form Dialog */}

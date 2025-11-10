@@ -124,10 +124,6 @@ export default function BookingManagement() {
             Manage customer bookings and reservations
           </p>
         </div>
-        <Button>
-          <PlusIcon className='mr-2 h-4 w-4' />
-          New Booking
-        </Button>
       </div>
 
       {/* Filters */}
