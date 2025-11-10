@@ -7,6 +7,7 @@ import Settings from '@/features/admin/pages/Settings.jsx';
 import StaffManagement from '@/features/admin/pages/StaffManagement.jsx';
 import StationManagement from '@/features/admin/pages/StationManagement.jsx';
 import UserManagement from '@/features/admin/pages/UserManagement.jsx';
+import BookingManagement from '@/features/staff/components/booking-management.jsx';
 import ForgotPassword from '@/features/auth/components/ForgotPassword.jsx';
 import Login from '@/features/auth/components/Login.jsx';
 import ResetPassword from '@/features/auth/components/ResetPassword.jsx';
@@ -62,6 +63,7 @@ export const router = createBrowserRouter([
         ),
         children: [
           { index: true, element: <Dashboard /> },
+          { path: 'bookings', element: <BookingManagement /> },
           { path: 'users', element: <UserManagement /> },
           { path: 'users/:id', element: <Profile /> },
           { path: 'staff', element: <StaffManagement /> },

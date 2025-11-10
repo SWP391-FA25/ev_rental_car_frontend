@@ -448,12 +448,15 @@ const BookingManagement = () => {
           <p className='text-muted-foreground'>{t('booking.subtitle')}</p>
         </div>
         <div className='flex items-center gap-3'>
-          <CreateBookingDialog
-            onBookingCreated={() => {
-              // Refresh bookings list after creating new booking
-              fetchBookings(pagination.currentPage, searchTerm, statusFilter);
-            }}
-          />
+          {/* Only show Create Booking for STAFF, not ADMIN */}
+          {user?.role === 'STAFF' && (
+            <CreateBookingDialog
+              onBookingCreated={() => {
+                // Refresh bookings list after creating new booking
+                fetchBookings(pagination.currentPage, searchTerm, statusFilter);
+              }}
+            />
+          )}
           <Button
             onClick={() =>
               fetchBookings(pagination.currentPage, searchTerm, statusFilter)
@@ -486,16 +489,15 @@ const BookingManagement = () => {
               {statusFilter === 'ALL'
                 ? t('booking.filters.statusAll')
                 : t(
-                    `booking.status.${
-                      {
-                        PENDING: 'pending',
-                        CONFIRMED: 'confirmed',
-                        IN_PROGRESS: 'inProgress',
-                        COMPLETED: 'completed',
-                        CANCELLED: 'cancelled',
-                      }[statusFilter]
-                    }`
-                  )}
+                  `booking.status.${{
+                    PENDING: 'pending',
+                    CONFIRMED: 'confirmed',
+                    IN_PROGRESS: 'inProgress',
+                    COMPLETED: 'completed',
+                    CANCELLED: 'cancelled',
+                  }[statusFilter]
+                  }`
+                )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
