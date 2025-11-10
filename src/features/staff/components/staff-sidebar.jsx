@@ -53,7 +53,7 @@ const data = {
   staff: {
     name: 'John Smith',
     email: 'john.smith@company.com',
-    avatar: '/api/placeholder/32/32',
+    avatar: null,
     role: 'Station Manager',
     station: 'Downtown Station',
   },
@@ -365,7 +365,7 @@ function StaffUser({ staff, setActiveTab }) {
             onClick={handleProfileClick}
           >
             <Avatar className='h-8 w-8 rounded-lg'>
-              <AvatarImage src={staff.avatar} alt={staff.name} />
+              <AvatarImage src={staff?.avatar ?? undefined} alt={staff?.name || 'Staff member'} />
               <AvatarFallback className='rounded-lg'>
                 {staff.name
                   .split(' ')
@@ -394,7 +394,13 @@ function StaffUser({ staff, setActiveTab }) {
   );
 }
 
-export function StaffSidebar({ staff, menuItems, setActiveTab, ...props }) {
+export function StaffSidebar({
+  staff,
+  menuItems,
+  activeTab,
+  setActiveTab,
+  ...props
+}) {
   // Keep original order from menuItems prop
   const orderedMenuItems = Array.isArray(menuItems) ? menuItems : [];
   const translateLabel = label => {
@@ -445,6 +451,9 @@ export function StaffSidebar({ staff, menuItems, setActiveTab, ...props }) {
                             <SidebarMenuSubItem key={subItem.id}>
                               <SidebarMenuSubButton
                                 onClick={() => setActiveTab(subItem.id)}
+                                aria-current={
+                                  activeTab === subItem.id ? 'page' : undefined
+                                }
                               >
                                 <span>{translateLabel(subItem.label)}</span>
                               </SidebarMenuSubButton>

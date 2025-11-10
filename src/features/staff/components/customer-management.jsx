@@ -190,7 +190,7 @@ function CustomerCheckIn() {
           name: renter.name,
           email: renter.email,
           phone: renter.phone,
-          avatar: renter.avatar || '/api/placeholder/32/32',
+          avatar: renter.avatar || null,
           status: 'Pending Check-in',
           currentBooking: renter.currentBooking || null,
           verificationStatus: {
@@ -300,8 +300,8 @@ function CustomerCheckIn() {
                         <div className='flex items-center gap-4'>
                           <Avatar className='h-12 w-12'>
                             <AvatarImage
-                              src={customer.avatar}
-                              alt={customer.name}
+                              src={customer.avatar ?? undefined}
+                              alt={customer.name || 'Customer'}
                             />
                             <AvatarFallback>
                               {(customer.name ?? '')
@@ -795,7 +795,7 @@ function CustomerSupport() {
           email: renter.email,
           phone: renter.phone,
           createdAt: renter.createdAt || renter.created_at || null,
-          avatar: renter.avatar || '/api/placeholder/32/32',
+          avatar: renter.avatar || null,
           // Map trạng thái dựa trên accountStatus thay vì isActive để tránh hiển thị sai
           status:
             renter.accountStatus === 'ACTIVE'
