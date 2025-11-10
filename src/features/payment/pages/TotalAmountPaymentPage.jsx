@@ -9,6 +9,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from '../../shared/lib/toast';
 import { paymentService } from '../services/paymentService';
+import { env } from '@/features/shared/lib/env';
 
 export default function TotalAmountPaymentPage() {
   const [searchParams] = useSearchParams();
@@ -53,10 +54,16 @@ export default function TotalAmountPaymentPage() {
         totalAmount,
       });
 
+      // Chuẩn bị 2 URL cho success/cancel (đi qua backend để cập nhật trạng thái trước khi về frontend)
+      const successUrl = `${env.apiBaseUrl}/api/payos/success?bookingId=${bookingId}`;
+      const cancelUrl = `${env.apiBaseUrl}/api/payos/failure?bookingId=${bookingId}`;
+
       const result = await paymentService.createRentalFeePayment(
         bookingId,
         totalAmount,
-        `Rental Fee ${bookingId.substring(0, 8)}`
+        `Rental Fee ${bookingId.substring(0, 8)}`,
+        successUrl,
+        cancelUrl
       );
 
       if (!result?.paymentUrl) {
