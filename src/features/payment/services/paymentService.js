@@ -34,12 +34,14 @@ export const paymentService = {
   },
 
   // Tạo payment link cho rental fee
-  async createRentalFeePayment(bookingId, amount, description) {
+  async createRentalFeePayment(bookingId, amount, description, successUrl, cancelUrl) {
     try {
       console.log('PaymentService - RentalFee - Sending request:', {
         bookingId,
         amount,
         description: description || `Rental Fee ${bookingId.substring(0, 8)}`,
+        successUrl,
+        cancelUrl,
       });
 
       // PayOS yêu cầu số tiền là số nguyên > 0 (VND)
@@ -51,6 +53,10 @@ export const paymentService = {
           bookingId,
           amount: normalizedAmount,
           description: description || `Rental Fee ${bookingId.substring(0, 8)}`,
+          // Truyền thêm 2 URL để backend thiết lập return/cancel khi tạo link PayOS
+          // Backend có thể bỏ qua nếu không hỗ trợ, nhưng giữ để tương thích về sau
+          successUrl,
+          cancelUrl,
         }
       );
 

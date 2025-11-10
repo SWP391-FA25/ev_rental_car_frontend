@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useTranslation } from 'react-i18next'
 import { Upload, CheckCircle, AlertCircle, FileText, X, AlertTriangle } from "lucide-react"
 import { Button } from "../../../shared/components/ui/button"
 import { Card } from "../../../shared/components/ui/card"
@@ -10,6 +11,7 @@ import { toast } from "sonner"
 import { useAuth } from "../../../../app/providers/AuthProvider"
 
 export function ContractUploadForm({ bookingId, contractId, onSuccess, onCancel, customerName }) {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const [formData, setFormData] = useState({
     renterName: customerName || "",
@@ -38,32 +40,32 @@ export function ContractUploadForm({ bookingId, contractId, onSuccess, onCancel,
     const newErrors = {}
 
     if (!formData.renterName.trim()) {
-      newErrors.renterName = "Vui lòng nhập tên khách hàng"
+      newErrors.renterName = t('staffContracts.uploadForm.errors.renterNameRequired')
     } else if (formData.renterName.length < 2 || formData.renterName.length > 100) {
-      newErrors.renterName = "Tên khách hàng phải từ 2-100 ký tự"
+      newErrors.renterName = t('staffContracts.uploadForm.errors.renterNameLength')
     }
 
     if (!formData.witnessName.trim()) {
-      newErrors.witnessName = "Vui lòng nhập tên người chứng kiến"
+      newErrors.witnessName = t('staffContracts.uploadForm.errors.witnessNameRequired')
     } else if (formData.witnessName.length < 2 || formData.witnessName.length > 100) {
-      newErrors.witnessName = "Tên người chứng kiến phải từ 2-100 ký tự"
+      newErrors.witnessName = t('staffContracts.uploadForm.errors.witnessNameLength')
     }
 
     if (formData.notes && formData.notes.length > 500) {
-      newErrors.notes = "Ghi chú không được vượt quá 500 ký tự"
+      newErrors.notes = t('staffContracts.uploadForm.errors.notesLength')
     }
 
     if (!formData.file) {
-      newErrors.file = "Vui lòng chọn file hợp đồng"
+      newErrors.file = t('staffContracts.uploadForm.errors.fileRequired')
     } else {
       const maxSize = 10 * 1024 * 1024 // 10MB
       if (formData.file.size > maxSize) {
-        newErrors.file = "File không được vượt quá 10MB"
+        newErrors.file = t('staffContracts.uploadForm.errors.fileTooLarge')
       }
 
       const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"]
       if (!allowedTypes.includes(formData.file.type)) {
-        newErrors.file = "Chỉ hỗ trợ file PDF, JPG, PNG"
+        newErrors.file = t('staffContracts.uploadForm.errors.fileInvalidType')
       }
     }
 
@@ -233,7 +235,7 @@ export function ContractUploadForm({ bookingId, contractId, onSuccess, onCancel,
           {/* Renter Name - Read Only */}
           <div>
             <label className="block text-sm font-semibold text-slate-900 mb-1.5">
-              Tên khách hàng <span className="text-red-600">*</span>
+              {t('staffContracts.uploadForm.renterNameLabel')} <span className="text-red-600">*</span>
             </label>
             <Input
               type="text"
@@ -241,13 +243,13 @@ export function ContractUploadForm({ bookingId, contractId, onSuccess, onCancel,
               readOnly
               className="bg-slate-100 border-2 border-slate-200 text-slate-700 cursor-not-allowed"
             />
-            <p className="text-xs text-slate-500 mt-1">Tự động lấy từ thông tin booking</p>
+            <p className="text-xs text-slate-500 mt-1">{t('staffContracts.uploadForm.autoBooking')}</p>
           </div>
 
           {/* Witness Name - Read Only */}
           <div>
             <label className="block text-sm font-semibold text-slate-900 mb-1.5">
-              Tên người chứng kiến <span className="text-red-600">*</span>
+              {t('staffContracts.uploadForm.witnessNameLabel')} <span className="text-red-600">*</span>
             </label>
             <Input
               type="text"
@@ -255,27 +257,27 @@ export function ContractUploadForm({ bookingId, contractId, onSuccess, onCancel,
               readOnly
               className="bg-slate-100 border-2 border-slate-200 text-slate-700 cursor-not-allowed"
             />
-            <p className="text-xs text-slate-500 mt-1">Tự động lấy từ thông tin nhân viên</p>
+            <p className="text-xs text-slate-500 mt-1">{t('staffContracts.uploadForm.autoStaff')}</p>
           </div>
 
           {/* Notes */}
           <div>
-            <label className="block text-sm font-semibold text-slate-900 mb-1.5">Ghi chú</label>
+            <label className="block text-sm font-semibold text-slate-900 mb-1.5">{t('staffContracts.uploadForm.notesLabel')}</label>
             <textarea
               value={formData.notes}
               onChange={(e) => handleInputChange("notes", e.target.value)}
-              placeholder="Nhập ghi chú (tối đa 500 ký tự)"
+              placeholder={t('staffContracts.uploadForm.notesPlaceholder')}
               maxLength={500}
               rows={3}
               className="w-full px-3 py-2 border-2 border-slate-200 rounded-lg bg-white text-slate-900 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 resize-none text-sm"
             />
-            <p className="text-xs text-slate-500 mt-1">{formData.notes.length}/500 ký tự</p>
+            <p className="text-xs text-slate-500 mt-1">{formData.notes.length}/500 {t('staffContracts.uploadForm.notesCountSuffix')}</p>
           </div>
 
           {/* File Upload */}
           <div>
             <label className="block text-sm font-semibold text-slate-900 mb-1.5">
-              Tải lên file hợp đồng <span className="text-red-600">*</span>
+              {t('staffContracts.uploadForm.fileLabel')} <span className="text-red-600">*</span>
             </label>
 
             {formData.file ? (
@@ -299,8 +301,8 @@ export function ContractUploadForm({ bookingId, contractId, onSuccess, onCancel,
               <label className="block">
                 <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-blue-400 hover:bg-blue-50 transition-colors cursor-pointer">
                   <Upload className="w-10 h-10 text-slate-400 mx-auto mb-2" />
-                  <p className="font-semibold text-slate-900 text-sm mb-1">Chọn file hoặc kéo thả</p>
-                  <p className="text-xs text-slate-600">PDF, JPG, PNG (Tối đa 10MB)</p>
+                  <p className="font-semibold text-slate-900 text-sm mb-1">{t('staffContracts.uploadForm.chooseOrDrag')}</p>
+                  <p className="text-xs text-slate-600">{t('staffContracts.uploadForm.acceptedTypes')}</p>
                 </div>
                 <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange} className="hidden" />
               </label>
@@ -318,7 +320,7 @@ export function ContractUploadForm({ bookingId, contractId, onSuccess, onCancel,
             onClick={handleCancel}
             disabled={loading}
           >
-            Hủy
+            {t('staffContracts.uploadForm.cancel')}
           </Button>
           <Button
             type="submit"
@@ -328,12 +330,12 @@ export function ContractUploadForm({ bookingId, contractId, onSuccess, onCancel,
             {loading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                Đang tải lên...
+                {t('staffContracts.uploadForm.uploading')}
               </>
             ) : (
               <>
                 <Upload className="w-4 h-4 mr-2" />
-                Tải lên
+                {t('staffContracts.uploadForm.upload')}
               </>
             )}
           </Button>
@@ -342,7 +344,7 @@ export function ContractUploadForm({ bookingId, contractId, onSuccess, onCancel,
         {/* Info Box - Compact */}
         <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
           <p className="text-xs text-slate-600">
-            <span className="font-semibold">Yêu cầu:</span> PDF/JPG/PNG, tối đa 10MB, hợp đồng đã ký đầy đủ, hình ảnh rõ ràng
+            <span className="font-semibold">{t('staffContracts.uploadForm.requirements.label')}</span> {t('staffContracts.uploadForm.requirements.text')}
           </p>
         </div>
       </form>
@@ -356,31 +358,31 @@ export function ContractUploadForm({ bookingId, contractId, onSuccess, onCancel,
                 <AlertTriangle className="w-6 h-6 text-amber-600" />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-bold text-slate-900 mb-2">Xác nhận tải lên hợp đồng</h3>
+                <h3 className="text-lg font-bold text-slate-900 mb-2">{t('staffContracts.uploadForm.confirm.title')}</h3>
                 <p className="text-sm text-slate-600 mb-4">
-                  Vui lòng kiểm tra kỹ các thông tin trước khi tải lên:
+                  {t('staffContracts.uploadForm.confirm.description')}
                 </p>
                 <ul className="space-y-2 text-sm text-slate-700 mb-4">
                   <li className="flex items-start gap-2">
                     <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                    <span>Hợp đồng đã được ký đầy đủ bởi khách hàng</span>
+                    <span>{t('staffContracts.uploadForm.confirm.items.signedByCustomer')}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                    <span>Thông tin khách hàng và người chứng kiến chính xác</span>
+                    <span>{t('staffContracts.uploadForm.confirm.items.accurateInfo')}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                    <span>File hợp đồng rõ ràng, không bị mờ hoặc thiếu trang</span>
+                    <span>{t('staffContracts.uploadForm.confirm.items.clearFile')}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                    <span>Tất cả các điều khoản đã được giải thích cho khách hàng</span>
+                    <span>{t('staffContracts.uploadForm.confirm.items.explainedTerms')}</span>
                   </li>
                 </ul>
                 <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <p className="text-xs text-blue-800">
-                    <span className="font-semibold">Lưu ý:</span> Sau khi tải lên, hợp đồng sẽ được lưu vào hệ thống và không thể chỉnh sửa.
+                    <span className="font-semibold">{t('staffContracts.uploadForm.confirm.noteTitle')}</span> {t('staffContracts.uploadForm.confirm.noteContent')}
                   </p>
                 </div>
               </div>
@@ -393,7 +395,7 @@ export function ContractUploadForm({ bookingId, contractId, onSuccess, onCancel,
                 className="flex-1 border-slate-300 text-slate-700 hover:bg-slate-50"
                 onClick={() => setShowConfirmDialog(false)}
               >
-                Hủy bỏ
+                {t('staffContracts.uploadForm.confirm.cancel')}
               </Button>
               <Button
                 type="button"
@@ -401,7 +403,7 @@ export function ContractUploadForm({ bookingId, contractId, onSuccess, onCancel,
                 onClick={handleConfirmUpload}
               >
                 <CheckCircle className="w-4 h-4 mr-2" />
-                Xác nhận tải lên
+                {t('staffContracts.uploadForm.confirm.confirmUpload')}
               </Button>
             </div>
           </div>

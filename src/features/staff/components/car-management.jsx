@@ -347,6 +347,42 @@ export default function VehicleManagement() {
         </DropdownMenu>
       </div>
 
+      {/* Summary Stats */}
+      <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold text-gray-600'>
+            {vehicles.length}
+          </div>
+          <div className='text-sm text-muted-foreground'>
+            {t('vehicle.stats.total')}
+          </div>
+        </div>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold text-green-600'>
+            {vehicles.filter(v => v.status === 'AVAILABLE').length}
+          </div>
+          <div className='text-sm text-muted-foreground'>
+            {t('vehicle.stats.available')}
+          </div>
+        </div>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold text-red-600'>
+            {vehicles.filter(v => v.status === 'RENTED').length}
+          </div>
+          <div className='text-sm text-muted-foreground'>
+            {t('vehicle.stats.rented')}
+          </div>
+        </div>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold text-amber-800'>
+            {vehicles.filter(v => v.fuelType === 'ELECTRIC').length}
+          </div>
+          <div className='text-sm text-muted-foreground'>
+            {t('vehicle.stats.electric')}
+          </div>
+        </div>
+      </div>
+
       <div className='rounded-md border'>
         <Table>
           <TableHeader>
@@ -454,40 +490,6 @@ export default function VehicleManagement() {
             })}
           </TableBody>
         </Table>
-      </div>
-
-      {/* Summary Stats */}
-      <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
-        <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>{vehicles.length}</div>
-          <div className='text-sm text-muted-foreground'>
-            {t('vehicle.stats.total')}
-          </div>
-        </div>
-        <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>
-            {vehicles.filter(v => v.status === 'AVAILABLE').length}
-          </div>
-          <div className='text-sm text-muted-foreground'>
-            {t('vehicle.stats.available')}
-          </div>
-        </div>
-        <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>
-            {vehicles.filter(v => v.status === 'RENTED').length}
-          </div>
-          <div className='text-sm text-muted-foreground'>
-            {t('vehicle.stats.rented')}
-          </div>
-        </div>
-        <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>
-            {vehicles.filter(v => v.fuelType === 'ELECTRIC').length}
-          </div>
-          <div className='text-sm text-muted-foreground'>
-            {t('vehicle.stats.electric')}
-          </div>
-        </div>
       </div>
 
       {/* Vehicle Details Dialog */}

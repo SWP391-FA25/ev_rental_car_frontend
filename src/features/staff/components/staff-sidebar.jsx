@@ -6,6 +6,7 @@ import {
   ChevronUp,
   Clock,
   CreditCard,
+  LogOut,
   MapPin,
   Settings,
   User2,
@@ -22,20 +23,12 @@ import {
   AvatarImage,
 } from '../../shared/components/ui/avatar';
 import { Badge } from '../../shared/components/ui/badge';
+import { Button } from '../../shared/components/ui/button';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '../../shared/components/ui/collapsible';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '../../shared/components/ui/dropdown-menu';
 import {
   Sidebar,
   SidebarContent,
@@ -54,14 +47,6 @@ import {
 } from '../../shared/components/ui/sidebar';
 import { apiClient } from '../../shared/lib/apiClient';
 import { endpoints } from '../../shared/lib/endpoints';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '../../shared/components/ui/dialog';
-import StaffProfileContent from './StaffProfileContent';
 import StaffSettingsContent from './StaffSettingsContent';
 
 const data = {
@@ -207,40 +192,36 @@ const data = {
   ],
 };
 
-function StaffNav({ items }) {
+function StaffNav({ items, setActiveTab }) {
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Staff Dashboard</SidebarGroupLabel>
       <SidebarMenu>
         {items.map(item => (
           <Collapsible
-            key={item.title}
-            asChild
-            defaultOpen={item.isActive}
-            className='group/collapsible'
+            key={item.id}
+            className='w-full'
+            // defaultOpen={item.id === 'operations'}
           >
-            <SidebarMenuItem>
-              <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip={item.title}>
-                  {item.icon && <item.icon />}
-                  <span>{item.title}</span>
-                  <ChevronUp className='ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180' />
-                </SidebarMenuButton>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <SidebarMenuSub>
-                  {item.items?.map(subItem => (
-                    <SidebarMenuSubItem key={subItem.title}>
-                      <SidebarMenuSubButton asChild>
-                        <a href={subItem.url}>
-                          <span>{subItem.title}</span>
-                        </a>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                  ))}
-                </SidebarMenuSub>
-              </CollapsibleContent>
-            </SidebarMenuItem>
+            <CollapsibleTrigger asChild>
+              <SidebarMenuButton>
+                {item.icon}
+                <span>{item.label}</span>
+                <ChevronUp className='ml-auto h-4 w-4 shrink-0 transition-transform duration-200' />
+              </SidebarMenuButton>
+            </CollapsibleTrigger>
+            <CollapsibleContent className='pl-4'>
+              <SidebarMenuSub>
+                {item.items.map(subItem => (
+                  <SidebarMenuSubItem
+                    key={subItem.id}
+                    onClick={() => setActiveTab(subItem.id)}
+                  >
+                    {subItem.label}
+                  </SidebarMenuSubItem>
+                ))}
+              </SidebarMenuSub>
+            </CollapsibleContent>
           </Collapsible>
         ))}
       </SidebarMenu>
@@ -355,11 +336,10 @@ function StaffQuickStats({ cars, stations, customers, payments }) {
   );
 }
 
-function StaffUser({ staff }) {
+function StaffUser({ staff, setActiveTab }) {
   const { logout } = useAuth();
   const navigate = useNavigate();
-  const [openProfile, setOpenProfile] = React.useState(false);
-  const [openSettings, setOpenSettings] = React.useState(false);
+
   const handleLogout = async () => {
     try {
       await apiClient.post(endpoints.auth.logout());
@@ -370,118 +350,51 @@ function StaffUser({ staff }) {
       navigate('/');
     }
   };
+
+  const handleProfileClick = () => {
+    setActiveTab('profile');
+  };
+
   return (
     <>
       <SidebarMenu>
         <SidebarMenuItem>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <SidebarMenuButton
-                size='lg'
-                className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
-              >
-                <Avatar className='h-8 w-8 rounded-lg'>
-                  <AvatarImage src={staff.avatar} alt={staff.name} />
-                  <AvatarFallback className='rounded-lg'>
-                    {staff.name
-                      .split(' ')
-                      .map(n => n[0])
-                      .join('')}
-                  </AvatarFallback>
-                </Avatar>
-                <div className='grid flex-1 text-left text-sm leading-tight'>
-                  <span className='truncate font-semibold'>{staff.name}</span>
-                  <span className='truncate text-xs text-muted-foreground'>
-                    {staff.role}
-                  </span>
-                </div>
-                <ChevronUp className='ml-auto size-4' />
-              </SidebarMenuButton>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              className='w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg z-50'
-              side='bottom'
-              align='end'
-              sideOffset={4}
-            >
-              <DropdownMenuLabel className='p-0 font-normal'>
-                <div className='flex items-center gap-2 px-1 py-1.5 text-left text-sm'>
-                  <Avatar className='h-8 w-8 rounded-lg'>
-                    <AvatarImage src={staff.avatar} alt={staff.name} />
-                    <AvatarFallback className='rounded-lg'>
-                      {staff.name
-                        .split(' ')
-                        .map(n => n[0])
-                        .join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className='grid flex-1 text-left text-sm leading-tight'>
-                    <span className='truncate font-semibold'>{staff.name}</span>
-                    <span className='truncate text-xs text-muted-foreground'>
-                      {staff.email}
-                    </span>
-                  </div>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem onClick={() => setOpenProfile(true)}>
-                  <User2 className='mr-2 h-4 w-4' />
-                  <span>Profile</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setOpenSettings(true)}>
-                  <Settings className='mr-2 h-4 w-4' />
-                  <span>Settings</span>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>
-                <span className='mr-2 h-4 w-4' />
-                <span>Logout</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <SidebarMenuButton
+            size='lg'
+            className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
+            onClick={handleProfileClick}
+          >
+            <Avatar className='h-8 w-8 rounded-lg'>
+              <AvatarImage src={staff.avatar} alt={staff.name} />
+              <AvatarFallback className='rounded-lg'>
+                {staff.name
+                  .split(' ')
+                  .map(n => n[0])
+                  .join('')}
+              </AvatarFallback>
+            </Avatar>
+            <div className='grid flex-1 text-left text-sm leading-tight'>
+              <span className='truncate font-semibold'>{staff.name}</span>
+              <span className='truncate text-xs text-muted-foreground'>
+                {staff.role}
+              </span>
+            </div>
+          </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
-
-      {/* Profile Dialog */}
-      <Dialog open={openProfile} onOpenChange={setOpenProfile}>
-        <DialogContent className='w-[95vw] max-w-[900px] max-h-[90vh] overflow-y-auto'>
-          <DialogHeader>
-            <div className='flex items-center gap-2'>
-              <User2 className='h-5 w-5 text-primary' />
-              <DialogTitle>Staff Profile</DialogTitle>
-            </div>
-            <DialogDescription>View and update your personal information</DialogDescription>
-          </DialogHeader>
-          <StaffProfileContent />
-        </DialogContent>
-      </Dialog>
-
-      {/* Settings Dialog */}
-      <Dialog open={openSettings} onOpenChange={setOpenSettings}>
-        <DialogContent className='w-[95vw] max-w-[900px] max-h-[90vh] overflow-y-auto'>
-          <DialogHeader>
-            <div className='flex items-center gap-2'>
-              <Settings className='h-5 w-5 text-primary' />
-              <DialogTitle>System Settings</DialogTitle>
-            </div>
-            <DialogDescription>Customize your system experience</DialogDescription>
-          </DialogHeader>
-          <StaffSettingsContent />
-        </DialogContent>
-      </Dialog>
+      <Button
+        variant='ghost'
+        onClick={handleLogout}
+        className='w-full justify-start'
+      >
+        <LogOut className='mr-2 h-4 w-4' />
+        <span>Logout</span>
+      </Button>
     </>
   );
 }
 
-export function StaffSidebar({
-  staff,
-  activeTab,
-  setActiveTab,
-  menuItems,
-  ...props
-}) {
+export function StaffSidebar({ staff, menuItems, setActiveTab, ...props }) {
   // Keep original order from menuItems prop
   const orderedMenuItems = Array.isArray(menuItems) ? menuItems : [];
   const translateLabel = label => {
@@ -494,7 +407,7 @@ export function StaffSidebar({
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              className='data-[slot=sidebar-menu-button]:!p-1.5'
+              className='data-[slot=sidebar-menu-button]:p-1.5'
             >
               <a href='#'>
                 <Car className='h-5 w-5' />
@@ -516,9 +429,6 @@ export function StaffSidebar({
                   <Collapsible
                     key={item.id}
                     asChild
-                    defaultOpen={item.items.some(
-                      subItem => subItem.id === activeTab
-                    )}
                     className='group/collapsible'
                   >
                     <SidebarMenuItem>
@@ -535,7 +445,6 @@ export function StaffSidebar({
                             <SidebarMenuSubItem key={subItem.id}>
                               <SidebarMenuSubButton
                                 onClick={() => setActiveTab(subItem.id)}
-                                isActive={activeTab === subItem.id}
                               >
                                 <span>{translateLabel(subItem.label)}</span>
                               </SidebarMenuSubButton>
@@ -550,10 +459,7 @@ export function StaffSidebar({
                 // Render as standalone menu item
                 return (
                   <SidebarMenuItem key={item.id}>
-                    <SidebarMenuButton
-                      onClick={() => setActiveTab(item.id)}
-                      isActive={activeTab === item.id}
-                    >
+                    <SidebarMenuButton>
                       {item.icon}
                       <span>{translateLabel(item.label)}</span>
                     </SidebarMenuButton>
@@ -565,7 +471,7 @@ export function StaffSidebar({
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <StaffUser staff={staff || data.staff} />
+        <StaffUser staff={staff || data.staff} setActiveTab={setActiveTab} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

@@ -24,6 +24,7 @@ export default function PaymentSuccessPage() {
   const [depositStatus, setDepositStatus] = useState(null);
   const [isChecking, setIsChecking] = useState(true);
   const [paymentType, setPaymentType] = useState(paymentTypeParam || null);
+  const [paidAmount, setPaidAmount] = useState(null);
   const { t } = useTranslation();
   const [completionTriggered, setCompletionTriggered] = useState(false);
 
@@ -45,6 +46,7 @@ export default function PaymentSuccessPage() {
 
       // If paymentId is available, also check payment status
       let resolvedType = paymentTypeParam || null;
+      let resolvedPaymentId = paymentId || null;
       if (!resolvedType) {
         // Try localStorage context first (frontend-only classification)
         try {
@@ -58,16 +60,31 @@ export default function PaymentSuccessPage() {
             (!paymentId || String(lastPid) === String(paymentId))
           ) {
             resolvedType = lastType;
+            resolvedPaymentId = resolvedPaymentId || lastPid || null;
           }
         } catch {}
       }
 
-      if (paymentId && !resolvedType) {
+      // Fetch payment status to get type and amount
+      if (resolvedPaymentId && !resolvedType) {
         try {
-          const statusRes = await paymentService.getPaymentStatus(paymentId);
+          const statusRes = await paymentService.getPaymentStatus(resolvedPaymentId);
           resolvedType = statusRes?.data?.paymentType || null;
+          const amt = statusRes?.data?.amount;
+          if (typeof amt === 'number') setPaidAmount(amt);
         } catch (paymentError) {
           console.error('Failed to check payment status:', paymentError);
+        }
+      }
+
+      // If type was known but amount not yet set, try fetching amount
+      if (resolvedPaymentId && paidAmount == null) {
+        try {
+          const statusRes = await paymentService.getPaymentStatus(resolvedPaymentId);
+          const amt = statusRes?.data?.amount;
+          if (typeof amt === 'number') setPaidAmount(amt);
+        } catch (paymentError) {
+          console.error('Failed to fetch paid amount:', paymentError);
         }
       }
 
@@ -351,7 +368,7 @@ export default function PaymentSuccessPage() {
                           {t('payment.success.totalPaid')}
                         </span>
                         <span className='text-green-600 font-medium'>
-                          {formatCurrency(booking.totalAmount, 'VND')}
+                          {formatCurrency(paidAmount ?? booking.totalAmount, 'VND')}
                         </span>
                       </div>
                     ) : (

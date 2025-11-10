@@ -1623,7 +1623,8 @@
       "reject": "Reject",
       "download": "Download",
       "batchApprove": "Batch Approve",
-      "batchReject": "Batch Reject"
+      "batchReject": "Batch Reject",
+      "confirmReject": "Confirm Reject"
     },
     "preview": {
       "title": "Document Preview",
@@ -1650,6 +1651,12 @@
       "reason": "Rejection Reason",
       "reasonPlaceholder": "Enter reason for rejection...",
       "submit": "Reject Document"
+    },
+    "batchReject": {
+      "title": "Batch Reject Documents",
+      "description": "Enter a reason to apply to all selected documents.",
+      "reason": "Rejection Reason",
+      "placeholder": "Enter a reason applied to selected documents..."
     },
     "common": {
       "na": "N/A",
@@ -1748,6 +1755,100 @@
       "maintenance": "Maintenance",
       "charging": "Charging",
       "outOfService": "Out of Service"
+    }
+  },
+  "staffContracts": {
+    "title": "Contract Management",
+    "subtitle": "Upload and manage rental contracts for customers",
+    "loading": "Loading data...",
+    "searchPlaceholder": "Search by contract number, customer, plate or branch...",
+    "filters": {
+      "all": "All",
+      "noContract": "Not created",
+      "completed": "Completed"
+    },
+    "table": {
+      "contractNumber": "Contract Number",
+      "customer": "Customer",
+      "vehicleBranch": "Vehicle / Branch",
+      "status": "Status",
+      "createdAt": "Created At",
+      "actions": "Actions"
+    },
+    "actions": {
+      "viewDetails": "View details",
+      "upload": "Upload contract",
+      "download": "Download contract"
+    },
+    "empty": {
+      "noBookings": "No bookings found"
+    },
+    "stats": {
+      "total": "Total",
+      "notCreated": "Not created",
+      "completed": "Completed"
+    },
+    "details": {
+      "contractNumber": "Contract Number",
+      "autoGenerate": "Will be generated automatically",
+      "status": "Status",
+      "customer": "Customer",
+      "vehicle": "Vehicle",
+      "branch": "Branch"
+    },
+    "upload": {
+      "title": "Upload Contract"
+    },
+    "uploadForm": {
+      "renterNameLabel": "Customer name",
+      "witnessNameLabel": "Witness name",
+      "autoBooking": "Auto-filled from booking",
+      "autoStaff": "Auto-filled from staff info",
+      "notesLabel": "Notes",
+      "notesPlaceholder": "Enter notes (max 500 characters)",
+      "notesCountSuffix": "characters",
+      "fileLabel": "Upload contract file",
+      "chooseOrDrag": "Choose file or drag & drop",
+      "acceptedTypes": "PDF, JPG, PNG (Max 10MB)",
+      "cancel": "Cancel",
+      "uploading": "Uploading...",
+      "upload": "Upload",
+      "requirements": {
+        "label": "Requirements:",
+        "text": "PDF/JPG/PNG, max 10MB, fully signed contract, clear images"
+      },
+      "confirm": {
+        "title": "Confirm contract upload",
+        "description": "Please carefully review the information before uploading:",
+        "items": {
+          "signedByCustomer": "Contract is fully signed by the customer",
+          "accurateInfo": "Customer and witness information is accurate",
+          "clearFile": "Contract file is clear, not blurry, and complete",
+          "explainedTerms": "All terms have been explained to the customer"
+        },
+        "noteTitle": "Note:",
+        "noteContent": "After uploading, the contract will be stored and cannot be edited.",
+        "cancel": "Cancel",
+        "confirmUpload": "Confirm upload"
+      },
+      "errors": {
+        "renterNameRequired": "Please enter customer name",
+        "renterNameLength": "Customer name must be 2–100 characters",
+        "witnessNameRequired": "Please enter witness name",
+        "witnessNameLength": "Witness name must be 2–100 characters",
+        "notesLength": "Notes must not exceed 500 characters",
+        "fileRequired": "Please select a contract file",
+        "fileTooLarge": "File must not exceed 10MB",
+        "fileInvalidType": "Only PDF, JPG, PNG are supported"
+      }
+    },
+    "status": {
+      "completed": "Completed",
+      "noContract": "Not created",
+      "unknown": "Unknown"
+    },
+    "common": {
+      "notAvailable": "Not available"
     }
   },
   "staffStations": {

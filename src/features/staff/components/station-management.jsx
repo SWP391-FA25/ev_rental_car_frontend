@@ -209,10 +209,10 @@ export default function StationManagement() {
     setAssignDialogOpen(false);
     const assignedStationId = stationToAssign?.id;
     setStationToAssign(null);
-    
+
     // Refresh stations list
     await loadStations();
-    
+
     // Refresh the assigned station to get updated staff assignments
     if (assignedStationId) {
       try {
@@ -221,14 +221,14 @@ export default function StationManagement() {
         );
         if (response && response.success) {
           const updatedStation = response.data.station;
-          
+
           // Update station in the stations list
           setStations(prev =>
             prev.map(station =>
               station.id === assignedStationId ? updatedStation : station
             )
           );
-          
+
           // If StationDetails is open for this station, refresh it
           if (selectedStation && selectedStation.id === assignedStationId) {
             setSelectedStation(updatedStation);
@@ -351,6 +351,45 @@ export default function StationManagement() {
         </DropdownMenu>
       </div>
 
+      {/* Summary Stats */}
+      <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold text-gray-600'>
+            {stations.length}
+          </div>
+          <div className='text-sm text-muted-foreground'>
+            {t('station.management.slots')}
+          </div>
+        </div>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold text-green-600'>
+            {stations.filter(s => s.status === 'ACTIVE').length}
+          </div>
+          <div className='text-sm text-muted-foreground'>
+            {t('station.form.status.active')}
+          </div>
+        </div>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold text-yellow-600'>
+            {stations.filter(s => s.status === 'MAINTENANCE').length}
+          </div>
+          <div className='text-sm text-muted-foreground'>
+            {t('station.form.status.maintenance')}
+          </div>
+        </div>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold text-emerald-800'>
+            {stations.reduce(
+              (total, station) => total + (station.capacity || 0),
+              0
+            )}
+          </div>
+          <div className='text-sm text-muted-foreground'>
+            {t('station.management.summary.capacity')}
+          </div>
+        </div>
+      </div>
+
       {/* Stations Table */}
       <div className='rounded-md border'>
         <Table>
@@ -440,43 +479,6 @@ export default function StationManagement() {
             ))}
           </TableBody>
         </Table>
-      </div>
-
-      {/* Summary Stats */}
-      <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
-        <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>{stations.length}</div>
-          <div className='text-sm text-muted-foreground'>
-            {t('station.management.slots')}
-          </div>
-        </div>
-        <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>
-            {stations.filter(s => s.status === 'ACTIVE').length}
-          </div>
-          <div className='text-sm text-muted-foreground'>
-            {t('station.form.status.active')}
-          </div>
-        </div>
-        <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>
-            {stations.filter(s => s.status === 'MAINTENANCE').length}
-          </div>
-          <div className='text-sm text-muted-foreground'>
-            {t('station.form.status.maintenance')}
-          </div>
-        </div>
-        <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>
-            {stations.reduce(
-              (total, station) => total + (station.capacity || 0),
-              0
-            )}
-          </div>
-          <div className='text-sm text-muted-foreground'>
-            {t('station.management.summary.capacity')}
-          </div>
-        </div>
       </div>
 
       {/* Station Details Dialog */}

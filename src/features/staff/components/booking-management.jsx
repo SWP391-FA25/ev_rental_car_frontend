@@ -287,6 +287,7 @@ const BookingManagement = () => {
         variant: 'default',
         icon: CheckCircle,
         label: t('booking.status.confirmed'),
+        color: 'text-white bg-emerald-700 border-emerald-700',
       },
       IN_PROGRESS: {
         variant: 'default',

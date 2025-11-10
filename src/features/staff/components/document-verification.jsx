@@ -322,7 +322,7 @@ const DocumentVerification = ({ userId, onVerificationUpdated }) => {
       });
       toast.success(
         t('staffDocuments.toasts.batchApproveSuccess') ||
-        'Approved all pending documents'
+          'Approved all pending documents'
       );
     } catch (err) {
       console.error('Batch approve error:', err);
@@ -811,7 +811,7 @@ const DocumentVerification = ({ userId, onVerificationUpdated }) => {
 
       {/* Reject Document Dialog */}
       <Dialog open={isRejectOpen} onOpenChange={setIsRejectOpen}>
-        <DialogContent className='max-h-[90vh] overflow-y-auto'>
+        <DialogContent className='max-h-[90vh] overflow-y-auto '>
           <DialogHeader>
             <DialogTitle>{t('staffDocuments.reject.title')}</DialogTitle>
           </DialogHeader>
@@ -834,7 +834,7 @@ const DocumentVerification = ({ userId, onVerificationUpdated }) => {
               </div>
 
               <div>
-                <Label htmlFor='rejectionReason'>
+                <Label className='block mb-4' htmlFor='rejectionReason'>
                   {t('staffDocuments.reject.reason')}
                 </Label>
                 <Textarea
@@ -868,11 +868,8 @@ const DocumentVerification = ({ userId, onVerificationUpdated }) => {
             <DialogTitle>{t('staffDocuments.batchReject.title')}</DialogTitle>
           </DialogHeader>
           <div className='space-y-4'>
-            <p className='text-sm text-muted-foreground'>
-              {t('staffDocuments.batchReject.description')}
-            </p>
             <div>
-              <Label htmlFor='batch-rejection-reason'>
+              <Label className='block mb-4' htmlFor='batch-rejection-reason'>
                 {t('staffDocuments.batchReject.reason')}
               </Label>
               <Textarea
@@ -918,7 +915,7 @@ const DocumentVerification = ({ userId, onVerificationUpdated }) => {
                     setDocuments(prev => {
                       const next = prev.map(doc =>
                         doc.user?.id === selectedUserForBatch &&
-                          doc.status === 'PENDING'
+                        doc.status === 'PENDING'
                           ? { ...doc, status: 'REJECTED' }
                           : doc
                       );
