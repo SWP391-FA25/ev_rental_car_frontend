@@ -73,7 +73,7 @@ export function ChartBarDefault() {
                 startDate.setDate(now.getDate() - days)
 
                 const filtered = bookings.filter(b => {
-                    const completedDate = b.actualEndDate || b.endTime || b.createdAt
+                    const completedDate = b.actualEndTime
                     if (!completedDate) return false
                     const d = new Date(completedDate)
                     return (b.status || b.bookingStatus) === 'COMPLETED' && d >= startDate && d <= now
@@ -85,7 +85,7 @@ export function ChartBarDefault() {
                     const revenueByMonth = {}
 
                     filtered.forEach(b => {
-                        const d = new Date(b.actualEndDate || b.endTime || b.createdAt)
+                        const d = new Date(b.actualEndTime)
                         const key = `${d.getFullYear()}-${d.getMonth() + 1}`
                         const base = b.basePrice || 0
                         const insurance = b.insuranceAmount || 0
@@ -114,7 +114,7 @@ export function ChartBarDefault() {
                     const revenueByDay = {}
 
                     filtered.forEach(b => {
-                        const d = new Date(b.actualEndDate || b.endTime || b.createdAt)
+                        const d = new Date(b.actualEndTime)
                         const key = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`
                         const base = b.basePrice || 0
                         const insurance = b.insuranceAmount || 0
