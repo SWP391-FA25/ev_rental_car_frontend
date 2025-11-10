@@ -14,7 +14,7 @@ export default function FavoriteCars() {
     {
       id: 1,
       name: 'Toyota Camry 2023',
-      image: '/api/placeholder/300/200',
+      image: null,
       price: 500000,
       rating: 4.8,
       location: 'Station A - District 1',
@@ -26,7 +26,7 @@ export default function FavoriteCars() {
     {
       id: 2,
       name: 'Honda Civic 2022',
-      image: '/api/placeholder/300/200',
+      image: null,
       price: 450000,
       rating: 4.6,
       location: 'Station B - District 3',
@@ -70,11 +70,17 @@ export default function FavoriteCars() {
             >
               <CardHeader className='p-0'>
                 <div className='relative'>
-                  <img
-                    src={car.image}
-                    alt={car.name}
-                    className='w-full h-48 object-cover rounded-t-lg'
-                  />
+                  {car.image ? (
+                    <img
+                      src={car.image}
+                      alt={car.name}
+                      className='w-full h-48 object-cover rounded-t-lg'
+                    />
+                  ) : (
+                    <div className='w-full h-48 rounded-t-lg bg-muted/50 flex items-center justify-center text-muted-foreground text-sm'>
+                      No image available
+                    </div>
+                  )}
                   <Button
                     size='sm'
                     className='absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white'
