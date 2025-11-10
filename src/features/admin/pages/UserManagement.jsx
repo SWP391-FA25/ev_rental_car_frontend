@@ -122,32 +122,6 @@ export default function UserManagement() {
         </Button>
       </div>
 
-      {/* Stats (moved to top) */}
-      <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-        <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>{users.length}</div>
-          <div className='text-sm text-muted-foreground'>
-            {t('userManagement.stats.totalUsers')}
-          </div>
-        </div>
-        <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>
-            {users.filter(u => u.accountStatus === 'ACTIVE').length}
-          </div>
-          <div className='text-sm text-muted-foreground'>
-            {t('userManagement.stats.activeUsers')}
-          </div>
-        </div>
-        <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>
-            {users.filter(u => u.accountStatus === 'BANNED').length}
-          </div>
-          <div className='text-sm text-muted-foreground'>
-            Banned Users
-          </div>
-        </div>
-      </div>
-
       {/* Filters */}
       <div className='flex items-center space-x-4'>
         <div className='relative flex-1 max-w-sm'>
@@ -181,6 +155,32 @@ export default function UserManagement() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+      </div>
+
+      {/* Summary Stats */}
+      <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold'>{users.length}</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('userManagement.stats.totalUsers')}
+          </div>
+        </div>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold'>
+            {users.filter(u => u.accountStatus === 'ACTIVE').length}
+          </div>
+          <div className='text-sm text-muted-foreground'>
+            {t('userManagement.stats.activeUsers')}
+          </div>
+        </div>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold'>
+            {users.filter(u => u.accountStatus === 'BANNED').length}
+          </div>
+          <div className='text-sm text-muted-foreground'>
+            Banned Users
+          </div>
+        </div>
       </div>
 
       {/* Users Table */}

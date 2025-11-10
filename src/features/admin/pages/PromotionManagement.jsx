@@ -207,6 +207,38 @@ export default function PromotionManagement() {
         </DropdownMenu>
       </div>
 
+      {/* Summary Stats */}
+      <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold'>{stats.total}</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('promotion.stats.total')}
+          </div>
+        </div>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold text-green-600'>
+            {stats.active}
+          </div>
+          <div className='text-sm text-muted-foreground'>
+            {t('promotion.stats.active')}
+          </div>
+        </div>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold text-blue-600'>
+            {stats.upcoming}
+          </div>
+          <div className='text-sm text-muted-foreground'>
+            {t('promotion.stats.upcoming')}
+          </div>
+        </div>
+        <div className='rounded-lg border p-4'>
+          <div className='text-2xl font-bold text-red-600'>{stats.expired}</div>
+          <div className='text-sm text-muted-foreground'>
+            {t('promotion.stats.expired')}
+          </div>
+        </div>
+      </div>
+
       {/* Table */}
       <div className='rounded-md border'>
         <Table>
@@ -301,38 +333,6 @@ export default function PromotionManagement() {
             )}
           </TableBody>
         </Table>
-      </div>
-
-      {/* Stats */}
-      <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
-        <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>{stats.total}</div>
-          <div className='text-sm text-muted-foreground'>
-            {t('promotion.stats.total')}
-          </div>
-        </div>
-        <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold text-green-600'>
-            {stats.active}
-          </div>
-          <div className='text-sm text-muted-foreground'>
-            {t('promotion.stats.active')}
-          </div>
-        </div>
-        <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold text-blue-600'>
-            {stats.upcoming}
-          </div>
-          <div className='text-sm text-muted-foreground'>
-            {t('promotion.stats.upcoming')}
-          </div>
-        </div>
-        <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold text-red-600'>{stats.expired}</div>
-          <div className='text-sm text-muted-foreground'>
-            {t('promotion.stats.expired')}
-          </div>
-        </div>
       </div>
 
       {/* Form & Details */}

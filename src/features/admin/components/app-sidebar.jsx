@@ -86,7 +86,6 @@ export function AppSidebar(props) {
       'Vehicals Management': 'vehiclesManagement',
       'Promotion Management': 'promotionManagement',
       'Notification Management': 'notificationManagement',
-      'Booking Management': 'bookingManagement',
     };
 
     const key = translationKeyMap[item.title];

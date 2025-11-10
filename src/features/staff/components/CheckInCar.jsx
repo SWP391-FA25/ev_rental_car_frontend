@@ -86,6 +86,10 @@ export default function CheckInCar() {
   const [checkInSummary, setCheckInSummary] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [customerDocuments, setCustomerDocuments] = useState(null);
+  const [customerDocumentsList, setCustomerDocumentsList] = useState([]);
+  const [needsDocumentUpload, setNeedsDocumentUpload] = useState(false);
+  const [docFile, setDocFile] = useState(null);
+  const [docType, setDocType] = useState('ID_CARD');
   const [loadingDocuments, setLoadingDocuments] = useState(false);
 
   // ✨ Inspection management states
@@ -111,42 +115,53 @@ export default function CheckInCar() {
 
       try {
         setLoadingAssignment(true);
-        // ✅ Optimized: Get assignment for specific staff only
+        // ✅ Get assignments for specific staff (can be multiple)
         const response = await apiClient.get(
           endpoints.assignments.getByStaffId(user.id)
         );
 
-        if (response.success) {
-          // Check if assignment exists in response
-          const assignment = response.data.assignment || response.data;
+        console.log('📋 API Response:', response);
 
-          if (assignment && assignment.station) {
-            setStaffAssignment(assignment);
+        // Backend returns { success: true, assignments: [...] }
+        const assignments = response.data?.assignments || response.assignments || [];
+
+        console.log('📋 Assignments array:', assignments);
+        console.log('📋 Assignments count:', assignments.length);
+
+        if (assignments && assignments.length > 0) {
+          // Take the first assignment (or you can let user choose if multiple)
+          const firstAssignment = assignments[0];
+
+          if (firstAssignment && firstAssignment.station) {
+            setStaffAssignment(firstAssignment);
             console.log(
               '✅ Staff assigned to station:',
-              assignment.station?.name
+              firstAssignment.station?.name
             );
+            console.log('✅ Total assignments:', assignments.length);
           } else {
-            console.warn('⚠️ Staff not assigned to any station');
+            console.warn('⚠️ Assignment has no station data');
             toast.error(
-              'You are not assigned to any station. Please contact admin.'
+              'Station information is missing. Please contact admin.'
             );
           }
         } else {
-          console.warn('⚠️ No assignment found for staff');
+          console.warn('⚠️ Staff not assigned to any station (empty array)');
           toast.error(
             'You are not assigned to any station. Please contact admin.'
           );
         }
       } catch (error) {
-        console.error('Error fetching staff assignment:', error);
+        console.error('❌ Error fetching staff assignment:', error);
+        console.error('❌ Error response:', error.response?.data);
+
         // If 404, staff has no assignment
         if (error.response?.status === 404) {
           toast.error(
             'You are not assigned to any station. Please contact admin.'
           );
         } else {
-          toast.error('Failed to load station assignment');
+          toast.error('Failed to load station assignment: ' + (error.message || 'Unknown error'));
         }
       } finally {
         setLoadingAssignment(false);
@@ -511,6 +526,11 @@ export default function CheckInCar() {
         response?.data ||
         [];
 
+      // Keep full list (may contain ids/statuses) so we can verify or pick ids
+      const docsArray = Array.isArray(documentsData) ? documentsData : [];
+      setCustomerDocumentsList(docsArray);
+      setNeedsDocumentUpload(docsArray.length === 0);
+
       console.log('📄 Fetched customer documents:', {
         renterId: rentersId,
         count: Array.isArray(documentsData) ? documentsData.length : 0,
@@ -543,11 +563,115 @@ export default function CheckInCar() {
       const errorMsg = err?.response?.data?.message || err?.message;
       if (err?.response?.status === 404) {
         console.log('No documents found for this renter');
+        setCustomerDocumentsList([]);
         setCustomerDocuments(null);
+        setNeedsDocumentUpload(true);
       } else {
         toast.warning(`Could not load customer documents: ${errorMsg}`);
+        setCustomerDocumentsList([]);
         setCustomerDocuments(null);
+        setNeedsDocumentUpload(true);
       }
+    } finally {
+      setLoadingDocuments(false);
+    }
+  };
+
+  // Upload a document on behalf of renter (staff action)
+  const handleUploadCustomerDocument = async () => {
+    if (!booking) return toast.error('Select a booking first');
+    if (!docFile) return toast.error('Please choose a file to upload');
+    const renterId = booking?.renters?.id || booking?.renters || booking?.user?.id || booking?.userId;
+    if (!renterId) return toast.error('Renter ID not found');
+
+    try {
+      setLoadingDocuments(true);
+      const form = new FormData();
+      // ✅ Backend expects field name 'document' (not 'file')
+      form.append('document', docFile, docFile.name);
+      // ✅ Backend gets userId from req.user.id (token), but we send for reference
+      form.append('documentType', docType);
+
+      // ⚠️ NOTE: This endpoint uses the authenticated user's ID from token
+      // If staff needs to upload on behalf of renter, backend may need modification
+      const res = await apiClient.post(endpoints.documents.upload(), form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      const created = res?.data?.data || res?.data;
+      toast.success('Document uploaded successfully');
+      // Refresh documents
+      await fetchCustomerDocuments(renterId);
+      setDocFile(null);
+      setDocType('ID_CARD');
+      setNeedsDocumentUpload(false);
+    } catch (e) {
+      console.error('Upload document error:', e);
+      const msg = e?.response?.data?.message || e?.message;
+      toast.error(msg || 'Failed to upload document');
+    } finally {
+      setLoadingDocuments(false);
+    }
+  };
+
+  // When staff toggles verification checkbox
+  const handleToggleDocumentVerified = async e => {
+    const checked = e.target.checked;
+
+    // If unchecking, simply clear local flag
+    if (!checked) {
+      setDocumentVerified(false);
+      return;
+    }
+
+    // ✅ Check if customer already has APPROVED documents
+    const hasApprovedDocs = customerDocumentsList.some(
+      doc => doc.status === 'APPROVED'
+    );
+
+    if (hasApprovedDocs) {
+      // ✅ Customer already has approved documents
+      // Just set local flag (no API call needed)
+      setDocumentVerified(true);
+      toast.success('Customer documents verified', {
+        description: 'Documents are already approved in the system'
+      });
+      return;
+    }
+
+    // ⚠️ No approved documents - need to verify via API
+    // Find first PENDING document to verify
+    const pendingDoc = customerDocumentsList.find(
+      doc => doc.status === 'PENDING' || doc.status === 'REJECTED'
+    );
+
+    if (!pendingDoc || !pendingDoc.id) {
+      toast.error('No document available to verify', {
+        description: 'Customer needs to upload documents first'
+      });
+      setDocumentVerified(false);
+      return;
+    }
+
+    // Call API to verify/approve the document
+    try {
+      setLoadingDocuments(true);
+      // ✅ Backend uses PATCH method for verify
+      const res = await apiClient.patch(endpoints.documents.verify(pendingDoc.id));
+
+      toast.success('Document verified and approved', {
+        description: 'Document status has been updated to APPROVED'
+      });
+      setDocumentVerified(true);
+
+      // Refresh documents to show updated status
+      const renterId = booking?.renters?.id || booking?.renters || booking?.user?.id || booking?.userId;
+      if (renterId) await fetchCustomerDocuments(renterId);
+    } catch (err) {
+      console.error('Verify document error:', err);
+      const msg = err?.response?.data?.message || err?.message;
+      toast.error(msg || 'Failed to verify document');
+      setDocumentVerified(false);
     } finally {
       setLoadingDocuments(false);
     }
@@ -856,12 +980,32 @@ export default function CheckInCar() {
     const mileageNum = Number(mileage);
     const id = booking?.id || bookingId;
 
-    let uploadedImageUrls = [];
-    let createdInspection = null;
     try {
       setIsSubmitting(true);
 
-      // 1. Tạo inspection trước với images: []
+      // 🔄 STEP 1: Check-in booking FIRST
+      // This ensures booking status changes to IN_PROGRESS and vehicle to RENTED
+      // If this fails, we don't create any inspection record (clean state)
+      console.log('🔄 Step 1: Checking in booking...');
+      const actualPickupLocation =
+        stations?.find?.(s => s.id === selectedStation)?.name ||
+        booking?.station?.name ||
+        '';
+
+      await apiClient.post(endpoints.bookings.checkIn(id), {
+        actualStartTime: new Date().toISOString(),
+        actualPickupLocation,
+        pickupOdometer: mileageNum,
+        batteryLevel: batteryNum,
+      });
+
+      console.log('✅ Step 1 completed: Booking checked in successfully');
+      console.log('   → Booking status: CONFIRMED → IN_PROGRESS');
+      console.log('   → Vehicle status: RESERVED → RENTED');
+
+      // 🔄 STEP 2: Create inspection AFTER successful check-in
+      // Only create inspection when booking is already IN_PROGRESS
+      console.log('🔄 Step 2: Creating inspection record...');
       const inspectionPayload = {
         vehicleId: booking?.vehicle?.id || booking?.vehicleId,
         staffId: user?.id,
@@ -877,62 +1021,55 @@ export default function CheckInCar() {
         damageNotes: damageNotes || undefined,
         notes: notes || undefined,
         documentVerified: documentVerified,
-        // Ban đầu tạo bản ghi dạng draft để upload ảnh
+        // Create as draft first, will mark completed after images uploaded
         isCompleted: false,
         images: [],
       };
 
-      try {
-        const inspectionRes = await apiClient.post(
-          endpoints.inspections.create(),
-          inspectionPayload
-        );
-        createdInspection =
-          inspectionRes?.data?.inspection || inspectionRes?.data || null;
-        console.log('✅ Inspection created:', createdInspection?.id);
-      } catch (insErr) {
-        console.error('Inspection creation failed:', insErr);
-        throw insErr;
+      const inspectionRes = await apiClient.post(
+        endpoints.inspections.create(),
+        inspectionPayload
+      );
+      const createdInspection =
+        inspectionRes?.data?.inspection || inspectionRes?.data || null;
+
+      if (!createdInspection?.id) {
+        throw new Error('Failed to create inspection: No inspection ID returned');
       }
 
-      // 2. Upload images với inspectionId thật (dùng hàm trung tâm, có retry)
-      if (inspectionFiles.length > 0 && createdInspection?.id) {
-        uploadedImageUrls = await uploadInspectionImages(createdInspection.id);
-        if (!uploadedImageUrls.length) {
-          console.warn(
-            '[CheckInCar] Không upload được ảnh nào, giữ inspection và yêu cầu thử lại.'
-          );
-          return; // Không xóa inspection để tránh lỗi quyền
+      console.log('✅ Step 2 completed: Inspection created:', createdInspection.id);
+
+      // 🔄 STEP 3: Upload images (if any)
+      let uploadedImageUrls = [];
+      if (inspectionFiles.length > 0) {
+        console.log(`🔄 Step 3: Uploading ${inspectionFiles.length} images...`);
+        try {
+          uploadedImageUrls = await uploadInspectionImages(createdInspection.id);
+          console.log(`✅ Step 3 completed: ${uploadedImageUrls.length} images uploaded`);
+        } catch (uploadErr) {
+          console.warn('⚠️ Image upload failed, but inspection is created:', uploadErr);
+          // Don't fail the whole process if images fail - can be uploaded later
+          toast.warning('Images upload failed', {
+            description: 'Inspection created but images failed to upload. You can edit and re-upload later.',
+            duration: 5000,
+          });
         }
-        // Cập nhật lại inspection với danh sách imageUrl
-        await apiClient.put(
-          endpoints.inspections.getById(createdInspection.id),
-          { images: uploadedImageUrls, isCompleted: true }
-        );
+      } else {
+        console.log('ℹ️ Step 3 skipped: No images to upload');
       }
 
-      // 3. Check-in booking sau khi tạo inspection thành công
-      try {
-        const actualPickupLocation =
-          stations?.find?.(s => s.id === selectedStation)?.name ||
-          booking?.station?.name ||
-          '';
-        await apiClient.post(endpoints.bookings.checkIn(id), {
-          actualStartTime: new Date().toISOString(),
-          actualPickupLocation,
-          pickupOdometer: mileageNum,
-          batteryLevel: batteryNum,
-        });
-      } catch (checkInErr) {
-        console.warn('Check-in booking failed:', checkInErr);
-        toast.error(
-          checkInErr?.response?.data?.message ||
-          checkInErr?.message ||
-          'Check-in failed'
-        );
-        return;
-      }
+      // 🔄 STEP 4: Mark inspection as completed
+      console.log('🔄 Step 4: Marking inspection as completed...');
+      await apiClient.put(
+        endpoints.inspections.getById(createdInspection.id),
+        {
+          images: uploadedImageUrls,
+          isCompleted: true
+        }
+      );
+      console.log('✅ Step 4 completed: Inspection marked as completed');
 
+      // 🔄 STEP 5: Show success dialog
       const customerName = booking?.user?.name || booking?.renter?.name || '';
       const vehicleLabel = `${booking?.vehicle?.name || ''}${booking?.vehicle?.licensePlate
         ? ' • ' + booking.vehicle.licensePlate
@@ -948,10 +1085,13 @@ export default function CheckInCar() {
         actualStartTime: new Date().toISOString(),
         staffInfo: { name: user?.name || 'Current staff' },
       });
+
       setCheckInSummaryOpen(true);
       resetAllFields();
 
-      // Refresh bookings list (except canceled)
+      console.log('✅ All steps completed successfully!');
+
+      // 🔄 STEP 6: Refresh bookings list
       try {
         setLoadingBookings(true);
         const resData = await getAllBookings({ limit: 100 });
@@ -960,98 +1100,164 @@ export default function CheckInCar() {
           return status !== 'CANCELED' && status !== 'CANCELLED';
         });
         setAvailableBookings(list);
+        console.log('✅ Bookings list refreshed');
       } catch (err) {
-        console.error('Refresh bookings error', err);
+        console.error('⚠️ Failed to refresh bookings (non-critical):', err);
       } finally {
         setLoadingBookings(false);
       }
     } catch (e) {
+      console.error('❌ Check-in process failed:', e);
       const status = e?.status ?? e?.response?.status;
       const serverMsg = e?.response?.data?.message || e?.message;
 
+      // Enhanced error messages
+      let errorTitle = 'Check-in Failed';
+      let errorDescription = serverMsg || 'Unable to complete check-in process. Please try again.';
+
       if (status === 400) {
-        toast.error(serverMsg || 'Validation failed');
-        return;
+        errorTitle = 'Validation Error';
+        errorDescription = serverMsg || 'Invalid data provided. Please check all fields.';
+      } else if (status === 403) {
+        errorTitle = 'Permission Denied';
+        errorDescription = 'You do not have permission to perform this action.';
+      } else if (status === 404) {
+        errorTitle = 'Not Found';
+        errorDescription = 'Booking or vehicle not found.';
+      } else if (status >= 500) {
+        errorTitle = 'Server Error';
+        errorDescription = 'Server encountered an error. Please try again later.';
       }
 
-      toast.error(serverMsg || 'Failed to create inspection');
+      toast.error(errorTitle, {
+        description: errorDescription,
+        duration: 5000,
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleCreateInspection = async () => {
-    // Validation
+    // ✅ COMPREHENSIVE VALIDATION - Thu thập TẤT CẢ lỗi trước khi hiển thị
+    const validationErrors = [];
+
+    // 1. Check booking
     if (!booking) {
-      toast.warning('Please select a booking');
-      return;
+      validationErrors.push('❌ No booking selected');
     }
 
+    // 2. Check staff ID
     if (!user?.id) {
-      toast.error('Staff information is missing');
-      return;
+      validationErrors.push('❌ Staff information is missing');
     }
 
-    // ✨ NEW: Check if contract exists and is COMPLETED before allowing inspection
+    // 3. Check vehicle info from booking
+    if (booking && !booking.vehicle?.id) {
+      validationErrors.push('❌ Vehicle information is missing from booking');
+    }
+
+    // 4. ⚠️ CRITICAL: Check vehicle status MUST be RESERVED to check-in
+    if (booking?.vehicle) {
+      const vehicleStatus = (booking.vehicle.status || '').toUpperCase();
+      if (vehicleStatus !== 'RESERVED') {
+        validationErrors.push(
+          `❌ Vehicle status must be RESERVED to check-in (Current status: ${vehicleStatus || 'Unknown'})`
+        );
+      }
+    }
+
+    // 5. Check station
+    if (!selectedStation) {
+      validationErrors.push('❌ Return station is not set');
+    }
+
+    // 5. ⚠️ Check contract exists and is COMPLETED
     if (!bookingHasContract || !existingContract) {
-      toast.error('Contract required', {
-        description: 'Please create and upload signed contract before check-in',
-        duration: 5000,
-      });
-      return;
+      validationErrors.push('❌ Contract is required - Please create and upload signed contract first');
+    } else if (existingContract.status !== 'COMPLETED') {
+      validationErrors.push('❌ Contract must be COMPLETED - Customer must sign and staff must upload it');
     }
 
-    if (existingContract.status !== 'COMPLETED') {
-      toast.error('Contract not completed', {
-        description:
-          'Customer must sign contract and staff must upload it before check-in',
-        duration: 5000,
-      });
-      return;
+    // 6. Check exterior condition
+    if (!exteriorCondition) {
+      validationErrors.push('❌ Exterior condition is required');
     }
 
+    // 7. Check interior condition
+    if (!interiorCondition) {
+      validationErrors.push('❌ Interior condition is required');
+    }
+
+    // 8. Check tire condition
+    if (!tireCondition) {
+      validationErrors.push('❌ Tire condition is required');
+    }
+
+    // 9. Check accessories status
+    if (!accessories) {
+      validationErrors.push('❌ Accessories status is required');
+    }
+
+    // 10. Check battery level
     const batteryNum = Number(batteryLevel);
+    if (!batteryLevel || batteryLevel.trim() === '') {
+      validationErrors.push('❌ Battery level is required');
+    } else if (isNaN(batteryNum)) {
+      validationErrors.push('❌ Battery level must be a valid number');
+    } else if (batteryNum < 0 || batteryNum > 100) {
+      validationErrors.push('❌ Battery level must be between 0-100%');
+    }
+
+    // 11. Check odometer reading
     const mileageNum = Number(mileage);
-
-    if (
-      !batteryLevel ||
-      isNaN(batteryNum) ||
-      batteryNum < 0 ||
-      batteryNum > 100
-    ) {
-      toast.error('Invalid battery level (0-100%)');
-      return;
+    if (!mileage || mileage.trim() === '') {
+      validationErrors.push('❌ Odometer reading is required');
+    } else if (isNaN(mileageNum)) {
+      validationErrors.push('❌ Odometer reading must be a valid number');
+    } else if (mileageNum < 0) {
+      validationErrors.push('❌ Odometer reading cannot be negative');
     }
 
-    if (!mileage || isNaN(mileageNum) || mileageNum < 0) {
-      toast.error('Invalid odometer reading');
-      return;
-    }
-
+    // 12. ⚠️ Check document verification (CRITICAL)
     if (!documentVerified) {
-      toast.warning('Please verify customer documents');
-      return;
+      validationErrors.push('❌ Customer documents must be verified - Please tick the verification checkbox');
     }
 
-    if (inspectionFiles.length === 0 && !isEditMode) {
-      toast.warning('Please upload at least 1 vehicle image');
-      return;
+    // 13. Check vehicle images (not in edit mode)
+    if (!isEditMode) {
+      const existingImagesCount = inspectionPreviews.filter(p => p.isExisting).length;
+      const newImagesCount = inspectionFiles.length;
+      const totalImages = existingImagesCount + newImagesCount;
+
+      if (totalImages === 0) {
+        validationErrors.push('❌ At least 1 vehicle image is required');
+      }
     }
 
+    // 14. Check damage notes if condition is not GOOD
     if (
       exteriorCondition !== 'GOOD' ||
       interiorCondition !== 'GOOD' ||
       tireCondition !== 'GOOD'
     ) {
       if (!damageNotes || damageNotes.trim().length < 10) {
-        toast.error(
-          'Please provide detailed damage notes (at least 10 characters) if vehicle condition is not GOOD'
+        validationErrors.push(
+          '❌ Detailed damage notes (min 10 characters) are required when vehicle condition is not GOOD'
         );
-        return;
       }
     }
 
-    // Time cutoff validation
+    // 15. Validate notes length if provided
+    if (notes && notes.length > 500) {
+      validationErrors.push('❌ Additional notes must not exceed 500 characters');
+    }
+
+    if (damageNotes && damageNotes.length > 1000) {
+      validationErrors.push('❌ Damage notes must not exceed 1000 characters');
+    }
+
+    // 16. Check time cutoff (must check-in within 24h of scheduled start)
     const plannedStartTime = booking?.startTime
       ? new Date(booking.startTime)
       : null;
@@ -1061,12 +1267,39 @@ export default function CheckInCar() {
         plannedStartTime.getTime() + 24 * 60 * 60 * 1000
       );
       if (actualStartTime > maxAllowed) {
-        toast.error(
-          'Cannot create inspection more than 24 hours after scheduled start time'
+        validationErrors.push(
+          '❌ Cannot check-in more than 24 hours after scheduled start time'
         );
-        return;
       }
     }
+
+    // 🚨 If there are ANY validation errors, show them ALL and stop
+    if (validationErrors.length > 0) {
+      const errorMessage = `Please complete the following required fields:\n\n${validationErrors.join('\n')}`;
+
+      toast.error('Check-In Validation Failed', {
+        description: (
+          <div className="space-y-1 text-xs">
+            <p className="font-semibold mb-2">Missing required information:</p>
+            <ul className="list-none space-y-1">
+              {validationErrors.map((error, idx) => (
+                <li key={idx} className="text-red-600 dark:text-red-400">
+                  {error}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ),
+        duration: 8000,
+      });
+
+      // Also log to console for debugging
+      console.error('❌ Check-In Validation Failed:', validationErrors);
+      return; // ❌ STOP - Do not proceed
+    }
+
+    // ✅ ALL VALIDATIONS PASSED - Proceed with inspection
+    console.log('✅ All validations passed - Proceeding with check-in');
 
     if (isEditMode && existingInspection?.id) {
       await handleUpdateInspection();
@@ -1182,6 +1415,51 @@ export default function CheckInCar() {
     }
     toast.info('Edit cancelled');
   };
+
+  // ✅ Calculate validation errors count for UI feedback
+  const getValidationErrorsCount = () => {
+    if (isEditMode || isViewMode) return 0; // Skip for edit/view mode
+
+    let errorCount = 0;
+
+    if (!booking) errorCount++;
+    if (!user?.id) errorCount++;
+    if (booking && !booking.vehicle?.id) errorCount++;
+    if (!selectedStation) errorCount++;
+    if (!bookingHasContract || !existingContract) errorCount++;
+    else if (existingContract.status !== 'COMPLETED') errorCount++;
+    if (!exteriorCondition) errorCount++;
+    if (!interiorCondition) errorCount++;
+    if (!tireCondition) errorCount++;
+    if (!accessories) errorCount++;
+
+    const batteryNum = Number(batteryLevel);
+    if (!batteryLevel || batteryLevel.trim() === '' || isNaN(batteryNum) || batteryNum < 0 || batteryNum > 100) {
+      errorCount++;
+    }
+
+    const mileageNum = Number(mileage);
+    if (!mileage || mileage.trim() === '' || isNaN(mileageNum) || mileageNum < 0) {
+      errorCount++;
+    }
+
+    if (!documentVerified) errorCount++;
+
+    const existingImagesCount = inspectionPreviews.filter(p => p.isExisting).length;
+    const newImagesCount = inspectionFiles.length;
+    if (existingImagesCount + newImagesCount === 0) errorCount++;
+
+    if (
+      (exteriorCondition !== 'GOOD' || interiorCondition !== 'GOOD' || tireCondition !== 'GOOD') &&
+      (!damageNotes || damageNotes.trim().length < 10)
+    ) {
+      errorCount++;
+    }
+
+    return errorCount;
+  };
+
+  const validationErrorsCount = getValidationErrorsCount();
 
   // Determine if fields should be disabled
   const isFieldsDisabled = isViewMode && !isEditMode;
@@ -2159,6 +2437,49 @@ export default function CheckInCar() {
               <p className='text-gray-600 dark:text-gray-400 text-xs mt-1'>
                 This customer hasn't uploaded any documents yet.
               </p>
+
+              {/* ⚠️ TEMPORARILY DISABLED - Backend needs to support staff uploading for other users */}
+              {user?.role === 'STAFF' && false && (
+                <div className='mt-3 space-y-2'>
+                  <p className='text-xs text-amber-600 font-semibold'>⚠️ Upload on behalf of customer (Feature in development)</p>
+                  <p className='text-xs text-muted-foreground'>Backend needs to support staff uploading documents for renters</p>
+                  <div className='flex items-center gap-2 opacity-50 pointer-events-none'>
+                    <select
+                      value={docType}
+                      onChange={e => setDocType(e.target.value)}
+                      className='px-2 py-1 rounded border'
+                      disabled
+                    >
+                      <option value='ID_CARD'>ID Card</option>
+                      <option value='DRIVERS_LICENSE'>Driver's License</option>
+                      <option value='PASSPORT'>Passport</option>
+                    </select>
+                    <input
+                      type='file'
+                      accept='image/*'
+                      onChange={e => setDocFile(e.target.files?.[0] || null)}
+                      className='text-sm'
+                      disabled
+                    />
+                    <Button size='sm' onClick={handleUploadCustomerDocument} disabled>
+                      Upload
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Staff instruction when customer has no documents */}
+              {user?.role === 'STAFF' && (
+                <div className='mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg'>
+                  <p className='text-sm font-semibold text-blue-900 dark:text-blue-200'>
+                    📋 Staff Instructions
+                  </p>
+                  <p className='text-xs text-blue-700 dark:text-blue-300 mt-1'>
+                    Customer needs to upload documents themselves through the mobile app or user portal.
+                    Staff cannot proceed with check-in until documents are uploaded and approved.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -2167,8 +2488,8 @@ export default function CheckInCar() {
               id='doc_verified'
               type='checkbox'
               checked={documentVerified}
-              onChange={e => setDocumentVerified(e.target.checked)}
-              disabled={isFieldsDisabled}
+              onChange={handleToggleDocumentVerified}
+              disabled={isFieldsDisabled || loadingDocuments}
             />
             <Label htmlFor='doc_verified' className='cursor-pointer'>
               I have verified customer's ID and driving license{' '}
@@ -2192,36 +2513,90 @@ export default function CheckInCar() {
                 : 'Complete Check-In'}
           </CardTitle>
         </CardHeader>
-        <CardContent className='flex items-center justify-between gap-3'>
-          <div>
-            <p className='text-sm text-muted-foreground'>
-              {isEditMode
-                ? 'Modify the inspection details and save changes.'
-                : isViewMode
-                  ? 'Viewing existing inspection record. Click Edit to modify.'
-                  : 'Review all information and complete vehicle check-in process.'}
-            </p>
-          </div>
-          <div className='flex gap-2'>
-            <Button
-              variant='outline'
-              onClick={resetAllFields}
-              disabled={isSubmitting}
-            >
-              Reset
-            </Button>
-            {!isViewMode && (
+        <CardContent className='space-y-4'>
+          {/* ⚠️ Validation Status Warning */}
+          {!isEditMode && !isViewMode && validationErrorsCount > 0 && (
+            <div className='p-4 bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-700 rounded-lg'>
+              <div className='flex items-start gap-3'>
+                <span className='text-2xl'>⚠️</span>
+                <div className='flex-1'>
+                  <p className='font-semibold text-amber-900 dark:text-amber-200'>
+                    {validationErrorsCount} Required {validationErrorsCount === 1 ? 'Field' : 'Fields'} Missing
+                  </p>
+                  <p className='text-sm text-amber-700 dark:text-amber-300 mt-1'>
+                    Please complete all required fields before proceeding with check-in.
+                    Click "Complete Check-In" to see detailed validation errors.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ✅ Ready to Check-In Status */}
+          {!isEditMode && !isViewMode && validationErrorsCount === 0 && booking && (
+            <div className='p-4 bg-green-50 dark:bg-green-900/20 border-2 border-green-300 dark:border-green-700 rounded-lg'>
+              <div className='flex items-start gap-3'>
+                <span className='text-2xl'>✅</span>
+                <div className='flex-1'>
+                  <p className='font-semibold text-green-900 dark:text-green-200'>
+                    Ready to Check-In
+                  </p>
+                  <p className='text-sm text-green-700 dark:text-green-300 mt-1'>
+                    All required fields are complete. You can now proceed with vehicle check-in.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className='flex items-center justify-between gap-3'>
+            <div className='flex-1'>
+              <p className='text-sm text-muted-foreground'>
+                {isEditMode
+                  ? 'Modify the inspection details and save changes.'
+                  : isViewMode
+                    ? 'Viewing existing inspection record. Click Edit to modify.'
+                    : 'Review all information and complete vehicle check-in process.'}
+              </p>
+            </div>
+            <div className='flex gap-2'>
               <Button
-                onClick={handleCreateInspection}
-                disabled={isSubmitDisabled}
+                variant='outline'
+                onClick={resetAllFields}
+                disabled={isSubmitting}
               >
-                {isSubmitting
-                  ? 'Processing...'
-                  : isEditMode
-                    ? 'Save Changes'
-                    : 'Complete Check-In'}
+                Reset
               </Button>
-            )}
+              {!isViewMode && (
+                <Button
+                  onClick={handleCreateInspection}
+                  disabled={isSubmitDisabled}
+                  className={
+                    validationErrorsCount > 0 && !isEditMode
+                      ? 'relative'
+                      : ''
+                  }
+                >
+                  {isSubmitting ? (
+                    <>
+                      <span className='mr-2'>⏳</span>
+                      Processing...
+                    </>
+                  ) : isEditMode ? (
+                    'Save Changes'
+                  ) : (
+                    <>
+                      {validationErrorsCount > 0 && (
+                        <span className='inline-flex items-center justify-center w-5 h-5 mr-2 text-xs font-bold text-white bg-red-500 rounded-full'>
+                          {validationErrorsCount}
+                        </span>
+                      )}
+                      Complete Check-In
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
