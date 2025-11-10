@@ -15,6 +15,7 @@ import {
   Phone,
   Search,
   UserCheck,
+  Plus as PlusIcon,
 } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { toast } from '../../shared/lib/toast';
@@ -86,6 +87,8 @@ import { apiClient } from '../../shared/lib/apiClient';
 import { endpoints } from '../../shared/lib/endpoints';
 import documentService from '../../shared/services/documentService';
 import DocumentVerification from './document-verification';
+import { UserForm } from '../../admin/components/renter/UserForm';
+import { useUsers } from '../../admin/hooks/useUsers';
 
 function CustomerStatusBadge({ status }) {
   const config = {
@@ -750,6 +753,8 @@ function CustomerSupport() {
   const [renterDetails, setRenterDetails] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isDocVerifyOpen, setIsDocVerifyOpen] = useState(false);
+  const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
+  const { createUser } = useUsers();
   // Phân trang: giới hạn 10 người dùng mỗi trang để giảm lag
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
@@ -949,7 +954,7 @@ function CustomerSupport() {
   }, [selectedRenterId]);
   return (
     <div className='space-y-4'>
-      <div className='flex flex-col sm:flex-row gap-4'>
+      <div className='flex flex-col sm:flex-row gap-4 items-center justify-between'>
         <div className='flex-1'>
           <div className='relative'>
             <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
@@ -984,6 +989,10 @@ function CustomerSupport() {
             </SelectItem>
           </SelectContent>
         </Select>
+        <Button onClick={() => setIsCreateFormOpen(true)} className='sm:ml-4'>
+          <PlusIcon className='mr-2 h-4 w-4' />
+          {t('userManagement.buttons.addUser')}
+        </Button>
       </div>
 
       <div className='rounded-md border text-sm'>
@@ -1189,6 +1198,38 @@ function CustomerSupport() {
             />
           </DialogContent>
         </Dialog>
+        <UserForm
+          open={isCreateFormOpen}
+          onOpenChange={setIsCreateFormOpen}
+          createUser={async userData => {
+            const newUser = await createUser(userData);
+            if (newUser?.id) {
+              const mapped = {
+                id: newUser.id,
+                name: newUser.name,
+                email: newUser.email,
+                phone: newUser.phone,
+                createdAt: newUser.createdAt || newUser.created_at || null,
+                status:
+                  newUser.accountStatus === 'ACTIVE'
+                    ? 'Active'
+                    : newUser.accountStatus === 'SUSPENDED'
+                    ? 'Suspended'
+                    : 'Inactive',
+                verificationStatus: {
+                  identity: newUser.identityVerified ? 'Verified' : 'Pending',
+                  license: newUser.licenseVerified ? 'Verified' : 'Pending',
+                  payment: newUser.paymentVerified ? 'Verified' : 'Pending',
+                },
+              };
+              setRenters(prev => [mapped, ...prev]);
+            }
+            return newUser;
+          }}
+          onUserCreated={() => {
+            // List is updated above; nothing else needed
+          }}
+        />
       </div>
     </div>
   );
@@ -1205,24 +1246,24 @@ export function CustomerManagement() {
         <p className='text-muted-foreground'>{t('staffCustomers.subtitle')}</p>
       </div>
 
-      <Tabs defaultValue='checkin' className='space-y-4'>
-        <TabsList>
-          <TabsTrigger value='checkin'>
+      <Tabs defaultValue='support' className='space-y-4'>
+        {/* <TabsList>
+          {/* <TabsTrigger value='checkin'>
             {t('staffCustomers.tabs.checkin')}
-          </TabsTrigger>
-          <TabsTrigger value='support'>
+          </TabsTrigger> */}
+        {/* <TabsTrigger value='support'>
             {t('staffCustomers.tabs.support')}
-          </TabsTrigger>
-        </TabsList>
+          </TabsTrigger> */}
+        {/* </TabsList> */}
 
-        <TabsContent value='checkin' className='space-y-4'>
+        {/* <TabsContent value='checkin' className='space-y-4'>
           <CustomerCheckIn />
-        </TabsContent>
-
+        </TabsContent> */}
         <TabsContent value='support' className='space-y-4'>
           <CustomerSupport />
         </TabsContent>
       </Tabs>
+
     </div>
   );
 }

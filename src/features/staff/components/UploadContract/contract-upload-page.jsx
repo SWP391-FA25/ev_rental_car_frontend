@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from "react-router-dom"
 import { Upload, FileText, Download, Eye, CheckCircle, Clock, X, Calendar, AlertCircle } from "lucide-react"
 import { Button } from "../../../shared/components/ui/button"
@@ -13,6 +14,7 @@ import { ContractUploadForm } from "./contract-upload-form"
 import { useAuth } from "../../../../app/providers/AuthProvider"
 
 export function ContractUploadPage() {
+	const { t } = useTranslation()
 	const { user } = useAuth()
 	const navigate = useNavigate()
 	const [contracts, setContracts] = useState([])
@@ -278,11 +280,11 @@ export function ContractUploadPage() {
 	const getStatusLabel = (status) => {
 		switch (status) {
 			case "COMPLETED":
-				return "Đã hoàn thành"
-			case "NO_CONTRACT":
-				return "Chưa tạo"
-			default:
-				return status || "Không rõ"
+		return t('staffContracts.status.completed')
+		case "NO_CONTRACT":
+			return t('staffContracts.status.noContract')
+		default:
+			return status || t('staffContracts.status.unknown')
 		}
 	}
 
@@ -331,7 +333,7 @@ export function ContractUploadPage() {
 			<div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6 flex items-center justify-center">
 				<div className="text-center">
 					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-					<p className="text-slate-600">Đang tải dữ liệu...</p>
+					<p className="text-slate-600">{t('staffContracts.loading')}</p>
 				</div>
 			</div>
 		)
@@ -342,19 +344,19 @@ export function ContractUploadPage() {
 			<div className="max-w-7xl mx-auto">
 				{/* Header */}
 				<div className="mb-8">
-					<h1 className="text-4xl font-bold text-slate-900 mb-2">Quản lý Hợp đồng Thuê</h1>
-					<p className="text-slate-600">Tải lên và quản lý hợp đồng thuê cho các khách hàng</p>
+					<h1 className="text-4xl font-bold text-slate-900 mb-2">{t('staffContracts.title')}</h1>
+					<p className="text-slate-600">{t('staffContracts.subtitle')}</p>
 				</div>
 
 				{/* Filters and Search */}
 				<div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 					<div className="flex-1">
-						<Input
-							placeholder="Tìm kiếm theo số hợp đồng, tên khách hàng, biển số xe hoặc chi nhánh..."
-							value={searchTerm}
-							onChange={(e) => setSearchTerm(e.target.value)}
-							className="bg-white border-slate-300"
-						/>
+					<Input
+						placeholder={t('staffContracts.searchPlaceholder')}
+						value={searchTerm}
+						onChange={(e) => setSearchTerm(e.target.value)}
+						className="bg-white border-slate-300"
+					/>
 					</div>
 					<div className="flex gap-2">
 						<Button
@@ -366,8 +368,8 @@ export function ContractUploadPage() {
 									: "border-slate-300 text-slate-700 hover:bg-slate-50"
 							}
 						>
-							Tất cả
-						</Button>
+						{t('staffContracts.filters.all')}
+					</Button>
 						<Button
 							variant={filterStatus === "NO_CONTRACT" ? "default" : "outline"}
 							onClick={() => setFilterStatus("NO_CONTRACT")}
@@ -377,8 +379,8 @@ export function ContractUploadPage() {
 									: "border-slate-300 text-slate-700 hover:bg-slate-50"
 							}
 						>
-							Chưa tạo
-						</Button>
+						{t('staffContracts.filters.noContract')}
+					</Button>
 						{/* Đã xóa nút Chờ tải file */}
 						<Button
 							variant={filterStatus === "COMPLETED" ? "default" : "outline"}
@@ -389,8 +391,8 @@ export function ContractUploadPage() {
 									: "border-slate-300 text-slate-700 hover:bg-slate-50"
 							}
 						>
-							Đã hoàn thành
-						</Button>
+						{t('staffContracts.filters.completed')}
+					</Button>
 					</div>
 				</div>
 
@@ -399,12 +401,12 @@ export function ContractUploadPage() {
 						<table className="w-full">
 							<thead className="bg-slate-50 border-b border-slate-200">
 								<tr>
-									<th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Số hợp đồng</th>
-									<th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Khách hàng</th>
-									<th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Xe / Chi nhánh</th>
-									<th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Trạng thái</th>
-									<th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Ngày tạo</th>
-									<th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Hành động</th>
+									<th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">{t('staffContracts.table.contractNumber')}</th>
+									<th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">{t('staffContracts.table.customer')}</th>
+									<th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">{t('staffContracts.table.vehicleBranch')}</th>
+									<th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">{t('staffContracts.table.status')}</th>
+									<th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">{t('staffContracts.table.createdAt')}</th>
+									<th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">{t('staffContracts.table.actions')}</th>
 								</tr>
 							</thead>
 							<tbody className="divide-y divide-slate-200">
@@ -415,7 +417,7 @@ export function ContractUploadPage() {
 												{contract?.contractNumber ? (
 													<p className="font-mono text-sm font-medium text-blue-600">{contract.contractNumber}</p>
 												) : (
-													<p className="text-sm text-slate-400 italic">Chưa có</p>
+												<p className="text-sm text-slate-400 italic">{t('staffContracts.common.notAvailable')}</p>
 												)}
 											</td>
 											<td className="px-6 py-4">
@@ -446,8 +448,8 @@ export function ContractUploadPage() {
 													<Button
 														variant="ghost"
 														size="sm"
-														className="text-slate-600 hover:text-blue-600 hover:bg-blue-50"
-														title="Xem chi tiết"
+												className="text-slate-600 hover:text-blue-600 hover:bg-blue-50"
+												title={t('staffContracts.actions.viewDetails')}
 														onClick={() => handleViewDetails(contract)}
 													>
 														<Eye className="w-4 h-4" />
@@ -456,8 +458,8 @@ export function ContractUploadPage() {
 														<Button
 															variant="ghost"
 															size="sm"
-															className="text-slate-600 hover:text-green-600 hover:bg-green-50"
-															title="Tải lên hợp đồng"
+												className="text-slate-600 hover:text-green-600 hover:bg-green-50"
+												title={t('staffContracts.actions.upload')}
 															onClick={() => handleUploadClick(contract)}
 														>
 															<Upload className="w-4 h-4" />
@@ -467,8 +469,8 @@ export function ContractUploadPage() {
 														<Button
 															variant="ghost"
 															size="sm"
-															className="text-slate-600 hover:text-purple-600 hover:bg-purple-50"
-															title="Tải xuống hợp đồng"
+												className="text-slate-600 hover:text-purple-600 hover:bg-purple-50"
+												title={t('staffContracts.actions.download')}
 															onClick={() => window.open(contract.contractFileUrl, '_blank')}
 														>
 															<Download className="w-4 h-4" />
@@ -483,7 +485,7 @@ export function ContractUploadPage() {
 										<td colSpan={6} className="px-6 py-12 text-center">
 											<div className="flex flex-col items-center gap-2">
 												<FileText className="w-12 h-12 text-slate-300" />
-												<p className="text-slate-600">Không tìm thấy booking nào</p>
+											<p className="text-slate-600">{t('staffContracts.empty.noBookings')}</p>
 											</div>
 										</td>
 									</tr>
@@ -495,17 +497,17 @@ export function ContractUploadPage() {
 					{/* Footer Stats */}
 					<div className="bg-slate-50 border-t border-slate-200 px-6 py-4 flex flex-wrap gap-6">
 						<div>
-							<p className="text-sm text-slate-600">Tổng cộng</p>
+						<p className="text-sm text-slate-600">{t('staffContracts.stats.total')}</p>
 							<p className="text-2xl font-bold text-slate-900">{contracts.length}</p>
 						</div>
 						<div>
-							<p className="text-sm text-slate-600">Chưa tạo</p>
+						<p className="text-sm text-slate-600">{t('staffContracts.stats.notCreated')}</p>
 							<p className="text-2xl font-bold text-amber-600">
 								{contracts.filter((c) => c?.contractStatus === "NO_CONTRACT").length}
 							</p>
 						</div>
 						<div>
-							<p className="text-sm text-slate-600">Đã hoàn thành</p>
+						<p className="text-sm text-slate-600">{t('staffContracts.stats.completed')}</p>
 							<p className="text-2xl font-bold text-green-600">
 								{contracts.filter((c) => c?.contractStatus === "COMPLETED").length}
 							</p>
@@ -520,7 +522,7 @@ export function ContractUploadPage() {
 					<Card className="w-full max-w-2xl bg-white max-h-[90vh] overflow-y-auto">
 						<div className="p-6">
 							<div className="flex items-center justify-between mb-6">
-								<h2 className="text-2xl font-bold text-slate-900">Tải lên Hợp đồng Ký kết</h2>
+									<h2 className="text-2xl font-bold text-slate-900">{t('staffContracts.upload.title')}</h2>
 								<button onClick={() => setShowUploadModal(false)} className="text-slate-400 hover:text-slate-600">
 									<X className="w-6 h-6" />
 								</button>
@@ -529,34 +531,34 @@ export function ContractUploadPage() {
 							<div className="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
 								<div className="grid grid-cols-2 gap-4">
 									<div>
-										<p className="text-sm text-slate-600">Số hợp đồng</p>
+												<p className="text-sm text-slate-600">{t('staffContracts.details.contractNumber')}</p>
 										{selectedContract?.contractNumber ? (
 											<p className="font-mono font-semibold text-blue-600">{selectedContract.contractNumber}</p>
 										) : (
-											<p className="text-sm text-slate-400 italic">Sẽ được tạo tự động</p>
+												<p className="text-sm text-slate-400 italic">{t('staffContracts.details.autoGenerate')}</p>
 										)}
 									</div>
 									<div>
-										<p className="text-sm text-slate-600">Trạng thái</p>
+												<p className="text-sm text-slate-600">{t('staffContracts.details.status')}</p>
 										<div className="flex items-center gap-2 mt-1">
 											{getStatusIcon(selectedContract?.contractStatus)}
 											<span className="font-semibold text-slate-900">{getStatusLabel(selectedContract?.contractStatus)}</span>
 										</div>
 									</div>
 									<div>
-										<p className="text-sm text-slate-600">Khách hàng</p>
+												<p className="text-sm text-slate-600">{t('staffContracts.details.customer')}</p>
 										<p className="font-semibold text-slate-900">{selectedContract?.user?.name || 'N/A'}</p>
 										<p className="text-xs text-slate-500">{selectedContract?.user?.phone || 'N/A'}</p>
 									</div>
 									<div>
-										<p className="text-sm text-slate-600">Xe</p>
+												<p className="text-sm text-slate-600">{t('staffContracts.details.vehicle')}</p>
 										<p className="font-semibold text-slate-900">{selectedContract?.vehicle?.licensePlate || 'N/A'}</p>
 										{getVehicleLabel(selectedContract?.vehicle) && (
 											<p className="text-xs text-slate-500">{getVehicleLabel(selectedContract?.vehicle)}</p>
 										)}
 									</div>
 									<div className="col-span-2">
-										<p className="text-sm text-slate-600">Chi nhánh</p>
+												<p className="text-sm text-slate-600">{t('staffContracts.details.branch')}</p>
 										<p className="font-semibold text-slate-900">{selectedContract?.station?.name || 'N/A'}</p>
 									</div>
 								</div>

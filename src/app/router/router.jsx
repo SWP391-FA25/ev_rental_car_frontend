@@ -23,7 +23,7 @@ import Home from '@/features/shared/components/Home.jsx';
 import { NotificationPage } from '@/features/shared/components/NotificationPage';
 import PolicyPage from '@/features/shared/components/PolicyPage.jsx';
 import StaffDashboard from '@/features/staff/layout/StaffDashboard.jsx';
-import StaffProfileLayout from '@/features/staff/layout/StaffProfileLayout.jsx';
+import StaffProfileLayout from '@/features/staff/layout/StaffProfileLayout';
 import { createBrowserRouter } from 'react-router-dom';
 import VehicleManagement from '../../features/admin/pages/VehicleManagement';
 import UserPage from '../../features/user/layout/UserPage';
@@ -63,6 +63,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <Dashboard /> },
           { path: 'users', element: <UserManagement /> },
+          { path: 'users/:id', element: <Profile /> },
           { path: 'staff', element: <StaffManagement /> },
           { path: 'stations', element: <StationManagement /> },
           { path: 'vehicles', element: <VehicleManagement /> },
@@ -81,10 +82,8 @@ export const router = createBrowserRouter([
             </RoleBasedRoute>
           </PrivateRoutes>
         ),
-        children: [
-          { path: 'profile', element: <Profile /> },
-        ],
       },
+
       {
         path: '/user',
         element: (
@@ -111,16 +110,6 @@ export const router = createBrowserRouter([
           <PrivateRoutes>
             <RoleBasedRoute allowedRoles={['RENTER']}>
               <UserProfileLayout />
-            </RoleBasedRoute>
-          </PrivateRoutes>
-        ),
-      },
-      {
-        path: '/staff/profile',
-        element: (
-          <PrivateRoutes>
-            <RoleBasedRoute allowedRoles={['STAFF']}>
-              <StaffProfileLayout />
             </RoleBasedRoute>
           </PrivateRoutes>
         ),

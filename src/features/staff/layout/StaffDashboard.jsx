@@ -45,6 +45,7 @@ import { StaffSidebar } from '../components/staff-sidebar';
 import StationManagement from '../components/station-management';
 import ReturnCar from '../components/ReturnCar';
 import { ContractUploadPage } from '../components/UploadContract/contract-upload-page';
+import StaffProfileLayout from './StaffProfileLayout';
 
 // const mockStaffData = [
 //   {
@@ -131,7 +132,6 @@ import { ContractUploadPage } from '../components/UploadContract/contract-upload
 // Removed mock data: stations, customers, and payments
 
 export default function StaffDashboard() {
-  const [activeTab, setActiveTab] = React.useState('dashboard');
   const { t } = useTranslation();
   const [carData, setCarData] = React.useState([]);
   const [staffData, setStaffData] = React.useState(null);
@@ -148,6 +148,7 @@ export default function StaffDashboard() {
   const [activeCustomersGrowth, setActiveCustomersGrowth] = React.useState(0);
   const [rentedGrowth, setRentedGrowth] = React.useState(0);
   const [maintenanceGrowth, setMaintenanceGrowth] = React.useState(0);
+  const [activeTab, setActiveTab] = React.useState('dashboard');
 
   // Fetch vehicles
   React.useEffect(() => {
@@ -360,7 +361,14 @@ export default function StaffDashboard() {
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+    const lastMonthEnd = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      0,
+      23,
+      59,
+      59
+    );
 
     const fetchRange = async (start, end) => {
       let page = 1;
@@ -404,10 +412,13 @@ export default function StaffDashboard() {
         ).size;
         const growthActive =
           lastActiveCustomers === 0
-            ? currentActiveCustomers > 0 ? 100 : 0
+            ? currentActiveCustomers > 0
+              ? 100
+              : 0
             : Math.round(
                 ((currentActiveCustomers - lastActiveCustomers) /
-                  lastActiveCustomers) * 100
+                  lastActiveCustomers) *
+                  100
               );
         setActiveCustomersGrowth(growthActive);
 
@@ -416,7 +427,9 @@ export default function StaffDashboard() {
         const lastRented = last.length;
         const growthRented =
           lastRented === 0
-            ? currentRented > 0 ? 100 : 0
+            ? currentRented > 0
+              ? 100
+              : 0
             : Math.round(((currentRented - lastRented) / lastRented) * 100);
         setRentedGrowth(growthRented);
       } catch (_) {
@@ -433,7 +446,14 @@ export default function StaffDashboard() {
       const now = new Date();
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
       const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+      const lastMonthEnd = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        0,
+        23,
+        59,
+        59
+      );
 
       const getDate = v => new Date(v.updatedAt || v.lastService || 0);
       const isMaint = v => (v.status || '').toUpperCase() === 'MAINTENANCE';
@@ -442,10 +462,17 @@ export default function StaffDashboard() {
         v => isMaint(v) && getDate(v) >= monthStart && getDate(v) <= now
       ).length;
       const lastMaint = carData.filter(
-        v => isMaint(v) && getDate(v) >= lastMonthStart && getDate(v) <= lastMonthEnd
+        v =>
+          isMaint(v) &&
+          getDate(v) >= lastMonthStart &&
+          getDate(v) <= lastMonthEnd
       ).length;
       const growth =
-        lastMaint === 0 ? (currentMaint > 0 ? 100 : 0) : Math.round(((currentMaint - lastMaint) / lastMaint) * 100);
+        lastMaint === 0
+          ? currentMaint > 0
+            ? 100
+            : 0
+          : Math.round(((currentMaint - lastMaint) / lastMaint) * 100);
       setMaintenanceGrowth(growth);
     } catch (_) {
       setMaintenanceGrowth(0);
@@ -587,7 +614,9 @@ export default function StaffDashboard() {
               <div className='text-2xl font-bold'>{activeCustomersCount}</div>
               <div
                 className={`flex items-center gap-1 text-xs ${
-                  activeCustomersGrowth >= 0 ? 'text-emerald-600' : 'text-red-600'
+                  activeCustomersGrowth >= 0
+                    ? 'text-emerald-600'
+                    : 'text-red-600'
                 }`}
               >
                 <TrendingUp size={12} />
@@ -795,6 +824,8 @@ export default function StaffDashboard() {
     switch (activeTab) {
       case 'dashboard':
         return renderDashboard();
+      case 'profile':
+        return <StaffProfileLayout />;
       case 'check-in':
         return renderCheckIn();
       case 'cars':
@@ -813,8 +844,8 @@ export default function StaffDashboard() {
         return renderUploadContract();
       case 'documents':
         return <DocumentVerification />;
-      case 'notifications':
-        return <NotificationPreferences />;
+      // case 'notifications':
+      //   return <NotificationPreferences />;
       // Removed quick-verify case
 
       default:
@@ -882,11 +913,11 @@ export default function StaffDashboard() {
         },
       ],
     },
-    {
-      id: 'notifications',
-      label: 'Notifications',
-      icon: <Bell className='h-4 w-4' />,
-    },
+    // {
+    //   id: 'notifications',
+    //   label: 'Notifications',
+    //   icon: <Bell className='h-4 w-4' />,
+    // },
     // Removed quick-verify menu item
   ];
 

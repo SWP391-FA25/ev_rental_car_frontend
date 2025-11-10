@@ -50,12 +50,8 @@ export function BookingCompleteForm({ onSubmit, onCancel, loading = false }) {
       newErrors.actualEndTime = 'Actual end time is required';
     }
 
-    const loc = (formData.actualReturnLocation || '').trim();
-    if (!loc) {
+    if (!formData.actualReturnLocation) {
       newErrors.actualReturnLocation = 'Return location is required';
-    } else if (loc.length < 3) {
-      newErrors.actualReturnLocation =
-        'Return location must be at least 3 characters';
     }
 
     if (formData.rating && (formData.rating < 1 || formData.rating > 5)) {
@@ -81,17 +77,8 @@ export function BookingCompleteForm({ onSubmit, onCancel, loading = false }) {
     }
 
     try {
-      // Chuẩn hóa thời gian thành ISO8601 để khớp validator backend
-      const endISO = formData.actualEndTime
-        ? new Date(formData.actualEndTime).toISOString()
-        : new Date().toISOString();
-      // Chuẩn hóa tên trạm: trim để tránh lỗi khoảng trắng
-      const location = (formData.actualReturnLocation || '').trim();
-
       const submitData = {
         ...formData,
-        actualEndTime: endISO,
-        actualReturnLocation: location,
         returnOdometer: formData.returnOdometer
           ? parseFloat(formData.returnOdometer)
           : undefined,
