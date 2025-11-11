@@ -365,7 +365,10 @@ function StaffUser({ staff, setActiveTab }) {
             onClick={handleProfileClick}
           >
             <Avatar className='h-8 w-8 rounded-lg'>
-              <AvatarImage src={staff?.avatar ?? undefined} alt={staff?.name || 'Staff member'} />
+              <AvatarImage
+                src={staff?.avatar ?? undefined}
+                alt={staff?.name || 'Staff member'}
+              />
               <AvatarFallback className='rounded-lg'>
                 {staff.name
                   .split(' ')
@@ -376,20 +379,19 @@ function StaffUser({ staff, setActiveTab }) {
             <div className='grid flex-1 text-left text-sm leading-tight'>
               <span className='truncate font-semibold'>{staff.name}</span>
               <span className='truncate text-xs text-muted-foreground'>
-                {staff.role}
+                {staff.role} - View Profile
               </span>
             </div>
+            <Button
+              variant='ghost'
+              onClick={handleLogout}
+              className='flex justify-start'
+            >
+              <LogOut className='mr-2 h-4 w-4' />
+            </Button>
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
-      <Button
-        variant='ghost'
-        onClick={handleLogout}
-        className='w-full justify-start'
-      >
-        <LogOut className='mr-2 h-4 w-4' />
-        <span>Logout</span>
-      </Button>
     </>
   );
 }
