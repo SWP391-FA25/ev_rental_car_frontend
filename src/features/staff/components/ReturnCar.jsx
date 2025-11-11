@@ -529,7 +529,9 @@ export default function ReturnCar() {
     }
     // Enforce staff can only return at assigned stations
     if (!assignedStationIds.includes(String(selectedReturnStationId))) {
-      setLocationError('Bạn chỉ có thể trả xe tại các trạm được phân công');
+      setLocationError(
+        'You can only return the vehicle at the designated stations.'
+      );
       return;
     }
     const odoErr = getOdoError(returnOdometer, booking);
@@ -697,7 +699,7 @@ export default function ReturnCar() {
         // Không chặn luồng; vẫn tiến hành hoàn tất đơn thuê
       }
 
-      // TÍNH TỔNG TIỀN VÀ PHÍ TRẢ TRỄ TRƯỚC, KHÔNG GỌI completeBooking
+      // TÍNH TỔNG TIỀN VÀ PHÍ TRẢ TRỄ TRƯỚC
       // Giữ payload để hoàn tất sau khi thanh toán
       setPendingCompletionPayload(payload);
 
