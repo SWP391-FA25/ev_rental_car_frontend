@@ -310,6 +310,7 @@
       "selectLabel": "Chọn đơn",
       "selectPlaceholder": "Chọn đơn đang hoạt động",
       "searchPlaceholder": "Tìm kiếm booking...",
+      "foundCount": "Tìm thấy {{count}} đơn thuê",
       "depositLabel": "Tiền cọc (VNĐ)",
       "customer": "Khách hàng",
       "vehicle": "Biển số xe",

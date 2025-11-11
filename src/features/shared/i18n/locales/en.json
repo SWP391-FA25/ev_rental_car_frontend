@@ -216,6 +216,7 @@
       "selectLabel": "Select booking",
       "selectPlaceholder": "Choose an eligible booking",
       "searchPlaceholder": "Search bookings...",
+      "foundCount": "{{count}} booking found",
       "depositLabel": "Deposit (VND)",
       "customer": "Customer",
       "vehicle": "Vehicle License Plate",

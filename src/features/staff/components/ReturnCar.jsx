@@ -41,7 +41,7 @@ import { stationService } from '../../cars/services/stationService';
 import { toast } from '../../shared/lib/toast';
 import { formatCurrency } from '@/features/shared/lib/utils';
 import { useAuth } from '@/app/providers/AuthProvider';
-import { CreditCard } from 'lucide-react';
+import { CreditCard, User, Car, Calendar } from 'lucide-react';
 import { apiClient } from '../../shared/lib/apiClient';
 import { endpoints } from '../../shared/lib/endpoints';
 
@@ -114,6 +114,25 @@ export default function ReturnCar() {
     if (!deadline) return false;
     return new Date() > deadline;
   }, [booking]);
+
+  // Định dạng ngày ngắn gọn (DD/MM/YYYY)
+  const formatDateShort = useCallback(dateString => {
+    if (!dateString) return t('booking.details.na');
+    try {
+      const d = new Date(dateString);
+      return new Intl.DateTimeFormat('vi-VN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(d);
+    } catch (_) {
+      try {
+        return new Date(dateString).toLocaleDateString('vi-VN');
+      } catch (__) {
+        return String(dateString);
+      }
+    }
+  }, [t]);
 
   // Fetch eligible bookings: rentals currently in progress or confirmed
   useEffect(() => {
@@ -998,45 +1017,78 @@ export default function ReturnCar() {
         </p>
       </div>
 
-      {/* Step 1: Ch?n don thu� / xe */}
+      {/* Step 1: Chọn đơn thuê xe */}
       <Card>
         <CardHeader>
           <CardTitle>{t('staffReturnCar.booking.title')}</CardTitle>
         </CardHeader>
         <CardContent className='grid grid-cols-1 md:grid-cols-3 gap-4'>
           <div className='col-span-2'>
-            <Label className='block mb-2'>
-              {t('staffReturnCar.booking.selectLabel')}
-            </Label>
-            <Combobox
-              value={bookingId}
-              onValueChange={handleSelectBooking}
-              placeholder={t('staffReturnCar.booking.selectPlaceholder')}
-              searchPlaceholder={t('staffReturnCar.booking.searchPlaceholder')}
-              className={
-                bookingError ? 'border-red-500 focus:ring-red-500' : ''
-              }
-              disabled={loadingBookings}
-              options={eligibleBookings.map(b => ({
-                value: String(b.id),
-                label: `${b.user?.name || b.customer?.name || ''} → ${t(
-                  'staffReturnCar.booking.vehicle'
-                )}: ${b.vehicle?.licensePlate || b.vehicle?.name || ''}`,
-                searchText: [
-                  b.user?.name,
-                  b.customer?.name,
-                  b.vehicle?.licensePlate,
-                  b.vehicle?.name,
-                  String(b.id),
-                ]
-                  .filter(Boolean)
-                  .join(' '),
-              }))}
-            />
-            {bookingError && (
-              <p className='mt-1 text-xs text-red-600'>{bookingError}</p>
-            )}
+          <Label className='block mb-2'>
+            {t('staffReturnCar.booking.selectLabel')}
+          </Label>
+          {/* Đếm số booking tìm thấy */}
+          <div className='text-sm text-muted-foreground mb-2'>
+            {t('staffReturnCar.booking.foundCount', {
+              count: (eligibleBookings || []).length,
+            })}
           </div>
+          <Combobox
+            value={bookingId}
+            onValueChange={handleSelectBooking}
+            placeholder={t('staffReturnCar.booking.selectPlaceholder')}
+            searchPlaceholder={t('staffReturnCar.booking.searchPlaceholder')}
+            className={
+              bookingError ? 'border-red-500 focus:ring-red-500' : ''
+            }
+            disabled={loadingBookings}
+            options={eligibleBookings.map(b => ({
+              value: String(b.id),
+              label:
+                `${b.user?.name || b.customer?.name || ''} • ${b.vehicle?.licensePlate || b.vehicle?.name || ''}`,
+              name: b.user?.name || b.customer?.name || '',
+              plate: b.vehicle?.licensePlate || b.vehicle?.name || '',
+              endDate: b.endTime || b.expectedReturnTime || '',
+              searchText: [
+                b.user?.name,
+                b.customer?.name,
+                b.vehicle?.licensePlate,
+                b.vehicle?.name,
+                String(b.id),
+              ]
+                .filter(Boolean)
+                .join(' '),
+            }))}
+            renderSelected={opt =>
+              opt
+                ? `${opt.name || ''} • ${opt.plate || ''}`
+                : t('staffReturnCar.booking.selectPlaceholder')
+            }
+            renderOption={opt => (
+              <div className='w-full'>
+                <div className='flex items-center gap-2'>
+                  <User className='h-4 w-4 text-muted-foreground' />
+                  <span className='font-medium'>{opt.name}</span>
+                  <span className='text-muted-foreground'>•</span>
+                  <Car className='h-4 w-4 text-muted-foreground' />
+                  <span className='text-muted-foreground'>
+                    {t('staffReturnCar.booking.vehicle')}
+                  </span>
+                  <Badge variant='secondary' className='ml-1'>
+                    {opt.plate}
+                  </Badge>
+                </div>
+                <div className='mt-1 flex items-center gap-2 text-xs text-muted-foreground'>
+                  <Calendar className='h-4 w-4' />
+                  <span>{formatDateShort(opt.endDate)}</span>
+                </div>
+              </div>
+            )}
+          />
+          {bookingError && (
+            <p className='mt-1 text-xs text-red-600'>{bookingError}</p>
+          )}
+        </div>
           {booking && (
             <div>
               <Label className='block mb-2'>
@@ -1143,7 +1195,7 @@ export default function ReturnCar() {
         </CardContent>
       </Card>
 
-      {/* Step 2b: Th�ng tin tr? xe theo schema */}
+      {/* Step 2b: Thông tin trả xe theo schema */}
       <Card>
         <CardHeader>
           <CardTitle>{t('staffReturnCar.returnDetails.title')}</CardTitle>
@@ -1241,14 +1293,14 @@ export default function ReturnCar() {
         </CardContent>
       </Card>
 
-      {/* Step 2: Ki?m tra xe */}
+      {/* Step 2: Kiểm tra xe */}
       <Card>
         <CardHeader>
           <CardTitle>{t('staffReturnCar.inspection.title')}</CardTitle>
         </CardHeader>
         <CardContent className='space-y-4'>
           <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-            {/* Dropdown ch?n k?t qu?a ki?m tra */}
+            {/* Dropdown chọn kết quả kiểm tra */}
             <div>
               <Label className='block mb-2'>
                 {t('staffReturnCar.inspection.resultLabel')}
@@ -1275,7 +1327,7 @@ export default function ReturnCar() {
               </Select>
             </div>
 
-            {/* M?c pin (%) */}
+            {/* Mức pin (%) */}
             <div>
               <Label className='block mb-2'>
                 {t('staffReturnCar.inspection.batteryLabel')} (%)
@@ -1302,7 +1354,7 @@ export default function ReturnCar() {
               )}
             </div>
 
-            {/* T?nh tr?ng l?p */}
+            {/* Tình trạng lốp */}
             <div>
               <Label className='block mb-2'>
                 {t('staffReturnCar.inspection.tireLabel')}
@@ -1330,7 +1382,7 @@ export default function ReturnCar() {
               </Select>
             </div>
 
-            {/* Checklist ch? hi?n th?n th? khi c? s? c?o */}
+            {/* Checklist chỉ hiển thị khi có sự cố */}
             {hasIncident && (
               <div className='md:col-span-3 grid grid-cols-2 gap-3'>
                 {Object.entries(checklist).map(([key, val]) => {
@@ -1358,7 +1410,7 @@ export default function ReturnCar() {
             )}
           </div>
 
-          {/* Upload ?nh?n & ghi ch? s? c?o: ch? hi?n th?n khi c? s? c?o */}
+          {/* Upload ảnh & ghi chú sự cố */}
           {hasIncident && (
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div>
@@ -1434,9 +1486,8 @@ export default function ReturnCar() {
         </CardContent>
       </Card>
 
-      {/* Step 3 removed per request: b? t�nh to�n c?c v� ho�n ti�n */}
 
-      {/* Step 4: C?p nh?t booking v� xe */}
+      {/* Step 4: Cập nhật booking và xe */}
       <Card>
         <CardHeader>
           <CardTitle>{t('staffReturnCar.complete.title')}</CardTitle>
@@ -1466,7 +1517,7 @@ export default function ReturnCar() {
         </CardContent>
       </Card>
 
-      {/* Modal hi?n th?n t?ng ti?n & pricing c?a xe sau khi ho?n t?t tr? xe */}
+      {/* Modal hiển thị pricing khi hoàn tất trả xe */}
       <Dialog open={returnSummaryOpen} onOpenChange={setReturnSummaryOpen}>
         <DialogContent>
           <DialogHeader>
