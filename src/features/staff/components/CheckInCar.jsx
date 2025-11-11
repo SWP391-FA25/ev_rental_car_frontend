@@ -133,7 +133,7 @@ export default function CheckInCar() {
           // ✅ Store ALL assignments (not just first one)
           setStaffAssignment({
             assignments, // Array of all assignments
-            stations: assignments.map(a => a.station).filter(Boolean) // Array of stations
+            stations: assignments.map(a => a.station).filter(Boolean), // Array of stations
           });
 
           const stationNames = assignments
@@ -162,7 +162,7 @@ export default function CheckInCar() {
         } else {
           toast.error(
             'Failed to load station assignment: ' +
-            (error.message || 'Unknown error')
+              (error.message || 'Unknown error')
           );
         }
         setStaffAssignment(null);
@@ -176,7 +176,10 @@ export default function CheckInCar() {
 
   useEffect(() => {
     const fetchEligibleBookings = async () => {
-      if (!staffAssignment?.assignments || staffAssignment.assignments.length === 0) {
+      if (
+        !staffAssignment?.assignments ||
+        staffAssignment.assignments.length === 0
+      ) {
         console.log('Waiting for staff assignments...');
         return;
       }
@@ -195,7 +198,9 @@ export default function CheckInCar() {
 
         console.log('Staff assigned to stations:', {
           stationIds: assignedStationIds,
-          stationNames: staffAssignment.assignments.map(a => a.station?.name).filter(Boolean)
+          stationNames: staffAssignment.assignments
+            .map(a => a.station?.name)
+            .filter(Boolean),
         });
 
         // Filter bookings: CONFIRMED status + belongs to ANY assigned station
@@ -204,12 +209,16 @@ export default function CheckInCar() {
           const bookingStationId = b.station?.id || b.stationId;
 
           const isConfirmed = status === 'CONFIRMED';
-          const isAssignedStation = assignedStationIds.includes(bookingStationId);
+          const isAssignedStation =
+            assignedStationIds.includes(bookingStationId);
 
           return isConfirmed && isAssignedStation;
         });
 
-        console.log('Available CONFIRMED bookings from assigned stations:', list.length);
+        console.log(
+          'Available CONFIRMED bookings from assigned stations:',
+          list.length
+        );
         setAvailableBookings(list);
       } catch (err) {
         console.error('Fetch eligible bookings error', err);
@@ -331,12 +340,12 @@ export default function CheckInCar() {
       statusUpper === 'CONFIRMED'
         ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
         : statusUpper === 'IN_PROGRESS'
-          ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
-          : statusUpper === 'COMPLETED'
-            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-            : statusUpper === 'PENDING'
-              ? 'bg-slate-100 text-slate-700 dark:bg-slate-800/50 dark:text-slate-300'
-              : 'bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-300';
+        ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
+        : statusUpper === 'COMPLETED'
+        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+        : statusUpper === 'PENDING'
+        ? 'bg-slate-100 text-slate-700 dark:bg-slate-800/50 dark:text-slate-300'
+        : 'bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-300';
     return (
       <span
         className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${cls}`}
@@ -571,7 +580,11 @@ export default function CheckInCar() {
     if (!docFile) return toast.error('Please choose a file to upload');
 
     // ✅ Lấy renter ID từ booking
-    const renterId = booking?.renters?.id || booking?.renters || booking?.user?.id || booking?.userId;
+    const renterId =
+      booking?.renters?.id ||
+      booking?.renters ||
+      booking?.user?.id ||
+      booking?.userId;
     console.log('🔍 Renter ID for document upload:', renterId);
     if (!renterId) {
       console.error('❌ Cannot find renter ID in booking:', booking);
@@ -594,17 +607,13 @@ export default function CheckInCar() {
         docType,
         fileName: docFile.name,
         fileSize: (docFile.size / 1024 / 1024).toFixed(2) + ' MB',
-        bookingId: booking?.id
+        bookingId: booking?.id,
       });
 
       // ✅ Upload với userId trong FormData body
-      const res = await apiClient.post(
-        endpoints.documents.upload(),
-        form,
-        {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        }
-      );
+      const res = await apiClient.post(endpoints.documents.upload(), form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
 
       const created = res?.data?.data || res?.data;
       const uploadedDocId = created?.id;
@@ -612,26 +621,26 @@ export default function CheckInCar() {
       console.log('✅ Document uploaded successfully:', {
         docId: uploadedDocId,
         renterId,
-        response: created
+        response: created,
       });
 
-      // ✅ Tự động verify luôn sau khi upload
+      // ✅ Tự động verify luôn sau khi upload (silent - no toast)
       if (uploadedDocId) {
         try {
           await apiClient.patch(endpoints.documents.verify(uploadedDocId));
           console.log('✅ Document auto-verified:', uploadedDocId);
-          toast.success('Document uploaded and verified successfully');
           setDocumentVerified(true); // ✅ Auto-tick checkbox
         } catch (verifyErr) {
-          console.warn('⚠️ Auto-verify failed:', verifyErr);
-          toast.success('Document uploaded (verification pending)');
+          console.warn('⚠️ Auto-verify failed (silent):', verifyErr);
+          // Silent fail - document might still be verified
         }
-      } else {
-        toast.success('Document uploaded successfully');
       }
 
       // Refresh documents để hiển thị document mới
       await fetchCustomerDocuments(renterId);
+
+      // Show success toast after refresh
+      toast.success('Document uploaded successfully');
       setDocFile(null);
 
       // Auto-select next missing document type
@@ -685,7 +694,8 @@ export default function CheckInCar() {
     } else {
       // ❌ Customer chưa có document approved → Không cho tick
       toast.error('Cannot verify - No approved documents', {
-        description: 'Please upload customer documents first using the form above'
+        description:
+          'Please upload customer documents first using the form above',
       });
       setDocumentVerified(false);
     }
@@ -780,7 +790,8 @@ export default function CheckInCar() {
 
     if (totalAfterUpload > 10) {
       toast.error(
-        `Maximum 10 images allowed. You have ${existingImagesCount} existing + ${currentNewCount} new. Can only add ${10 - existingImagesCount - currentNewCount
+        `Maximum 10 images allowed. You have ${existingImagesCount} existing + ${currentNewCount} new. Can only add ${
+          10 - existingImagesCount - currentNewCount
         } more.`
       );
       return;
@@ -1123,10 +1134,11 @@ export default function CheckInCar() {
 
       // 🔄 STEP 5: Show success dialog
       const customerName = booking?.user?.name || booking?.renter?.name || '';
-      const vehicleLabel = `${booking?.vehicle?.name || ''}${booking?.vehicle?.licensePlate
-        ? ' • ' + booking.vehicle.licensePlate
-        : ''
-        }`.trim();
+      const vehicleLabel = `${booking?.vehicle?.name || ''}${
+        booking?.vehicle?.licensePlate
+          ? ' • ' + booking.vehicle.licensePlate
+          : ''
+      }`.trim();
 
       setCheckInSummary({
         bookingId: id,
@@ -1217,7 +1229,8 @@ export default function CheckInCar() {
       const vehicleStatus = (booking.vehicle.status || '').toUpperCase();
       if (vehicleStatus !== 'RESERVED') {
         validationErrors.push(
-          `❌ Vehicle status must be RESERVED to check-in (Current status: ${vehicleStatus || 'Unknown'
+          `❌ Vehicle status must be RESERVED to check-in (Current status: ${
+            vehicleStatus || 'Unknown'
           })`
         );
       }
@@ -1569,7 +1582,11 @@ export default function CheckInCar() {
   }
 
   // Show error if staff not assigned to any station
-  if (!staffAssignment || !staffAssignment.assignments || staffAssignment.assignments.length === 0) {
+  if (
+    !staffAssignment ||
+    !staffAssignment.assignments ||
+    staffAssignment.assignments.length === 0
+  ) {
     return (
       <div className='flex items-center justify-center min-h-[400px]'>
         <div className='max-w-md space-y-4 text-center'>
@@ -1599,7 +1616,10 @@ export default function CheckInCar() {
         <h2 className='text-xl font-semibold'>Check-In Car (Staff)</h2>
         <p className='text-sm text-muted-foreground'>
           Inspect vehicle condition and hand over keys to customer • Stations:{' '}
-          {staffAssignment.assignments?.map(a => a.station?.name).filter(Boolean).join(', ') || 'Unknown'}
+          {staffAssignment.assignments
+            ?.map(a => a.station?.name)
+            .filter(Boolean)
+            .join(', ') || 'Unknown'}
         </p>
       </div>
 
@@ -1677,10 +1697,11 @@ export default function CheckInCar() {
                             <button
                               key={b.id}
                               onClick={() => handleSelectBooking(b.id)}
-                              className={`w-full text-left p-4 rounded-md transition-all ${isSelected
-                                ? 'bg-primary text-primary-foreground'
-                                : 'hover:bg-accent'
-                                }`}
+                              className={`w-full text-left p-4 rounded-md transition-all ${
+                                isSelected
+                                  ? 'bg-primary text-primary-foreground'
+                                  : 'hover:bg-accent'
+                              }`}
                             >
                               <div className='flex items-start justify-between gap-3'>
                                 <div className='flex-1 space-y-2'>
@@ -1689,10 +1710,11 @@ export default function CheckInCar() {
                                     <div className='flex items-center gap-1.5'>
                                       <User className='h-3.5 w-3.5' />
                                       <span
-                                        className={`font-semibold text-sm ${isSelected
-                                          ? 'text-primary-foreground'
-                                          : 'text-foreground'
-                                          }`}
+                                        className={`font-semibold text-sm ${
+                                          isSelected
+                                            ? 'text-primary-foreground'
+                                            : 'text-foreground'
+                                        }`}
                                       >
                                         {b.user?.name ||
                                           b.customer?.name ||
@@ -1711,18 +1733,20 @@ export default function CheckInCar() {
                                     <div className='flex items-center gap-1.5'>
                                       <Car className='h-3.5 w-3.5' />
                                       <span
-                                        className={`text-sm ${isSelected
-                                          ? 'text-primary-foreground'
-                                          : 'text-foreground'
-                                          }`}
+                                        className={`text-sm ${
+                                          isSelected
+                                            ? 'text-primary-foreground'
+                                            : 'text-foreground'
+                                        }`}
                                       >
                                         {b.vehicle?.name || 'Vehicle'}
                                         {b.vehicle?.licensePlate && (
                                           <span
-                                            className={`font-mono ml-1.5 px-1.5 py-0.5 rounded text-xs ${isSelected
-                                              ? 'bg-primary-foreground/20 text-primary-foreground'
-                                              : 'bg-muted text-muted-foreground'
-                                              }`}
+                                            className={`font-mono ml-1.5 px-1.5 py-0.5 rounded text-xs ${
+                                              isSelected
+                                                ? 'bg-primary-foreground/20 text-primary-foreground'
+                                                : 'bg-muted text-muted-foreground'
+                                            }`}
                                           >
                                             {b.vehicle.licensePlate}
                                           </span>
@@ -1733,10 +1757,11 @@ export default function CheckInCar() {
 
                                   {/* Date & Code */}
                                   <div
-                                    className={`flex items-center gap-3 text-xs ${isSelected
-                                      ? 'text-primary-foreground/80'
-                                      : 'text-muted-foreground'
-                                      }`}
+                                    className={`flex items-center gap-3 text-xs ${
+                                      isSelected
+                                        ? 'text-primary-foreground/80'
+                                        : 'text-muted-foreground'
+                                    }`}
                                   >
                                     <div className='flex items-center gap-1.5'>
                                       <Calendar className='w-3 h-3' />
@@ -2473,6 +2498,89 @@ export default function CheckInCar() {
                       </p>
                     </div>
                   )}
+
+                {/* ⚠️ Smart Warning: Missing ID_CARD or DRIVERS_LICENSE */}
+                {(customerDocuments.identityCard ||
+                  customerDocuments.drivingLicense) &&
+                  (!customerDocuments.identityCard ||
+                    !customerDocuments.drivingLicense) && (
+                    <div className='col-span-2 p-4 border rounded-lg bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'>
+                      <p className='text-sm font-semibold text-amber-800 dark:text-amber-300'>
+                        ⚠️ Missing Required Document
+                      </p>
+                      <p className='mt-1 text-xs text-amber-600 dark:text-amber-400'>
+                        {!customerDocuments.identityCard &&
+                          customerDocuments.drivingLicense && (
+                            <>
+                              Please upload <strong>ID Card (CCCD)</strong>{' '}
+                              before check-in.
+                            </>
+                          )}
+                        {customerDocuments.identityCard &&
+                          !customerDocuments.drivingLicense && (
+                            <>
+                              Please upload{' '}
+                              <strong>Driver's License (GPLX)</strong> before
+                              check-in.
+                            </>
+                          )}
+                      </p>
+
+                      {/* 📤 Upload Form for Missing Document */}
+                      <div className='p-3 mt-3 space-y-3 border border-blue-200 rounded-lg bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800'>
+                        <p className='text-xs font-semibold text-blue-600 dark:text-blue-400'>
+                          📤 Upload Missing Document
+                        </p>
+                        <div className='flex flex-col gap-3'>
+                          <div className='flex items-center gap-2'>
+                            <label className='w-32 text-xs font-medium text-gray-700 dark:text-gray-300'>
+                              Document Type:
+                            </label>
+                            <select
+                              value={docType}
+                              onChange={e => setDocType(e.target.value)}
+                              className='flex-1 px-3 py-2 text-sm bg-white border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-800'
+                            >
+                              <option value='ID_CARD'>ID Card / CCCD</option>
+                              <option value='DRIVERS_LICENSE'>
+                                Driver's License / GPLX
+                              </option>
+                              <option value='PASSPORT'>Passport</option>
+                            </select>
+                          </div>
+                          <div className='flex items-center gap-2'>
+                            <label className='w-32 text-xs font-medium text-gray-700 dark:text-gray-300'>
+                              Choose File:
+                            </label>
+                            <input
+                              type='file'
+                              accept='image/jpeg,image/jpg,image/png,image/webp'
+                              onChange={e =>
+                                setDocFile(e.target.files?.[0] || null)
+                              }
+                              className='flex-1 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200'
+                            />
+                          </div>
+                          {docFile && (
+                            <p className='text-xs text-green-600 dark:text-green-400'>
+                              ✓ Selected: {docFile.name} (
+                              {(docFile.size / 1024 / 1024).toFixed(2)} MB)
+                            </p>
+                          )}
+                          <Button
+                            size='sm'
+                            onClick={handleUploadCustomerDocument}
+                            disabled={!docFile || loadingDocuments}
+                            className='w-full'
+                          >
+                            {loadingDocuments
+                              ? 'Uploading...'
+                              : '📤 Upload & Auto-Verify'}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
               </div>
             </div>
           )}
@@ -2484,29 +2592,42 @@ export default function CheckInCar() {
                 This customer hasn't uploaded any documents yet.
               </p>
 
+              {/* ⚠️ Smart Missing Document Warning */}
+              <div className='p-3 mt-3 border rounded-lg bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'>
+                <p className='text-sm font-semibold text-amber-900 dark:text-amber-200'>
+                  ⚠️ Required Documents Missing
+                </p>
+                <p className='mt-1 text-xs text-amber-700 dark:text-amber-300'>
+                  Please upload both <strong>ID Card (CCCD)</strong> and{' '}
+                  <strong>Driver's License (GPLX)</strong> before check-in.
+                </p>
+              </div>
+
               {/* ✅ ENABLED - Staff can upload documents on behalf of customer */}
               {needsDocumentUpload && (
                 <div className='mt-4 space-y-3'>
-                  <p className='text-xs text-blue-600 dark:text-blue-400 font-semibold'>
+                  <p className='text-xs font-semibold text-blue-600 dark:text-blue-400'>
                     📤 Upload customer documents
                   </p>
                   <div className='flex flex-col gap-3'>
                     <div className='flex items-center gap-2'>
-                      <label className='text-xs font-medium text-gray-700 dark:text-gray-300 w-32'>
+                      <label className='w-32 text-xs font-medium text-gray-700 dark:text-gray-300'>
                         Document Type:
                       </label>
                       <select
                         value={docType}
                         onChange={e => setDocType(e.target.value)}
-                        className='flex-1 px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm'
+                        className='flex-1 px-3 py-2 text-sm bg-white border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-800'
                       >
                         <option value='ID_CARD'>ID Card / CCCD</option>
-                        <option value='DRIVERS_LICENSE'>Driver's License / GPLX</option>
+                        <option value='DRIVERS_LICENSE'>
+                          Driver's License / GPLX
+                        </option>
                         <option value='PASSPORT'>Passport</option>
                       </select>
                     </div>
                     <div className='flex items-center gap-2'>
-                      <label className='text-xs font-medium text-gray-700 dark:text-gray-300 w-32'>
+                      <label className='w-32 text-xs font-medium text-gray-700 dark:text-gray-300'>
                         Choose File:
                       </label>
                       <input
@@ -2518,7 +2639,8 @@ export default function CheckInCar() {
                     </div>
                     {docFile && (
                       <p className='text-xs text-green-600 dark:text-green-400'>
-                        ✓ Selected: {docFile.name} ({(docFile.size / 1024 / 1024).toFixed(2)} MB)
+                        ✓ Selected: {docFile.name} (
+                        {(docFile.size / 1024 / 1024).toFixed(2)} MB)
                       </p>
                     )}
                     <Button
@@ -2527,19 +2649,22 @@ export default function CheckInCar() {
                       disabled={!docFile || loadingDocuments}
                       className='w-full'
                     >
-                      {loadingDocuments ? 'Uploading...' : '📤 Upload & Auto-Verify'}
+                      {loadingDocuments
+                        ? 'Uploading...'
+                        : '📤 Upload & Auto-Verify'}
                     </Button>
                   </div>
                 </div>
               )}
 
               {/* Staff instruction */}
-              <div className='mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg'>
+              <div className='p-3 mt-3 border border-blue-200 rounded-lg bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800'>
                 <p className='text-sm font-semibold text-blue-900 dark:text-blue-200'>
                   📋 Staff Instructions
                 </p>
-                <p className='text-xs text-blue-700 dark:text-blue-300 mt-1'>
-                  Upload customer's ID/License documents above. The document will be automatically verified after upload.
+                <p className='mt-1 text-xs text-blue-700 dark:text-blue-300'>
+                  Upload customer's ID/License documents above. The document
+                  will be automatically verified after upload.
                 </p>
               </div>
             </div>
@@ -2562,8 +2687,8 @@ export default function CheckInCar() {
                 </Label>
               </div>
               <p className='text-xs text-muted-foreground'>
-                Required: Check customer's identity documents before handing over
-                vehicle.
+                Required: Check customer's identity documents before handing
+                over vehicle.
               </p>
             </>
           )}
@@ -2576,8 +2701,8 @@ export default function CheckInCar() {
             {isEditMode
               ? 'Update Inspection'
               : isViewMode
-                ? 'View Inspection'
-                : 'Complete Check-In'}
+              ? 'View Inspection'
+              : 'Complete Check-In'}
           </CardTitle>
         </CardHeader>
         <CardContent className='space-y-4'>
@@ -2628,8 +2753,8 @@ export default function CheckInCar() {
                 {isEditMode
                   ? 'Modify the inspection details and save changes.'
                   : isViewMode
-                    ? 'Viewing existing inspection record. Click Edit to modify.'
-                    : 'Review all information and complete vehicle check-in process.'}
+                  ? 'Viewing existing inspection record. Click Edit to modify.'
+                  : 'Review all information and complete vehicle check-in process.'}
               </p>
             </div>
             <div className='flex gap-2'>
