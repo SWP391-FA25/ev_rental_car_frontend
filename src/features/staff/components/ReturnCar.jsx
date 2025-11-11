@@ -116,23 +116,26 @@ export default function ReturnCar() {
   }, [booking]);
 
   // Định dạng ngày ngắn gọn (DD/MM/YYYY)
-  const formatDateShort = useCallback(dateString => {
-    if (!dateString) return t('booking.details.na');
-    try {
-      const d = new Date(dateString);
-      return new Intl.DateTimeFormat('vi-VN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-      }).format(d);
-    } catch (_) {
+  const formatDateShort = useCallback(
+    dateString => {
+      if (!dateString) return t('booking.details.na');
       try {
-        return new Date(dateString).toLocaleDateString('vi-VN');
-      } catch (__) {
-        return String(dateString);
+        const d = new Date(dateString);
+        return new Intl.DateTimeFormat('vi-VN', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        }).format(d);
+      } catch (_) {
+        try {
+          return new Date(dateString).toLocaleDateString('vi-VN');
+        } catch (__) {
+          return String(dateString);
+        }
       }
-    }
-  }, [t]);
+    },
+    [t]
+  );
 
   // Fetch eligible bookings: rentals currently in progress or confirmed
   useEffect(() => {
@@ -1024,71 +1027,72 @@ export default function ReturnCar() {
         </CardHeader>
         <CardContent className='grid grid-cols-1 md:grid-cols-3 gap-4'>
           <div className='col-span-2'>
-          <Label className='block mb-2'>
-            {t('staffReturnCar.booking.selectLabel')}
-          </Label>
-          {/* Đếm số booking tìm thấy */}
-          <div className='text-sm text-muted-foreground mb-2'>
-            {t('staffReturnCar.booking.foundCount', {
-              count: (eligibleBookings || []).length,
-            })}
-          </div>
-          <Combobox
-            value={bookingId}
-            onValueChange={handleSelectBooking}
-            placeholder={t('staffReturnCar.booking.selectPlaceholder')}
-            searchPlaceholder={t('staffReturnCar.booking.searchPlaceholder')}
-            className={
-              bookingError ? 'border-red-500 focus:ring-red-500' : ''
-            }
-            disabled={loadingBookings}
-            options={eligibleBookings.map(b => ({
-              value: String(b.id),
-              label:
-                `${b.user?.name || b.customer?.name || ''} • ${b.vehicle?.licensePlate || b.vehicle?.name || ''}`,
-              name: b.user?.name || b.customer?.name || '',
-              plate: b.vehicle?.licensePlate || b.vehicle?.name || '',
-              endDate: b.endTime || b.expectedReturnTime || '',
-              searchText: [
-                b.user?.name,
-                b.customer?.name,
-                b.vehicle?.licensePlate,
-                b.vehicle?.name,
-                String(b.id),
-              ]
-                .filter(Boolean)
-                .join(' '),
-            }))}
-            renderSelected={opt =>
-              opt
-                ? `${opt.name || ''} • ${opt.plate || ''}`
-                : t('staffReturnCar.booking.selectPlaceholder')
-            }
-            renderOption={opt => (
-              <div className='w-full'>
-                <div className='flex items-center gap-2'>
-                  <User className='h-4 w-4 text-muted-foreground' />
-                  <span className='font-medium'>{opt.name}</span>
-                  <span className='text-muted-foreground'>•</span>
-                  <Car className='h-4 w-4 text-muted-foreground' />
-                  <span className='text-muted-foreground'>
-                    {t('staffReturnCar.booking.vehicle')}
-                  </span>
-                  <Badge variant='secondary' className='ml-1'>
-                    {opt.plate}
-                  </Badge>
+            <Label className='block mb-2'>
+              {t('staffReturnCar.booking.selectLabel')}
+            </Label>
+            {/* Đếm số booking tìm thấy */}
+            <div className='text-sm text-muted-foreground mb-2'>
+              {t('staffReturnCar.booking.foundCount', {
+                count: (eligibleBookings || []).length,
+              })}
+            </div>
+            <Combobox
+              value={bookingId}
+              onValueChange={handleSelectBooking}
+              placeholder={t('staffReturnCar.booking.selectPlaceholder')}
+              searchPlaceholder={t('staffReturnCar.booking.searchPlaceholder')}
+              className={
+                bookingError ? 'border-red-500 focus:ring-red-500' : ''
+              }
+              disabled={loadingBookings}
+              options={eligibleBookings.map(b => ({
+                value: String(b.id),
+                label: `${b.user?.name || b.customer?.name || ''} • ${
+                  b.vehicle?.licensePlate || b.vehicle?.name || ''
+                }`,
+                name: b.user?.name || b.customer?.name || '',
+                plate: b.vehicle?.licensePlate || b.vehicle?.name || '',
+                endDate: b.endTime || b.expectedReturnTime || '',
+                searchText: [
+                  b.user?.name,
+                  b.customer?.name,
+                  b.vehicle?.licensePlate,
+                  b.vehicle?.name,
+                  String(b.id),
+                ]
+                  .filter(Boolean)
+                  .join(' '),
+              }))}
+              renderSelected={opt =>
+                opt
+                  ? `${opt.name || ''} • ${opt.plate || ''}`
+                  : t('staffReturnCar.booking.selectPlaceholder')
+              }
+              renderOption={opt => (
+                <div className='w-full'>
+                  <div className='flex items-center gap-2'>
+                    <User className='h-4 w-4 text-muted-foreground' />
+                    <span className='font-medium'>{opt.name}</span>
+                    <span className='text-muted-foreground'>•</span>
+                    <Car className='h-4 w-4 text-muted-foreground' />
+                    <span className='text-muted-foreground'>
+                      {t('staffReturnCar.booking.vehicle')}
+                    </span>
+                    <Badge variant='secondary' className='ml-1'>
+                      {opt.plate}
+                    </Badge>
+                  </div>
+                  <div className='mt-1 flex items-center gap-2 text-xs text-muted-foreground'>
+                    <Calendar className='h-4 w-4' />
+                    <span>{formatDateShort(opt.endDate)}</span>
+                  </div>
                 </div>
-                <div className='mt-1 flex items-center gap-2 text-xs text-muted-foreground'>
-                  <Calendar className='h-4 w-4' />
-                  <span>{formatDateShort(opt.endDate)}</span>
-                </div>
-              </div>
+              )}
+            />
+            {bookingError && (
+              <p className='mt-1 text-xs text-red-600'>{bookingError}</p>
             )}
-          />
-          {bookingError && (
-            <p className='mt-1 text-xs text-red-600'>{bookingError}</p>
-          )}
-        </div>
+          </div>
           {booking && (
             <div>
               <Label className='block mb-2'>
@@ -1486,7 +1490,6 @@ export default function ReturnCar() {
         </CardContent>
       </Card>
 
-
       {/* Step 4: Cập nhật booking và xe */}
       <Card>
         <CardHeader>
@@ -1624,7 +1627,7 @@ export default function ReturnCar() {
                   className='cursor-pointer text-sm'
                 >
                   {t('staffReturnCar.modal.depositHandled', {
-                    defaultValue: 'Đã xử lí tiền cọc',
+                    defaultValue: 'Deposit handled',
                   })}
                 </Label>
               </div>
@@ -1704,7 +1707,7 @@ export default function ReturnCar() {
                   <div className='flex justify-between'>
                     <span className='text-amber-600'>
                       {t('staffReturnCar.modal.pricing.depositApplied', {
-                        defaultValue: 'Đã trừ tiền cọc',
+                        defaultValue: 'Deposit applied',
                       })}
                     </span>
                     <span className='font-medium text-amber-600'>

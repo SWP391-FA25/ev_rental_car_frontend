@@ -286,6 +286,7 @@
       "description": "Payment details for this return",
       "vehicle": "Vehicle",
       "payableVND": "Amount payable (VND)",
+      "depositHandled": "Deposit handled",
       "pricingTitle": "Vehicle pricing",
       "pricing": {
         "hourly": "Hourly rate",
@@ -293,7 +294,8 @@
         "weekly": "Weekly rate",
         "monthly": "Monthly rate",
         "insurance": "Insurance fee",
-        "deposit": "Deposit"
+        "deposit": "Deposit",
+        "depositApplied": "Deposit applied"
       },
       "payment": {
         "methodTitle": "Payment method",

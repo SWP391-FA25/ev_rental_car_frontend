@@ -359,6 +359,12 @@
       "searchStationPlaceholder": "Tìm kiếm trạm...",
       "lastRecordedLabel": "Odo gần nhất: {{value}} km"
     },
+    "modal": {
+      "depositHandled": "Đã xử lí tiền cọc",
+      "pricing": {
+        "depositApplied": "Đã trừ tiền cọc"
+      }
+    },
     "deposit": {
       "title": "3. Tính toán cọc & hoàn tiền",
       "damage": "Khấu trừ hư hỏng",
