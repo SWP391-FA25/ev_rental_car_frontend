@@ -38,11 +38,13 @@ import { apiClient } from '../../../shared/lib/apiClient';
 import { toast } from 'sonner';
 import { ContractUploadForm } from './contract-upload-form';
 import { useAuth } from '../../../../app/providers/AuthProvider';
+import { useBooking } from '../../../booking/hooks/useBooking';
 
 export function ContractUploadPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { getAllBookings } = useBooking();
 
   // Tab state
   const [activeTab, setActiveTab] = useState('existing'); // 'existing' or 'create'
@@ -120,20 +122,34 @@ export function ContractUploadPage() {
     try {
       setBookingsLoading(true);
 
-      // Fetch CONFIRMED bookings (limit 100 due to backend validation)
-      const [bookingsResponse, contractsResponse] = await Promise.all([
-        apiClient.get(
-          `${endpoints.bookings.getAll()}?status=CONFIRMED&limit=100`
-        ),
-        apiClient.get(endpoints.contracts.getAll()),
-      ]);
+      // Fetch CONFIRMED bookings using useBooking hook (same as CheckIn)
+      const bookingsData = await getAllBookings({
+        status: 'CONFIRMED',
+        limit: 100,
+      });
 
-      const bookings = bookingsResponse?.data?.data?.bookings || [];
-      const contracts = contractsResponse?.data?.data?.contracts || [];
+      console.log('📦 Bookings Data (from useBooking):', bookingsData);
+
+      // Fetch all contracts
+      const contractsResponse = await apiClient.get(
+        endpoints.contracts.getAll()
+      );
+      console.log('📄 Contracts Response:', contractsResponse);
+
+      const bookings = bookingsData?.bookings || [];
+      const contracts = contractsResponse?.data?.contracts || [];
+
+      console.log('📦 Extracted bookings:', bookings);
+      console.log('📄 Extracted contracts:', contracts);
 
       // Create map of bookingId that have contracts
       const bookingIdsWithContract = new Set(
         contracts.map(c => c.bookingId).filter(Boolean)
+      );
+
+      console.log(
+        '🔍 Booking IDs with contracts:',
+        Array.from(bookingIdsWithContract)
       );
 
       // Filter bookings without contracts
@@ -141,10 +157,12 @@ export function ContractUploadPage() {
         booking => !bookingIdsWithContract.has(booking.id)
       );
 
+      console.log('✅ Bookings without contracts:', bookingsWithout);
+
       setBookingsWithoutContract(bookingsWithout);
     } catch (err) {
-      console.error('Fetch bookings error:', err);
-      // Silent fail - empty state will be shown
+      console.error('❌ Fetch bookings error:', err);
+      toast.error('Failed to load bookings');
       setBookingsWithoutContract([]);
     } finally {
       setBookingsLoading(false);
@@ -366,8 +384,8 @@ export function ContractUploadPage() {
                                   #
                                   {String(
                                     (existingPage - 1) * existingLimit +
-                                    index +
-                                    1
+                                      index +
+                                      1
                                   ).padStart(3, '0')}
                                 </span>
                               </td>
