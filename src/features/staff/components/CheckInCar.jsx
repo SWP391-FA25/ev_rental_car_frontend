@@ -105,7 +105,7 @@ export default function CheckInCar() {
   const [loadingContract, setLoadingContract] = useState(false);
 
   // ✨ Staff assignment state (now supports multiple stations)
-  const [staffAssignments, setStaffAssignments] = useState([]);
+  const [staffAssignment, setStaffAssignment] = useState(null);
   const [loadingAssignment, setLoadingAssignment] = useState(true);
 
   // Fetch staff assignments (can be multiple stations)
@@ -115,6 +115,7 @@ export default function CheckInCar() {
 
       try {
         setLoadingAssignment(true);
+        // ✅ Get ALL assignments for staff (many-to-many relationship)
         const response = await apiClient.get(
           endpoints.assignments.getByStaffId(user.id)
         );
@@ -126,26 +127,28 @@ export default function CheckInCar() {
           response.data?.assignments || response.assignments || [];
 
         console.log('📋 Assignments array:', assignments);
-        console.log('📋 Assignments count:', assignments.length);
+        console.log('📋 Total assignments:', assignments.length);
 
         if (assignments && assignments.length > 0) {
-          // Store ALL assignments (staff can work at multiple stations)
-          setStaffAssignments(assignments);
+          // ✅ Store ALL assignments (not just first one)
+          setStaffAssignment({
+            assignments, // Array of all assignments
+            stations: assignments.map(a => a.station).filter(Boolean) // Array of stations
+          });
 
           const stationNames = assignments
             .map(a => a.station?.name)
             .filter(Boolean)
             .join(', ');
 
-          console.log(
-            `✅ Staff assigned to ${assignments.length} station(s):`,
-            stationNames
-          );
+          console.log('✅ Staff assigned to stations:', stationNames);
+          console.log('✅ Total assignments:', assignments.length);
         } else {
           console.warn('⚠️ Staff not assigned to any station (empty array)');
           toast.error(
             'You are not assigned to any station. Please contact admin.'
           );
+          setStaffAssignment(null);
         }
       } catch (error) {
         console.error('❌ Error fetching staff assignment:', error);
@@ -159,9 +162,10 @@ export default function CheckInCar() {
         } else {
           toast.error(
             'Failed to load station assignment: ' +
-              (error.message || 'Unknown error')
+            (error.message || 'Unknown error')
           );
         }
+        setStaffAssignment(null);
       } finally {
         setLoadingAssignment(false);
       }
@@ -172,8 +176,8 @@ export default function CheckInCar() {
 
   useEffect(() => {
     const fetchEligibleBookings = async () => {
-      if (!staffAssignments || staffAssignments.length === 0) {
-        console.log('⏳ Waiting for staff assignments...');
+      if (!staffAssignment?.assignments || staffAssignment.assignments.length === 0) {
+        console.log('Waiting for staff assignments...');
         return;
       }
 
@@ -182,51 +186,30 @@ export default function CheckInCar() {
         const resData = await getAllBookings({ limit: 100 });
         const allBookings = resData?.bookings || resData || [];
 
-        console.log('🔍 Total bookings from API:', allBookings.length);
-        console.log('📦 Sample booking (first one):', allBookings[0]);
+        console.log('Total bookings from API:', allBookings.length);
 
-        // Get all station IDs this staff is assigned to
-        const assignedStationIds = staffAssignments
+        // Get all station IDs that staff is assigned to
+        const assignedStationIds = staffAssignment.assignments
           .map(a => a.station?.id)
           .filter(Boolean);
 
-        const assignedStationNames = staffAssignments
-          .map(a => a.station?.name)
-          .filter(Boolean)
-          .join(', ');
-
-        console.log('👤 Staff assigned to stations:', {
-          count: assignedStationIds.length,
+        console.log('Staff assigned to stations:', {
           stationIds: assignedStationIds,
-          stationNames: assignedStationNames,
+          stationNames: staffAssignment.assignments.map(a => a.station?.name).filter(Boolean)
         });
 
-        // Filter by staff's assigned stations (can be multiple)
+        // Filter bookings: CONFIRMED status + belongs to ANY assigned station
         const list = allBookings.filter(b => {
           const status = (b.status || b.bookingStatus || '').toUpperCase();
           const bookingStationId = b.station?.id || b.stationId;
 
           const isConfirmed = status === 'CONFIRMED';
-          const isAssignedStation =
-            assignedStationIds.includes(bookingStationId);
+          const isAssignedStation = assignedStationIds.includes(bookingStationId);
 
-          console.log(`📦 Booking ${b.id || b.bookingCode}:`, {
-            status,
-            isConfirmed,
-            bookingStationId,
-            bookingStationName: b.station?.name,
-            isAssignedStation,
-            willShow: isConfirmed && isAssignedStation,
-          });
-
-          // ✅ Show bookings from ANY station this staff is assigned to
           return isConfirmed && isAssignedStation;
         });
 
-        console.log(
-          `📋 Available bookings for ${assignedStationNames}:`,
-          list.length
-        );
+        console.log('Available CONFIRMED bookings from assigned stations:', list.length);
         setAvailableBookings(list);
       } catch (err) {
         console.error('Fetch eligible bookings error', err);
@@ -235,7 +218,7 @@ export default function CheckInCar() {
       }
     };
     fetchEligibleBookings();
-  }, [getAllBookings, staffAssignments]);
+  }, [getAllBookings, staffAssignment]);
 
   // ✨ Click outside to close dropdown
   useEffect(() => {
@@ -348,12 +331,12 @@ export default function CheckInCar() {
       statusUpper === 'CONFIRMED'
         ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
         : statusUpper === 'IN_PROGRESS'
-        ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
-        : statusUpper === 'COMPLETED'
-        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-        : statusUpper === 'PENDING'
-        ? 'bg-slate-100 text-slate-700 dark:bg-slate-800/50 dark:text-slate-300'
-        : 'bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-300';
+          ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
+          : statusUpper === 'COMPLETED'
+            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+            : statusUpper === 'PENDING'
+              ? 'bg-slate-100 text-slate-700 dark:bg-slate-800/50 dark:text-slate-300'
+              : 'bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-300';
     return (
       <span
         className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${cls}`}
@@ -519,36 +502,33 @@ export default function CheckInCar() {
 
     try {
       setLoadingDocuments(true);
-      // ✅ Use correct endpoint to get documents by user ID
       console.log('📡 Calling API: GET /api/documents/user/' + rentersId);
       const response = await apiClient.get(
         endpoints.documents.getByUserId(rentersId)
       );
 
-      // Parse response - can be array of documents or paginated response
       const documentsData =
         response?.data?.data?.documents ||
         response?.data?.documents ||
         response?.data ||
         [];
 
-      // Keep full list (may contain ids/statuses) so we can verify or pick ids
       const docsArray = Array.isArray(documentsData) ? documentsData : [];
       setCustomerDocumentsList(docsArray);
-      setNeedsDocumentUpload(docsArray.length === 0);
 
       console.log('📄 Fetched customer documents:', {
         renterId: rentersId,
-        count: Array.isArray(documentsData) ? documentsData.length : 0,
-        documents: documentsData,
+        count: docsArray.length,
+        documents: docsArray,
       });
 
-      // Transform documents array to object with document types as keys
-      if (Array.isArray(documentsData) && documentsData.length > 0) {
-        const docsObj = {};
+      // ✅ Check if customer has APPROVED documents
+      const hasApprovedDocs = docsArray.some(doc => doc.status === 'APPROVED');
 
-        documentsData.forEach(doc => {
-          // Only show APPROVED documents
+      if (hasApprovedDocs) {
+        // ✅ Customer ĐÃ CÓ document approved → Show documents, allow checkbox tick
+        const docsObj = {};
+        docsArray.forEach(doc => {
           if (doc.status === 'APPROVED') {
             if (doc.documentType === 'ID_CARD') {
               docsObj.identityCard = doc.fileUrl || doc.thumbnailUrl;
@@ -559,20 +539,22 @@ export default function CheckInCar() {
             }
           }
         });
-
         setCustomerDocuments(Object.keys(docsObj).length > 0 ? docsObj : null);
+        setNeedsDocumentUpload(false);
       } else {
+        // ⚠️ Customer CHƯA CÓ document approved → Show upload UI
         setCustomerDocuments(null);
+        setNeedsDocumentUpload(true);
       }
     } catch (err) {
       console.warn('Failed to fetch customer documents:', err);
-      const errorMsg = err?.response?.data?.message || err?.message;
       if (err?.response?.status === 404) {
-        console.log('No documents found for this renter');
+        console.log('No documents found - show upload UI');
         setCustomerDocumentsList([]);
         setCustomerDocuments(null);
         setNeedsDocumentUpload(true);
       } else {
+        const errorMsg = err?.response?.data?.message || err?.message;
         toast.warning(`Could not load customer documents: ${errorMsg}`);
         setCustomerDocumentsList([]);
         setCustomerDocuments(null);
@@ -585,87 +567,70 @@ export default function CheckInCar() {
 
   // Upload a document on behalf of renter (staff action)
   const handleUploadCustomerDocument = async () => {
-    if (!booking) {
-      toast.error('No booking selected', {
-        description: 'Please select a booking first before uploading documents',
-      });
-      return;
-    }
+    if (!booking) return toast.error('Select a booking first');
+    if (!docFile) return toast.error('Please choose a file to upload');
 
-    if (!docFile) {
-      toast.error('No file selected', {
-        description: 'Please choose a document file to upload',
-      });
-      return;
-    }
-
-    // Validate file size (max 10MB)
-    const maxSize = 10 * 1024 * 1024;
-    if (docFile.size > maxSize) {
-      toast.error('File too large', {
-        description: 'Maximum file size is 10MB. Please choose a smaller file.',
-      });
-      return;
-    }
-
-    // Validate file type
-    const allowedTypes = [
-      'image/jpeg',
-      'image/jpg',
-      'image/png',
-      'application/pdf',
-    ];
-    if (!allowedTypes.includes(docFile.type)) {
-      toast.error('Invalid file type', {
-        description: 'Only JPG, PNG, and PDF files are allowed',
-      });
-      return;
-    }
-
-    const renterId =
-      booking?.renters?.id ||
-      booking?.renters ||
-      booking?.user?.id ||
-      booking?.userId;
-
+    // ✅ Lấy renter ID từ booking
+    const renterId = booking?.renters?.id || booking?.renters || booking?.user?.id || booking?.userId;
+    console.log('🔍 Renter ID for document upload:', renterId);
     if (!renterId) {
-      toast.error('Renter ID not found', {
-        description: 'Cannot identify the customer for this booking',
-      });
-      return;
+      console.error('❌ Cannot find renter ID in booking:', booking);
+      return toast.error('Renter ID not found in booking');
     }
 
     try {
       setLoadingDocuments(true);
       const form = new FormData();
-      // ✅ Backend expects field name 'document' (not 'file')
+
+      // ✅ CRITICAL: Gửi userId của RENTER (không phải staff)
+      form.append('userId', renterId);
       form.append('document', docFile, docFile.name);
-      // ✅ Send documentType
       form.append('documentType', docType);
       // ✅ IMPORTANT: Send renterId so backend knows who to upload for
       form.append('renterId', renterId);
 
-      // ✅ Staff uploads on behalf of renter - backend will auto-approve
-      const res = await apiClient.post(endpoints.documents.upload(), form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      console.log('📤 Uploading document for renter:', {
+        renterId,
+        docType,
+        fileName: docFile.name,
+        fileSize: (docFile.size / 1024 / 1024).toFixed(2) + ' MB',
+        bookingId: booking?.id
       });
+
+      // ✅ Upload với userId trong FormData body
+      const res = await apiClient.post(
+        endpoints.documents.upload(),
+        form,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        }
+      );
 
       const created = res?.data?.data || res?.data;
+      const uploadedDocId = created?.id;
 
-      // Success message based on document type
-      const docTypeLabel =
-        docType === 'ID_CARD'
-          ? 'ID Card'
-          : docType === 'DRIVERS_LICENSE'
-          ? "Driver's License"
-          : 'Passport';
-
-      toast.success(`${docTypeLabel} uploaded successfully`, {
-        description:
-          'Document has been auto-approved and is ready for verification',
+      console.log('✅ Document uploaded successfully:', {
+        docId: uploadedDocId,
+        renterId,
+        response: created
       });
 
-      // Refresh documents
+      // ✅ Tự động verify luôn sau khi upload
+      if (uploadedDocId) {
+        try {
+          await apiClient.patch(endpoints.documents.verify(uploadedDocId));
+          console.log('✅ Document auto-verified:', uploadedDocId);
+          toast.success('Document uploaded and verified successfully');
+          setDocumentVerified(true); // ✅ Auto-tick checkbox
+        } catch (verifyErr) {
+          console.warn('⚠️ Auto-verify failed:', verifyErr);
+          toast.success('Document uploaded (verification pending)');
+        }
+      } else {
+        toast.success('Document uploaded successfully');
+      }
+
+      // Refresh documents để hiển thị document mới
       await fetchCustomerDocuments(renterId);
       setDocFile(null);
 
@@ -687,7 +652,8 @@ export default function CheckInCar() {
 
       setNeedsDocumentUpload(false);
     } catch (e) {
-      console.error('Upload document error:', e);
+      console.error('❌ Upload document error:', e);
+      console.error('❌ Error response:', e?.response?.data);
       const msg = e?.response?.data?.message || e?.message;
       toast.error('Failed to upload document', {
         description: msg || 'An error occurred while uploading the document',
@@ -698,107 +664,30 @@ export default function CheckInCar() {
   };
 
   // When staff toggles verification checkbox
-  const handleToggleDocumentVerified = async e => {
+  const handleToggleDocumentVerified = e => {
     const checked = e.target.checked;
 
-    // If unchecking, simply clear local flag
+    // ✅ Checkbox chỉ để staff XÁC NHẬN đã kiểm tra document
+    // KHÔNG GỌI API - Upload đã tự động verify rồi
     if (!checked) {
       setDocumentVerified(false);
       return;
     }
 
-    // Check if customer has both required documents
-    const hasIdCard = customerDocumentsList.some(
-      doc => doc.documentType === 'ID_CARD' && doc.status === 'APPROVED'
-    );
-    const hasLicense = customerDocumentsList.some(
-      doc => doc.documentType === 'DRIVERS_LICENSE' && doc.status === 'APPROVED'
-    );
-
-    if (!hasIdCard && !hasLicense) {
-      toast.error('Cannot verify documents', {
-        description:
-          "Customer needs to upload both ID Card and Driver's License",
-      });
-      setDocumentVerified(false);
-      return;
-    }
-
-    if (!hasIdCard) {
-      toast.error('Missing ID Card', {
-        description: 'Customer needs to upload ID Card before verification',
-      });
-      setDocumentVerified(false);
-      return;
-    }
-
-    if (!hasLicense) {
-      toast.error("Missing Driver's License", {
-        description:
-          "Customer needs to upload Driver's License before verification",
-      });
-      setDocumentVerified(false);
-      return;
-    }
-
-    // ✅ Check if customer already has APPROVED documents
+    // Check if customer has any approved documents
     const hasApprovedDocs = customerDocumentsList.some(
       doc => doc.status === 'APPROVED'
     );
 
     if (hasApprovedDocs) {
-      // ✅ Customer already has approved documents
-      // Just set local flag (no API call needed)
+      // ✅ Customer có document approved → Cho phép tick
       setDocumentVerified(true);
-      toast.success('Documents verified', {
-        description: "Both ID Card and Driver's License are approved ✓",
-      });
-      return;
-    }
-
-    // ⚠️ No approved documents - need to verify via API
-    // Find first PENDING document to verify
-    const pendingDoc = customerDocumentsList.find(
-      doc => doc.status === 'PENDING' || doc.status === 'REJECTED'
-    );
-
-    if (!pendingDoc || !pendingDoc.id) {
-      toast.error('No document available to verify', {
-        description: 'Customer needs to upload documents first',
+    } else {
+      // ❌ Customer chưa có document approved → Không cho tick
+      toast.error('Cannot verify - No approved documents', {
+        description: 'Please upload customer documents first using the form above'
       });
       setDocumentVerified(false);
-      return;
-    }
-
-    // Call API to verify/approve the document
-    try {
-      setLoadingDocuments(true);
-      // ✅ Backend uses PATCH method for verify
-      const res = await apiClient.patch(
-        endpoints.documents.verify(pendingDoc.id)
-      );
-
-      toast.success('Document verified and approved', {
-        description: 'Document status has been updated to APPROVED',
-      });
-      setDocumentVerified(true);
-
-      // Refresh documents to show updated status
-      const renterId =
-        booking?.renters?.id ||
-        booking?.renters ||
-        booking?.user?.id ||
-        booking?.userId;
-      if (renterId) await fetchCustomerDocuments(renterId);
-    } catch (err) {
-      console.error('Verify document error:', err);
-      const msg = err?.response?.data?.message || err?.message;
-      toast.error('Failed to verify document', {
-        description: msg || 'An error occurred during verification',
-      });
-      setDocumentVerified(false);
-    } finally {
-      setLoadingDocuments(false);
     }
   };
 
@@ -891,8 +780,7 @@ export default function CheckInCar() {
 
     if (totalAfterUpload > 10) {
       toast.error(
-        `Maximum 10 images allowed. You have ${existingImagesCount} existing + ${currentNewCount} new. Can only add ${
-          10 - existingImagesCount - currentNewCount
+        `Maximum 10 images allowed. You have ${existingImagesCount} existing + ${currentNewCount} new. Can only add ${10 - existingImagesCount - currentNewCount
         } more.`
       );
       return;
@@ -1081,12 +969,17 @@ export default function CheckInCar() {
   };
 
   const resetAllFields = () => {
+    // Reset booking
     setBookingId('');
     setBooking(null);
+
+    // Reset inspection states
     setBookingHasInspection(false);
     setExistingInspection(null);
     setIsEditMode(false);
     setIsViewMode(false);
+
+    // Reset inspection form fields
     setExteriorCondition('GOOD');
     setInteriorCondition('GOOD');
     setTireCondition('GOOD');
@@ -1099,6 +992,29 @@ export default function CheckInCar() {
     setInspectionFiles([]);
     setInspectionPreviews([]);
     setSelectedStation('');
+
+    // Reset contract states
+    setBookingHasContract(false);
+    setExistingContract(null);
+
+    // Reset customer documents
+    setCustomerDocuments(null);
+    setCustomerDocumentsList([]);
+    setNeedsDocumentUpload(false);
+    setDocFile(null);
+    setDocType('ID_CARD');
+
+    // Reset search
+    setSearchQuery('');
+    setIsSearchOpen(false);
+
+    // Reset validation errors
+    setValidationErrors({
+      batteryLevel: '',
+      mileage: '',
+      damageNotes: '',
+      notes: '',
+    });
   };
 
   const performInspectionSubmission = async () => {
@@ -1207,11 +1123,10 @@ export default function CheckInCar() {
 
       // 🔄 STEP 5: Show success dialog
       const customerName = booking?.user?.name || booking?.renter?.name || '';
-      const vehicleLabel = `${booking?.vehicle?.name || ''}${
-        booking?.vehicle?.licensePlate
-          ? ' • ' + booking.vehicle.licensePlate
-          : ''
-      }`.trim();
+      const vehicleLabel = `${booking?.vehicle?.name || ''}${booking?.vehicle?.licensePlate
+        ? ' • ' + booking.vehicle.licensePlate
+        : ''
+        }`.trim();
 
       setCheckInSummary({
         bookingId: id,
@@ -1302,8 +1217,7 @@ export default function CheckInCar() {
       const vehicleStatus = (booking.vehicle.status || '').toUpperCase();
       if (vehicleStatus !== 'RESERVED') {
         validationErrors.push(
-          `❌ Vehicle status must be RESERVED to check-in (Current status: ${
-            vehicleStatus || 'Unknown'
+          `❌ Vehicle status must be RESERVED to check-in (Current status: ${vehicleStatus || 'Unknown'
           })`
         );
       }
@@ -1655,7 +1569,7 @@ export default function CheckInCar() {
   }
 
   // Show error if staff not assigned to any station
-  if (!staffAssignments || staffAssignments.length === 0) {
+  if (!staffAssignment || !staffAssignment.assignments || staffAssignment.assignments.length === 0) {
     return (
       <div className='flex items-center justify-center min-h-[400px]'>
         <div className='max-w-md space-y-4 text-center'>
@@ -1674,7 +1588,7 @@ export default function CheckInCar() {
   }
 
   // Get all assigned station names
-  const assignedStationNames = staffAssignments
+  const assignedStationNames = staffAssignment.assignments
     .map(a => a.station?.name)
     .filter(Boolean)
     .join(', ');
@@ -1684,9 +1598,8 @@ export default function CheckInCar() {
       <div>
         <h2 className='text-xl font-semibold'>Check-In Car (Staff)</h2>
         <p className='text-sm text-muted-foreground'>
-          Inspect vehicle condition and hand over keys to customer • Station
-          {staffAssignments.length > 1 ? 's' : ''}:{' '}
-          {assignedStationNames || 'Unknown'}
+          Inspect vehicle condition and hand over keys to customer • Stations:{' '}
+          {staffAssignment.assignments?.map(a => a.station?.name).filter(Boolean).join(', ') || 'Unknown'}
         </p>
       </div>
 
@@ -1764,11 +1677,10 @@ export default function CheckInCar() {
                             <button
                               key={b.id}
                               onClick={() => handleSelectBooking(b.id)}
-                              className={`w-full text-left p-4 rounded-md transition-all ${
-                                isSelected
-                                  ? 'bg-primary text-primary-foreground'
-                                  : 'hover:bg-accent'
-                              }`}
+                              className={`w-full text-left p-4 rounded-md transition-all ${isSelected
+                                ? 'bg-primary text-primary-foreground'
+                                : 'hover:bg-accent'
+                                }`}
                             >
                               <div className='flex items-start justify-between gap-3'>
                                 <div className='flex-1 space-y-2'>
@@ -1777,11 +1689,10 @@ export default function CheckInCar() {
                                     <div className='flex items-center gap-1.5'>
                                       <User className='h-3.5 w-3.5' />
                                       <span
-                                        className={`font-semibold text-sm ${
-                                          isSelected
-                                            ? 'text-primary-foreground'
-                                            : 'text-foreground'
-                                        }`}
+                                        className={`font-semibold text-sm ${isSelected
+                                          ? 'text-primary-foreground'
+                                          : 'text-foreground'
+                                          }`}
                                       >
                                         {b.user?.name ||
                                           b.customer?.name ||
@@ -1800,20 +1711,18 @@ export default function CheckInCar() {
                                     <div className='flex items-center gap-1.5'>
                                       <Car className='h-3.5 w-3.5' />
                                       <span
-                                        className={`text-sm ${
-                                          isSelected
-                                            ? 'text-primary-foreground'
-                                            : 'text-foreground'
-                                        }`}
+                                        className={`text-sm ${isSelected
+                                          ? 'text-primary-foreground'
+                                          : 'text-foreground'
+                                          }`}
                                       >
                                         {b.vehicle?.name || 'Vehicle'}
                                         {b.vehicle?.licensePlate && (
                                           <span
-                                            className={`font-mono ml-1.5 px-1.5 py-0.5 rounded text-xs ${
-                                              isSelected
-                                                ? 'bg-primary-foreground/20 text-primary-foreground'
-                                                : 'bg-muted text-muted-foreground'
-                                            }`}
+                                            className={`font-mono ml-1.5 px-1.5 py-0.5 rounded text-xs ${isSelected
+                                              ? 'bg-primary-foreground/20 text-primary-foreground'
+                                              : 'bg-muted text-muted-foreground'
+                                              }`}
                                           >
                                             {b.vehicle.licensePlate}
                                           </span>
@@ -1824,11 +1733,10 @@ export default function CheckInCar() {
 
                                   {/* Date & Code */}
                                   <div
-                                    className={`flex items-center gap-3 text-xs ${
-                                      isSelected
-                                        ? 'text-primary-foreground/80'
-                                        : 'text-muted-foreground'
-                                    }`}
+                                    className={`flex items-center gap-3 text-xs ${isSelected
+                                      ? 'text-primary-foreground/80'
+                                      : 'text-muted-foreground'
+                                      }`}
                                   >
                                     <div className='flex items-center gap-1.5'>
                                       <Calendar className='w-3 h-3' />
@@ -1939,45 +1847,6 @@ export default function CheckInCar() {
             </div>
           )}
 
-          {/* ✨ Info banner for existing contract */}
-          {bookingHasContract && existingContract && (
-            <div className='p-4 border-2 border-green-400 rounded-lg md:col-span-3 bg-green-50'>
-              <div className='flex items-center justify-between'>
-                <div className='flex items-center gap-3'>
-                  <span className='text-2xl'>📄</span>
-                  <div>
-                    <p className='font-semibold text-green-900'>
-                      Contract Already Exists
-                    </p>
-                    <p className='text-sm text-green-700'>
-                      Contract {existingContract.contractNumber} - Status:{' '}
-                      {existingContract.status}
-                    </p>
-                    <p className='mt-1 text-xs text-green-600'>
-                      Created{' '}
-                      {new Date(existingContract.createdAt).toLocaleString()}
-                      {existingContract.status === 'COMPLETED' &&
-                        existingContract.uploadedAt &&
-                        ` • Signed: ${new Date(
-                          existingContract.uploadedAt
-                        ).toLocaleString()}`}
-                    </p>
-                  </div>
-                </div>
-                {existingContract.status === 'COMPLETED' && (
-                  <span className='px-3 py-1 text-xs font-medium text-white bg-green-600 rounded-full'>
-                    ✓ Completed
-                  </span>
-                )}
-                {existingContract.status === 'CREATED' && (
-                  <span className='px-3 py-1 text-xs font-medium text-white rounded-full bg-amber-600'>
-                    ⏳ Awaiting Signature
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
-
           {loadingInspection && (
             <div className='p-4 border rounded-lg md:col-span-3 bg-gray-50'>
               <p className='text-sm text-gray-600'>
@@ -2084,7 +1953,7 @@ export default function CheckInCar() {
           {/* Station Info - Display only (from booking) */}
           <div>
             <Label className='block mb-2'>
-              Return Station <span className='text-red-500'>*</span>
+              Check-In Station <span className='text-red-500'>*</span>
             </Label>
             <div className='p-3 border rounded-md bg-muted/50'>
               {booking?.station ? (
@@ -2615,184 +2484,89 @@ export default function CheckInCar() {
                 This customer hasn't uploaded any documents yet.
               </p>
 
-              {/* Staff can upload documents on behalf of customer */}
-              {user?.role === 'STAFF' && (
+              {/* ✅ ENABLED - Staff can upload documents on behalf of customer */}
+              {needsDocumentUpload && (
                 <div className='mt-4 space-y-3'>
-                  <div className='p-3 border rounded-lg border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20'>
-                    <p className='text-sm font-semibold text-amber-900 dark:text-amber-200'>
-                      📤 Upload on behalf of customer
-                    </p>
-                    <p className='mt-1 text-xs text-amber-700 dark:text-amber-300'>
-                      Required: ID Card AND Driver's License. Documents will be
-                      auto-approved.
-                    </p>
-                  </div>
-
-                  <div className='space-y-2'>
-                    <Label htmlFor='docType' className='text-sm font-medium'>
-                      Document Type <span className='text-destructive'>*</span>
-                    </Label>
-                    <Select value={docType} onValueChange={setDocType}>
-                      <SelectTrigger id='docType'>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value='ID_CARD'>
-                          🪪 ID Card (Required)
-                        </SelectItem>
-                        <SelectItem value='DRIVERS_LICENSE'>
-                          🚗 Driver's License (Required)
-                        </SelectItem>
-                        <SelectItem value='PASSPORT'>
-                          🛂 Passport (Optional)
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className='space-y-2'>
-                    <Label htmlFor='docFile' className='text-sm font-medium'>
-                      Select Document Image{' '}
-                      <span className='text-destructive'>*</span>
-                    </Label>
-                    <Input
-                      id='docFile'
-                      type='file'
-                      accept='image/*,.pdf'
-                      onChange={e => setDocFile(e.target.files?.[0] || null)}
-                      className='cursor-pointer'
-                    />
+                  <p className='text-xs text-blue-600 dark:text-blue-400 font-semibold'>
+                    📤 Upload customer documents
+                  </p>
+                  <div className='flex flex-col gap-3'>
+                    <div className='flex items-center gap-2'>
+                      <label className='text-xs font-medium text-gray-700 dark:text-gray-300 w-32'>
+                        Document Type:
+                      </label>
+                      <select
+                        value={docType}
+                        onChange={e => setDocType(e.target.value)}
+                        className='flex-1 px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm'
+                      >
+                        <option value='ID_CARD'>ID Card / CCCD</option>
+                        <option value='DRIVERS_LICENSE'>Driver's License / GPLX</option>
+                        <option value='PASSPORT'>Passport</option>
+                      </select>
+                    </div>
+                    <div className='flex items-center gap-2'>
+                      <label className='text-xs font-medium text-gray-700 dark:text-gray-300 w-32'>
+                        Choose File:
+                      </label>
+                      <input
+                        type='file'
+                        accept='image/jpeg,image/jpg,image/png,image/webp'
+                        onChange={e => setDocFile(e.target.files?.[0] || null)}
+                        className='flex-1 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100'
+                      />
+                    </div>
                     {docFile && (
-                      <p className='text-xs text-muted-foreground'>
-                        Selected: {docFile.name} (
-                        {(docFile.size / 1024 / 1024).toFixed(2)} MB)
+                      <p className='text-xs text-green-600 dark:text-green-400'>
+                        ✓ Selected: {docFile.name} ({(docFile.size / 1024 / 1024).toFixed(2)} MB)
                       </p>
                     )}
-                    <p className='text-xs text-muted-foreground'>
-                      Accepted: JPG, PNG, PDF (max 10MB)
-                    </p>
+                    <Button
+                      size='sm'
+                      onClick={handleUploadCustomerDocument}
+                      disabled={!docFile || loadingDocuments}
+                      className='w-full'
+                    >
+                      {loadingDocuments ? 'Uploading...' : '📤 Upload & Auto-Verify'}
+                    </Button>
                   </div>
-
-                  <Button
-                    onClick={handleUploadCustomerDocument}
-                    disabled={!docFile || loadingDocuments}
-                    className='w-full'
-                  >
-                    {loadingDocuments ? 'Uploading...' : 'Upload Document'}
-                  </Button>
                 </div>
               )}
+
+              {/* Staff instruction */}
+              <div className='mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg'>
+                <p className='text-sm font-semibold text-blue-900 dark:text-blue-200'>
+                  📋 Staff Instructions
+                </p>
+                <p className='text-xs text-blue-700 dark:text-blue-300 mt-1'>
+                  Upload customer's ID/License documents above. The document will be automatically verified after upload.
+                </p>
+              </div>
             </div>
           )}
 
-          {/* Show partial documents - missing some required docs */}
-          {customerDocuments &&
-            !loadingDocuments &&
-            booking &&
-            (() => {
-              const hasIdCard = !!customerDocuments.identityCard;
-              const hasLicense = !!customerDocuments.drivingLicense;
-              const missingDocs = [];
-
-              if (!hasIdCard)
-                missingDocs.push({ type: 'ID_CARD', label: '🪪 ID Card' });
-              if (!hasLicense)
-                missingDocs.push({
-                  type: 'DRIVERS_LICENSE',
-                  label: "🚗 Driver's License",
-                });
-
-              if (missingDocs.length > 0) {
-                return (
-                  <div className='p-4 mb-4 border rounded-lg border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20'>
-                    <p className='text-sm font-semibold text-amber-900 dark:text-amber-200'>
-                      ⚠️ Missing Required Documents
-                    </p>
-                    <p className='mt-1 mb-3 text-xs text-amber-700 dark:text-amber-300'>
-                      Customer is missing:{' '}
-                      {missingDocs.map(d => d.label).join(', ')}
-                    </p>
-
-                    {user?.role === 'STAFF' && (
-                      <div className='pt-3 mt-3 space-y-3 border-t border-amber-200 dark:border-amber-700'>
-                        <div className='space-y-2'>
-                          <Label
-                            htmlFor='missingDocType'
-                            className='text-sm font-medium text-amber-900 dark:text-amber-200'
-                          >
-                            Upload Missing Document
-                          </Label>
-                          <Select value={docType} onValueChange={setDocType}>
-                            <SelectTrigger
-                              id='missingDocType'
-                              className='bg-background'
-                            >
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {missingDocs.map(doc => (
-                                <SelectItem key={doc.type} value={doc.type}>
-                                  {doc.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className='space-y-2'>
-                          <Input
-                            type='file'
-                            accept='image/*,.pdf'
-                            onChange={e =>
-                              setDocFile(e.target.files?.[0] || null)
-                            }
-                            className='cursor-pointer bg-background'
-                          />
-                          {docFile && (
-                            <p className='text-xs text-amber-700 dark:text-amber-300'>
-                              Selected: {docFile.name}
-                            </p>
-                          )}
-                        </div>
-
-                        <Button
-                          onClick={handleUploadCustomerDocument}
-                          disabled={!docFile || loadingDocuments}
-                          className='w-full'
-                          variant='default'
-                        >
-                          {loadingDocuments
-                            ? 'Uploading...'
-                            : `Upload ${
-                                missingDocs.find(d => d.type === docType)
-                                  ?.label || 'Document'
-                              }`}
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                );
-              }
-              return null;
-            })()}
-
-          <div className='flex items-center gap-2 text-sm'>
-            <input
-              id='doc_verified'
-              type='checkbox'
-              checked={documentVerified}
-              onChange={handleToggleDocumentVerified}
-              disabled={isFieldsDisabled || loadingDocuments}
-            />
-            <Label htmlFor='doc_verified' className='cursor-pointer'>
-              I have verified customer's ID and driving license{' '}
-              <span className='text-red-500'>*</span>
-            </Label>
-          </div>
-          <p className='text-xs text-muted-foreground'>
-            Required: Check customer's identity documents before handing over
-            vehicle.
-          </p>
+          {/* ✅ Chỉ hiện checkbox nếu customer ĐÃ CÓ approved documents */}
+          {customerDocuments && (
+            <>
+              <div className='flex items-center gap-2 text-sm'>
+                <input
+                  id='doc_verified'
+                  type='checkbox'
+                  checked={documentVerified}
+                  onChange={handleToggleDocumentVerified}
+                  disabled={isFieldsDisabled || loadingDocuments}
+                />
+                <Label htmlFor='doc_verified' className='cursor-pointer'>
+                  I have verified customer's ID and driving license{' '}
+                  <span className='text-red-500'>*</span>
+                </Label>
+              </div>
+              <p className='text-xs text-muted-foreground'>
+                Required: Check customer's identity documents before handing over
+                vehicle.
+              </p>
+            </>
+          )}
         </CardContent>
       </Card>
 
@@ -2802,8 +2576,8 @@ export default function CheckInCar() {
             {isEditMode
               ? 'Update Inspection'
               : isViewMode
-              ? 'View Inspection'
-              : 'Complete Check-In'}
+                ? 'View Inspection'
+                : 'Complete Check-In'}
           </CardTitle>
         </CardHeader>
         <CardContent className='space-y-4'>
@@ -2854,8 +2628,8 @@ export default function CheckInCar() {
                 {isEditMode
                   ? 'Modify the inspection details and save changes.'
                   : isViewMode
-                  ? 'Viewing existing inspection record. Click Edit to modify.'
-                  : 'Review all information and complete vehicle check-in process.'}
+                    ? 'Viewing existing inspection record. Click Edit to modify.'
+                    : 'Review all information and complete vehicle check-in process.'}
               </p>
             </div>
             <div className='flex gap-2'>
