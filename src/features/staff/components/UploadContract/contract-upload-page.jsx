@@ -11,12 +11,28 @@ import {
   CheckCircle,
   Clock,
   X,
-  Calendar,
+  Plus,
   AlertCircle,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { Button } from '../../../shared/components/ui/button';
 import { Card } from '../../../shared/components/ui/card';
 import { Input } from '../../../shared/components/ui/input';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '../../../shared/components/ui/tabs';
+import { Badge } from '../../../shared/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../../shared/components/ui/select';
 import { endpoints } from '../../../shared/lib/endpoints';
 import { apiClient } from '../../../shared/lib/apiClient';
 import { toast } from 'sonner';
@@ -27,34 +43,84 @@ export function ContractUploadPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [contracts, setContracts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  // Backend only has: COMPLETED
-  // Frontend adds "NO_CONTRACT" for bookings without contract
-  const statusOptions = ['all', 'NO_CONTRACT', 'COMPLETED']; // Không còn CREATED
+
+  // Tab state
+  const [activeTab, setActiveTab] = useState('existing'); // 'existing' or 'create'
+
+  // ========== EXISTING CONTRACTS TAB ==========
+  const [existingContracts, setExistingContracts] = useState([]);
+  const [existingLoading, setExistingLoading] = useState(false);
+  const [existingPage, setExistingPage] = useState(1);
+  const [existingLimit] = useState(10);
+  const [existingTotal, setExistingTotal] = useState(0);
+  const [existingTotalPages, setExistingTotalPages] = useState(0);
+  const [existingSearch, setExistingSearch] = useState('');
+  const [existingStatusFilter, setExistingStatusFilter] = useState('');
+
+  // ========== CREATE CONTRACT TAB (Bookings without contract) ==========
+  const [bookingsWithoutContract, setBookingsWithoutContract] = useState([]);
+  const [bookingsLoading, setBookingsLoading] = useState(false);
+  const [bookingsSearch, setBookingsSearch] = useState('');
+
+  // ========== COMMON STATE ==========
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedContract, setSelectedContract] = useState(null);
-  const [page, setPage] = useState(1);
-  const [limit] = useState(20);
-  const [totalPages, setTotalPages] = useState(0);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState(null);
 
   // Authorization check
   useEffect(() => {
     if (!user || (user.role !== 'STAFF' && user.role !== 'ADMIN')) {
       toast.error('You do not have permission to access this page');
-      // Optionally redirect to home or another page
     }
   }, [user]);
 
-  // Fetch both bookings and contracts, then merge
-  const fetchContracts = async () => {
+  // ========== FETCH EXISTING CONTRACTS ==========
+  const fetchExistingContracts = async (page = 1, status = '', search = '') => {
     try {
-      setLoading(true);
+      setExistingLoading(true);
 
-      // Fetch both bookings and contracts in parallel
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: existingLimit.toString(),
+      });
+
+      if (status) params.append('status', status);
+      // Backend search tự tìm trong booking.user.name, vehicle.model, etc
+
+      const response = await apiClient.get(
+        `${endpoints.contracts.getAll()}?${params.toString()}`
+      );
+
+      console.log('📄 Contracts API Response:', response);
+      console.log('📄 Response data:', response?.data);
+      console.log('📄 Response data.data:', response?.data?.data);
+
+      const data = response?.data || {}; // Backend trả về {success, data: {contracts, pagination}}
+      const contracts = data.contracts || [];
+      const pagination = data.pagination || {};
+
+      console.log('📄 Extracted contracts:', contracts);
+      console.log('📄 Extracted pagination:', pagination);
+
+      setExistingContracts(contracts);
+      setExistingTotal(pagination.total || 0);
+      setExistingTotalPages(pagination.totalPages || 0);
+    } catch (err) {
+      console.error('❌ Fetch contracts error:', err);
+      console.error('❌ Error response:', err?.response);
+      toast.error('Failed to load contracts');
+    } finally {
+      setExistingLoading(false);
+    }
+  };
+
+  // ========== FETCH BOOKINGS WITHOUT CONTRACT ==========
+  const fetchBookingsWithoutContract = async () => {
+    try {
+      setBookingsLoading(true);
+
+      // Fetch CONFIRMED bookings (limit 100 due to backend validation)
       const [bookingsResponse, contractsResponse] = await Promise.all([
         apiClient.get(
           `${endpoints.bookings.getAll()}?status=CONFIRMED&limit=100`
@@ -62,289 +128,105 @@ export function ContractUploadPage() {
         apiClient.get(endpoints.contracts.getAll()),
       ]);
 
-      const confirmedBookings = Array.isArray(bookingsResponse?.data)
-        ? bookingsResponse.data
-        : Array.isArray(bookingsResponse?.data?.bookings)
-          ? bookingsResponse.data.bookings
-          : [];
+      const bookings = bookingsResponse?.data?.data?.bookings || [];
+      const contracts = contractsResponse?.data?.data?.contracts || [];
 
-      const existingContracts = Array.isArray(contractsResponse?.data)
-        ? contractsResponse.data
-        : Array.isArray(contractsResponse?.data?.contracts)
-          ? contractsResponse.data.contracts
-          : [];
+      // Create map of bookingId that have contracts
+      const bookingIdsWithContract = new Set(
+        contracts.map(c => c.bookingId).filter(Boolean)
+      );
 
-      console.log('📋 Found CONFIRMED bookings:', confirmedBookings.length);
-      console.log('📄 Found existing contracts:', existingContracts.length);
+      // Filter bookings without contracts
+      const bookingsWithout = bookings.filter(
+        booking => !bookingIdsWithContract.has(booking.id)
+      );
 
-      // Create a map of contracts by bookingId
-      const contractMap = {};
-      existingContracts.forEach(contract => {
-        if (contract?.bookingId) {
-          contractMap[contract.bookingId] = contract;
-        }
-      });
-
-      // Merge bookings with their contracts
-      const mergedData = confirmedBookings.map(booking => {
-        const contract = contractMap[booking.id];
-        return {
-          ...booking,
-          hasContract: !!contract,
-          contractId: contract?.id || null,
-          contractNumber: contract?.contractNumber || null,
-          // Backend status: CREATED (no file yet) or COMPLETED (file uploaded)
-          // Frontend: NO_CONTRACT (no contract record exists yet)
-          contractStatus: contract?.status || 'NO_CONTRACT',
-          contractFileUrl: contract?.signedFileUrl || null,
-          contractCreatedAt: contract?.createdAt || null,
-          contractUpdatedAt: contract?.updatedAt || null,
-          vehicleId: booking?.vehicle?.id || booking?.vehicleId,
-        };
-      });
-
-      console.log('🔗 Merged data:', mergedData.length);
-
-      // Collect user ids to fetch phone numbers
-      const userIdsToFetch = [
-        ...new Set(mergedData.map(b => b.userId).filter(id => id)),
-      ];
-
-      // Collect vehicle ids to fetch brand and model
-      const vehicleIdsToFetch = [
-        ...new Set(mergedData.map(b => b.vehicleId).filter(id => id)),
-      ];
-
-      // Fetch user details to get phone numbers
-      if (userIdsToFetch.length > 0) {
-        try {
-          console.log('👤 Fetching user details for:', userIdsToFetch);
-          const userFetches = userIdsToFetch.map(id =>
-            apiClient
-              .get(endpoints.renters.getById(id))
-              .then(r => {
-                console.log(`🔍 API Response for user ${id}:`, r);
-                // Backend returns { success: true, data: { renter } }
-                return { id, data: r?.data?.data?.renter || r?.data?.renter };
-              })
-              .catch(err => {
-                console.error(`❌ Error fetching user ${id}:`, err);
-                return { id, data: null };
-              })
-          );
-          const users = await Promise.all(userFetches);
-
-          const userMap = {};
-          users.forEach(u => {
-            if (u?.id && u?.data) {
-              userMap[u.id] = u.data;
-              console.log(`✅ User ${u.id}:`, {
-                name: u.data.name,
-                email: u.data.email,
-                phone: u.data.phone,
-              });
-            }
-          });
-
-          // Merge fetched user phone back into mergedData
-          for (let i = 0; i < mergedData.length; i++) {
-            const uid = mergedData[i]?.userId;
-            if (uid && userMap[uid]) {
-              // If user object doesn't exist, create it
-              if (!mergedData[i].user) {
-                mergedData[i].user = {};
-              }
-              mergedData[i].user = {
-                ...mergedData[i].user,
-                id: uid,
-                name: userMap[uid].name || mergedData[i].user.name,
-                email: userMap[uid].email || mergedData[i].user.email,
-                phone: userMap[uid].phone,
-              };
-              console.log(`✅ Merged user ${uid}:`, mergedData[i].user);
-            }
-          }
-          console.log('🔄 User phone data merged successfully');
-        } catch (err) {
-          console.warn('⚠️ Could not fetch user details:', err);
-        }
-      }
-
-      // Fetch vehicle details
-      if (vehicleIdsToFetch.length > 0) {
-        try {
-          console.log('🚗 Fetching vehicle details for:', vehicleIdsToFetch);
-          // Fetch vehicle details in parallel
-          const vehicleFetches = vehicleIdsToFetch.map(id =>
-            apiClient
-              .get(endpoints.vehicles.getById(id))
-              .then(r => {
-                console.log(`🔍 API Response for vehicle ${id}:`, r);
-                return { id, data: r?.data?.data || r?.data };
-              })
-              .catch(err => {
-                console.error(`❌ Error fetching vehicle ${id}:`, err);
-                return { id, data: null };
-              })
-          );
-          const vehicles = await Promise.all(vehicleFetches);
-
-          const vehicleMap = {};
-          vehicles.forEach(v => {
-            if (v?.id && v?.data) {
-              vehicleMap[v.id] = v.data;
-              console.log(`✅ Vehicle ${v.id}:`, {
-                brand: v.data.brand,
-                model: v.data.model,
-                licensePlate: v.data.licensePlate,
-                fullData: v.data,
-              });
-            }
-          });
-
-          // Merge fetched vehicle info back into mergedData
-          for (let i = 0; i < mergedData.length; i++) {
-            const vid = mergedData[i]?.vehicleId;
-            if (vid && vehicleMap[vid]) {
-              mergedData[i].vehicle = {
-                ...mergedData[i].vehicle,
-                brand: vehicleMap[vid].brand,
-                model: vehicleMap[vid].model,
-              };
-              console.log(`✅ Merged vehicle ${vid}:`, mergedData[i].vehicle);
-            }
-          }
-          console.log('🔄 Vehicle data merged successfully');
-        } catch (err) {
-          console.warn('⚠️ Could not fetch additional vehicle details:', err);
-        }
-      }
-
-      setContracts(mergedData);
-      setTotalPages(Math.ceil(mergedData.length / limit));
-      setError(null);
+      setBookingsWithoutContract(bookingsWithout);
     } catch (err) {
-      console.error('Fetch error:', err);
-      setError(err?.message || 'Failed to load data');
-      toast.error('Failed to load data');
-      setContracts([]);
+      console.error('Fetch bookings error:', err);
+      // Silent fail - empty state will be shown
+      setBookingsWithoutContract([]);
     } finally {
-      setLoading(false);
+      setBookingsLoading(false);
     }
   };
 
+  // Load data when tab changes
   useEffect(() => {
-    fetchContracts();
-  }, []);
+    if (activeTab === 'existing') {
+      fetchExistingContracts(
+        existingPage,
+        existingStatusFilter,
+        existingSearch
+      );
+    } else if (activeTab === 'create') {
+      fetchBookingsWithoutContract();
+    }
+  }, [activeTab, existingPage, existingStatusFilter]);
 
-  const handleUploadClick = contract => {
-    console.log('📤 Opening upload modal for contract:', contract);
-    console.log('🚗 Vehicle data:', contract?.vehicle);
-    setSelectedContract(contract);
+  // ========== HANDLERS ==========
+  const handleCreateContract = booking => {
+    setSelectedBooking(booking);
     setShowUploadModal(true);
   };
 
-  const handleUploadSuccess = async () => {
-    await fetchContracts();
-    setShowUploadModal(false);
-    setSelectedContract(null);
-    toast.success(
-      'Contract uploaded successfully! Redirecting to Check-In...',
-      {
-        duration: 2000,
-      }
-    );
+  const handleViewContract = contract => {
+    console.log('🔍 View Contract clicked:', contract);
+    console.log('🔍 signedFileUrl:', contract?.signedFileUrl);
+    console.log('🔍 signedFileName:', contract?.signedFileName);
+    setSelectedContract(contract);
+    setShowDetailModal(true);
+  };
 
-    // ✅ Navigate to CheckInCar page after 1.5 seconds
+  const handleUploadSuccess = async () => {
+    toast.success('Contract created successfully!');
+    setShowUploadModal(false);
+    setSelectedBooking(null);
+    setSelectedContract(null);
+
+    // Refresh current tab
+    if (activeTab === 'existing') {
+      await fetchExistingContracts(
+        existingPage,
+        existingStatusFilter,
+        existingSearch
+      );
+    } else {
+      await fetchBookingsWithoutContract();
+    }
+
+    // Navigate to check-in after 1.5s
     setTimeout(() => {
       navigate('/staff?tab=check-in');
     }, 1500);
   };
 
-  const handleViewDetails = contract => {
-    console.log('👁️ Opening detail modal for contract:', contract);
-    console.log('🚗 Vehicle data:', contract?.vehicle);
-    setSelectedContract(contract);
-    setShowDetailModal(true);
-  };
-
-  const [showDetailModal, setShowDetailModal] = useState(false);
-
-  const filteredContracts = contracts.filter(contract => {
-    const matchesSearch =
-      contract?.id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contract?.contractNumber
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      contract?.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contract?.vehicle?.licensePlate
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      contract?.vehicle?.brand
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      contract?.vehicle?.model
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      contract?.station?.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    // Không còn trạng thái CREATED
-    const matchesStatus =
-      filterStatus === 'all'
-        ? contract?.contractStatus !== 'CREATED'
-        : contract?.contractStatus === filterStatus;
-    return matchesSearch && matchesStatus;
-  });
-
-  const getStatusIcon = status => {
+  // ========== HELPERS ==========
+  const getStatusBadge = status => {
     switch (status) {
+      case 'CREATED':
+        return (
+          <Badge
+            variant='outline'
+            className='bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800'
+          >
+            <Clock className='w-3 h-3 mr-1' />
+            Pending Upload
+          </Badge>
+        );
       case 'COMPLETED':
-        return <CheckCircle className='w-5 h-5 text-green-600' />;
-      case 'NO_CONTRACT':
-        return <AlertCircle className='w-5 h-5 text-amber-600' />;
+        return (
+          <Badge
+            variant='outline'
+            className='text-green-700 border-green-200 bg-green-50 dark:bg-green-950/50 dark:text-green-400 dark:border-green-800'
+          >
+            <CheckCircle className='w-3 h-3 mr-1' />
+            Completed
+          </Badge>
+        );
       default:
-        return null;
+        return <Badge variant='outline'>{status || 'Unknown'}</Badge>;
     }
-  };
-
-  const getStatusLabel = status => {
-    switch (status) {
-      case 'COMPLETED':
-        return t('staffContracts.status.completed');
-      case 'NO_CONTRACT':
-        return t('staffContracts.status.noContract');
-      default:
-        return status || t('staffContracts.status.unknown');
-    }
-  };
-
-  const getStatusColor = status => {
-    switch (status) {
-      case 'COMPLETED':
-        return 'bg-green-50 dark:bg-green-900/50 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800';
-      case 'NO_CONTRACT':
-        return 'bg-amber-50 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800';
-      default:
-        return 'bg-muted/50 text-muted-foreground border';
-    }
-  };
-
-  const getVehicleLabel = vehicle => {
-    if (!vehicle) return '';
-
-    // Priority: brand + model > model alone > name
-    // Do NOT fallback to licensePlate (to avoid duplication)
-    if (vehicle.brand && vehicle.model)
-      return `${vehicle.brand} ${vehicle.model}`;
-    if (vehicle.model) return vehicle.model;
-    if (vehicle.name) return vehicle.name;
-
-    return ''; // Return empty string if no brand/model/name
-  };
-
-  const formatFileSize = bytes => {
-    if (!bytes) return 'N/A';
-    const mb = bytes / (1024 * 1024);
-    return mb.toFixed(2) + ' MB';
   };
 
   const formatDate = dateString => {
@@ -358,244 +240,349 @@ export function ContractUploadPage() {
     });
   };
 
-  if (loading) {
-    return (
-      <div className='min-h-screen bg-linear-to-br from-muted/30 to-muted/50 p-6 flex items-center justify-center'>
-        <div className='text-center'>
-          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4'></div>
-          <p className='text-muted-foreground'>{t('staffContracts.loading')}</p>
-        </div>
-      </div>
-    );
-  }
+  // ========== FILTERED DATA ==========
+  const filteredExisting = existingContracts.filter(contract => {
+    if (!existingSearch) return true; // Show all if no search
 
+    const searchLower = existingSearch.toLowerCase();
+    return (
+      contract?.contractNumber?.toLowerCase().includes(searchLower) ||
+      contract?.booking?.user?.name?.toLowerCase().includes(searchLower) ||
+      contract?.booking?.vehicle?.licensePlate
+        ?.toLowerCase()
+        .includes(searchLower) ||
+      contract?.renterName?.toLowerCase().includes(searchLower)
+    );
+  });
+
+  const filteredBookings = bookingsWithoutContract.filter(
+    booking =>
+      booking?.user?.name
+        ?.toLowerCase()
+        .includes(bookingsSearch.toLowerCase()) ||
+      booking?.vehicle?.licensePlate
+        ?.toLowerCase()
+        .includes(bookingsSearch.toLowerCase()) ||
+      booking?.station?.name
+        ?.toLowerCase()
+        .includes(bookingsSearch.toLowerCase())
+  );
+
+  // ========== RENDER ==========
   return (
-    <div className='min-h-screen bg-linear-to-br from-muted/30 to-muted/50 p-6'>
-      <div className='max-w-7xl mx-auto'>
+    <div className='min-h-screen p-6 bg-linear-to-br from-muted/30 to-muted/50'>
+      <div className='mx-auto max-w-7xl'>
         {/* Header */}
         <div className='mb-8'>
-          <h1 className='text-4xl font-bold mb-2'>
-            {t('staffContracts.title')}
-          </h1>
+          <h1 className='mb-2 text-4xl font-bold'>Contract Management</h1>
           <p className='text-muted-foreground'>
-            {t('staffContracts.subtitle')}
+            Manage rental contracts and create new ones
           </p>
         </div>
 
-        {/* Filters and Search */}
-        <div className='mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
-          <div className='flex-1'>
-            <Input
-              placeholder={t('staffContracts.searchPlaceholder')}
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <div className='flex gap-2'>
-            <Button
-              variant={filterStatus === 'all' ? 'default' : 'outline'}
-              onClick={() => setFilterStatus('all')}
-            >
-              {t('staffContracts.filters.all')}
-            </Button>
-            <Button
-              variant={filterStatus === 'NO_CONTRACT' ? 'default' : 'outline'}
-              onClick={() => setFilterStatus('NO_CONTRACT')}
-            >
-              {t('staffContracts.filters.noContract')}
-            </Button>
-            {/* Đã xóa nút Chờ tải file */}
-            <Button
-              variant={filterStatus === 'COMPLETED' ? 'default' : 'outline'}
-              onClick={() => setFilterStatus('COMPLETED')}
-            >
-              {t('staffContracts.filters.completed')}
-            </Button>
-          </div>
-        </div>
+        {/* Tabs */}
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className='space-y-6'
+        >
+          <TabsList className='grid w-full max-w-md grid-cols-2'>
+            <TabsTrigger value='existing' className='flex items-center gap-2'>
+              <FileText className='w-4 h-4' />
+              Existing Contracts
+            </TabsTrigger>
+            <TabsTrigger value='create' className='flex items-center gap-2'>
+              <Plus className='w-4 h-4' />
+              Create Contract
+            </TabsTrigger>
+          </TabsList>
 
-        <Card className='overflow-hidden'>
-          <div className='overflow-x-auto'>
-            <table className='w-full'>
-              <thead className='bg-muted/50 border-b'>
-                <tr>
-                  <th className='px-6 py-4 text-left text-sm font-semibold'>
-                    {t('staffContracts.table.contractNumber')}
-                  </th>
-                  <th className='px-6 py-4 text-left text-sm font-semibold'>
-                    {t('staffContracts.table.customer')}
-                  </th>
-                  <th className='px-6 py-4 text-left text-sm font-semibold'>
-                    {t('staffContracts.table.vehicleBranch')}
-                  </th>
-                  <th className='px-6 py-4 text-left text-sm font-semibold'>
-                    {t('staffContracts.table.status')}
-                  </th>
-                  <th className='px-6 py-4 text-left text-sm font-semibold'>
-                    {t('staffContracts.table.createdAt')}
-                  </th>
-                  <th className='px-6 py-4 text-left text-sm font-semibold'>
-                    {t('staffContracts.table.actions')}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className='divide-y'>
-                {filteredContracts.length > 0 ? (
-                  filteredContracts.map(contract => (
-                    <tr
-                      key={contract?.id}
-                      className='hover:bg-muted/50 transition-colors'
-                    >
-                      <td className='px-6 py-4'>
-                        {contract?.contractNumber ? (
-                          <p className='font-mono text-sm font-medium text-primary'>
-                            {contract.contractNumber}
-                          </p>
+          {/* ========== TAB 1: EXISTING CONTRACTS ========== */}
+          <TabsContent value='existing' className='space-y-4'>
+            {/* Filters */}
+            <div className='flex flex-col gap-4 md:flex-row md:items-center'>
+              <Input
+                placeholder='Search by contract number, customer, vehicle...'
+                value={existingSearch}
+                onChange={e => setExistingSearch(e.target.value)}
+                className='md:w-96'
+              />
+              <Select
+                value={existingStatusFilter || 'ALL'}
+                onValueChange={value =>
+                  setExistingStatusFilter(value === 'ALL' ? '' : value)
+                }
+              >
+                <SelectTrigger className='md:w-48'>
+                  <SelectValue placeholder='All Status' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='ALL'>All Status</SelectItem>
+                  <SelectItem value='CREATED'>Pending Upload</SelectItem>
+                  <SelectItem value='COMPLETED'>Completed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Table */}
+            <Card>
+              {existingLoading ? (
+                <div className='p-12 text-center'>
+                  <div className='w-12 h-12 mx-auto mb-4 border-b-2 rounded-full animate-spin border-primary' />
+                  <p className='text-muted-foreground'>Loading contracts...</p>
+                </div>
+              ) : (
+                <>
+                  <div className='overflow-x-auto'>
+                    <table className='w-full'>
+                      <thead className='border-b bg-muted/50'>
+                        <tr>
+                          <th className='px-4 py-3 text-sm font-semibold text-left'>
+                            Contract #
+                          </th>
+                          <th className='px-4 py-3 text-sm font-semibold text-left'>
+                            Customer
+                          </th>
+                          <th className='px-4 py-3 text-sm font-semibold text-left'>
+                            Vehicle
+                          </th>
+                          <th className='px-4 py-3 text-sm font-semibold text-left'>
+                            Status
+                          </th>
+                          <th className='px-4 py-3 text-sm font-semibold text-left'>
+                            Created
+                          </th>
+                          <th className='px-4 py-3 text-sm font-semibold text-left'>
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className='divide-y'>
+                        {filteredExisting.length > 0 ? (
+                          filteredExisting.map((contract, index) => (
+                            <tr key={contract.id} className='hover:bg-muted/30'>
+                              <td className='px-4 py-3'>
+                                <span className='font-mono text-sm font-medium text-primary'>
+                                  #
+                                  {String(
+                                    (existingPage - 1) * existingLimit +
+                                    index +
+                                    1
+                                  ).padStart(3, '0')}
+                                </span>
+                              </td>
+                              <td className='px-4 py-3'>
+                                <div>
+                                  <p className='font-medium'>
+                                    {contract.booking?.user?.name || 'N/A'}
+                                  </p>
+                                  <p className='text-xs text-muted-foreground'>
+                                    {contract.booking?.user?.phone || 'N/A'}
+                                  </p>
+                                </div>
+                              </td>
+                              <td className='px-4 py-3'>
+                                <p className='text-sm'>
+                                  {contract.booking?.vehicle?.licensePlate ||
+                                    'N/A'}
+                                </p>
+                                <p className='text-xs text-muted-foreground'>
+                                  {contract.booking?.vehicle?.brand}{' '}
+                                  {contract.booking?.vehicle?.model}
+                                </p>
+                              </td>
+                              <td className='px-4 py-3'>
+                                {getStatusBadge(contract.status)}
+                              </td>
+                              <td className='px-4 py-3'>
+                                <p className='text-sm text-muted-foreground'>
+                                  {formatDate(contract.createdAt)}
+                                </p>
+                              </td>
+                              <td className='px-4 py-3'>
+                                <div className='flex items-center gap-2'>
+                                  <Button
+                                    variant='ghost'
+                                    size='sm'
+                                    onClick={() => handleViewContract(contract)}
+                                  >
+                                    <Eye className='w-4 h-4' />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
                         ) : (
-                          <p className='text-sm text-muted-foreground italic'>
-                            {t('staffContracts.common.notAvailable')}
-                          </p>
+                          <tr>
+                            <td colSpan={6} className='px-4 py-12 text-center'>
+                              <FileText className='w-12 h-12 mx-auto mb-2 text-muted-foreground/50' />
+                              <p className='text-muted-foreground'>
+                                No contracts found
+                              </p>
+                            </td>
+                          </tr>
                         )}
-                      </td>
-                      <td className='px-6 py-4'>
-                        <div>
-                          <p className='font-medium'>
-                            {contract?.user?.name ||
-                              getVehicleLabel(contract?.vehicle) ||
-                              'N/A'}
-                          </p>
-                          <p className='text-xs text-muted-foreground'>
-                            {contract?.user?.phone || 'N/A'}
-                          </p>
-                        </div>
-                      </td>
-                      <td className='px-6 py-4'>
-                        <div>
-                          <p className='text-sm font-medium'>
-                            {contract?.vehicle?.licensePlate || 'N/A'}
-                          </p>
-                          <p className='text-xs text-muted-foreground'>
-                            {contract?.station?.name || 'N/A'}
-                          </p>
-                        </div>
-                      </td>
-                      <td className='px-6 py-4'>
-                        <div
-                          className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border ${getStatusColor(
-                            contract?.contractStatus
-                          )}`}
-                        >
-                          {getStatusIcon(contract?.contractStatus)}
-                          <span className='text-sm font-medium'>
-                            {getStatusLabel(contract?.contractStatus)}
-                          </span>
-                        </div>
-                      </td>
-                      <td className='px-6 py-4'>
-                        <p className='text-sm text-muted-foreground'>
-                          {formatDate(
-                            contract?.contractCreatedAt || contract?.createdAt
-                          )}
-                        </p>
-                      </td>
-                      <td className='px-6 py-4'>
-                        <div className='flex items-center gap-2'>
-                          <Button
-                            variant='ghost'
-                            size='sm'
-                            className='text-muted-foreground hover:text-primary hover:bg-primary/10'
-                            title={t('staffContracts.actions.viewDetails')}
-                            onClick={() => handleViewDetails(contract)}
-                          >
-                            <Eye className='w-4 h-4' />
-                          </Button>
-                          {contract?.contractStatus === 'NO_CONTRACT' && (
-                            <Button
-                              variant='ghost'
-                              size='sm'
-                              className='text-muted-foreground hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30'
-                              title={t('staffContracts.actions.upload')}
-                              onClick={() => handleUploadClick(contract)}
-                            >
-                              <Upload className='w-4 h-4' />
-                            </Button>
-                          )}
-                          {contract?.contractFileUrl && (
-                            <Button
-                              variant='ghost'
-                              size='sm'
-                              className='text-muted-foreground hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/30'
-                              title={t('staffContracts.actions.download')}
-                              onClick={() =>
-                                window.open(contract.contractFileUrl, '_blank')
-                              }
-                            >
-                              <Download className='w-4 h-4' />
-                            </Button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={6} className='px-6 py-12 text-center'>
-                      <div className='flex flex-col items-center gap-2'>
-                        <FileText className='w-12 h-12 text-muted-foreground/50' />
-                        <p className='text-muted-foreground'>
-                          {t('staffContracts.empty.noBookings')}
-                        </p>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                      </tbody>
+                    </table>
+                  </div>
 
-          {/* Footer Stats */}
-          <div className='bg-muted/50 border-t px-6 py-4 flex flex-wrap gap-6'>
-            <div>
-              <p className='text-sm text-muted-foreground'>
-                {t('staffContracts.stats.total')}
-              </p>
-              <p className='text-2xl font-bold'>{contracts.length}</p>
-            </div>
-            <div>
-              <p className='text-sm text-muted-foreground'>
-                {t('staffContracts.stats.notCreated')}
-              </p>
-              <p className='text-2xl font-bold text-amber-600 dark:text-amber-400'>
-                {
-                  contracts.filter(c => c?.contractStatus === 'NO_CONTRACT')
-                    .length
-                }
-              </p>
-            </div>
-            <div>
-              <p className='text-sm text-muted-foreground'>
-                {t('staffContracts.stats.completed')}
-              </p>
-              <p className='text-2xl font-bold text-green-600 dark:text-green-400'>
-                {
-                  contracts.filter(c => c?.contractStatus === 'COMPLETED')
-                    .length
-                }
-              </p>
-            </div>
-          </div>
-        </Card>
+                  {/* Pagination */}
+                  {existingTotalPages > 1 && (
+                    <div className='flex items-center justify-between p-4 border-t'>
+                      <p className='text-sm text-muted-foreground'>
+                        Page {existingPage} of {existingTotalPages} •{' '}
+                        {existingTotal} total
+                      </p>
+                      <div className='flex gap-2'>
+                        <Button
+                          variant='outline'
+                          size='sm'
+                          onClick={() =>
+                            setExistingPage(p => Math.max(1, p - 1))
+                          }
+                          disabled={existingPage === 1}
+                        >
+                          <ChevronLeft className='w-4 h-4' />
+                        </Button>
+                        <Button
+                          variant='outline'
+                          size='sm'
+                          onClick={() =>
+                            setExistingPage(p =>
+                              Math.min(existingTotalPages, p + 1)
+                            )
+                          }
+                          disabled={existingPage === existingTotalPages}
+                        >
+                          <ChevronRight className='w-4 h-4' />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </Card>
+          </TabsContent>
+
+          {/* ========== TAB 2: CREATE CONTRACT ========== */}
+          <TabsContent value='create' className='space-y-4'>
+            {/* Search */}
+            <Input
+              placeholder='Search by customer, vehicle, branch...'
+              value={bookingsSearch}
+              onChange={e => setBookingsSearch(e.target.value)}
+              className='md:w-96'
+            />
+
+            {/* Table */}
+            <Card>
+              {bookingsLoading ? (
+                <div className='p-12 text-center'>
+                  <div className='w-12 h-12 mx-auto mb-4 border-b-2 rounded-full animate-spin border-primary' />
+                  <p className='text-muted-foreground'>Loading bookings...</p>
+                </div>
+              ) : (
+                <div className='overflow-x-auto'>
+                  <table className='w-full'>
+                    <thead className='border-b bg-muted/50'>
+                      <tr>
+                        <th className='px-4 py-3 text-sm font-semibold text-left'>
+                          Booking ID
+                        </th>
+                        <th className='px-4 py-3 text-sm font-semibold text-left'>
+                          Customer
+                        </th>
+                        <th className='px-4 py-3 text-sm font-semibold text-left'>
+                          Vehicle
+                        </th>
+                        <th className='px-4 py-3 text-sm font-semibold text-left'>
+                          Branch
+                        </th>
+                        <th className='px-4 py-3 text-sm font-semibold text-left'>
+                          Start Date
+                        </th>
+                        <th className='px-4 py-3 text-sm font-semibold text-left'>
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className='divide-y'>
+                      {filteredBookings.length > 0 ? (
+                        filteredBookings.map((booking, index) => (
+                          <tr key={booking.id} className='hover:bg-muted/30'>
+                            <td className='px-4 py-3'>
+                              <span className='font-mono text-sm font-semibold'>
+                                #{String(index + 1).padStart(3, '0')}
+                              </span>
+                            </td>
+                            <td className='px-4 py-3'>
+                              <div>
+                                <p className='font-medium'>
+                                  {booking.user?.name || 'N/A'}
+                                </p>
+                                <p className='text-xs text-muted-foreground'>
+                                  {booking.user?.phone || 'N/A'}
+                                </p>
+                              </div>
+                            </td>
+                            <td className='px-4 py-3'>
+                              <p className='text-sm'>
+                                {booking.vehicle?.licensePlate || 'N/A'}
+                              </p>
+                              <p className='text-xs text-muted-foreground'>
+                                {booking.vehicle?.brand}{' '}
+                                {booking.vehicle?.model}
+                              </p>
+                            </td>
+                            <td className='px-4 py-3'>
+                              <p className='text-sm'>
+                                {booking.station?.name || 'N/A'}
+                              </p>
+                            </td>
+                            <td className='px-4 py-3'>
+                              <p className='text-sm text-muted-foreground'>
+                                {formatDate(booking.startTime)}
+                              </p>
+                            </td>
+                            <td className='px-4 py-3'>
+                              <Button
+                                variant='default'
+                                size='sm'
+                                onClick={() => handleCreateContract(booking)}
+                                className='bg-green-600 hover:bg-green-700'
+                              >
+                                <Plus className='w-4 h-4 mr-1' />
+                                Create Contract
+                              </Button>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={6} className='px-4 py-12 text-center'>
+                            <AlertCircle className='w-12 h-12 mx-auto mb-2 text-muted-foreground/50' />
+                            <p className='text-muted-foreground'>
+                              No confirmed bookings without contract
+                            </p>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Upload Modal */}
-      {showUploadModal && selectedContract && (
-        <div className='fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50'>
+      {showUploadModal && selectedBooking && (
+        <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50'>
           <Card className='w-full max-w-2xl max-h-[90vh] overflow-y-auto'>
             <div className='p-6'>
               <div className='flex items-center justify-between mb-6'>
-                <h2 className='text-2xl font-bold'>
-                  {t('staffContracts.upload.title')}
-                </h2>
+                <h2 className='text-2xl font-bold'>Create Contract</h2>
                 <button
                   onClick={() => setShowUploadModal(false)}
                   className='text-muted-foreground hover:text-foreground'
@@ -604,72 +591,40 @@ export function ContractUploadPage() {
                 </button>
               </div>
 
-              <div className='mb-6 p-4 bg-muted/50 rounded-lg border'>
+              <div className='p-4 mb-6 space-y-3 border rounded-lg bg-muted/50'>
                 <div className='grid grid-cols-2 gap-4'>
                   <div>
-                    <p className='text-sm text-muted-foreground'>
-                      {t('staffContracts.details.contractNumber')}
-                    </p>
-                    {selectedContract?.contractNumber ? (
-                      <p className='font-mono font-semibold text-primary'>
-                        {selectedContract.contractNumber}
-                      </p>
-                    ) : (
-                      <p className='text-sm text-muted-foreground italic'>
-                        {t('staffContracts.details.autoGenerate')}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <p className='text-sm text-muted-foreground'>
-                      {t('staffContracts.details.status')}
-                    </p>
-                    <div className='flex items-center gap-2 mt-1'>
-                      {getStatusIcon(selectedContract?.contractStatus)}
-                      <span className='font-semibold'>
-                        {getStatusLabel(selectedContract?.contractStatus)}
-                      </span>
-                    </div>
-                  </div>
-                  <div>
-                    <p className='text-sm text-muted-foreground'>
-                      {t('staffContracts.details.customer')}
-                    </p>
+                    <p className='text-sm text-muted-foreground'>Customer</p>
                     <p className='font-semibold'>
-                      {selectedContract?.user?.name || 'N/A'}
+                      {selectedBooking.user?.name || 'N/A'}
                     </p>
                     <p className='text-xs text-muted-foreground'>
-                      {selectedContract?.user?.phone || 'N/A'}
+                      {selectedBooking.user?.phone || 'N/A'}
                     </p>
                   </div>
                   <div>
-                    <p className='text-sm text-muted-foreground'>
-                      {t('staffContracts.details.vehicle')}
-                    </p>
+                    <p className='text-sm text-muted-foreground'>Vehicle</p>
                     <p className='font-semibold'>
-                      {selectedContract?.vehicle?.licensePlate || 'N/A'}
+                      {selectedBooking.vehicle?.licensePlate || 'N/A'}
                     </p>
-                    {getVehicleLabel(selectedContract?.vehicle) && (
-                      <p className='text-xs text-muted-foreground'>
-                        {getVehicleLabel(selectedContract?.vehicle)}
-                      </p>
-                    )}
+                    <p className='text-xs text-muted-foreground'>
+                      {selectedBooking.vehicle?.brand}{' '}
+                      {selectedBooking.vehicle?.model}
+                    </p>
                   </div>
                   <div className='col-span-2'>
-                    <p className='text-sm text-muted-foreground'>
-                      {t('staffContracts.details.branch')}
-                    </p>
+                    <p className='text-sm text-muted-foreground'>Branch</p>
                     <p className='font-semibold'>
-                      {selectedContract?.station?.name || 'N/A'}
+                      {selectedBooking.station?.name || 'N/A'}
                     </p>
                   </div>
                 </div>
               </div>
 
               <ContractUploadForm
-                bookingId={selectedContract?.id}
-                contractId={selectedContract?.contractId}
-                customerName={selectedContract?.user?.name}
+                bookingId={selectedBooking.id}
+                contractId={null}
+                customerName={selectedBooking.user?.name}
                 onSuccess={handleUploadSuccess}
                 onCancel={() => setShowUploadModal(false)}
               />
@@ -678,13 +633,13 @@ export function ContractUploadPage() {
         </div>
       )}
 
-      {/* Detail Modal */}
+      {/* Contract Detail Modal */}
       {showDetailModal && selectedContract && (
-        <div className='fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50'>
+        <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50'>
           <Card className='w-full max-w-2xl max-h-[90vh] overflow-y-auto'>
             <div className='p-6'>
               <div className='flex items-center justify-between mb-6'>
-                <h2 className='text-2xl font-bold'>Booking Details</h2>
+                <h2 className='text-2xl font-bold'>Contract Details</h2>
                 <button
                   onClick={() => setShowDetailModal(false)}
                   className='text-muted-foreground hover:text-foreground'
@@ -692,133 +647,205 @@ export function ContractUploadPage() {
                   <X className='w-6 h-6' />
                 </button>
               </div>
+
               <div className='space-y-6'>
-                {/* Booking Info */}
+                {/* Contract Info */}
                 <div>
-                  <h3 className='text-lg font-semibold text-foreground mb-4'>
-                    Booking Information
+                  <h3 className='mb-4 text-lg font-semibold'>
+                    Contract Information
                   </h3>
                   <div className='grid grid-cols-2 gap-4'>
-                    <div className='p-3 bg-card rounded border border-border'>
+                    <div className='p-3 border rounded bg-muted/50'>
+                      <p className='text-sm text-muted-foreground'>
+                        Contract Number
+                      </p>
+                      <p className='font-semibold'>
+                        {selectedContract.contractNumber || 'N/A'}
+                      </p>
+                    </div>
+                    <div className='p-3 border rounded bg-muted/50'>
                       <p className='text-sm text-muted-foreground'>Status</p>
-                      <div className='flex items-center gap-2 mt-1'>
-                        {getStatusIcon(selectedContract?.status)}
-                        <span className='font-semibold text-foreground'>
-                          {getStatusLabel(selectedContract?.status)}
-                        </span>
+                      {getStatusBadge(selectedContract.status)}
+                    </div>
+                    <div className='p-3 border rounded bg-muted/50'>
+                      <p className='text-sm text-muted-foreground'>
+                        Renter Name
+                      </p>
+                      <p className='font-semibold'>
+                        {selectedContract.renterName || 'N/A'}
+                      </p>
+                    </div>
+                    <div className='p-3 border rounded bg-muted/50'>
+                      <p className='text-sm text-muted-foreground'>
+                        Witness Name
+                      </p>
+                      <p className='font-semibold'>
+                        {selectedContract.witnessName || 'N/A'}
+                      </p>
+                    </div>
+                    <div className='col-span-2 p-3 border rounded bg-muted/50'>
+                      <p className='text-sm text-muted-foreground'>Notes</p>
+                      <p className='text-sm'>
+                        {selectedContract.notes || 'No notes'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Booking Info */}
+                {selectedContract.booking && (
+                  <div>
+                    <h3 className='mb-4 text-lg font-semibold'>
+                      Booking Information
+                    </h3>
+                    <div className='grid grid-cols-2 gap-4'>
+                      <div className='p-3 border rounded bg-muted/50'>
+                        <p className='text-sm text-muted-foreground'>
+                          Customer
+                        </p>
+                        <p className='font-semibold'>
+                          {selectedContract.booking.user?.name || 'N/A'}
+                        </p>
+                        <p className='text-xs text-muted-foreground'>
+                          {selectedContract.booking.user?.phone || 'N/A'}
+                        </p>
+                      </div>
+                      <div className='p-3 border rounded bg-muted/50'>
+                        <p className='text-sm text-muted-foreground'>Vehicle</p>
+                        <p className='font-semibold'>
+                          {selectedContract.booking.vehicle?.licensePlate ||
+                            'N/A'}
+                        </p>
+                        <p className='text-xs text-muted-foreground'>
+                          {selectedContract.booking.vehicle?.brand}{' '}
+                          {selectedContract.booking.vehicle?.model}
+                        </p>
+                      </div>
+                      <div className='p-3 border rounded bg-muted/50'>
+                        <p className='text-sm text-muted-foreground'>
+                          Start Time
+                        </p>
+                        <p className='text-sm'>
+                          {formatDate(selectedContract.booking.startTime)}
+                        </p>
+                      </div>
+                      <div className='p-3 border rounded bg-muted/50'>
+                        <p className='text-sm text-muted-foreground'>
+                          End Time
+                        </p>
+                        <p className='text-sm'>
+                          {formatDate(selectedContract.booking.endTime)}
+                        </p>
                       </div>
                     </div>
-                    <div className='p-3 bg-card rounded border border-border'>
-                      <p className='text-sm text-muted-foreground'>Phone</p>
-                      <p className='font-semibold text-foreground'>
-                        {selectedContract?.user?.phone || 'N/A'}
-                      </p>
-                    </div>
-                    <div className='p-3 bg-card rounded border border-border'>
-                      <p className='text-sm text-muted-foreground'>Customer</p>
-                      <p className='font-semibold text-foreground'>
-                        {selectedContract?.user?.name ||
-                          getVehicleLabel(selectedContract?.vehicle) ||
-                          'N/A'}
-                      </p>
-                      <p className='text-xs text-muted-foreground'>
-                        {selectedContract?.user?.email || 'N/A'}
-                      </p>
-                    </div>
-                    <div className='p-3 bg-card rounded border border-border'>
-                      <p className='text-sm text-muted-foreground'>Vehicle</p>
-                      <p className='font-semibold text-foreground'>
-                        {selectedContract?.vehicle?.licensePlate || 'N/A'}
-                      </p>
-                      {getVehicleLabel(selectedContract?.vehicle) && (
-                        <p className='text-xs text-muted-foreground'>
-                          {getVehicleLabel(selectedContract?.vehicle)}
-                        </p>
-                      )}
-                    </div>
-                    <div className='p-3 bg-card rounded border border-border'>
-                      <p className='text-sm text-muted-foreground'>
-                        Branch
-                      </p>
-                      <p className='font-semibold text-foreground'>
-                        {selectedContract?.station?.name || 'N/A'}
-                      </p>
-                      <p className='text-xs text-muted-foreground'>
-                        {selectedContract?.station?.address || 'N/A'}
-                      </p>
-                    </div>
-                    <div className='p-3 bg-card rounded border border-border'>
-                      <p className='text-sm text-muted-foreground'>
-                        Staff in Charge
-                      </p>
-                      <p className='font-semibold text-foreground'>
-                        {selectedContract?.staff?.name || user?.name || 'N/A'}
-                      </p>
-                      <p className='text-xs text-muted-foreground'>
-                        {selectedContract?.staff?.email || user?.email || 'N/A'}
-                      </p>
-                    </div>
                   </div>
-                </div>
-                {/* Dates */}
+                )}
+
+                {/* Timestamps */}
                 <div>
-                  <h3 className='text-lg font-semibold text-foreground mb-4'>
-                    Time Period
-                  </h3>
+                  <h3 className='mb-4 text-lg font-semibold'>Timestamps</h3>
                   <div className='grid grid-cols-2 gap-4'>
-                    <div className='p-3 bg-card rounded border border-border'>
+                    <div className='p-3 border rounded bg-muted/50'>
                       <p className='text-sm text-muted-foreground'>
-                        Start Date
+                        Created At
                       </p>
-                      <p className='font-semibold text-foreground'>
-                        {selectedContract?.startTime
-                          ? new Date(selectedContract.startTime).toLocaleString(
-                            'vi-VN'
-                          )
-                          : 'N/A'}
+                      <p className='text-sm'>
+                        {formatDate(selectedContract.createdAt)}
                       </p>
                     </div>
-                    <div className='p-3 bg-card rounded border border-border'>
+                    <div className='p-3 border rounded bg-muted/50'>
                       <p className='text-sm text-muted-foreground'>
-                        End Date
+                        Updated At
                       </p>
-                      <p className='font-semibold text-foreground'>
-                        {selectedContract?.endTime
-                          ? new Date(selectedContract.endTime).toLocaleString(
-                            'vi-VN'
-                          )
-                          : 'N/A'}
+                      <p className='text-sm'>
+                        {formatDate(selectedContract.updatedAt)}
                       </p>
                     </div>
+                    {selectedContract.signedAt && (
+                      <div className='p-3 border rounded bg-muted/50'>
+                        <p className='text-sm text-muted-foreground'>
+                          Signed At
+                        </p>
+                        <p className='text-sm'>
+                          {formatDate(selectedContract.signedAt)}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
+
+                {/* Signed Contract Preview */}
+                {selectedContract.signedFileUrl && (
+                  <div>
+                    <h3 className='mb-4 text-lg font-semibold'>
+                      Signed Contract
+                    </h3>
+                    <div className='space-y-3'>
+                      {/* File Name */}
+                      <div className='p-3 border rounded bg-muted/50'>
+                        <p className='text-sm text-muted-foreground'>
+                          File Name
+                        </p>
+                        <p className='mt-1 font-mono text-sm break-all'>
+                          {selectedContract.signedFileName || 'N/A'}
+                        </p>
+                      </div>
+
+                      {/* File Preview */}
+                      <div className='overflow-hidden border rounded bg-muted/50'>
+                        {selectedContract.signedFileName
+                          ?.toLowerCase()
+                          .endsWith('.pdf') ? (
+                          // PDF Preview using iframe
+                          <iframe
+                            src={selectedContract.signedFileUrl}
+                            className='w-full h-[500px]'
+                            title='Signed Contract PDF'
+                          />
+                        ) : (
+                          // Image Preview
+                          <img
+                            src={selectedContract.signedFileUrl}
+                            alt='Signed Contract'
+                            className='object-contain w-full h-auto max-h-[500px]'
+                            onError={e => {
+                              e.target.onerror = null;
+                              e.target.src =
+                                'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23ddd" width="400" height="300"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EImage not available%3C/text%3E%3C/svg%3E';
+                            }}
+                          />
+                        )}
+                      </div>
+
+                      {/* Action Button */}
+                      <Button
+                        onClick={() =>
+                          window.open(selectedContract.signedFileUrl, '_blank')
+                        }
+                        variant='outline'
+                        className='w-full'
+                      >
+                        <Eye className='w-4 h-4 mr-2' />
+                        View Full Size
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
+
               <div className='flex gap-3 mt-6'>
                 <Button
                   onClick={() => setShowDetailModal(false)}
                   variant='outline'
-                  className='flex-1 border-slate-300 dark:border-slate-600'
+                  className='flex-1'
                 >
                   Close
                 </Button>
-                {selectedContract?.contractStatus === 'NO_CONTRACT' && (
-                  <Button
-                    onClick={() => {
-                      setShowDetailModal(false);
-                      handleUploadClick(selectedContract);
-                    }}
-                    className='flex-1 bg-green-600 hover:bg-green-700 text-white'
-                  >
-                    <Upload className='w-4 h-4 mr-2' />
-                    Upload Contract
-                  </Button>
-                )}
               </div>
             </div>
           </Card>
         </div>
       )}
-      {/* Kết thúc Detail Modal */}
     </div>
   );
 }
