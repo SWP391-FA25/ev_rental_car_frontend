@@ -115,7 +115,7 @@ export default function CheckInCar() {
 
       try {
         setLoadingAssignment(true);
-        // ✅ Get assignments for specific staff (can be multiple)
+        // ✅ Get ALL assignments for staff (many-to-many relationship)
         const response = await apiClient.get(
           endpoints.assignments.getByStaffId(user.id)
         );
@@ -126,30 +126,28 @@ export default function CheckInCar() {
         const assignments = response.data?.assignments || response.assignments || [];
 
         console.log('📋 Assignments array:', assignments);
-        console.log('📋 Assignments count:', assignments.length);
+        console.log('📋 Total assignments:', assignments.length);
 
         if (assignments && assignments.length > 0) {
-          // Take the first assignment (or you can let user choose if multiple)
-          const firstAssignment = assignments[0];
+          // ✅ Store ALL assignments (not just first one)
+          setStaffAssignment({
+            assignments, // Array of all assignments
+            stations: assignments.map(a => a.station).filter(Boolean) // Array of stations
+          });
 
-          if (firstAssignment && firstAssignment.station) {
-            setStaffAssignment(firstAssignment);
-            console.log(
-              '✅ Staff assigned to station:',
-              firstAssignment.station?.name
-            );
-            console.log('✅ Total assignments:', assignments.length);
-          } else {
-            console.warn('⚠️ Assignment has no station data');
-            toast.error(
-              'Station information is missing. Please contact admin.'
-            );
-          }
+          const stationNames = assignments
+            .map(a => a.station?.name)
+            .filter(Boolean)
+            .join(', ');
+
+          console.log('✅ Staff assigned to stations:', stationNames);
+          console.log('✅ Total assignments:', assignments.length);
         } else {
           console.warn('⚠️ Staff not assigned to any station (empty array)');
           toast.error(
             'You are not assigned to any station. Please contact admin.'
           );
+          setStaffAssignment(null);
         }
       } catch (error) {
         console.error('❌ Error fetching staff assignment:', error);
@@ -163,6 +161,7 @@ export default function CheckInCar() {
         } else {
           toast.error('Failed to load station assignment: ' + (error.message || 'Unknown error'));
         }
+        setStaffAssignment(null);
       } finally {
         setLoadingAssignment(false);
       }
@@ -173,8 +172,8 @@ export default function CheckInCar() {
 
   useEffect(() => {
     const fetchEligibleBookings = async () => {
-      if (!staffAssignment?.station?.id) {
-        console.log('⏳ Waiting for staff assignment...');
+      if (!staffAssignment?.assignments || staffAssignment.assignments.length === 0) {
+        console.log('Waiting for staff assignments...');
         return;
       }
 
@@ -183,44 +182,30 @@ export default function CheckInCar() {
         const resData = await getAllBookings({ limit: 100 });
         const allBookings = resData?.bookings || resData || [];
 
-        console.log('🔍 Total bookings from API:', allBookings.length);
-        console.log('👤 Staff assigned to station:', {
-          stationId: staffAssignment.station.id,
-          stationName: staffAssignment.station.name,
+        console.log('Total bookings from API:', allBookings.length);
+
+        // Get all station IDs that staff is assigned to
+        const assignedStationIds = staffAssignment.assignments
+          .map(a => a.station?.id)
+          .filter(Boolean);
+
+        console.log('Staff assigned to stations:', {
+          stationIds: assignedStationIds,
+          stationNames: staffAssignment.assignments.map(a => a.station?.name).filter(Boolean)
         });
 
-        // Filter by staff's assigned station
+        // Filter bookings: CONFIRMED status + belongs to ANY assigned station
         const list = allBookings.filter(b => {
           const status = (b.status || b.bookingStatus || '').toUpperCase();
           const bookingStationId = b.station?.id || b.stationId;
 
-          // Debug each booking
           const isConfirmed = status === 'CONFIRMED';
-          const isSameStation = bookingStationId === staffAssignment.station.id;
+          const isAssignedStation = assignedStationIds.includes(bookingStationId);
 
-          console.log(`📦 Booking ${b.id || b.bookingCode}:`, {
-            status,
-            isConfirmed,
-            bookingStationId,
-            bookingStationName: b.station?.name,
-            isSameStation,
-            willShow: isConfirmed && isSameStation
-          });
-
-          // Show bookings that:
-          // 1. Status is CONFIRMED only
-          // 2. Belong to staff's assigned station
-          return (
-            status === 'CONFIRMED' &&
-            bookingStationId === staffAssignment.station.id
-          );
+          return isConfirmed && isAssignedStation;
         });
 
-        console.log(
-          '📋 Available bookings for station',
-          staffAssignment.station.name + ':',
-          list.length
-        );
+        console.log('Available CONFIRMED bookings from assigned stations:', list.length);
         setAvailableBookings(list);
       } catch (err) {
         console.error('Fetch eligible bookings error', err);
@@ -513,36 +498,33 @@ export default function CheckInCar() {
 
     try {
       setLoadingDocuments(true);
-      // ✅ Use correct endpoint to get documents by user ID
       console.log('📡 Calling API: GET /api/documents/user/' + rentersId);
       const response = await apiClient.get(
         endpoints.documents.getByUserId(rentersId)
       );
 
-      // Parse response - can be array of documents or paginated response
       const documentsData =
         response?.data?.data?.documents ||
         response?.data?.documents ||
         response?.data ||
         [];
 
-      // Keep full list (may contain ids/statuses) so we can verify or pick ids
       const docsArray = Array.isArray(documentsData) ? documentsData : [];
       setCustomerDocumentsList(docsArray);
-      setNeedsDocumentUpload(docsArray.length === 0);
 
       console.log('📄 Fetched customer documents:', {
         renterId: rentersId,
-        count: Array.isArray(documentsData) ? documentsData.length : 0,
-        documents: documentsData,
+        count: docsArray.length,
+        documents: docsArray,
       });
 
-      // Transform documents array to object with document types as keys
-      if (Array.isArray(documentsData) && documentsData.length > 0) {
-        const docsObj = {};
+      // ✅ Check if customer has APPROVED documents
+      const hasApprovedDocs = docsArray.some(doc => doc.status === 'APPROVED');
 
-        documentsData.forEach(doc => {
-          // Only show APPROVED documents
+      if (hasApprovedDocs) {
+        // ✅ Customer ĐÃ CÓ document approved → Show documents, allow checkbox tick
+        const docsObj = {};
+        docsArray.forEach(doc => {
           if (doc.status === 'APPROVED') {
             if (doc.documentType === 'ID_CARD') {
               docsObj.identityCard = doc.fileUrl || doc.thumbnailUrl;
@@ -553,20 +535,22 @@ export default function CheckInCar() {
             }
           }
         });
-
         setCustomerDocuments(Object.keys(docsObj).length > 0 ? docsObj : null);
+        setNeedsDocumentUpload(false);
       } else {
+        // ⚠️ Customer CHƯA CÓ document approved → Show upload UI
         setCustomerDocuments(null);
+        setNeedsDocumentUpload(true);
       }
     } catch (err) {
       console.warn('Failed to fetch customer documents:', err);
-      const errorMsg = err?.response?.data?.message || err?.message;
       if (err?.response?.status === 404) {
-        console.log('No documents found for this renter');
+        console.log('No documents found - show upload UI');
         setCustomerDocumentsList([]);
         setCustomerDocuments(null);
         setNeedsDocumentUpload(true);
       } else {
+        const errorMsg = err?.response?.data?.message || err?.message;
         toast.warning(`Could not load customer documents: ${errorMsg}`);
         setCustomerDocumentsList([]);
         setCustomerDocuments(null);
@@ -581,32 +565,73 @@ export default function CheckInCar() {
   const handleUploadCustomerDocument = async () => {
     if (!booking) return toast.error('Select a booking first');
     if (!docFile) return toast.error('Please choose a file to upload');
+
+    // ✅ Lấy renter ID từ booking
     const renterId = booking?.renters?.id || booking?.renters || booking?.user?.id || booking?.userId;
-    if (!renterId) return toast.error('Renter ID not found');
+    console.log('🔍 Renter ID for document upload:', renterId);
+    if (!renterId) {
+      console.error('❌ Cannot find renter ID in booking:', booking);
+      return toast.error('Renter ID not found in booking');
+    }
 
     try {
       setLoadingDocuments(true);
       const form = new FormData();
-      // ✅ Backend expects field name 'document' (not 'file')
+
+      // ✅ CRITICAL: Gửi userId của RENTER (không phải staff)
+      form.append('userId', renterId);
       form.append('document', docFile, docFile.name);
-      // ✅ Backend gets userId from req.user.id (token), but we send for reference
       form.append('documentType', docType);
 
-      // ⚠️ NOTE: This endpoint uses the authenticated user's ID from token
-      // If staff needs to upload on behalf of renter, backend may need modification
-      const res = await apiClient.post(endpoints.documents.upload(), form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      console.log('📤 Uploading document for renter:', {
+        renterId,
+        docType,
+        fileName: docFile.name,
+        fileSize: (docFile.size / 1024 / 1024).toFixed(2) + ' MB',
+        bookingId: booking?.id
       });
 
+      // ✅ Upload với userId trong FormData body
+      const res = await apiClient.post(
+        endpoints.documents.upload(),
+        form,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        }
+      );
+
       const created = res?.data?.data || res?.data;
-      toast.success('Document uploaded successfully');
-      // Refresh documents
+      const uploadedDocId = created?.id;
+
+      console.log('✅ Document uploaded successfully:', {
+        docId: uploadedDocId,
+        renterId,
+        response: created
+      });
+
+      // ✅ Tự động verify luôn sau khi upload
+      if (uploadedDocId) {
+        try {
+          await apiClient.patch(endpoints.documents.verify(uploadedDocId));
+          console.log('✅ Document auto-verified:', uploadedDocId);
+          toast.success('Document uploaded and verified successfully');
+          setDocumentVerified(true); // ✅ Auto-tick checkbox
+        } catch (verifyErr) {
+          console.warn('⚠️ Auto-verify failed:', verifyErr);
+          toast.success('Document uploaded (verification pending)');
+        }
+      } else {
+        toast.success('Document uploaded successfully');
+      }
+
+      // Refresh documents để hiển thị document mới
       await fetchCustomerDocuments(renterId);
       setDocFile(null);
       setDocType('ID_CARD');
       setNeedsDocumentUpload(false);
     } catch (e) {
-      console.error('Upload document error:', e);
+      console.error('❌ Upload document error:', e);
+      console.error('❌ Error response:', e?.response?.data);
       const msg = e?.response?.data?.message || e?.message;
       toast.error(msg || 'Failed to upload document');
     } finally {
@@ -615,65 +640,30 @@ export default function CheckInCar() {
   };
 
   // When staff toggles verification checkbox
-  const handleToggleDocumentVerified = async e => {
+  const handleToggleDocumentVerified = e => {
     const checked = e.target.checked;
 
-    // If unchecking, simply clear local flag
+    // ✅ Checkbox chỉ để staff XÁC NHẬN đã kiểm tra document
+    // KHÔNG GỌI API - Upload đã tự động verify rồi
     if (!checked) {
       setDocumentVerified(false);
       return;
     }
 
-    // ✅ Check if customer already has APPROVED documents
+    // Check if customer has any approved documents
     const hasApprovedDocs = customerDocumentsList.some(
       doc => doc.status === 'APPROVED'
     );
 
     if (hasApprovedDocs) {
-      // ✅ Customer already has approved documents
-      // Just set local flag (no API call needed)
+      // ✅ Customer có document approved → Cho phép tick
       setDocumentVerified(true);
-      toast.success('Customer documents verified', {
-        description: 'Documents are already approved in the system'
-      });
-      return;
-    }
-
-    // ⚠️ No approved documents - need to verify via API
-    // Find first PENDING document to verify
-    const pendingDoc = customerDocumentsList.find(
-      doc => doc.status === 'PENDING' || doc.status === 'REJECTED'
-    );
-
-    if (!pendingDoc || !pendingDoc.id) {
-      toast.error('No document available to verify', {
-        description: 'Customer needs to upload documents first'
+    } else {
+      // ❌ Customer chưa có document approved → Không cho tick
+      toast.error('Cannot verify - No approved documents', {
+        description: 'Please upload customer documents first using the form above'
       });
       setDocumentVerified(false);
-      return;
-    }
-
-    // Call API to verify/approve the document
-    try {
-      setLoadingDocuments(true);
-      // ✅ Backend uses PATCH method for verify
-      const res = await apiClient.patch(endpoints.documents.verify(pendingDoc.id));
-
-      toast.success('Document verified and approved', {
-        description: 'Document status has been updated to APPROVED'
-      });
-      setDocumentVerified(true);
-
-      // Refresh documents to show updated status
-      const renterId = booking?.renters?.id || booking?.renters || booking?.user?.id || booking?.userId;
-      if (renterId) await fetchCustomerDocuments(renterId);
-    } catch (err) {
-      console.error('Verify document error:', err);
-      const msg = err?.response?.data?.message || err?.message;
-      toast.error(msg || 'Failed to verify document');
-      setDocumentVerified(false);
-    } finally {
-      setLoadingDocuments(false);
     }
   };
 
@@ -1509,8 +1499,8 @@ export default function CheckInCar() {
       <div>
         <h2 className='text-xl font-semibold'>Check-In Car (Staff)</h2>
         <p className='text-sm text-muted-foreground'>
-          Inspect vehicle condition and hand over keys to customer • Station:{' '}
-          {staffAssignment.station?.name || 'Unknown'}
+          Inspect vehicle condition and hand over keys to customer • Stations:{' '}
+          {staffAssignment.assignments?.map(a => a.station?.name).filter(Boolean).join(', ') || 'Unknown'}
         </p>
       </div>
 
@@ -1903,7 +1893,7 @@ export default function CheckInCar() {
           {/* Station Info - Display only (from booking) */}
           <div>
             <Label className='block mb-2'>
-              Return Station <span className='text-red-500'>*</span>
+              Check-In Station <span className='text-red-500'>*</span>
             </Label>
             <div className='p-3 border rounded-md bg-muted/50'>
               {booking?.station ? (
@@ -2438,68 +2428,89 @@ export default function CheckInCar() {
                 This customer hasn't uploaded any documents yet.
               </p>
 
-              {/* ⚠️ TEMPORARILY DISABLED - Backend needs to support staff uploading for other users */}
-              {user?.role === 'STAFF' && false && (
-                <div className='mt-3 space-y-2'>
-                  <p className='text-xs text-amber-600 font-semibold'>⚠️ Upload on behalf of customer (Feature in development)</p>
-                  <p className='text-xs text-muted-foreground'>Backend needs to support staff uploading documents for renters</p>
-                  <div className='flex items-center gap-2 opacity-50 pointer-events-none'>
-                    <select
-                      value={docType}
-                      onChange={e => setDocType(e.target.value)}
-                      className='px-2 py-1 rounded border'
-                      disabled
+              {/* ✅ ENABLED - Staff can upload documents on behalf of customer */}
+              {needsDocumentUpload && (
+                <div className='mt-4 space-y-3'>
+                  <p className='text-xs text-blue-600 dark:text-blue-400 font-semibold'>
+                    📤 Upload customer documents
+                  </p>
+                  <div className='flex flex-col gap-3'>
+                    <div className='flex items-center gap-2'>
+                      <label className='text-xs font-medium text-gray-700 dark:text-gray-300 w-32'>
+                        Document Type:
+                      </label>
+                      <select
+                        value={docType}
+                        onChange={e => setDocType(e.target.value)}
+                        className='flex-1 px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm'
+                      >
+                        <option value='ID_CARD'>ID Card / CCCD</option>
+                        <option value='DRIVERS_LICENSE'>Driver's License / GPLX</option>
+                        <option value='PASSPORT'>Passport</option>
+                      </select>
+                    </div>
+                    <div className='flex items-center gap-2'>
+                      <label className='text-xs font-medium text-gray-700 dark:text-gray-300 w-32'>
+                        Choose File:
+                      </label>
+                      <input
+                        type='file'
+                        accept='image/jpeg,image/jpg,image/png,image/webp'
+                        onChange={e => setDocFile(e.target.files?.[0] || null)}
+                        className='flex-1 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100'
+                      />
+                    </div>
+                    {docFile && (
+                      <p className='text-xs text-green-600 dark:text-green-400'>
+                        ✓ Selected: {docFile.name} ({(docFile.size / 1024 / 1024).toFixed(2)} MB)
+                      </p>
+                    )}
+                    <Button
+                      size='sm'
+                      onClick={handleUploadCustomerDocument}
+                      disabled={!docFile || loadingDocuments}
+                      className='w-full'
                     >
-                      <option value='ID_CARD'>ID Card</option>
-                      <option value='DRIVERS_LICENSE'>Driver's License</option>
-                      <option value='PASSPORT'>Passport</option>
-                    </select>
-                    <input
-                      type='file'
-                      accept='image/*'
-                      onChange={e => setDocFile(e.target.files?.[0] || null)}
-                      className='text-sm'
-                      disabled
-                    />
-                    <Button size='sm' onClick={handleUploadCustomerDocument} disabled>
-                      Upload
+                      {loadingDocuments ? 'Uploading...' : '📤 Upload & Auto-Verify'}
                     </Button>
                   </div>
                 </div>
               )}
 
-              {/* Staff instruction when customer has no documents */}
-              {user?.role === 'STAFF' && (
-                <div className='mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg'>
-                  <p className='text-sm font-semibold text-blue-900 dark:text-blue-200'>
-                    📋 Staff Instructions
-                  </p>
-                  <p className='text-xs text-blue-700 dark:text-blue-300 mt-1'>
-                    Customer needs to upload documents themselves through the mobile app or user portal.
-                    Staff cannot proceed with check-in until documents are uploaded and approved.
-                  </p>
-                </div>
-              )}
+              {/* Staff instruction */}
+              <div className='mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg'>
+                <p className='text-sm font-semibold text-blue-900 dark:text-blue-200'>
+                  📋 Staff Instructions
+                </p>
+                <p className='text-xs text-blue-700 dark:text-blue-300 mt-1'>
+                  Upload customer's ID/License documents above. The document will be automatically verified after upload.
+                </p>
+              </div>
             </div>
           )}
 
-          <div className='flex items-center gap-2 text-sm'>
-            <input
-              id='doc_verified'
-              type='checkbox'
-              checked={documentVerified}
-              onChange={handleToggleDocumentVerified}
-              disabled={isFieldsDisabled || loadingDocuments}
-            />
-            <Label htmlFor='doc_verified' className='cursor-pointer'>
-              I have verified customer's ID and driving license{' '}
-              <span className='text-red-500'>*</span>
-            </Label>
-          </div>
-          <p className='text-xs text-muted-foreground'>
-            Required: Check customer's identity documents before handing over
-            vehicle.
-          </p>
+          {/* ✅ Chỉ hiện checkbox nếu customer ĐÃ CÓ approved documents */}
+          {customerDocuments && (
+            <>
+              <div className='flex items-center gap-2 text-sm'>
+                <input
+                  id='doc_verified'
+                  type='checkbox'
+                  checked={documentVerified}
+                  onChange={handleToggleDocumentVerified}
+                  disabled={isFieldsDisabled || loadingDocuments}
+                />
+                <Label htmlFor='doc_verified' className='cursor-pointer'>
+                  I have verified customer's ID and driving license{' '}
+                  <span className='text-red-500'>*</span>
+                </Label>
+              </div>
+              <p className='text-xs text-muted-foreground'>
+                Required: Check customer's identity documents before handing over
+                vehicle.
+              </p>
+            </>
+          )}
         </CardContent>
       </Card>
 
