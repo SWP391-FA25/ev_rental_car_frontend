@@ -16,8 +16,8 @@ import { apiClient } from '../../../shared/lib/apiClient';
 import { endpoints } from '../../../shared/lib/endpoints';
 import { env } from '../../../shared/lib/env';
 
-const Row = ({ label, value, valueClass = 'text-gray-900' }) => (
-  <div className='flex justify-between px-4 py-2 text-gray-700'>
+const Row = ({ label, value, valueClass = 'text-foreground' }) => (
+  <div className='flex justify-between px-4 py-2 text-muted-foreground'>
     <span>{label}</span>
     <span className={`font-medium ${valueClass}`}>{value}</span>
   </div>
@@ -129,35 +129,38 @@ export function BookingDetails({ open, onOpenChange, booking }) {
   // Badge color helpers for inspection summary
   const getBatteryBadgeClass = val => {
     if (val === null || val === undefined) {
-      return 'bg-gray-100 text-gray-600 border-gray-200';
+      return 'bg-muted/50 text-muted-foreground border-border';
     }
     const n = Number(val);
-    if (Number.isNaN(n)) return 'bg-gray-100 text-gray-600 border-gray-200';
-    if (n >= 70) return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-    if (n >= 30) return 'bg-amber-100 text-amber-800 border-amber-200';
-    return 'bg-rose-100 text-rose-700 border-rose-200';
+    if (Number.isNaN(n))
+      return 'bg-muted/50 text-muted-foreground border-border';
+    if (n >= 70)
+      return 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800';
+    if (n >= 30)
+      return 'bg-amber-100 dark:bg-amber-950/50 text-amber-800 dark:text-amber-400 border-amber-200 dark:border-amber-800';
+    return 'bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800';
   };
 
   const getConditionBadgeClass = value => {
     const v = (value || '').toString().toUpperCase();
-    if (!v) return 'bg-gray-100 text-gray-600 border-gray-200';
+    if (!v) return 'bg-muted/50 text-muted-foreground border-border';
     if (v === 'GOOD' || v === 'EXCELLENT')
-      return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+      return 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800';
     if (v === 'FAIR' || v === 'AVERAGE')
-      return 'bg-amber-100 text-amber-800 border-amber-200';
+      return 'bg-amber-100 dark:bg-amber-950/50 text-amber-800 dark:text-amber-400 border-amber-200 dark:border-amber-800';
     if (v === 'POOR' || v === 'BAD')
-      return 'bg-rose-100 text-rose-700 border-rose-200';
+      return 'bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800';
     if (v === 'N/A' || v === 'NA')
-      return 'bg-gray-100 text-gray-600 border-gray-200';
-    return 'bg-blue-100 text-blue-700 border-blue-200';
+      return 'bg-muted/50 text-muted-foreground border-border';
+    return 'bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800';
   };
 
   const getDocBadgeClass = val => {
     if (typeof val !== 'boolean')
-      return 'bg-gray-100 text-gray-600 border-gray-200';
+      return 'bg-muted/50 text-muted-foreground border-border';
     return val
-      ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
-      : 'bg-rose-100 text-rose-700 border-rose-200';
+      ? 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
+      : 'bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800';
   };
 
   // Format currency
@@ -325,7 +328,7 @@ export function BookingDetails({ open, onOpenChange, booking }) {
             )}
 
             {!loadingInspections && inspectionsError && (
-              <div className='p-2 border rounded-md bg-red-50 text-red-600 min-h-[40px] flex items-center'>
+              <div className='p-2 border rounded-md bg-destructive/10 text-destructive min-h-[40px] flex items-center'>
                 {t('booking.details.inspections.loadFailed')}:{' '}
                 {inspectionsError}
               </div>
@@ -642,9 +645,9 @@ export function BookingDetails({ open, onOpenChange, booking }) {
           <h3 className='font-semibold'>
             {t('booking.details.pricing.title')}
           </h3>
-          <div className='border border-green-200 rounded-2xl overflow-hidden shadow-sm bg-white'>
+          <div className='border border-green-200 dark:border-green-800 rounded-2xl overflow-hidden shadow-sm bg-card'>
             {/* Body */}
-            <div className='divide-y divide-green-100'>
+            <div className='divide-y divide-green-100 dark:divide-green-800'>
               <Row label='Base Price' value={formatPrice(booking.basePrice)} />
               <Row
                 label='Insurance'
@@ -654,24 +657,24 @@ export function BookingDetails({ open, onOpenChange, booking }) {
               <Row
                 label='Discount'
                 value={`-${formatPrice(booking.discountAmount)}`}
-                valueClass='text-green-600 font-semibold'
+                valueClass='text-green-600 dark:text-green-400 font-semibold'
               />
             </div>
 
             {/* Deposit */}
-            <div className='flex justify-between px-4 py-2 border-t border-green-100'>
-              <span className='text-gray-700'>Deposit (Paid)</span>
-              <span className='text-gray-900 font-medium'>
+            <div className='flex justify-between px-4 py-2 border-t border-green-100 dark:border-green-800'>
+              <span className='text-muted-foreground'>Deposit (Paid)</span>
+              <span className='text-foreground font-medium'>
                 {formatPrice(booking.depositAmount)}
               </span>
             </div>
 
             {/* Total Amount */}
-            <div className='px-4 py-3 bg-green-100 flex justify-between items-center'>
-              <span className='text-green-800 font-semibold text-base'>
+            <div className='px-4 py-3 bg-green-100 dark:bg-green-950/50 flex justify-between items-center'>
+              <span className='text-green-800 dark:text-green-300 font-semibold text-base'>
                 {t('booking.details.pricing.totalAmount')}
               </span>
-              <span className='text-green-700 text-lg font-bold'>
+              <span className='text-green-700 dark:text-green-400 text-lg font-bold'>
                 {formatPrice(booking.totalAmount)}
               </span>
             </div>
@@ -700,13 +703,13 @@ export function BookingDetails({ open, onOpenChange, booking }) {
                 switch (status?.toUpperCase()) {
                   case 'PAID':
                   case 'COMPLETED':
-                    return 'bg-green-100 text-green-700 border-green-200';
+                    return 'bg-green-100 dark:bg-green-950/50 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800';
                   case 'PENDING':
-                    return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+                    return 'bg-yellow-50 dark:bg-yellow-950/50 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800';
                   case 'FAILED':
-                    return 'bg-red-50 text-red-700 border-red-200';
+                    return 'bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800';
                   default:
-                    return 'bg-gray-50 text-gray-700 border-gray-200';
+                    return 'bg-muted/50 text-muted-foreground border-border';
                 }
               };
 
@@ -716,11 +719,11 @@ export function BookingDetails({ open, onOpenChange, booking }) {
                     {t('booking.details.paymentHistory')}
                   </h3>
 
-                  <div className='bg-white border border-green-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200'>
+                  <div className='bg-card border border-green-200 dark:border-green-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200'>
                     {/* Header */}
-                    <div className='bg-gradient-to-r from-green-500 to-green-600 px-4 py-3 flex justify-between items-center'>
+                    <div className='bg-gradient-to-r from-green-500 to-green-600 dark:from-green-700 dark:to-green-800 px-4 py-3 flex justify-between items-center'>
                       <div className='flex items-center gap-2'>
-                        <div className='bg-white/20 p-1.5 rounded-lg'>
+                        <div className='bg-white/20 dark:bg-white/10 p-1.5 rounded-lg'>
                           <CreditCard className='w-5 h-5 text-white' />
                         </div>
                         <div>
@@ -746,11 +749,11 @@ export function BookingDetails({ open, onOpenChange, booking }) {
 
                     {/* Body */}
                     <div className='p-4 space-y-3'>
-                      <div className='bg-green-50 rounded-xl p-4 flex justify-between items-center'>
-                        <span className='text-sm text-green-700 font-medium'>
+                      <div className='bg-green-50 dark:bg-green-950/50 rounded-xl p-4 flex justify-between items-center'>
+                        <span className='text-sm text-green-700 dark:text-green-400 font-medium'>
                           Total Amount:
                         </span>
-                        <span className='text-2xl font-bold text-green-800'>
+                        <span className='text-2xl font-bold text-green-800 dark:text-green-300'>
                           {formatPrice(payment.amount)}
                         </span>
                       </div>
@@ -758,19 +761,21 @@ export function BookingDetails({ open, onOpenChange, booking }) {
                       {/* Method & Type */}
                       <div className='grid grid-cols-2 gap-3'>
                         {payment.paymentMethod && (
-                          <div className='bg-green-50 rounded-lg p-3 border border-green-100'>
-                            <p className='text-xs text-green-700 mb-1'>
+                          <div className='bg-green-50 dark:bg-green-950/50 rounded-lg p-3 border border-green-100 dark:border-green-800'>
+                            <p className='text-xs text-green-700 dark:text-green-400 mb-1'>
                               Method
                             </p>
-                            <p className='text-sm font-semibold text-green-900'>
+                            <p className='text-sm font-semibold text-green-900 dark:text-green-200'>
                               {payment.paymentMethod.replace(/_/g, ' ')}
                             </p>
                           </div>
                         )}
                         {payment.paymentType && (
-                          <div className='bg-green-50 rounded-lg p-3 border border-green-100'>
-                            <p className='text-xs text-green-700 mb-1'>Type</p>
-                            <p className='text-sm font-semibold text-green-900'>
+                          <div className='bg-green-50 dark:bg-green-950/50 rounded-lg p-3 border border-green-100 dark:border-green-800'>
+                            <p className='text-xs text-green-700 dark:text-green-400 mb-1'>
+                              Type
+                            </p>
+                            <p className='text-sm font-semibold text-green-900 dark:text-green-200'>
                               {payment.paymentType.replace(/_/g, ' ')}
                             </p>
                           </div>
