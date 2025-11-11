@@ -518,22 +518,22 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
     <div className='space-y-8'>
       {/* Booking Selection Section */}
       {!bookingId && (
-        <Card className='border-slate-200 shadow-sm'>
-          <CardHeader className='bg-white border-b border-slate-200'>
-            <CardTitle className='text-slate-900'>Select Booking</CardTitle>
+        <Card className='shadow-sm'>
+          <CardHeader className='border-b'>
+            <CardTitle>Select Booking</CardTitle>
             <CardDescription>Choose your car rental booking</CardDescription>
           </CardHeader>
           <CardContent className='pt-6'>
             <div className='space-y-3'>
               {loadingBookings && (
-                <div className='text-sm text-slate-500'>
+                <div className='text-sm text-muted-foreground'>
                   Loading bookings...
                 </div>
               )}
-              {error && <div className='text-sm text-red-600'>{error}</div>}
+              {error && <div className='text-sm text-destructive'>{error}</div>}
               {bookings && bookings.length === 0 && (
-                <div className='text-center py-8'>
-                  <p className='text-slate-500'>
+                <div className='py-8 text-center'>
+                  <p className='text-muted-foreground'>
                     No bookings require contract creation
                   </p>
                 </div>
@@ -545,57 +545,59 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                     key={booking.id}
                     className={`p-4 cursor-pointer transition-all border-2 ${
                       selectedBooking?.id === booking.id
-                        ? 'border-blue-600 bg-blue-50'
-                        : 'border-slate-200 hover:border-slate-300 bg-white'
+                        ? 'border-primary bg-primary/5'
+                        : 'hover:border-primary/50'
                     }`}
                     onClick={() => handleBookingSelect(booking)}
                   >
                     <div className='flex items-start justify-between'>
                       <div className='flex-1'>
                         <div className='flex items-center gap-2 mb-2'>
-                          <h3 className='font-semibold text-slate-900'>
+                          <h3 className='font-semibold'>
                             {booking.bookingCode || `Record #${index + 1}`}
                           </h3>
-                          <span className='text-sm bg-blue-100 text-blue-700 px-2 py-1 rounded'>
+                          <span className='px-2 py-1 text-sm rounded bg-primary/10 text-primary'>
                             {booking.status}
                           </span>
                         </div>
-                        <div className='grid grid-cols-2 gap-4 text-sm text-slate-600'>
+                        <div className='grid grid-cols-2 gap-4 text-sm text-muted-foreground'>
                           <div>
-                            <p className='text-slate-500'>Customer</p>
-                            <p className='font-medium text-slate-900'>
+                            <p className='text-muted-foreground'>Customer</p>
+                            <p className='font-medium text-foreground'>
                               {authUser?.name || booking.staff?.name}
                             </p>
                           </div>
                           <div>
-                            <p className='text-slate-500'>Assigned Staff</p>
-                            <p className='font-medium text-slate-900'>
+                            <p className='text-muted-foreground'>
+                              Assigned Staff
+                            </p>
+                            <p className='font-medium text-foreground'>
                               {booking.staff?.name}
                             </p>
                           </div>
                           <div>
-                            <p className='text-slate-500'>Location</p>
-                            <p className='font-medium text-slate-900'>
+                            <p className='text-muted-foreground'>Location</p>
+                            <p className='font-medium text-foreground'>
                               {booking.station?.name}
                             </p>
                           </div>
                           <div>
-                            <p className='text-slate-500'>Vehicle</p>
-                            <p className='font-medium text-slate-900'>
+                            <p className='text-muted-foreground'>Vehicle</p>
+                            <p className='font-medium text-foreground'>
                               {booking.vehicle?.brand} {booking.vehicle?.model}
                             </p>
                           </div>
                           <div>
-                            <p className='text-slate-500'>Rental date</p>
-                            <p className='font-medium text-slate-900'>
+                            <p className='text-muted-foreground'>Rental date</p>
+                            <p className='font-medium text-foreground'>
                               {new Date(
                                 booking.createdAt || booking.rentalDate
                               ).toLocaleDateString('en-US')}
                             </p>
                           </div>
                           <div>
-                            <p className='text-slate-500'>Price</p>
-                            <p className='font-medium text-slate-900'>
+                            <p className='text-muted-foreground'>Price</p>
+                            <p className='font-medium text-foreground'>
                               {booking.totalAmount?.toLocaleString('en-US') ||
                                 booking.price}{' '}
                               VND
@@ -604,9 +606,9 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                         </div>
                       </div>
                       {selectedBooking?.id === booking.id && (
-                        <div className='ml-4 flex-shrink-0'>
-                          <div className='flex items-center justify-center w-6 h-6 rounded-full bg-blue-600'>
-                            <Check className='w-4 h-4 text-white' />
+                        <div className='ml-4 shrink-0'>
+                          <div className='flex items-center justify-center w-6 h-6 rounded-full bg-primary'>
+                            <Check className='w-4 h-4 text-primary-foreground' />
                           </div>
                         </div>
                       )}
@@ -620,16 +622,16 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
 
       {/* Inspection Card Section - Hiển thị TẤT CẢ CHECK_IN inspections */}
       {selectedBooking && (
-        <Card className='border-slate-200 shadow-sm'>
-          <CardHeader className='bg-white border-b border-slate-200'>
-            <CardTitle className='flex items-center gap-2 text-slate-900'>
+        <Card className='shadow-sm'>
+          <CardHeader className='border-b'>
+            <CardTitle className='flex items-center gap-2'>
               <FileText className='w-5 h-5' />
               Vehicle Inspection Report (Vehicle Receipt)
             </CardTitle>
             <CardDescription>
               List of check-in inspection reports for this booking
               {inspections.length > 0 && (
-                <span className='ml-2 text-blue-600 font-medium'>
+                <span className='ml-2 font-medium text-primary'>
                   ({inspections.length} reports)
                 </span>
               )}
@@ -638,27 +640,27 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
           <CardContent className='pt-6'>
             {loadingInspection && (
               <div className='flex items-center justify-center py-8'>
-                <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600'></div>
-                <span className='ml-3 text-sm text-slate-500'>
+                <div className='w-8 h-8 border-b-2 rounded-full animate-spin border-primary'></div>
+                <span className='ml-3 text-sm text-muted-foreground'>
                   Loading inspection reports...
                 </span>
               </div>
             )}
             {inspectionError && (
-              <div className='flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-lg'>
-                <AlertCircle className='w-5 h-5 text-red-600 flex-shrink-0' />
-                <p className='text-sm text-red-600'>{inspectionError}</p>
+              <div className='flex items-center gap-2 p-4 border rounded-lg bg-destructive/10 border-destructive/20'>
+                <AlertCircle className='w-5 h-5 text-destructive shrink-0' />
+                <p className='text-sm text-destructive'>{inspectionError}</p>
               </div>
             )}
             {!loadingInspection &&
               inspections.length === 0 &&
               !inspectionError && (
-                <div className='text-center py-8 border-2 border-dashed border-slate-200 rounded-lg'>
-                  <FileText className='w-12 h-12 text-slate-300 mx-auto mb-3' />
-                  <p className='text-slate-500'>
+                <div className='py-8 text-center border-2 border-dashed rounded-lg border-border'>
+                  <FileText className='w-12 h-12 mx-auto mb-3 text-muted-foreground/50' />
+                  <p className='text-muted-foreground'>
                     No CHECK_IN inspection reports for this booking
                   </p>
-                  <p className='text-xs text-slate-400 mt-1'>
+                  <p className='mt-1 text-xs text-muted-foreground/70'>
                     Reports will be created when you check in the vehicle
                   </p>
                 </div>
@@ -670,16 +672,16 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                 {inspections.map((inspection, index) => (
                   <div
                     key={inspection.id || index}
-                    className='border border-slate-200 rounded-lg p-6 bg-white hover:shadow-md transition-shadow'
+                    className='p-6 transition-shadow border rounded-lg hover:shadow-md'
                   >
                     {/* Header với trạng thái */}
-                    <div className='flex items-center justify-between pb-4 border-b mb-4'>
+                    <div className='flex items-center justify-between pb-4 mb-4 border-b'>
                       <div className='flex items-center gap-3'>
-                        <div className='px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700'>
+                        <div className='px-3 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary'>
                           🚗 Check-in #{index + 1}
                         </div>
                         {inspection.isCompleted && (
-                          <div className='flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium'>
+                          <div className='flex items-center gap-1 px-3 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full dark:bg-green-900/50 dark:text-green-300'>
                             <CheckCircle2 className='w-3 h-3' />
                             Completed
                           </div>
@@ -688,14 +690,16 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                     </div>
 
                     {/* Thông tin chính - Grid 3 cột */}
-                    <div className='grid grid-cols-1 md:grid-cols-3 gap-4 mb-4'>
+                    <div className='grid grid-cols-1 gap-4 mb-4 md:grid-cols-3'>
                       {/* Số km */}
-                      <div className='bg-slate-50 p-4 rounded-lg border border-slate-200'>
-                        <p className='text-xs text-slate-500 mb-1'>Mileage</p>
-                        <p className='text-2xl font-bold text-slate-900'>
+                      <div className='p-4 border rounded-lg bg-muted/50'>
+                        <p className='mb-1 text-xs text-muted-foreground'>
+                          Mileage
+                        </p>
+                        <p className='text-2xl font-bold'>
                           {inspection.mileage ?? 'N/A'}
                           {inspection.mileage && (
-                            <span className='text-sm font-normal text-slate-500 ml-1'>
+                            <span className='ml-1 text-sm font-normal text-muted-foreground'>
                               km
                             </span>
                           )}
@@ -703,21 +707,21 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                       </div>
 
                       {/* Mức pin */}
-                      <div className='bg-slate-50 p-4 rounded-lg border border-slate-200'>
-                        <p className='text-xs text-slate-500 mb-1'>
+                      <div className='p-4 border rounded-lg bg-muted/50'>
+                        <p className='mb-1 text-xs text-muted-foreground'>
                           Battery Level
                         </p>
                         <div className='flex items-center gap-2'>
-                          <p className='text-2xl font-bold text-slate-900'>
+                          <p className='text-2xl font-bold'>
                             {inspection.batteryLevel ?? 'N/A'}
                             {inspection.batteryLevel != null && (
-                              <span className='text-sm font-normal text-slate-500'>
+                              <span className='text-sm font-normal text-muted-foreground'>
                                 %
                               </span>
                             )}
                           </p>
                           {inspection.batteryLevel != null && (
-                            <div className='flex-1 h-2 bg-slate-200 rounded-full overflow-hidden'>
+                            <div className='flex-1 h-2 overflow-hidden rounded-full bg-muted'>
                               <div
                                 className={`h-full transition-all ${
                                   inspection.batteryLevel >= 80
@@ -736,11 +740,11 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                       </div>
 
                       {/* Nhân viên */}
-                      <div className='bg-slate-50 p-4 rounded-lg border border-slate-200'>
-                        <p className='text-xs text-slate-500 mb-1'>
+                      <div className='p-4 border rounded-lg bg-muted/50'>
+                        <p className='mb-1 text-xs text-muted-foreground'>
                           Inspecting staff
                         </p>
-                        <p className='text-lg font-semibold text-slate-900'>
+                        <p className='text-lg font-semibold'>
                           {inspection.staffName ||
                             inspection.staff?.name ||
                             'N/A'}
@@ -749,26 +753,26 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                     </div>
 
                     {/* Tình trạng xe */}
-                    <div className='bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4'>
-                      <h4 className='font-semibold text-slate-900 mb-3 flex items-center gap-2'>
-                        <CheckCircle2 className='w-4 h-4 text-blue-600' />
+                    <div className='p-4 mb-4 border rounded-lg bg-primary/5 border-primary/20'>
+                      <h4 className='flex items-center gap-2 mb-3 font-semibold'>
+                        <CheckCircle2 className='w-4 h-4 text-primary' />
                         Vehicle condition
                       </h4>
-                      <div className='grid grid-cols-1 md:grid-cols-3 gap-3'>
+                      <div className='grid grid-cols-1 gap-3 md:grid-cols-3'>
                         {/* Ngoại thất */}
                         <div>
-                          <p className='text-xs text-slate-600 mb-1'>
+                          <p className='mb-1 text-xs text-muted-foreground'>
                             Exterior
                           </p>
                           <div
                             className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${
                               inspection.exteriorCondition === 'GOOD'
-                                ? 'bg-green-100 text-green-700'
+                                ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300'
                                 : inspection.exteriorCondition === 'FAIR'
-                                ? 'bg-yellow-100 text-yellow-700'
+                                ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300'
                                 : inspection.exteriorCondition === 'POOR'
-                                ? 'bg-red-100 text-red-700'
-                                : 'bg-slate-100 text-slate-700'
+                                ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300'
+                                : 'bg-muted text-muted-foreground'
                             }`}
                           >
                             {inspection.exteriorCondition === 'GOOD' &&
@@ -783,18 +787,18 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
 
                         {/* Nội thất */}
                         <div>
-                          <p className='text-xs text-slate-600 mb-1'>
+                          <p className='mb-1 text-xs text-muted-foreground'>
                             Interior
                           </p>
                           <div
                             className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${
                               inspection.interiorCondition === 'GOOD'
-                                ? 'bg-green-100 text-green-700'
+                                ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300'
                                 : inspection.interiorCondition === 'FAIR'
-                                ? 'bg-yellow-100 text-yellow-700'
+                                ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300'
                                 : inspection.interiorCondition === 'POOR'
-                                ? 'bg-red-100 text-red-700'
-                                : 'bg-slate-100 text-slate-700'
+                                ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300'
+                                : 'bg-muted text-muted-foreground'
                             }`}
                           >
                             {inspection.interiorCondition === 'GOOD' &&
@@ -809,18 +813,18 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
 
                         {/* Lốp xe */}
                         <div>
-                          <p className='text-xs text-slate-600 mb-1'>
+                          <p className='mb-1 text-xs text-muted-foreground'>
                             Tire condition
                           </p>
                           <div
                             className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${
                               inspection.tireCondition === 'GOOD'
-                                ? 'bg-green-100 text-green-700'
+                                ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300'
                                 : inspection.tireCondition === 'FAIR'
-                                ? 'bg-yellow-100 text-yellow-700'
+                                ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300'
                                 : inspection.tireCondition === 'POOR'
-                                ? 'bg-red-100 text-red-700'
-                                : 'bg-slate-100 text-slate-700'
+                                ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300'
+                                : 'bg-muted text-muted-foreground'
                             }`}
                           >
                             {inspection.tireCondition === 'GOOD' && '✓ Good'}
@@ -834,12 +838,12 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
 
                     {/* Damage notes (if any) */}
                     {inspection.damageNotes && (
-                      <div className='bg-red-50 p-4 rounded-lg border border-red-200 mb-4'>
-                        <h4 className='font-semibold text-red-900 mb-2 flex items-center gap-2'>
+                      <div className='p-4 mb-4 border rounded-lg bg-destructive/10 border-destructive/20'>
+                        <h4 className='flex items-center gap-2 mb-2 font-semibold text-destructive'>
                           <AlertCircle className='w-4 h-4' />
                           Damage notes
                         </h4>
-                        <p className='text-sm text-red-800'>
+                        <p className='text-sm text-destructive/90'>
                           {inspection.damageNotes}
                         </p>
                       </div>
@@ -847,11 +851,9 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
 
                     {/* Other notes */}
                     {inspection.notes && (
-                      <div className='bg-slate-50 p-4 rounded-lg border border-slate-200 mb-4'>
-                        <h4 className='font-semibold text-slate-900 mb-2'>
-                          Notes
-                        </h4>
-                        <p className='text-sm text-slate-700'>
+                      <div className='p-4 mb-4 border rounded-lg bg-muted/50'>
+                        <h4 className='mb-2 font-semibold'>Notes</h4>
+                        <p className='text-sm text-muted-foreground'>
                           {inspection.notes}
                         </p>
                       </div>
@@ -860,15 +862,13 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                     {/* Accessories */}
                     {Array.isArray(inspection.accessories) &&
                       inspection.accessories.length > 0 && (
-                        <div className='bg-slate-50 p-4 rounded-lg border border-slate-200 mb-4'>
-                          <h4 className='font-semibold text-slate-900 mb-2'>
-                            Accessories
-                          </h4>
+                        <div className='p-4 mb-4 border rounded-lg bg-muted/50'>
+                          <h4 className='mb-2 font-semibold'>Accessories</h4>
                           <div className='flex flex-wrap gap-2'>
                             {inspection.accessories.map((accessory, idx) => (
                               <span
                                 key={idx}
-                                className='px-3 py-1 bg-white border border-slate-300 rounded-full text-xs text-slate-700'
+                                className='px-3 py-1 text-xs border rounded-full bg-background'
                               >
                                 {accessory}
                               </span>
@@ -880,19 +880,19 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                     {/* Inspection images */}
                     {inspection.images && inspection.images.length > 0 && (
                       <div className='mb-4'>
-                        <h4 className='font-semibold text-slate-900 mb-3 flex items-center gap-2'>
+                        <h4 className='flex items-center gap-2 mb-3 font-semibold'>
                           📷 Inspection images ({inspection.images.length})
                         </h4>
                         {/* Warning message */}
-                        <div className='mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg'>
-                          <p className='text-xs text-amber-800'>
+                        <div className='p-3 mb-3 border rounded-lg bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800'>
+                          <p className='text-xs text-amber-800 dark:text-amber-300'>
                             ⚠️ <strong>Note:</strong> If images appear
                             dark/black, please <strong>click the image</strong>{' '}
                             to open in a new tab or contact staff to update
                             clearer images.
                           </p>
                         </div>
-                        <div className='grid grid-cols-2 md:grid-cols-4 gap-3'>
+                        <div className='grid grid-cols-2 gap-3 md:grid-cols-4'>
                           {inspection.images.map((img, idx) => {
                             // Extract image URL - prioritize thumbnailUrl for preview
                             const thumbnailUrl =
@@ -922,12 +922,12 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                             return (
                               <div
                                 key={idx}
-                                className='relative group bg-white rounded-lg overflow-hidden border border-slate-200'
+                                className='relative overflow-hidden border rounded-lg group bg-background'
                               >
                                 <img
                                   src={previewUrl}
                                   alt={`Ảnh kiểm tra ${idx + 1}`}
-                                  className='w-full h-32 object-contain cursor-pointer hover:shadow-lg transition-shadow'
+                                  className='object-contain w-full h-32 transition-shadow cursor-pointer hover:shadow-lg'
                                   style={{
                                     minHeight: '128px',
                                     maxHeight: '128px',
@@ -973,7 +973,7 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                                     const errorDiv =
                                       document.createElement('div');
                                     errorDiv.className =
-                                      'w-full h-32 flex items-center justify-center bg-red-50 border border-red-200 rounded-lg cursor-pointer';
+                                      'flex items-center justify-center w-full h-32 border border-red-200 rounded-lg cursor-pointer bg-red-50';
                                     errorDiv.onclick = () =>
                                       window.open(fullUrl, '_blank');
                                     errorDiv.innerHTML = `
@@ -987,8 +987,8 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                                     );
                                   }}
                                 />
-                                <div className='absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all flex items-center justify-center pointer-events-none'>
-                                  <span className='text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none'>
+                                <div className='absolute inset-0 flex items-center justify-center transition-all bg-black bg-opacity-0 pointer-events-none group-hover:bg-opacity-20'>
+                                  <span className='text-xs text-white opacity-0 pointer-events-none group-hover:opacity-100'>
                                     🔍 Xem lớn
                                   </span>
                                 </div>
@@ -1004,7 +1004,7 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                     )}
 
                     {/* Additional information */}
-                    <div className='pt-4 border-t grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-slate-500'>
+                    <div className='grid grid-cols-1 gap-3 pt-4 text-xs border-t md:grid-cols-2 text-muted-foreground'>
                       <div>
                         <span className='font-medium'>Created at:</span>{' '}
                         {inspection.createdAt
@@ -1048,24 +1048,28 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
 
       {/* Contract List Section */}
       {selectedBooking && (
-        <Card className='border-slate-200 shadow-sm'>
-          <CardHeader className='bg-white border-b border-slate-200'>
-            <CardTitle className='text-slate-900'>Contracts</CardTitle>
+        <Card className='shadow-sm'>
+          <CardHeader className='border-b'>
+            <CardTitle>Contracts</CardTitle>
             <CardDescription>
               List of contracts for this booking
             </CardDescription>
           </CardHeader>
           <CardContent className='pt-6'>
             {loadingContracts && (
-              <div className='text-sm text-slate-500'>Loading contracts...</div>
+              <div className='text-sm text-muted-foreground'>
+                Loading contracts...
+              </div>
             )}
-            {error && <div className='text-sm text-red-600'>{error}</div>}
+            {error && <div className='text-sm text-destructive'>{error}</div>}
 
             {!loadingContracts && contracts.length === 0 && (
-              <div className='text-center py-8 border-2 border-dashed border-slate-200 rounded-lg'>
-                <FileText className='w-12 h-12 text-slate-300 mx-auto mb-3' />
-                <p className='text-slate-500'>No contracts for this booking</p>
-                <p className='text-sm text-slate-400 mt-1'>
+              <div className='py-8 text-center border-2 border-dashed rounded-lg border-border'>
+                <FileText className='w-12 h-12 mx-auto mb-3 text-muted-foreground/50' />
+                <p className='text-muted-foreground'>
+                  No contracts for this booking
+                </p>
+                <p className='mt-1 text-sm text-muted-foreground/70'>
                   Contracts will be created by staff
                 </p>
               </div>
@@ -1074,18 +1078,18 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
             {contracts.length > 0 && (
               <div className='space-y-4'>
                 {contracts.map(contract => (
-                  <Card key={contract.id} className='p-4 border-slate-200'>
+                  <Card key={contract.id} className='p-4'>
                     <div className='flex items-start justify-between'>
                       <div className='flex-1'>
                         <div className='flex items-center gap-2 mb-2'>
-                          <h3 className='font-semibold text-slate-900'>
+                          <h3 className='font-semibold'>
                             {contract.contractNumber}
                           </h3>
                           <span
                             className={`text-sm px-2 py-1 rounded ${
                               contract.status === 'COMPLETED'
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-amber-100 text-amber-700'
+                                ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300'
+                                : 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300'
                             }`}
                           >
                             {contract.status === 'COMPLETED'
@@ -1093,10 +1097,10 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                               : 'Awaiting signature'}
                           </span>
                         </div>
-                        <div className='grid grid-cols-2 gap-4 text-sm text-slate-600'>
+                        <div className='grid grid-cols-2 gap-4 text-sm text-muted-foreground'>
                           <div>
-                            <p className='text-slate-500'>Created on</p>
-                            <p className='font-medium text-slate-900'>
+                            <p className='text-muted-foreground'>Created on</p>
+                            <p className='font-medium text-foreground'>
                               {new Date(contract.createdAt).toLocaleDateString(
                                 'en-US'
                               )}
@@ -1104,8 +1108,8 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                           </div>
                           {contract.renterName && (
                             <div>
-                              <p className='text-slate-500'>Renter</p>
-                              <p className='font-medium text-slate-900'>
+                              <p className='text-muted-foreground'>Renter</p>
+                              <p className='font-medium text-foreground'>
                                 {contract.renterName}
                               </p>
                             </div>
@@ -1114,8 +1118,10 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                             contract.signedAt && (
                               <>
                                 <div>
-                                  <p className='text-slate-500'>Signed on</p>
-                                  <p className='font-medium text-slate-900'>
+                                  <p className='text-muted-foreground'>
+                                    Signed on
+                                  </p>
+                                  <p className='font-medium text-foreground'>
                                     {new Date(
                                       contract.signedAt
                                     ).toLocaleDateString('en-US')}
@@ -1123,8 +1129,10 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                                 </div>
                                 {contract.witnessName && (
                                   <div>
-                                    <p className='text-slate-500'>Witness</p>
-                                    <p className='font-medium text-slate-900'>
+                                    <p className='text-muted-foreground'>
+                                      Witness
+                                    </p>
+                                    <p className='font-medium text-foreground'>
                                       {contract.witnessName}
                                     </p>
                                   </div>
@@ -1134,8 +1142,10 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                         </div>
                         {contract.notes && (
                           <div className='mt-2 text-sm'>
-                            <p className='text-slate-500'>Notes:</p>
-                            <p className='text-slate-700'>{contract.notes}</p>
+                            <p className='text-muted-foreground'>Notes:</p>
+                            <p className='text-foreground/80'>
+                              {contract.notes}
+                            </p>
                           </div>
                         )}
                       </div>
@@ -1162,7 +1172,7 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                               href={contract.signedFileUrl}
                               target='_blank'
                               rel='noopener noreferrer'
-                              className='inline-flex items-center justify-center px-3 py-2 text-sm font-medium border border-slate-300 rounded-md hover:bg-slate-50'
+                              className='inline-flex items-center justify-center px-3 py-2 text-sm font-medium border rounded-md hover:bg-accent'
                             >
                               <FileText className='w-4 h-4 mr-2' />
                               View contract
@@ -1181,11 +1191,9 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
       {/* Upload Contract Form */}
       {selectedBooking &&
         contracts.filter(c => c.status === 'CREATED').length > 0 && (
-          <Card className='border-slate-200 shadow-sm'>
-            <CardHeader className='bg-white border-b border-slate-200'>
-              <CardTitle className='text-slate-900'>
-                Upload Signed Contract
-              </CardTitle>
+          <Card className='shadow-sm'>
+            <CardHeader className='border-b'>
+              <CardTitle>Upload Signed Contract</CardTitle>
               <CardDescription>
                 Please fill in the information and upload the signed contract
                 file
@@ -1198,13 +1206,13 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                   <div
                     key={contract.id}
                     id={`upload-form-${contract.id}`}
-                    className='space-y-4 mb-8 pb-8 border-b last:border-b-0'
+                    className='pb-8 mb-8 space-y-4 border-b last:border-b-0'
                   >
-                    <h3 className='font-semibold text-lg mb-4'>
+                    <h3 className='mb-4 text-lg font-semibold'>
                       Contract: {contract.contractNumber}
                     </h3>
 
-                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                    <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
                       <div className='space-y-2'>
                         <Label htmlFor={`renterName-${contract.id}`}>
                           Renter name <span className='text-red-500'>*</span>
@@ -1248,7 +1256,7 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                         rows={3}
                         maxLength={500}
                       />
-                      <p className='text-xs text-slate-500'>
+                      <p className='text-xs text-muted-foreground'>
                         {formData.notes.length}/500 characters
                       </p>
                     </div>
@@ -1256,7 +1264,7 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                     <div className='space-y-2'>
                       <Label htmlFor={`file-${contract.id}`}>
                         Signed contract file{' '}
-                        <span className='text-red-500'>*</span>
+                        <span className='text-destructive'>*</span>
                       </Label>
                       <div className='flex items-center gap-4'>
                         <Input
@@ -1273,11 +1281,11 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                           {actionLoading ? 'Uploading...' : 'Upload'}
                         </Button>
                       </div>
-                      <p className='text-xs text-slate-500'>
+                      <p className='text-xs text-muted-foreground'>
                         Accepts PDF, JPG, JPEG, PNG (max 10MB)
                       </p>
                       {selectedFile && (
-                        <p className='text-xs text-green-600'>
+                        <p className='text-xs text-green-600 dark:text-green-400'>
                           Selected: {selectedFile.name} (
                           {(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
                         </p>
@@ -1291,11 +1299,9 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
 
       {/* Review-Only Section - Không có action buttons */}
       {selectedBooking && contracts.some(c => c.status === 'COMPLETED') && (
-        <Card className='border-slate-200 shadow-sm'>
-          <CardHeader className='bg-white border-b border-slate-200'>
-            <CardTitle className='text-slate-900'>
-              Contract Terms (Read Only)
-            </CardTitle>
+        <Card className='shadow-sm'>
+          <CardHeader className='border-b'>
+            <CardTitle>Contract Terms (Read Only)</CardTitle>
             <CardDescription>
               Information on the terms and conditions of the rental contract
             </CardDescription>
@@ -1303,19 +1309,15 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
           <CardContent className='pt-6'>
             <div className='space-y-6'>
               {/* Contract Terms - Read Only */}
-              <Card className='border-slate-200'>
-                <CardHeader className='bg-slate-50 border-b border-slate-200'>
-                  <CardTitle className='text-slate-900'>
-                    Contract Terms & Conditions
-                  </CardTitle>
+              <Card>
+                <CardHeader className='border-b bg-muted/50'>
+                  <CardTitle>Contract Terms & Conditions</CardTitle>
                 </CardHeader>
                 <CardContent className='pt-6'>
-                  <div className='space-y-4 text-sm text-slate-700 max-h-96 overflow-y-auto'>
+                  <div className='space-y-4 overflow-y-auto text-sm max-h-96'>
                     <div>
-                      <h4 className='font-semibold text-slate-900 mb-2'>
-                        1. Rental Period
-                      </h4>
-                      <p>
+                      <h4 className='mb-2 font-semibold'>1. Rental Period</h4>
+                      <p className='text-muted-foreground'>
                         The rental period starts at check-in at the station and
                         ends at return at the station. Any usage beyond the
                         rental period will be charged according to the stated
@@ -1323,7 +1325,7 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                       </p>
                     </div>
                     <div>
-                      <h4 className='font-semibold text-slate-900 mb-2'>
+                      <h4 className='mb-2 font-semibold'>
                         2. Vehicle Care Responsibility
                       </h4>
                       <p>
@@ -1334,7 +1336,7 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                       </p>
                     </div>
                     <div>
-                      <h4 className='font-semibold text-slate-900 mb-2'>
+                      <h4 className='mb-2 font-semibold'>
                         3. Usage Conditions
                       </h4>
                       <p>
@@ -1343,7 +1345,7 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                       </p>
                     </div>
                     <div>
-                      <h4 className='font-semibold text-slate-900 mb-2'>
+                      <h4 className='mb-2 font-semibold'>
                         4. Insurance & Protection
                       </h4>
                       <p>
@@ -1353,9 +1355,7 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
                       </p>
                     </div>
                     <div>
-                      <h4 className='font-semibold text-slate-900 mb-2'>
-                        5. Fees & Payment
-                      </h4>
+                      <h4 className='mb-2 font-semibold'>5. Fees & Payment</h4>
                       <p>
                         Rental fees must be paid in full before check-in.
                         Additional charges (overtime, damage, etc.) will be
@@ -1367,20 +1367,18 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
               </Card>
 
               {/* Damage Responsibility - Read Only */}
-              <Card className='border-slate-200'>
-                <CardHeader className='bg-slate-50 border-b border-slate-200'>
-                  <CardTitle className='text-slate-900'>
-                    Damage Responsibility
-                  </CardTitle>
+              <Card>
+                <CardHeader className='border-b bg-muted/50'>
+                  <CardTitle>Damage Responsibility</CardTitle>
                 </CardHeader>
                 <CardContent className='pt-6'>
-                  <div className='space-y-3 text-sm text-slate-700'>
+                  <div className='space-y-3 text-sm'>
                     <p>
-                      <span className='font-semibold text-slate-900'>
+                      <span className='font-semibold'>
                         The renter confirms that:
                       </span>
                     </p>
-                    <ul className='list-disc list-inside space-y-2 ml-2'>
+                    <ul className='ml-2 space-y-2 list-disc list-inside text-muted-foreground'>
                       <li>
                         Has carefully checked the vehicle condition before
                         check-in
@@ -1397,15 +1395,13 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
               </Card>
 
               {/* Data Privacy - Read Only */}
-              <Card className='border-slate-200'>
-                <CardHeader className='bg-slate-50 border-b border-slate-200'>
-                  <CardTitle className='text-slate-900'>
-                    Personal Data Protection
-                  </CardTitle>
+              <Card>
+                <CardHeader className='border-b bg-muted/50'>
+                  <CardTitle>Personal Data Protection</CardTitle>
                 </CardHeader>
                 <CardContent className='pt-6'>
-                  <div className='space-y-3 text-sm text-slate-700'>
-                    <p>
+                  <div className='space-y-3 text-sm'>
+                    <p className='text-muted-foreground'>
                       Your personal data is processed in accordance with our
                       data protection policy. We are committed to safeguarding
                       your information and only using it for purposes related to
@@ -1416,20 +1412,18 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
               </Card>
 
               {/* Additional Conditions - Read Only */}
-              <Card className='border-slate-200'>
-                <CardHeader className='bg-slate-50 border-b border-slate-200'>
-                  <CardTitle className='text-slate-900'>
-                    Additional Conditions
-                  </CardTitle>
+              <Card>
+                <CardHeader className='border-b bg-muted/50'>
+                  <CardTitle>Additional Conditions</CardTitle>
                 </CardHeader>
                 <CardContent className='pt-6'>
-                  <div className='space-y-3 text-sm text-slate-700'>
+                  <div className='space-y-3 text-sm'>
                     <p>
-                      <span className='font-semibold text-slate-900'>
+                      <span className='font-semibold'>
                         Additional conditions:
                       </span>
                     </p>
-                    <ul className='list-disc list-inside space-y-2 ml-2'>
+                    <ul className='ml-2 space-y-2 list-disc list-inside text-muted-foreground'>
                       <li>
                         The vehicle must be returned at the specified time and
                         location
@@ -1443,11 +1437,11 @@ export default function CarRentalContract({ bookingId, onStatusChange }) {
               </Card>
 
               {/* Info Notice */}
-              <div className='flex gap-3 p-4 bg-blue-50 rounded-lg border border-blue-200'>
-                <AlertCircle className='w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5' />
-                <div className='text-sm text-blue-800'>
-                  <p className='font-semibold mb-1'>Important note:</p>
-                  <p>
+              <div className='flex gap-3 p-4 border rounded-lg bg-primary/5 border-primary/20'>
+                <AlertCircle className='w-5 h-5 text-primary shrink-0 mt-0.5' />
+                <div className='text-sm'>
+                  <p className='mb-1 font-semibold'>Important note:</p>
+                  <p className='text-muted-foreground'>
                     By signing this contract, you confirm that you have read,
                     understood, and agree to all terms and conditions. This
                     contract is legally binding and you bear legal
