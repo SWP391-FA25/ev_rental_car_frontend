@@ -104,11 +104,11 @@ export default function CheckInCar() {
   const [existingContract, setExistingContract] = useState(null);
   const [loadingContract, setLoadingContract] = useState(false);
 
-  // ✨ Staff assignment state
-  const [staffAssignment, setStaffAssignment] = useState(null);
+  // ✨ Staff assignment state (now supports multiple stations)
+  const [staffAssignments, setStaffAssignments] = useState([]);
   const [loadingAssignment, setLoadingAssignment] = useState(true);
 
-  // Fetch staff assignment first
+  // Fetch staff assignments (can be multiple stations)
   useEffect(() => {
     const fetchStaffAssignment = async () => {
       if (!user?.id) return;
@@ -123,7 +123,8 @@ export default function CheckInCar() {
         console.log('📋 API Response:', response);
 
         // Backend returns { success: true, assignments: [...] }
-        const assignments = response.data?.assignments || response.assignments || [];
+        const assignments =
+          response.data?.assignments || response.assignments || [];
 
         console.log('📋 Assignments array:', assignments);
         console.log('📋 Total assignments:', assignments.length);
@@ -159,7 +160,10 @@ export default function CheckInCar() {
             'You are not assigned to any station. Please contact admin.'
           );
         } else {
-          toast.error('Failed to load station assignment: ' + (error.message || 'Unknown error'));
+          toast.error(
+            'Failed to load station assignment: ' +
+            (error.message || 'Unknown error')
+          );
         }
         setStaffAssignment(null);
       } finally {
@@ -214,7 +218,7 @@ export default function CheckInCar() {
       }
     };
     fetchEligibleBookings();
-  }, [getAllBookings, staffAssignment]);
+  }, [getAllBookings, staffAssignments]);
 
   // ✨ Click outside to close dropdown
   useEffect(() => {
@@ -582,6 +586,8 @@ export default function CheckInCar() {
       form.append('userId', renterId);
       form.append('document', docFile, docFile.name);
       form.append('documentType', docType);
+      // ✅ IMPORTANT: Send renterId so backend knows who to upload for
+      form.append('renterId', renterId);
 
       console.log('📤 Uploading document for renter:', {
         renterId,
@@ -627,13 +633,31 @@ export default function CheckInCar() {
       // Refresh documents để hiển thị document mới
       await fetchCustomerDocuments(renterId);
       setDocFile(null);
-      setDocType('ID_CARD');
+
+      // Auto-select next missing document type
+      const hasIdCard = customerDocumentsList.some(
+        d => d.documentType === 'ID_CARD'
+      );
+      const hasLicense = customerDocumentsList.some(
+        d => d.documentType === 'DRIVERS_LICENSE'
+      );
+
+      if (!hasIdCard) {
+        setDocType('ID_CARD');
+      } else if (!hasLicense) {
+        setDocType('DRIVERS_LICENSE');
+      } else {
+        setDocType('ID_CARD'); // Reset to default
+      }
+
       setNeedsDocumentUpload(false);
     } catch (e) {
       console.error('❌ Upload document error:', e);
       console.error('❌ Error response:', e?.response?.data);
       const msg = e?.response?.data?.message || e?.message;
-      toast.error(msg || 'Failed to upload document');
+      toast.error('Failed to upload document', {
+        description: msg || 'An error occurred while uploading the document',
+      });
     } finally {
       setLoadingDocuments(false);
     }
@@ -1024,23 +1048,36 @@ export default function CheckInCar() {
         inspectionRes?.data?.inspection || inspectionRes?.data || null;
 
       if (!createdInspection?.id) {
-        throw new Error('Failed to create inspection: No inspection ID returned');
+        throw new Error(
+          'Failed to create inspection: No inspection ID returned'
+        );
       }
 
-      console.log('✅ Step 2 completed: Inspection created:', createdInspection.id);
+      console.log(
+        '✅ Step 2 completed: Inspection created:',
+        createdInspection.id
+      );
 
       // 🔄 STEP 3: Upload images (if any)
       let uploadedImageUrls = [];
       if (inspectionFiles.length > 0) {
         console.log(`🔄 Step 3: Uploading ${inspectionFiles.length} images...`);
         try {
-          uploadedImageUrls = await uploadInspectionImages(createdInspection.id);
-          console.log(`✅ Step 3 completed: ${uploadedImageUrls.length} images uploaded`);
+          uploadedImageUrls = await uploadInspectionImages(
+            createdInspection.id
+          );
+          console.log(
+            `✅ Step 3 completed: ${uploadedImageUrls.length} images uploaded`
+          );
         } catch (uploadErr) {
-          console.warn('⚠️ Image upload failed, but inspection is created:', uploadErr);
+          console.warn(
+            '⚠️ Image upload failed, but inspection is created:',
+            uploadErr
+          );
           // Don't fail the whole process if images fail - can be uploaded later
           toast.warning('Images upload failed', {
-            description: 'Inspection created but images failed to upload. You can edit and re-upload later.',
+            description:
+              'Inspection created but images failed to upload. You can edit and re-upload later.',
             duration: 5000,
           });
         }
@@ -1050,20 +1087,17 @@ export default function CheckInCar() {
 
       // 🔄 STEP 4: Mark inspection as completed
       console.log('🔄 Step 4: Marking inspection as completed...');
-      await apiClient.put(
-        endpoints.inspections.getById(createdInspection.id),
-        {
-          images: uploadedImageUrls,
-          isCompleted: true
-        }
-      );
+      await apiClient.put(endpoints.inspections.getById(createdInspection.id), {
+        images: uploadedImageUrls,
+        isCompleted: true,
+      });
       console.log('✅ Step 4 completed: Inspection marked as completed');
 
       // 🔄 STEP 5: Show success dialog
       const customerName = booking?.user?.name || booking?.renter?.name || '';
       const vehicleLabel = `${booking?.vehicle?.name || ''}${booking?.vehicle?.licensePlate
-        ? ' • ' + booking.vehicle.licensePlate
-        : ''
+          ? ' • ' + booking.vehicle.licensePlate
+          : ''
         }`.trim();
 
       setCheckInSummary({
@@ -1103,11 +1137,13 @@ export default function CheckInCar() {
 
       // Enhanced error messages
       let errorTitle = 'Check-in Failed';
-      let errorDescription = serverMsg || 'Unable to complete check-in process. Please try again.';
+      let errorDescription =
+        serverMsg || 'Unable to complete check-in process. Please try again.';
 
       if (status === 400) {
         errorTitle = 'Validation Error';
-        errorDescription = serverMsg || 'Invalid data provided. Please check all fields.';
+        errorDescription =
+          serverMsg || 'Invalid data provided. Please check all fields.';
       } else if (status === 403) {
         errorTitle = 'Permission Denied';
         errorDescription = 'You do not have permission to perform this action.';
@@ -1116,7 +1152,8 @@ export default function CheckInCar() {
         errorDescription = 'Booking or vehicle not found.';
       } else if (status >= 500) {
         errorTitle = 'Server Error';
-        errorDescription = 'Server encountered an error. Please try again later.';
+        errorDescription =
+          'Server encountered an error. Please try again later.';
       }
 
       toast.error(errorTitle, {
@@ -1152,7 +1189,8 @@ export default function CheckInCar() {
       const vehicleStatus = (booking.vehicle.status || '').toUpperCase();
       if (vehicleStatus !== 'RESERVED') {
         validationErrors.push(
-          `❌ Vehicle status must be RESERVED to check-in (Current status: ${vehicleStatus || 'Unknown'})`
+          `❌ Vehicle status must be RESERVED to check-in (Current status: ${vehicleStatus || 'Unknown'
+          })`
         );
       }
     }
@@ -1164,9 +1202,13 @@ export default function CheckInCar() {
 
     // 5. ⚠️ Check contract exists and is COMPLETED
     if (!bookingHasContract || !existingContract) {
-      validationErrors.push('❌ Contract is required - Please create and upload signed contract first');
+      validationErrors.push(
+        '❌ Contract is required - Please create and upload signed contract first'
+      );
     } else if (existingContract.status !== 'COMPLETED') {
-      validationErrors.push('❌ Contract must be COMPLETED - Customer must sign and staff must upload it');
+      validationErrors.push(
+        '❌ Contract must be COMPLETED - Customer must sign and staff must upload it'
+      );
     }
 
     // 6. Check exterior condition
@@ -1211,12 +1253,16 @@ export default function CheckInCar() {
 
     // 12. ⚠️ Check document verification (CRITICAL)
     if (!documentVerified) {
-      validationErrors.push('❌ Customer documents must be verified - Please tick the verification checkbox');
+      validationErrors.push(
+        '❌ Customer documents must be verified - Please tick the verification checkbox'
+      );
     }
 
     // 13. Check vehicle images (not in edit mode)
     if (!isEditMode) {
-      const existingImagesCount = inspectionPreviews.filter(p => p.isExisting).length;
+      const existingImagesCount = inspectionPreviews.filter(
+        p => p.isExisting
+      ).length;
       const newImagesCount = inspectionFiles.length;
       const totalImages = existingImagesCount + newImagesCount;
 
@@ -1240,7 +1286,9 @@ export default function CheckInCar() {
 
     // 15. Validate notes length if provided
     if (notes && notes.length > 500) {
-      validationErrors.push('❌ Additional notes must not exceed 500 characters');
+      validationErrors.push(
+        '❌ Additional notes must not exceed 500 characters'
+      );
     }
 
     if (damageNotes && damageNotes.length > 1000) {
@@ -1265,15 +1313,17 @@ export default function CheckInCar() {
 
     // 🚨 If there are ANY validation errors, show them ALL and stop
     if (validationErrors.length > 0) {
-      const errorMessage = `Please complete the following required fields:\n\n${validationErrors.join('\n')}`;
+      const errorMessage = `Please complete the following required fields:\n\n${validationErrors.join(
+        '\n'
+      )}`;
 
       toast.error('Check-In Validation Failed', {
         description: (
-          <div className="space-y-1 text-xs">
-            <p className="font-semibold mb-2">Missing required information:</p>
-            <ul className="list-none space-y-1">
+          <div className='space-y-1 text-xs'>
+            <p className='mb-2 font-semibold'>Missing required information:</p>
+            <ul className='space-y-1 list-none'>
               {validationErrors.map((error, idx) => (
-                <li key={idx} className="text-red-600 dark:text-red-400">
+                <li key={idx} className='text-red-600 dark:text-red-400'>
                   {error}
                 </li>
               ))}
@@ -1424,23 +1474,38 @@ export default function CheckInCar() {
     if (!accessories) errorCount++;
 
     const batteryNum = Number(batteryLevel);
-    if (!batteryLevel || batteryLevel.trim() === '' || isNaN(batteryNum) || batteryNum < 0 || batteryNum > 100) {
+    if (
+      !batteryLevel ||
+      batteryLevel.trim() === '' ||
+      isNaN(batteryNum) ||
+      batteryNum < 0 ||
+      batteryNum > 100
+    ) {
       errorCount++;
     }
 
     const mileageNum = Number(mileage);
-    if (!mileage || mileage.trim() === '' || isNaN(mileageNum) || mileageNum < 0) {
+    if (
+      !mileage ||
+      mileage.trim() === '' ||
+      isNaN(mileageNum) ||
+      mileageNum < 0
+    ) {
       errorCount++;
     }
 
     if (!documentVerified) errorCount++;
 
-    const existingImagesCount = inspectionPreviews.filter(p => p.isExisting).length;
+    const existingImagesCount = inspectionPreviews.filter(
+      p => p.isExisting
+    ).length;
     const newImagesCount = inspectionFiles.length;
     if (existingImagesCount + newImagesCount === 0) errorCount++;
 
     if (
-      (exteriorCondition !== 'GOOD' || interiorCondition !== 'GOOD' || tireCondition !== 'GOOD') &&
+      (exteriorCondition !== 'GOOD' ||
+        interiorCondition !== 'GOOD' ||
+        tireCondition !== 'GOOD') &&
       (!damageNotes || damageNotes.trim().length < 10)
     ) {
       errorCount++;
@@ -1465,8 +1530,8 @@ export default function CheckInCar() {
   if (loadingAssignment) {
     return (
       <div className='flex items-center justify-center min-h-[400px]'>
-        <div className='text-center space-y-3'>
-          <div className='h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto' />
+        <div className='space-y-3 text-center'>
+          <div className='w-8 h-8 mx-auto border-4 rounded-full border-primary border-t-transparent animate-spin' />
           <p className='text-sm text-muted-foreground'>
             Loading staff assignment...
           </p>
@@ -1476,14 +1541,14 @@ export default function CheckInCar() {
   }
 
   // Show error if staff not assigned to any station
-  if (!staffAssignment) {
+  if (!staffAssignments || staffAssignments.length === 0) {
     return (
       <div className='flex items-center justify-center min-h-[400px]'>
-        <div className='text-center space-y-4 max-w-md'>
+        <div className='max-w-md space-y-4 text-center'>
           <div className='text-6xl'>🚫</div>
           <div>
             <h3 className='text-lg font-semibold'>No Station Assignment</h3>
-            <p className='text-sm text-muted-foreground mt-2'>
+            <p className='mt-2 text-sm text-muted-foreground'>
               You are not assigned to any station. Please contact your
               administrator to assign you to a station before performing
               check-ins.
@@ -1493,6 +1558,12 @@ export default function CheckInCar() {
       </div>
     );
   }
+
+  // Get all assigned station names
+  const assignedStationNames = staffAssignments
+    .map(a => a.station?.name)
+    .filter(Boolean)
+    .join(', ');
 
   return (
     <div className='space-y-6'>
@@ -1522,7 +1593,7 @@ export default function CheckInCar() {
             <div className='relative'>
               {/* Search Input */}
               <div className='relative'>
-                <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
+                <Search className='absolute w-4 h-4 -translate-y-1/2 left-3 top-1/2 text-muted-foreground' />
                 <Input
                   type='text'
                   placeholder='Search bookings...'
@@ -1532,7 +1603,7 @@ export default function CheckInCar() {
                     setIsSearchOpen(true);
                   }}
                   onFocus={() => setIsSearchOpen(true)}
-                  className='pl-10 pr-10 h-12 text-base'
+                  className='h-12 pl-10 pr-10 text-base'
                   disabled={loadingBookings}
                 />
                 {searchQuery && (
@@ -1541,19 +1612,19 @@ export default function CheckInCar() {
                       setSearchQuery('');
                       setIsSearchOpen(false);
                     }}
-                    className='absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors'
+                    className='absolute transition-colors -translate-y-1/2 right-3 top-1/2 text-muted-foreground hover:text-foreground'
                   >
-                    <X className='h-4 w-4' />
+                    <X className='w-4 h-4' />
                   </button>
                 )}
               </div>
 
               {/* Dropdown Results - Max 4 items with scroll */}
               {isSearchOpen && !loadingBookings && (
-                <div className='absolute z-50 w-full mt-2 rounded-lg border bg-popover shadow-lg'>
+                <div className='absolute z-50 w-full mt-2 border rounded-lg shadow-lg bg-popover'>
                   {filteredBookings.length === 0 ? (
                     <div className='p-8 text-center'>
-                      <Search className='h-12 w-12 text-muted-foreground mx-auto mb-3' />
+                      <Search className='w-12 h-12 mx-auto mb-3 text-muted-foreground' />
                       <p className='text-sm text-muted-foreground'>
                         {searchQuery
                           ? 'No bookings found matching your search'
@@ -1562,7 +1633,7 @@ export default function CheckInCar() {
                     </div>
                   ) : (
                     <div className='p-2'>
-                      <div className='text-xs font-medium text-muted-foreground px-3 py-2 bg-muted/50 rounded-t-md'>
+                      <div className='px-3 py-2 text-xs font-medium text-muted-foreground bg-muted/50 rounded-t-md'>
                         {filteredBookings.length} booking
                         {filteredBookings.length !== 1 ? 's' : ''} found
                       </div>
@@ -1579,20 +1650,20 @@ export default function CheckInCar() {
                               key={b.id}
                               onClick={() => handleSelectBooking(b.id)}
                               className={`w-full text-left p-4 rounded-md transition-all ${isSelected
-                                ? 'bg-primary text-primary-foreground'
-                                : 'hover:bg-accent'
+                                  ? 'bg-primary text-primary-foreground'
+                                  : 'hover:bg-accent'
                                 }`}
                             >
                               <div className='flex items-start justify-between gap-3'>
                                 <div className='flex-1 space-y-2'>
                                   {/* Customer & Vehicle */}
-                                  <div className='flex items-center gap-2 flex-wrap'>
+                                  <div className='flex flex-wrap items-center gap-2'>
                                     <div className='flex items-center gap-1.5'>
                                       <User className='h-3.5 w-3.5' />
                                       <span
                                         className={`font-semibold text-sm ${isSelected
-                                          ? 'text-primary-foreground'
-                                          : 'text-foreground'
+                                            ? 'text-primary-foreground'
+                                            : 'text-foreground'
                                           }`}
                                       >
                                         {b.user?.name ||
@@ -1613,16 +1684,16 @@ export default function CheckInCar() {
                                       <Car className='h-3.5 w-3.5' />
                                       <span
                                         className={`text-sm ${isSelected
-                                          ? 'text-primary-foreground'
-                                          : 'text-foreground'
+                                            ? 'text-primary-foreground'
+                                            : 'text-foreground'
                                           }`}
                                       >
                                         {b.vehicle?.name || 'Vehicle'}
                                         {b.vehicle?.licensePlate && (
                                           <span
                                             className={`font-mono ml-1.5 px-1.5 py-0.5 rounded text-xs ${isSelected
-                                              ? 'bg-primary-foreground/20 text-primary-foreground'
-                                              : 'bg-muted text-muted-foreground'
+                                                ? 'bg-primary-foreground/20 text-primary-foreground'
+                                                : 'bg-muted text-muted-foreground'
                                               }`}
                                           >
                                             {b.vehicle.licensePlate}
@@ -1635,12 +1706,12 @@ export default function CheckInCar() {
                                   {/* Date & Code */}
                                   <div
                                     className={`flex items-center gap-3 text-xs ${isSelected
-                                      ? 'text-primary-foreground/80'
-                                      : 'text-muted-foreground'
+                                        ? 'text-primary-foreground/80'
+                                        : 'text-muted-foreground'
                                       }`}
                                   >
                                     <div className='flex items-center gap-1.5'>
-                                      <Calendar className='h-3 w-3' />
+                                      <Calendar className='w-3 h-3' />
                                       <span>
                                         {new Date(
                                           b.startTime
@@ -1660,11 +1731,11 @@ export default function CheckInCar() {
 
                                 {/* Status Badges */}
                                 <div className='flex flex-col items-end gap-1.5'>
-                                  {isSelected && <Check className='h-5 w-5' />}
+                                  {isSelected && <Check className='w-5 h-5' />}
                                   {renderStatusBadge(getBookingStatus(b))}
                                   {hasInspection && (
-                                    <span className='inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'>
-                                      <Check className='h-3 w-3' />
+                                    <span className='inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-md dark:bg-green-900/30 dark:text-green-300'>
+                                      <Check className='w-3 h-3' />
                                       Inspected
                                     </span>
                                   )}
@@ -1684,7 +1755,7 @@ export default function CheckInCar() {
             {loadingBookings && (
               <div className='flex items-center justify-center p-8 border rounded-lg bg-muted/30'>
                 <div className='flex items-center gap-2 text-muted-foreground'>
-                  <div className='h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin' />
+                  <div className='w-4 h-4 border-2 border-current rounded-full border-t-transparent animate-spin' />
                   <span className='text-sm'>Loading bookings...</span>
                 </div>
               </div>
@@ -1693,7 +1764,7 @@ export default function CheckInCar() {
 
           {/* ✨ Info banner for existing inspection */}
           {bookingHasInspection && existingInspection && (
-            <div className='md:col-span-3 p-4 bg-blue-50 border-2 border-blue-400 rounded-lg'>
+            <div className='p-4 border-2 border-blue-400 rounded-lg md:col-span-3 bg-blue-50'>
               <div className='flex items-center justify-between'>
                 <div className='flex items-center gap-3'>
                   <span className='text-2xl'>📋</span>
@@ -1750,7 +1821,7 @@ export default function CheckInCar() {
 
           {/* ✨ Info banner for existing contract */}
           {bookingHasContract && existingContract && (
-            <div className='md:col-span-3 p-4 bg-green-50 border-2 border-green-400 rounded-lg'>
+            <div className='p-4 border-2 border-green-400 rounded-lg md:col-span-3 bg-green-50'>
               <div className='flex items-center justify-between'>
                 <div className='flex items-center gap-3'>
                   <span className='text-2xl'>📄</span>
@@ -1762,7 +1833,7 @@ export default function CheckInCar() {
                       Contract {existingContract.contractNumber} - Status:{' '}
                       {existingContract.status}
                     </p>
-                    <p className='text-xs text-green-600 mt-1'>
+                    <p className='mt-1 text-xs text-green-600'>
                       Created{' '}
                       {new Date(existingContract.createdAt).toLocaleString()}
                       {existingContract.status === 'COMPLETED' &&
@@ -1774,12 +1845,12 @@ export default function CheckInCar() {
                   </div>
                 </div>
                 {existingContract.status === 'COMPLETED' && (
-                  <span className='px-3 py-1 bg-green-600 text-white text-xs font-medium rounded-full'>
+                  <span className='px-3 py-1 text-xs font-medium text-white bg-green-600 rounded-full'>
                     ✓ Completed
                   </span>
                 )}
                 {existingContract.status === 'CREATED' && (
-                  <span className='px-3 py-1 bg-amber-600 text-white text-xs font-medium rounded-full'>
+                  <span className='px-3 py-1 text-xs font-medium text-white rounded-full bg-amber-600'>
                     ⏳ Awaiting Signature
                   </span>
                 )}
@@ -1788,7 +1859,7 @@ export default function CheckInCar() {
           )}
 
           {loadingInspection && (
-            <div className='md:col-span-3 p-4 bg-gray-50 border rounded-lg'>
+            <div className='p-4 border rounded-lg md:col-span-3 bg-gray-50'>
               <p className='text-sm text-gray-600'>
                 Loading inspection data...
               </p>
@@ -1796,7 +1867,7 @@ export default function CheckInCar() {
           )}
 
           {booking && (
-            <div className='md:col-span-3 grid grid-cols-1 md:grid-cols-4 gap-4 border rounded p-4'>
+            <div className='grid grid-cols-1 gap-4 p-4 border rounded md:col-span-3 md:grid-cols-4'>
               <div>
                 <p className='text-sm text-muted-foreground'>Customer</p>
                 <p className='font-medium'>
@@ -1832,14 +1903,14 @@ export default function CheckInCar() {
           {booking && (
             <div className='md:col-span-3'>
               {loadingContract ? (
-                <div className='p-4 bg-slate-100 border border-slate-200 rounded-lg'>
+                <div className='p-4 border rounded-lg bg-slate-100 border-slate-200'>
                   <p className='text-sm text-slate-600'>
                     ⏳ Checking contract status...
                   </p>
                 </div>
               ) : !bookingHasContract ? (
-                <div className='p-4 bg-amber-50 border-2 border-amber-300 rounded-lg'>
-                  <p className='text-sm font-semibold text-amber-900 mb-1'>
+                <div className='p-4 border-2 rounded-lg bg-amber-50 border-amber-300'>
+                  <p className='mb-1 text-sm font-semibold text-amber-900'>
                     ⚠️ Contract Required
                   </p>
                   <p className='text-sm text-amber-700'>
@@ -1847,15 +1918,15 @@ export default function CheckInCar() {
                     check-in.
                     <a
                       href='/staff/contracts'
-                      className='underline ml-1 font-medium'
+                      className='ml-1 font-medium underline'
                     >
                       Go to Contracts
                     </a>
                   </p>
                 </div>
               ) : existingContract?.status === 'CREATED' ? (
-                <div className='p-4 bg-blue-50 border-2 border-blue-300 rounded-lg'>
-                  <p className='text-sm font-semibold text-blue-900 mb-1'>
+                <div className='p-4 border-2 border-blue-300 rounded-lg bg-blue-50'>
+                  <p className='mb-1 text-sm font-semibold text-blue-900'>
                     📄 Contract Created
                   </p>
                   <p className='text-sm text-blue-700'>
@@ -1863,15 +1934,15 @@ export default function CheckInCar() {
                     signed file upload.
                     <a
                       href='/staff/contracts'
-                      className='underline ml-1 font-medium'
+                      className='ml-1 font-medium underline'
                     >
                       Upload Now
                     </a>
                   </p>
                 </div>
               ) : existingContract?.status === 'COMPLETED' ? (
-                <div className='p-4 bg-green-50 border-2 border-green-300 rounded-lg'>
-                  <p className='text-sm font-semibold text-green-900 mb-1'>
+                <div className='p-4 border-2 border-green-300 rounded-lg bg-green-50'>
+                  <p className='mb-1 text-sm font-semibold text-green-900'>
                     ✅ Contract Completed
                   </p>
                   <p className='text-sm text-green-700'>
@@ -1909,12 +1980,12 @@ export default function CheckInCar() {
                 </p>
               )}
             </div>
-            <p className='text-xs text-muted-foreground mt-1'>
+            <p className='mt-1 text-xs text-muted-foreground'>
               Station is determined by the booking and cannot be changed
             </p>
           </div>
 
-          <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+          <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
             <div>
               <Label className='block mb-2'>
                 Exterior Condition <span className='text-red-500'>*</span>
@@ -1995,7 +2066,7 @@ export default function CheckInCar() {
             </Select>
           </div>
 
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+          <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
             <div>
               <Label className='block mb-2'>
                 Battery Level (%) <span className='text-red-500'>*</span>
@@ -2013,7 +2084,7 @@ export default function CheckInCar() {
                 }
               />
               {validationErrors.batteryLevel && (
-                <p className='text-xs text-red-500 mt-1'>
+                <p className='mt-1 text-xs text-red-500'>
                   {validationErrors.batteryLevel}
                 </p>
               )}
@@ -2032,14 +2103,14 @@ export default function CheckInCar() {
                 className={validationErrors.mileage ? 'border-red-500' : ''}
               />
               {validationErrors.mileage && (
-                <p className='text-xs text-red-500 mt-1'>
+                <p className='mt-1 text-xs text-red-500'>
                   {validationErrors.mileage}
                 </p>
               )}
             </div>
           </div>
 
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+          <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
             <div>
               <Label className='block mb-2'>Upload Vehicle Images</Label>
               <Input
@@ -2050,11 +2121,11 @@ export default function CheckInCar() {
                 disabled={isFieldsDisabled}
               />
               {!!inspectionPreviews.length && (
-                <div className='mt-3 grid grid-cols-2 md:grid-cols-3 gap-2'>
+                <div className='grid grid-cols-2 gap-2 mt-3 md:grid-cols-3'>
                   {inspectionPreviews.map((p, idx) => (
                     <div
                       key={idx}
-                      className='border rounded overflow-hidden relative group'
+                      className='relative overflow-hidden border rounded group'
                     >
                       {/* ✨ Badge to indicate existing vs new image */}
                       {p.isExisting && (
@@ -2070,14 +2141,14 @@ export default function CheckInCar() {
                       <img
                         src={p.url}
                         alt={p.name}
-                        className='w-full h-24 object-cover'
+                        className='object-cover w-full h-24'
                       />
                       <div className='p-2 text-xs truncate'>{p.name}</div>
                       {!isFieldsDisabled && (
                         <button
                           type='button'
                           onClick={() => handleRemoveImage(idx)}
-                          className='absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg'
+                          className='absolute p-1 text-white transition-opacity bg-red-500 rounded-full shadow-lg opacity-0 top-1 right-1 hover:bg-red-600 group-hover:opacity-100'
                           title={
                             p.isExisting
                               ? 'Remove from view (will keep existing)'
@@ -2103,7 +2174,7 @@ export default function CheckInCar() {
                   ))}
                 </div>
               )}
-              <p className='text-xs text-muted-foreground mt-1'>
+              <p className='mt-1 text-xs text-muted-foreground'>
                 {inspectionPreviews.filter(p => p.isExisting).length} existing +{' '}
                 {inspectionFiles.length} new ={' '}
                 {inspectionPreviews.filter(p => p.isExisting).length +
@@ -2122,11 +2193,11 @@ export default function CheckInCar() {
                 className={validationErrors.damageNotes ? 'border-red-500' : ''}
               />
               {validationErrors.damageNotes && (
-                <p className='text-xs text-red-500 mt-1'>
+                <p className='mt-1 text-xs text-red-500'>
                   {validationErrors.damageNotes}
                 </p>
               )}
-              <p className='text-xs text-muted-foreground mt-1'>
+              <p className='mt-1 text-xs text-muted-foreground'>
                 {damageNotes.length}/1000 characters
               </p>
             </div>
@@ -2143,11 +2214,11 @@ export default function CheckInCar() {
               className={validationErrors.notes ? 'border-red-500' : ''}
             />
             {validationErrors.notes && (
-              <p className='text-xs text-red-500 mt-1'>
+              <p className='mt-1 text-xs text-red-500'>
                 {validationErrors.notes}
               </p>
             )}
-            <p className='text-xs text-muted-foreground mt-1'>
+            <p className='mt-1 text-xs text-muted-foreground'>
               {notes.length}/500 characters
             </p>
           </div>
@@ -2166,15 +2237,15 @@ export default function CheckInCar() {
           )}
 
           {customerDocuments && (
-            <div className='mb-4 p-4 border rounded bg-slate-50 dark:bg-slate-900/30'>
-              <h4 className='text-sm font-semibold text-slate-900 dark:text-slate-100 mb-3'>
+            <div className='p-4 mb-4 border rounded bg-slate-50 dark:bg-slate-900/30'>
+              <h4 className='mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100'>
                 📄 Customer Documents (Approved)
               </h4>
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+              <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
                 {customerDocuments.identityCard && (
-                  <div className='border rounded-lg p-4 bg-white dark:bg-slate-800 shadow-sm'>
+                  <div className='p-4 bg-white border rounded-lg shadow-sm dark:bg-slate-800'>
                     <div className='flex items-center gap-2 mb-3'>
-                      <div className='w-8 h-8 rounded bg-slate-100 dark:bg-slate-700 flex items-center justify-center'>
+                      <div className='flex items-center justify-center w-8 h-8 rounded bg-slate-100 dark:bg-slate-700'>
                         <span className='text-lg'>📄</span>
                       </div>
                       <div className='flex-1'>
@@ -2185,7 +2256,7 @@ export default function CheckInCar() {
                           Uploaded: 10/9/2025
                         </p>
                       </div>
-                      <span className='inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium'>
+                      <span className='inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-green-700 rounded-full bg-green-50 dark:bg-green-900/30 dark:text-green-400'>
                         <svg
                           className='w-3 h-3'
                           fill='currentColor'
@@ -2201,12 +2272,12 @@ export default function CheckInCar() {
                       </span>
                     </div>
 
-                    <div className='relative w-full h-56 rounded-lg overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-600 mb-3'>
+                    <div className='relative w-full h-56 mb-3 overflow-hidden rounded-lg bg-linear-to-br from-muted/30 to-muted/50'>
                       {customerDocuments.identityCard ? (
                         <img
                           src={customerDocuments.identityCard}
                           alt='Customer ID Card'
-                          className='w-full h-full object-contain'
+                          className='object-contain w-full h-full'
                           onLoad={e => {
                             console.log(
                               '✅ ID Card loaded successfully:',
@@ -2223,15 +2294,15 @@ export default function CheckInCar() {
                             e.target.style.display = 'none';
                             const errorDiv = document.createElement('div');
                             errorDiv.className =
-                              'w-full h-full flex items-center justify-center';
+                              'flex items-center justify-center w-full h-full';
                             errorDiv.innerHTML =
                               '<p class="text-red-500 text-sm">Failed to load image</p>';
                             e.target.parentElement.appendChild(errorDiv);
                           }}
                         />
                       ) : (
-                        <div className='w-full h-full flex items-center justify-center'>
-                          <p className='text-gray-500 text-sm'>No image</p>
+                        <div className='flex items-center justify-center w-full h-full'>
+                          <p className='text-sm text-gray-500'>No image</p>
                         </div>
                       )}
                     </div>
@@ -2240,7 +2311,7 @@ export default function CheckInCar() {
                       onClick={() =>
                         window.open(customerDocuments.identityCard, '_blank')
                       }
-                      className='w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-sm font-medium transition-colors'
+                      className='flex items-center justify-center w-full gap-2 px-4 py-2 text-sm font-medium transition-colors rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200'
                     >
                       <svg
                         className='w-4 h-4'
@@ -2267,9 +2338,9 @@ export default function CheckInCar() {
                 )}
 
                 {customerDocuments.drivingLicense && (
-                  <div className='border rounded-lg p-4 bg-white dark:bg-slate-800 shadow-sm'>
+                  <div className='p-4 bg-white border rounded-lg shadow-sm dark:bg-slate-800'>
                     <div className='flex items-center gap-2 mb-3'>
-                      <div className='w-8 h-8 rounded bg-slate-100 dark:bg-slate-700 flex items-center justify-center'>
+                      <div className='flex items-center justify-center w-8 h-8 rounded bg-slate-100 dark:bg-slate-700'>
                         <span className='text-lg'>📄</span>
                       </div>
                       <div className='flex-1'>
@@ -2280,7 +2351,7 @@ export default function CheckInCar() {
                           Uploaded: 10/9/2025
                         </p>
                       </div>
-                      <span className='inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium'>
+                      <span className='inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-green-700 rounded-full bg-green-50 dark:bg-green-900/30 dark:text-green-400'>
                         <svg
                           className='w-3 h-3'
                           fill='currentColor'
@@ -2296,12 +2367,12 @@ export default function CheckInCar() {
                       </span>
                     </div>
 
-                    <div className='relative w-full h-56 rounded-lg overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-600 mb-3'>
+                    <div className='relative w-full h-56 mb-3 overflow-hidden rounded-lg bg-linear-to-br from-muted/30 to-muted/50'>
                       {customerDocuments.drivingLicense ? (
                         <img
                           src={customerDocuments.drivingLicense}
                           alt='Customer Driving License'
-                          className='w-full h-full object-contain'
+                          className='object-contain w-full h-full'
                           onLoad={e => {
                             console.log(
                               '✅ Driving License loaded successfully:',
@@ -2318,15 +2389,15 @@ export default function CheckInCar() {
                             e.target.style.display = 'none';
                             const errorDiv = document.createElement('div');
                             errorDiv.className =
-                              'w-full h-full flex items-center justify-center';
+                              'flex items-center justify-center w-full h-full';
                             errorDiv.innerHTML =
                               '<p class="text-red-500 text-sm">Failed to load image</p>';
                             e.target.parentElement.appendChild(errorDiv);
                           }}
                         />
                       ) : (
-                        <div className='w-full h-full flex items-center justify-center'>
-                          <p className='text-gray-500 text-sm'>No image</p>
+                        <div className='flex items-center justify-center w-full h-full'>
+                          <p className='text-sm text-gray-500'>No image</p>
                         </div>
                       )}
                     </div>
@@ -2335,7 +2406,7 @@ export default function CheckInCar() {
                       onClick={() =>
                         window.open(customerDocuments.drivingLicense, '_blank')
                       }
-                      className='w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-sm font-medium transition-colors'
+                      className='flex items-center justify-center w-full gap-2 px-4 py-2 text-sm font-medium transition-colors rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200'
                     >
                       <svg
                         className='w-4 h-4'
@@ -2363,16 +2434,14 @@ export default function CheckInCar() {
 
                 {customerDocuments.passport && (
                   <div className='space-y-2'>
-                    <p className='text-sm font-medium text-slate-700 dark:text-slate-300'>
-                      🛂 Passport
-                    </p>
-                    <div className='relative border-2 border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden bg-white dark:bg-slate-800 hover:border-blue-400 dark:hover:border-blue-500 transition-colors cursor-pointer group min-h-[192px]'>
+                    <p className='text-sm font-medium'>🛂 Passport</p>
+                    <div className='relative overflow-hidden transition-colors border-2 rounded-lg cursor-pointer bg-card hover:border-primary group min-h-48'>
                       {customerDocuments.passport ? (
                         <>
                           <img
                             src={customerDocuments.passport}
                             alt='Customer Passport'
-                            className='w-full h-48 object-contain bg-white'
+                            className='object-contain w-full h-48 bg-white'
                             onClick={() =>
                               window.open(customerDocuments.passport, '_blank')
                             }
@@ -2385,15 +2454,15 @@ export default function CheckInCar() {
                                 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="150"%3E%3Crect fill="%23f0f0f0" width="200" height="150"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%23999"%3EImage not found%3C/text%3E%3C/svg%3E';
                             }}
                           />
-                          <div className='absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all flex items-center justify-center'>
-                            <span className='text-white opacity-0 group-hover:opacity-100 text-sm font-medium'>
+                          <div className='absolute inset-0 flex items-center justify-center transition-all bg-black bg-opacity-0 group-hover:bg-opacity-10'>
+                            <span className='text-sm font-medium text-white opacity-0 group-hover:opacity-100'>
                               Click to enlarge
                             </span>
                           </div>
                         </>
                       ) : (
-                        <div className='w-full h-48 flex items-center justify-center bg-gray-100 dark:bg-gray-800'>
-                          <p className='text-gray-500 text-sm'>No image URL</p>
+                        <div className='flex items-center justify-center w-full h-48 bg-gray-100 dark:bg-gray-800'>
+                          <p className='text-sm text-gray-500'>No image URL</p>
                         </div>
                       )}
                     </div>
@@ -2406,11 +2475,11 @@ export default function CheckInCar() {
                 {!customerDocuments.identityCard &&
                   !customerDocuments.drivingLicense &&
                   !customerDocuments.passport && (
-                    <div className='col-span-2 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg'>
-                      <p className='text-amber-800 dark:text-amber-300 text-sm font-medium'>
+                    <div className='col-span-2 p-4 border rounded-lg bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'>
+                      <p className='text-sm font-medium text-amber-800 dark:text-amber-300'>
                         ⚠️ No approved documents
                       </p>
-                      <p className='text-amber-600 dark:text-amber-400 text-xs mt-1'>
+                      <p className='mt-1 text-xs text-amber-600 dark:text-amber-400'>
                         Customer has not uploaded or verified documents yet.
                       </p>
                     </div>
@@ -2420,11 +2489,9 @@ export default function CheckInCar() {
           )}
 
           {!customerDocuments && !loadingDocuments && booking && (
-            <div className='mb-4 p-4 bg-gray-50 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700 rounded-lg'>
-              <p className='text-gray-700 dark:text-gray-300 text-sm font-medium'>
-                📂 No documents found
-              </p>
-              <p className='text-gray-600 dark:text-gray-400 text-xs mt-1'>
+            <div className='p-4 mb-4 border rounded-lg bg-muted/50'>
+              <p className='text-sm font-medium'>📂 No documents found</p>
+              <p className='mt-1 text-xs text-muted-foreground'>
                 This customer hasn't uploaded any documents yet.
               </p>
 
@@ -2527,16 +2594,18 @@ export default function CheckInCar() {
         <CardContent className='space-y-4'>
           {/* ⚠️ Validation Status Warning */}
           {!isEditMode && !isViewMode && validationErrorsCount > 0 && (
-            <div className='p-4 bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-700 rounded-lg'>
+            <div className='p-4 border-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-700'>
               <div className='flex items-start gap-3'>
                 <span className='text-2xl'>⚠️</span>
                 <div className='flex-1'>
                   <p className='font-semibold text-amber-900 dark:text-amber-200'>
-                    {validationErrorsCount} Required {validationErrorsCount === 1 ? 'Field' : 'Fields'} Missing
+                    {validationErrorsCount} Required{' '}
+                    {validationErrorsCount === 1 ? 'Field' : 'Fields'} Missing
                   </p>
-                  <p className='text-sm text-amber-700 dark:text-amber-300 mt-1'>
-                    Please complete all required fields before proceeding with check-in.
-                    Click "Complete Check-In" to see detailed validation errors.
+                  <p className='mt-1 text-sm text-amber-700 dark:text-amber-300'>
+                    Please complete all required fields before proceeding with
+                    check-in. Click "Complete Check-In" to see detailed
+                    validation errors.
                   </p>
                 </div>
               </div>
@@ -2544,21 +2613,25 @@ export default function CheckInCar() {
           )}
 
           {/* ✅ Ready to Check-In Status */}
-          {!isEditMode && !isViewMode && validationErrorsCount === 0 && booking && (
-            <div className='p-4 bg-green-50 dark:bg-green-900/20 border-2 border-green-300 dark:border-green-700 rounded-lg'>
-              <div className='flex items-start gap-3'>
-                <span className='text-2xl'>✅</span>
-                <div className='flex-1'>
-                  <p className='font-semibold text-green-900 dark:text-green-200'>
-                    Ready to Check-In
-                  </p>
-                  <p className='text-sm text-green-700 dark:text-green-300 mt-1'>
-                    All required fields are complete. You can now proceed with vehicle check-in.
-                  </p>
+          {!isEditMode &&
+            !isViewMode &&
+            validationErrorsCount === 0 &&
+            booking && (
+              <div className='p-4 border-2 border-green-300 rounded-lg bg-green-50 dark:bg-green-900/20 dark:border-green-700'>
+                <div className='flex items-start gap-3'>
+                  <span className='text-2xl'>✅</span>
+                  <div className='flex-1'>
+                    <p className='font-semibold text-green-900 dark:text-green-200'>
+                      Ready to Check-In
+                    </p>
+                    <p className='mt-1 text-sm text-green-700 dark:text-green-300'>
+                      All required fields are complete. You can now proceed with
+                      vehicle check-in.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
           <div className='flex items-center justify-between gap-3'>
             <div className='flex-1'>
@@ -2583,9 +2656,7 @@ export default function CheckInCar() {
                   onClick={handleCreateInspection}
                   disabled={isSubmitDisabled}
                   className={
-                    validationErrorsCount > 0 && !isEditMode
-                      ? 'relative'
-                      : ''
+                    validationErrorsCount > 0 && !isEditMode ? 'relative' : ''
                   }
                 >
                   {isSubmitting ? (

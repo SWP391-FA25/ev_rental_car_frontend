@@ -892,7 +892,7 @@ function CustomerSupport() {
       const res = await apiClient.put(endpoints.renters.update(id), payload);
       const success = res?.data?.success ?? true;
       if (!success) {
-        throw new Error(res?.data?.message || 'Cập nhật trạng thái thất bại');
+        throw new Error(res?.data?.message || 'Failed to update status');
       }
       setRenters(prev =>
         prev.map(r =>
@@ -1263,7 +1263,6 @@ export function CustomerManagement() {
           <CustomerSupport />
         </TabsContent>
       </Tabs>
-
     </div>
   );
 }

@@ -284,13 +284,18 @@ export default function ReturnCar() {
       if (!user?.id) return;
       try {
         setLoadingAssignments(true);
-        const res = await apiClient.get(endpoints.assignments.getByStaffId(user.id));
+        const res = await apiClient.get(
+          endpoints.assignments.getByStaffId(user.id)
+        );
         const payload = res?.data;
         // Support both list and single assignment response shapes
         let raw = [];
         if (Array.isArray(payload?.assignments)) {
           raw = payload.assignments;
-        } else if (payload?.assignment && typeof payload.assignment === 'object') {
+        } else if (
+          payload?.assignment &&
+          typeof payload.assignment === 'object'
+        ) {
           raw = [payload.assignment];
         } else if (Array.isArray(payload)) {
           raw = payload;
@@ -306,14 +311,16 @@ export default function ReturnCar() {
         setAssignedStationIds(uniqueIds);
 
         if (!uniqueIds.length) {
-          setLocationError('Bạn chưa được phân công trạm. Vui lòng liên hệ quản trị.');
+          setLocationError(
+            'Bạn chưa được phân công trạm. Vui lòng liên hệ quản trị.'
+          );
         } else {
           setLocationError('');
         }
         setAssignmentError('');
       } catch (err) {
         console.error('Failed to load staff assignments:', err);
-        setAssignmentError('Không thể tải phân công trạm của nhân viên');
+        setAssignmentError('Unable to load staff station assignments');
       } finally {
         setLoadingAssignments(false);
       }
@@ -342,7 +349,9 @@ export default function ReturnCar() {
       const pickupId = booking?.pickupStation?.id
         ? String(booking.pickupStation.id)
         : '';
-      const fallback = allowedStations[0]?.id ? String(allowedStations[0].id) : '';
+      const fallback = allowedStations[0]?.id
+        ? String(allowedStations[0].id)
+        : '';
       const nextId = allowedStations.some(s => String(s.id) === pickupId)
         ? pickupId
         : fallback;
@@ -877,7 +886,9 @@ export default function ReturnCar() {
           response?.message ||
           response?.data?.message ||
           'Không nhận được link thanh toán từ máy chủ';
-      toast.error(`${msg}. Please try again or check your login permissions.`);
+        toast.error(
+          `${msg}. Please try again or check your login permissions.`
+        );
       }
     } catch (error) {
       console.error('Payment creation failed:', error);

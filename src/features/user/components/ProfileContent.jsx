@@ -163,46 +163,46 @@ export default function ProfileContent({ user }) {
             className='flex items-center gap-2'
             disabled={isSaving}
           >
-            <Edit className='h-4 w-4' />
+            <Edit className='w-4 h-4' />
             Edit
           </Button>
         </div>
       </div>
       <VerificationBanner />
 
-      <div className='bg-card rounded-lg border border-border p-6 shadow-sm'>
+      <div className='p-6 border rounded-lg shadow-sm bg-card border-border'>
         <div className='flex gap-8'>
           {/* Profile Section */}
-          <div className='flex flex-1 flex-col items-center text-center flex-shrink-0'>
+          <div className='flex flex-col items-center flex-1 flex-shrink-0 text-center'>
             {/* Avatar */}
-            <Avatar className='h-50 w-50 mb-4'>
+            <Avatar className='mb-4 h-50 w-50'>
               <AvatarImage src={user?.avatar || ''} alt={displayName} />
-              <AvatarFallback className='bg-amber-100 text-amber-800 text-4xl font-semibold'>
+              <AvatarFallback className='text-4xl font-semibold bg-amber-100 text-amber-800'>
                 {initials}
               </AvatarFallback>
             </Avatar>
 
             {/* Name */}
-            <h2 className='text-xl font-semibold text-card-foreground mb-2'>
+            <h2 className='mb-2 text-xl font-semibold text-card-foreground'>
               {displayName}
             </h2>
 
             {/* Join Date */}
-            <p className='text-sm text-muted-foreground mb-4'>
+            <p className='mb-4 text-sm text-muted-foreground'>
               Joined: {joinDate}
             </p>
           </div>
 
           {/* Personal Details */}
           <div className='flex-1'>
-            <h3 className='text-lg font-semibold text-card-foreground mb-6'>
+            <h3 className='mb-6 text-lg font-semibold text-card-foreground'>
               Personal Information
             </h3>
 
             <div className='space-y-3'>
               {/* Full Name */}
               <div className='flex items-center justify-between py-2'>
-                <span className='text-sm font-medium text-muted-foreground w-32 flex-shrink-0'>
+                <span className='flex-shrink-0 w-32 text-sm font-medium text-muted-foreground'>
                   Full name
                 </span>
                 {isEditingProfile ? (
@@ -212,10 +212,10 @@ export default function ProfileContent({ user }) {
                       handleProfileInputChange('fullName', e.target.value)
                     }
                     placeholder='Enter full name'
-                    className='bg-gray-50 flex-1 ml-4'
+                    className='flex-1 ml-4 bg-gray-50'
                   />
                 ) : (
-                  <div className='flex items-center gap-2 flex-1 ml-4'>
+                  <div className='flex items-center flex-1 gap-2 ml-4'>
                     <span className='text-sm font-bold text-card-foreground'>
                       {profileData.fullName || displayName}
                     </span>
@@ -228,7 +228,7 @@ export default function ProfileContent({ user }) {
 
               {/* Gender */}
               <div className='flex items-center justify-between py-2'>
-                <span className='text-sm font-medium text-muted-foreground w-32 flex-shrink-0'>
+                <span className='flex-shrink-0 w-32 text-sm font-medium text-muted-foreground'>
                   Gender
                 </span>
                 {isEditingProfile ? (
@@ -247,7 +247,7 @@ export default function ProfileContent({ user }) {
                     </SelectContent>
                   </Select>
                 ) : (
-                  <div className='flex items-center gap-2 flex-1 ml-4'>
+                  <div className='flex items-center flex-1 gap-2 ml-4'>
                     <span className='text-sm font-bold text-card-foreground'>
                       {profileData.gender}
                     </span>
@@ -257,7 +257,7 @@ export default function ProfileContent({ user }) {
 
               {/* Phone */}
               <div className='flex items-center justify-between py-2'>
-                <span className='text-sm font-medium text-muted-foreground w-32 flex-shrink-0'>
+                <span className='flex-shrink-0 w-32 text-sm font-medium text-muted-foreground'>
                   Phone number
                 </span>
                 {isEditingProfile ? (
@@ -267,10 +267,10 @@ export default function ProfileContent({ user }) {
                       handleProfileInputChange('phone', e.target.value)
                     }
                     placeholder='Enter phone number'
-                    className='bg-gray-50 flex-1 ml-4'
+                    className='flex-1 ml-4 bg-gray-50'
                   />
                 ) : (
-                  <div className='flex items-center gap-2 flex-1 ml-4'>
+                  <div className='flex items-center flex-1 gap-2 ml-4'>
                     <span className='text-sm font-bold text-card-foreground'>
                       {profileData.phone || 'Not updated'}
                     </span>
@@ -280,7 +280,7 @@ export default function ProfileContent({ user }) {
 
               {/* Address */}
               <div className='flex items-center justify-between py-2'>
-                <span className='text-sm font-medium text-muted-foreground w-32 flex-shrink-0'>
+                <span className='flex-shrink-0 w-32 text-sm font-medium text-muted-foreground'>
                   Address
                 </span>
                 {isEditingProfile ? (
@@ -290,10 +290,10 @@ export default function ProfileContent({ user }) {
                       handleProfileInputChange('address', e.target.value)
                     }
                     placeholder='Enter address'
-                    className='bg-gray-50 flex-1 ml-4'
+                    className='flex-1 ml-4 bg-gray-50'
                   />
                 ) : (
-                  <div className='flex items-center gap-2 flex-1 ml-4'>
+                  <div className='flex items-center flex-1 gap-2 ml-4'>
                     <span className='text-sm font-bold text-card-foreground'>
                       {profileData.address || 'Not updated'}
                     </span>
@@ -303,10 +303,10 @@ export default function ProfileContent({ user }) {
 
               {/* Email */}
               <div className='flex items-center justify-between py-2'>
-                <span className='text-sm font-medium text-muted-foreground w-32 flex-shrink-0'>
+                <span className='flex-shrink-0 w-32 text-sm font-medium text-muted-foreground'>
                   Email
                 </span>
-                <div className='flex items-center gap-2 flex-1 ml-4'>
+                <div className='flex items-center flex-1 gap-2 ml-4'>
                   <span className='text-sm font-bold text-card-foreground'>
                     {profileData.email}
                   </span>
@@ -371,20 +371,20 @@ export default function ProfileContent({ user }) {
               Giấy phép lái xe
             </h2>
             <Badge variant='destructive' className='flex items-center gap-1'>
-              <XCircle className='h-3 w-3' />
+              <XCircle className='w-3 h-3' />
               Chưa xác thực
             </Badge>
           </div>
         </div>
 
-        <div className='bg-card rounded-lg border border-border p-6 shadow-sm'>
+        <div className='p-6 border rounded-lg shadow-sm bg-card border-border'>
           <div className='flex gap-8'>
             <div className='flex-1'>
-              <h3 className='text-lg font-semibold text-card-foreground mb-4'>
+              <h3 className='mb-4 text-lg font-semibold text-card-foreground'>
                 Hình ảnh
               </h3>
 
-              <div className='border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors'>
+              <div className='p-8 text-center transition-colors border-2 border-gray-300 border-dashed rounded-lg hover:border-gray-400'>
                 {uploadedImage || licenseDoc ? (
                   <div className='space-y-4'>
                     <img
@@ -394,7 +394,7 @@ export default function ProfileContent({ user }) {
                         licenseDoc?.fileUrl
                       }
                       alt='License preview'
-                      className='max-w-full h-48 object-contain mx-auto rounded'
+                      className='object-contain h-48 max-w-full mx-auto rounded'
                     />
                     <Button
                       variant='outline'
@@ -406,13 +406,13 @@ export default function ProfileContent({ user }) {
                   </div>
                 ) : (
                   <div className='space-y-4'>
-                    <Upload className='h-12 w-12 text-green-600 mx-auto' />
+                    <Upload className='w-12 h-12 mx-auto text-green-600' />
                     <div>
-                      <p className='text-muted-foreground mb-2'>
-                        Tải lên hình ảnh giấy phép lái xe
+                      <p className='mb-2 text-muted-foreground'>
+                        Upload driver's license image
                       </p>
                       <p className='text-sm text-muted-foreground'>
-                        JPG, PNG hoặc PDF (tối đa 10MB)
+                        JPG, PNG or PDF (max 10MB)
                       </p>
                     </div>
                     <input
@@ -427,11 +427,11 @@ export default function ProfileContent({ user }) {
                         htmlFor='license-upload'
                         className='cursor-pointer'
                       >
-                        Chọn tệp
+                        Choose File
                       </label>
                     </Button>
                     {uploadError && (
-                      <p className='text-sm text-red-600 mt-2'>{uploadError}</p>
+                      <p className='mt-2 text-sm text-red-600'>{uploadError}</p>
                     )}
                   </div>
                 )}
@@ -439,8 +439,8 @@ export default function ProfileContent({ user }) {
             </div>
 
             <div className='flex-1'>
-              <h3 className='text-lg font-semibold text-card-foreground mb-4'>
-                Thông tin chung
+              <h3 className='mb-4 text-lg font-semibold text-card-foreground'>
+                General Information
               </h3>
 
               <div className='space-y-4'>
@@ -449,11 +449,11 @@ export default function ProfileContent({ user }) {
                     htmlFor='license-number'
                     className='text-sm font-medium text-muted-foreground'
                   >
-                    Số GPLX (không bắt buộc)
+                    License Number (optional)
                   </Label>
                   <Input
                     id='license-number'
-                    placeholder='Nhập số GPLX (nếu có)'
+                    placeholder='Enter license number (if available)'
                     value={licenseData.licenseNumber}
                     onChange={e =>
                       handleLicenseInputChange('licenseNumber', e.target.value)
@@ -465,7 +465,7 @@ export default function ProfileContent({ user }) {
 
                 <div className='flex gap-3 pt-4'>
                   <Button onClick={handleSaveLicense} className='flex-1'>
-                    Lưu thông tin
+                    Save Information
                   </Button>
                   <Button
                     variant='outline'
@@ -485,8 +485,8 @@ export default function ProfileContent({ user }) {
         </div>
 
         <div className='mt-6'>
-          <Button variant='link' className='text-primary p-0 h-auto text-sm'>
-            <HelpCircle className='h-4 w-4 mr-1' />
+          <Button variant='link' className='h-auto p-0 text-sm text-primary'>
+            <HelpCircle className='w-4 h-4 mr-1' />
             Vì sao tôi phải xác thực GPLX?
           </Button>
         </div>
@@ -502,14 +502,14 @@ export default function ProfileContent({ user }) {
           </div>
         </div>
 
-        <div className='bg-card rounded-lg border border-border p-6 shadow-sm'>
+        <div className='p-6 border rounded-lg shadow-sm bg-card border-border'>
           <div className='flex gap-8'>
             <div className='flex-1'>
-              <h3 className='text-lg font-semibold text-card-foreground mb-4'>
+              <h3 className='mb-4 text-lg font-semibold text-card-foreground'>
                 Hình ảnh CCCD
               </h3>
 
-              <div className='border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors'>
+              <div className='p-8 text-center transition-colors border-2 border-gray-300 border-dashed rounded-lg hover:border-gray-400'>
                 {cccdImage || idCardDoc ? (
                   <div className='space-y-4'>
                     <img
@@ -519,7 +519,7 @@ export default function ProfileContent({ user }) {
                         idCardDoc?.fileUrl
                       }
                       alt='CCCD preview'
-                      className='max-w-full h-48 object-contain mx-auto rounded'
+                      className='object-contain h-48 max-w-full mx-auto rounded'
                     />
                     <Button
                       variant='outline'
@@ -531,13 +531,13 @@ export default function ProfileContent({ user }) {
                   </div>
                 ) : (
                   <div className='space-y-4'>
-                    <Upload className='h-12 w-12 text-green-600 mx-auto' />
+                    <Upload className='w-12 h-12 mx-auto text-green-600' />
                     <div>
-                      <p className='text-muted-foreground mb-2'>
-                        Tải lên hình ảnh CCCD (mặt trước/mặt sau)
+                      <p className='mb-2 text-muted-foreground'>
+                        Upload ID card image (front/back)
                       </p>
                       <p className='text-sm text-muted-foreground'>
-                        JPG, PNG hoặc PDF (tối đa 10MB)
+                        JPG, PNG or PDF (max 10MB)
                       </p>
                     </div>
                     <input
@@ -549,11 +549,11 @@ export default function ProfileContent({ user }) {
                     />
                     <Button asChild>
                       <label htmlFor='cccd-upload' className='cursor-pointer'>
-                        Chọn tệp
+                        Choose File
                       </label>
                     </Button>
                     {uploadError && (
-                      <p className='text-sm text-red-600 mt-2'>{uploadError}</p>
+                      <p className='mt-2 text-sm text-red-600'>{uploadError}</p>
                     )}
                   </div>
                 )}
@@ -561,8 +561,8 @@ export default function ProfileContent({ user }) {
             </div>
 
             <div className='flex-1'>
-              <h3 className='text-lg font-semibold text-card-foreground mb-4'>
-                Thông tin CCCD
+              <h3 className='mb-4 text-lg font-semibold text-card-foreground'>
+                ID Card Information
               </h3>
 
               <div className='space-y-4'>
@@ -571,11 +571,11 @@ export default function ProfileContent({ user }) {
                     htmlFor='cccd-number'
                     className='text-sm font-medium text-muted-foreground'
                   >
-                    Số CCCD
+                    ID Card Number
                   </Label>
                   <Input
                     id='cccd-number'
-                    placeholder='Nhập số CCCD'
+                    placeholder='Enter ID card number'
                     className='bg-gray-50'
                   />
                 </div>
@@ -596,7 +596,7 @@ export default function ProfileContent({ user }) {
                     disabled={uploading}
                     className='flex-1'
                   >
-                    {uploading ? 'Đang tải...' : 'Tải lên CCCD'}
+                    {uploading ? 'Uploading...' : 'Upload ID Card'}
                   </Button>
                   <Button
                     variant='outline'
