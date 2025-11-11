@@ -65,14 +65,14 @@ export function ContractUploadPage() {
       const confirmedBookings = Array.isArray(bookingsResponse?.data)
         ? bookingsResponse.data
         : Array.isArray(bookingsResponse?.data?.bookings)
-        ? bookingsResponse.data.bookings
-        : [];
+          ? bookingsResponse.data.bookings
+          : [];
 
       const existingContracts = Array.isArray(contractsResponse?.data)
         ? contractsResponse.data
         : Array.isArray(contractsResponse?.data?.contracts)
-        ? contractsResponse.data.contracts
-        : [];
+          ? contractsResponse.data.contracts
+          : [];
 
       console.log('📋 Found CONFIRMED bookings:', confirmedBookings.length);
       console.log('📄 Found existing contracts:', existingContracts.length);
@@ -695,28 +695,28 @@ export function ContractUploadPage() {
               <div className='space-y-6'>
                 {/* Booking Info */}
                 <div>
-                  <h3 className='text-lg font-semibold mb-4'>
+                  <h3 className='text-lg font-semibold text-foreground mb-4'>
                     Booking Information
                   </h3>
                   <div className='grid grid-cols-2 gap-4'>
-                    <div className='p-3 bg-muted/50 rounded border'>
+                    <div className='p-3 bg-card rounded border border-border'>
                       <p className='text-sm text-muted-foreground'>Status</p>
                       <div className='flex items-center gap-2 mt-1'>
                         {getStatusIcon(selectedContract?.status)}
-                        <span className='font-semibold'>
+                        <span className='font-semibold text-foreground'>
                           {getStatusLabel(selectedContract?.status)}
                         </span>
                       </div>
                     </div>
-                    <div className='p-3 bg-muted/50 rounded border'>
+                    <div className='p-3 bg-card rounded border border-border'>
                       <p className='text-sm text-muted-foreground'>Phone</p>
-                      <p className='font-semibold'>
+                      <p className='font-semibold text-foreground'>
                         {selectedContract?.user?.phone || 'N/A'}
                       </p>
                     </div>
-                    <div className='p-3 bg-muted/50 rounded border'>
+                    <div className='p-3 bg-card rounded border border-border'>
                       <p className='text-sm text-muted-foreground'>Customer</p>
-                      <p className='font-semibold'>
+                      <p className='font-semibold text-foreground'>
                         {selectedContract?.user?.name ||
                           getVehicleLabel(selectedContract?.vehicle) ||
                           'N/A'}
@@ -725,9 +725,9 @@ export function ContractUploadPage() {
                         {selectedContract?.user?.email || 'N/A'}
                       </p>
                     </div>
-                    <div className='p-3 bg-muted/50 rounded border'>
+                    <div className='p-3 bg-card rounded border border-border'>
                       <p className='text-sm text-muted-foreground'>Vehicle</p>
-                      <p className='font-semibold'>
+                      <p className='font-semibold text-foreground'>
                         {selectedContract?.vehicle?.licensePlate || 'N/A'}
                       </p>
                       {getVehicleLabel(selectedContract?.vehicle) && (
@@ -736,25 +736,25 @@ export function ContractUploadPage() {
                         </p>
                       )}
                     </div>
-                    <div className='p-3 bg-slate-50 dark:bg-slate-900/50 rounded border border-slate-200 dark:border-slate-700'>
-                      <p className='text-sm text-slate-600 dark:text-slate-400'>
+                    <div className='p-3 bg-card rounded border border-border'>
+                      <p className='text-sm text-muted-foreground'>
                         Branch
                       </p>
-                      <p className='font-semibold text-slate-900 dark:text-slate-100'>
+                      <p className='font-semibold text-foreground'>
                         {selectedContract?.station?.name || 'N/A'}
                       </p>
-                      <p className='text-xs text-slate-500 dark:text-slate-400'>
+                      <p className='text-xs text-muted-foreground'>
                         {selectedContract?.station?.address || 'N/A'}
                       </p>
                     </div>
-                    <div className='p-3 bg-slate-50 dark:bg-slate-900/50 rounded border border-slate-200 dark:border-slate-700'>
-                      <p className='text-sm text-slate-600 dark:text-slate-400'>
+                    <div className='p-3 bg-card rounded border border-border'>
+                      <p className='text-sm text-muted-foreground'>
                         Staff in Charge
                       </p>
-                      <p className='font-semibold text-slate-900 dark:text-slate-100'>
+                      <p className='font-semibold text-foreground'>
                         {selectedContract?.staff?.name || user?.name || 'N/A'}
                       </p>
-                      <p className='text-xs text-slate-500 dark:text-slate-400'>
+                      <p className='text-xs text-muted-foreground'>
                         {selectedContract?.staff?.email || user?.email || 'N/A'}
                       </p>
                     </div>
@@ -762,31 +762,31 @@ export function ContractUploadPage() {
                 </div>
                 {/* Dates */}
                 <div>
-                  <h3 className='text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4'>
+                  <h3 className='text-lg font-semibold text-foreground mb-4'>
                     Time Period
                   </h3>
                   <div className='grid grid-cols-2 gap-4'>
-                    <div className='p-3 bg-slate-50 dark:bg-slate-900/50 rounded border border-slate-200 dark:border-slate-700'>
-                      <p className='text-sm text-slate-600 dark:text-slate-400'>
+                    <div className='p-3 bg-card rounded border border-border'>
+                      <p className='text-sm text-muted-foreground'>
                         Start Date
                       </p>
-                      <p className='font-semibold text-slate-900 dark:text-slate-100'>
+                      <p className='font-semibold text-foreground'>
                         {selectedContract?.startTime
                           ? new Date(selectedContract.startTime).toLocaleString(
-                              'vi-VN'
-                            )
+                            'vi-VN'
+                          )
                           : 'N/A'}
                       </p>
                     </div>
-                    <div className='p-3 bg-slate-50 dark:bg-slate-900/50 rounded border border-slate-200 dark:border-slate-700'>
-                      <p className='text-sm text-slate-600 dark:text-slate-400'>
+                    <div className='p-3 bg-card rounded border border-border'>
+                      <p className='text-sm text-muted-foreground'>
                         End Date
                       </p>
-                      <p className='font-semibold text-slate-900 dark:text-slate-100'>
+                      <p className='font-semibold text-foreground'>
                         {selectedContract?.endTime
                           ? new Date(selectedContract.endTime).toLocaleString(
-                              'vi-VN'
-                            )
+                            'vi-VN'
+                          )
                           : 'N/A'}
                       </p>
                     </div>

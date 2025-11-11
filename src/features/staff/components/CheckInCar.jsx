@@ -105,7 +105,7 @@ export default function CheckInCar() {
   const [loadingContract, setLoadingContract] = useState(false);
 
   // ✨ Staff assignment state (now supports multiple stations)
-  const [staffAssignments, setStaffAssignments] = useState([]);
+  const [staffAssignment, setStaffAssignment] = useState(null);
   const [loadingAssignment, setLoadingAssignment] = useState(true);
 
   // Fetch staff assignments (can be multiple stations)
@@ -218,7 +218,7 @@ export default function CheckInCar() {
       }
     };
     fetchEligibleBookings();
-  }, [getAllBookings, staffAssignments]);
+  }, [getAllBookings, staffAssignment]);
 
   // ✨ Click outside to close dropdown
   useEffect(() => {
@@ -969,12 +969,17 @@ export default function CheckInCar() {
   };
 
   const resetAllFields = () => {
+    // Reset booking
     setBookingId('');
     setBooking(null);
+
+    // Reset inspection states
     setBookingHasInspection(false);
     setExistingInspection(null);
     setIsEditMode(false);
     setIsViewMode(false);
+
+    // Reset inspection form fields
     setExteriorCondition('GOOD');
     setInteriorCondition('GOOD');
     setTireCondition('GOOD');
@@ -987,6 +992,29 @@ export default function CheckInCar() {
     setInspectionFiles([]);
     setInspectionPreviews([]);
     setSelectedStation('');
+
+    // Reset contract states
+    setBookingHasContract(false);
+    setExistingContract(null);
+
+    // Reset customer documents
+    setCustomerDocuments(null);
+    setCustomerDocumentsList([]);
+    setNeedsDocumentUpload(false);
+    setDocFile(null);
+    setDocType('ID_CARD');
+
+    // Reset search
+    setSearchQuery('');
+    setIsSearchOpen(false);
+
+    // Reset validation errors
+    setValidationErrors({
+      batteryLevel: '',
+      mileage: '',
+      damageNotes: '',
+      notes: '',
+    });
   };
 
   const performInspectionSubmission = async () => {
@@ -1096,8 +1124,8 @@ export default function CheckInCar() {
       // 🔄 STEP 5: Show success dialog
       const customerName = booking?.user?.name || booking?.renter?.name || '';
       const vehicleLabel = `${booking?.vehicle?.name || ''}${booking?.vehicle?.licensePlate
-          ? ' • ' + booking.vehicle.licensePlate
-          : ''
+        ? ' • ' + booking.vehicle.licensePlate
+        : ''
         }`.trim();
 
       setCheckInSummary({
@@ -1541,7 +1569,7 @@ export default function CheckInCar() {
   }
 
   // Show error if staff not assigned to any station
-  if (!staffAssignments || staffAssignments.length === 0) {
+  if (!staffAssignment || !staffAssignment.assignments || staffAssignment.assignments.length === 0) {
     return (
       <div className='flex items-center justify-center min-h-[400px]'>
         <div className='max-w-md space-y-4 text-center'>
@@ -1560,7 +1588,7 @@ export default function CheckInCar() {
   }
 
   // Get all assigned station names
-  const assignedStationNames = staffAssignments
+  const assignedStationNames = staffAssignment.assignments
     .map(a => a.station?.name)
     .filter(Boolean)
     .join(', ');
@@ -1650,8 +1678,8 @@ export default function CheckInCar() {
                               key={b.id}
                               onClick={() => handleSelectBooking(b.id)}
                               className={`w-full text-left p-4 rounded-md transition-all ${isSelected
-                                  ? 'bg-primary text-primary-foreground'
-                                  : 'hover:bg-accent'
+                                ? 'bg-primary text-primary-foreground'
+                                : 'hover:bg-accent'
                                 }`}
                             >
                               <div className='flex items-start justify-between gap-3'>
@@ -1662,8 +1690,8 @@ export default function CheckInCar() {
                                       <User className='h-3.5 w-3.5' />
                                       <span
                                         className={`font-semibold text-sm ${isSelected
-                                            ? 'text-primary-foreground'
-                                            : 'text-foreground'
+                                          ? 'text-primary-foreground'
+                                          : 'text-foreground'
                                           }`}
                                       >
                                         {b.user?.name ||
@@ -1684,16 +1712,16 @@ export default function CheckInCar() {
                                       <Car className='h-3.5 w-3.5' />
                                       <span
                                         className={`text-sm ${isSelected
-                                            ? 'text-primary-foreground'
-                                            : 'text-foreground'
+                                          ? 'text-primary-foreground'
+                                          : 'text-foreground'
                                           }`}
                                       >
                                         {b.vehicle?.name || 'Vehicle'}
                                         {b.vehicle?.licensePlate && (
                                           <span
                                             className={`font-mono ml-1.5 px-1.5 py-0.5 rounded text-xs ${isSelected
-                                                ? 'bg-primary-foreground/20 text-primary-foreground'
-                                                : 'bg-muted text-muted-foreground'
+                                              ? 'bg-primary-foreground/20 text-primary-foreground'
+                                              : 'bg-muted text-muted-foreground'
                                               }`}
                                           >
                                             {b.vehicle.licensePlate}
@@ -1706,8 +1734,8 @@ export default function CheckInCar() {
                                   {/* Date & Code */}
                                   <div
                                     className={`flex items-center gap-3 text-xs ${isSelected
-                                        ? 'text-primary-foreground/80'
-                                        : 'text-muted-foreground'
+                                      ? 'text-primary-foreground/80'
+                                      : 'text-muted-foreground'
                                       }`}
                                   >
                                     <div className='flex items-center gap-1.5'>
@@ -1815,45 +1843,6 @@ export default function CheckInCar() {
                     </Button>
                   )}
                 </div>
-              </div>
-            </div>
-          )}
-
-          {/* ✨ Info banner for existing contract */}
-          {bookingHasContract && existingContract && (
-            <div className='p-4 border-2 border-green-400 rounded-lg md:col-span-3 bg-green-50'>
-              <div className='flex items-center justify-between'>
-                <div className='flex items-center gap-3'>
-                  <span className='text-2xl'>📄</span>
-                  <div>
-                    <p className='font-semibold text-green-900'>
-                      Contract Already Exists
-                    </p>
-                    <p className='text-sm text-green-700'>
-                      Contract {existingContract.contractNumber} - Status:{' '}
-                      {existingContract.status}
-                    </p>
-                    <p className='mt-1 text-xs text-green-600'>
-                      Created{' '}
-                      {new Date(existingContract.createdAt).toLocaleString()}
-                      {existingContract.status === 'COMPLETED' &&
-                        existingContract.uploadedAt &&
-                        ` • Signed: ${new Date(
-                          existingContract.uploadedAt
-                        ).toLocaleString()}`}
-                    </p>
-                  </div>
-                </div>
-                {existingContract.status === 'COMPLETED' && (
-                  <span className='px-3 py-1 text-xs font-medium text-white bg-green-600 rounded-full'>
-                    ✓ Completed
-                  </span>
-                )}
-                {existingContract.status === 'CREATED' && (
-                  <span className='px-3 py-1 text-xs font-medium text-white rounded-full bg-amber-600'>
-                    ⏳ Awaiting Signature
-                  </span>
-                )}
               </div>
             </div>
           )}

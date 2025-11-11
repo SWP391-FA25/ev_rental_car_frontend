@@ -202,7 +202,7 @@ export function ContractUploadForm({
         if (uploadResponse.status === 400) {
           throw new Error(
             uploadData.message ||
-              'Dữ liệu không hợp lệ hoặc file không đúng định dạng'
+            'Dữ liệu không hợp lệ hoặc file không đúng định dạng'
           );
         } else if (uploadResponse.status === 403) {
           throw new Error('You do not have permission to upload the contract');
@@ -279,7 +279,7 @@ export function ContractUploadForm({
         <div className='space-y-4'>
           {/* Renter Name - Read Only */}
           <div>
-            <label className='block text-sm font-semibold mb-1.5'>
+            <label className='block text-sm font-semibold mb-1.5 text-foreground'>
               {t('staffContracts.uploadForm.renterNameLabel')}{' '}
               <span className='text-destructive'>*</span>
             </label>
@@ -287,7 +287,7 @@ export function ContractUploadForm({
               type='text'
               value={formData.renterName}
               readOnly
-              className='bg-muted border-2 cursor-not-allowed'
+              className='bg-muted/50 border-2 border-input cursor-not-allowed text-foreground'
             />
             <p className='text-xs text-muted-foreground mt-1'>
               {t('staffContracts.uploadForm.autoBooking')}
@@ -296,7 +296,7 @@ export function ContractUploadForm({
 
           {/* Witness Name - Read Only */}
           <div>
-            <label className='block text-sm font-semibold mb-1.5'>
+            <label className='block text-sm font-semibold mb-1.5 text-foreground'>
               {t('staffContracts.uploadForm.witnessNameLabel')}{' '}
               <span className='text-destructive'>*</span>
             </label>
@@ -304,7 +304,7 @@ export function ContractUploadForm({
               type='text'
               value={formData.witnessName}
               readOnly
-              className='bg-muted border-2 cursor-not-allowed'
+              className='bg-muted/50 border-2 border-input cursor-not-allowed text-foreground'
             />
             <p className='text-xs text-muted-foreground mt-1'>
               {t('staffContracts.uploadForm.autoStaff')}
@@ -313,7 +313,7 @@ export function ContractUploadForm({
 
           {/* Notes */}
           <div>
-            <label className='block text-sm font-semibold mb-1.5'>
+            <label className='block text-sm font-semibold mb-1.5 text-foreground'>
               {t('staffContracts.uploadForm.notesLabel')}
             </label>
             <textarea
@@ -322,7 +322,7 @@ export function ContractUploadForm({
               placeholder={t('staffContracts.uploadForm.notesPlaceholder')}
               maxLength={500}
               rows={3}
-              className='w-full px-3 py-2 border-2 rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none text-sm'
+              className='w-full px-3 py-2 border-2 rounded-lg bg-background border-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none text-sm'
             />
             <p className='text-xs text-muted-foreground mt-1'>
               {formData.notes.length}/500{' '}
@@ -332,17 +332,17 @@ export function ContractUploadForm({
 
           {/* File Upload */}
           <div>
-            <label className='block text-sm font-semibold mb-1.5'>
+            <label className='block text-sm font-semibold mb-1.5 text-foreground'>
               {t('staffContracts.uploadForm.fileLabel')}{' '}
               <span className='text-destructive'>*</span>
             </label>
 
             {formData.file ? (
-              <div className='p-3 bg-primary/5 border-2 border-primary/20 rounded-lg flex items-center justify-between'>
+              <div className='p-3 bg-primary/10 border-2 border-primary/30 rounded-lg flex items-center justify-between'>
                 <div className='flex items-center gap-3'>
                   <FileText className='w-5 h-5 text-primary' />
                   <div>
-                    <p className='font-medium text-sm'>{formData.file.name}</p>
+                    <p className='font-medium text-sm text-foreground'>{formData.file.name}</p>
                     <p className='text-xs text-muted-foreground'>
                       {(formData.file.size / 1024 / 1024).toFixed(2)} MB
                     </p>
@@ -351,16 +351,16 @@ export function ContractUploadForm({
                 <button
                   type='button'
                   onClick={removeFile}
-                  className='p-1 hover:bg-primary/10 rounded transition-colors'
+                  className='p-1 hover:bg-primary/20 rounded transition-colors'
                 >
-                  <X className='w-4 h-4 text-muted-foreground' />
+                  <X className='w-4 h-4 text-muted-foreground hover:text-foreground' />
                 </button>
               </div>
             ) : (
               <label className='block'>
-                <div className='border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer'>
+                <div className='border-2 border-dashed border-input rounded-lg p-6 text-center hover:border-primary hover:bg-primary/10 transition-colors cursor-pointer bg-card'>
                   <Upload className='w-10 h-10 text-muted-foreground mx-auto mb-2' />
-                  <p className='font-semibold text-sm mb-1'>
+                  <p className='font-semibold text-sm mb-1 text-foreground'>
                     {t('staffContracts.uploadForm.chooseOrDrag')}
                   </p>
                   <p className='text-xs text-muted-foreground'>
@@ -412,9 +412,9 @@ export function ContractUploadForm({
         </div>
 
         {/* Info Box - Compact */}
-        <div className='mt-4 p-3 bg-muted/50 rounded-lg border'>
+        <div className='mt-4 p-3 bg-muted/30 rounded-lg border border-border'>
           <p className='text-xs text-muted-foreground'>
-            <span className='font-semibold'>
+            <span className='font-semibold text-foreground'>
               {t('staffContracts.uploadForm.requirements.label')}
             </span>{' '}
             {t('staffContracts.uploadForm.requirements.text')}
@@ -424,14 +424,14 @@ export function ContractUploadForm({
 
       {/* Confirmation Dialog */}
       {showConfirmDialog && (
-        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-100'>
-          <div className='bg-card rounded-lg shadow-xl max-w-md w-full p-6'>
+        <div className='fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-100'>
+          <div className='bg-card border border-border rounded-lg shadow-xl max-w-md w-full p-6'>
             <div className='flex items-start gap-4 mb-4'>
-              <div className='p-3 bg-amber-100 dark:bg-amber-900/50 rounded-full'>
-                <AlertTriangle className='w-6 h-6 text-amber-600 dark:text-amber-400' />
+              <div className='p-3 bg-amber-500/20 rounded-full'>
+                <AlertTriangle className='w-6 h-6 text-amber-500' />
               </div>
               <div className='flex-1'>
-                <h3 className='text-lg font-bold mb-2'>
+                <h3 className='text-lg font-bold mb-2 text-foreground'>
                   {t('staffContracts.uploadForm.confirm.title')}
                 </h3>
                 <p className='text-sm text-muted-foreground mb-4'>
@@ -439,39 +439,39 @@ export function ContractUploadForm({
                 </p>
                 <ul className='space-y-2 text-sm mb-4'>
                   <li className='flex items-start gap-2'>
-                    <CheckCircle className='w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 shrink-0' />
-                    <span>
+                    <CheckCircle className='w-4 h-4 text-green-500 mt-0.5 shrink-0' />
+                    <span className='text-foreground'>
                       {t(
                         'staffContracts.uploadForm.confirm.items.signedByCustomer'
                       )}
                     </span>
                   </li>
                   <li className='flex items-start gap-2'>
-                    <CheckCircle className='w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 shrink-0' />
-                    <span>
+                    <CheckCircle className='w-4 h-4 text-green-500 mt-0.5 shrink-0' />
+                    <span className='text-foreground'>
                       {t(
                         'staffContracts.uploadForm.confirm.items.accurateInfo'
                       )}
                     </span>
                   </li>
                   <li className='flex items-start gap-2'>
-                    <CheckCircle className='w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 shrink-0' />
-                    <span>
+                    <CheckCircle className='w-4 h-4 text-green-500 mt-0.5 shrink-0' />
+                    <span className='text-foreground'>
                       {t('staffContracts.uploadForm.confirm.items.clearFile')}
                     </span>
                   </li>
                   <li className='flex items-start gap-2'>
-                    <CheckCircle className='w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 shrink-0' />
-                    <span>
+                    <CheckCircle className='w-4 h-4 text-green-500 mt-0.5 shrink-0' />
+                    <span className='text-foreground'>
                       {t(
                         'staffContracts.uploadForm.confirm.items.explainedTerms'
                       )}
                     </span>
                   </li>
                 </ul>
-                <div className='p-3 bg-primary/5 rounded-lg border border-primary/20'>
+                <div className='p-3 bg-primary/10 rounded-lg border border-primary/30'>
                   <p className='text-xs text-muted-foreground'>
-                    <span className='font-semibold'>
+                    <span className='font-semibold text-foreground'>
                       {t('staffContracts.uploadForm.confirm.noteTitle')}
                     </span>{' '}
                     {t('staffContracts.uploadForm.confirm.noteContent')}

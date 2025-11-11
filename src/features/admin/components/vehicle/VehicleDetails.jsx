@@ -621,22 +621,12 @@ export function VehicleDetails({
               <div className='space-y-2'>
                 <Label htmlFor='status'>Status</Label>
                 {isEditing ? (
-                  <Select
-                    value={formData.status}
-                    onValueChange={value => handleInputChange('status', value)}
-                    disabled={loading}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {VEHICLE_STATUS.map(status => (
-                        <SelectItem key={status.value} value={status.value}>
-                          {status.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
+                    <Badge variant={getStatusBadgeVariant(formData.status)}>
+                      {getStatusLabel(formData.status)}
+                    </Badge>
+                    <span className='ml-2 text-xs text-muted-foreground'></span>
+                  </div>
                 ) : (
                   <div className='p-2 border rounded-md bg-muted/50 min-h-[40px] flex items-center'>
                     <Badge variant={getStatusBadgeVariant(vehicle.status)}>
