@@ -32,6 +32,7 @@ import { apiClient } from '../../shared/lib/apiClient';
 import { endpoints } from '../../shared/lib/endpoints';
 import { toast } from '../../shared/lib/toast';
 import { formatCurrency } from '../../shared/lib/utils';
+import { CreateContractModal } from './CreateContractModal';
 // import { useStaffBooking } from '../hooks/useStaffBooking';
 import {
   Search,
@@ -103,6 +104,7 @@ export default function CheckInCar() {
   const [bookingHasContract, setBookingHasContract] = useState(false);
   const [existingContract, setExistingContract] = useState(null);
   const [loadingContract, setLoadingContract] = useState(false);
+  const [showContractModal, setShowContractModal] = useState(false); // Modal state
 
   // ✨ Staff assignment state (now supports multiple stations)
   const [staffAssignment, setStaffAssignment] = useState(null);
@@ -276,7 +278,8 @@ export default function CheckInCar() {
       // ✨ Fetch existing contracts for this booking
       await fetchBookingContracts(value);
 
-      // ✅ Fetch customer documents - Get renter/user ID correctly
+      // ✅ Always fetch customer documents and setup check-in fields
+      // User can upload contract via modal if needed
       const renterId = b?.renters?.id || b?.renters || b?.user?.id || b?.userId;
       if (renterId) {
         console.log('🔍 Fetching documents for renter ID:', renterId);
@@ -1917,49 +1920,51 @@ export default function CheckInCar() {
           {booking && (
             <div className='md:col-span-3'>
               {loadingContract ? (
-                <div className='p-4 border rounded-lg bg-slate-100 border-slate-200'>
-                  <p className='text-sm text-slate-600'>
+                <div className='p-4 border rounded-lg bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700'>
+                  <p className='text-sm text-slate-600 dark:text-slate-400'>
                     ⏳ Checking contract status...
                   </p>
                 </div>
               ) : !bookingHasContract ? (
-                <div className='p-4 border-2 rounded-lg bg-amber-50 border-amber-300'>
-                  <p className='mb-1 text-sm font-semibold text-amber-900'>
+                <div className='p-4 border-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-800'>
+                  <p className='mb-1 text-sm font-semibold text-amber-900 dark:text-amber-100'>
                     ⚠️ Contract Required
                   </p>
-                  <p className='text-sm text-amber-700'>
+                  <p className='text-sm text-amber-700 dark:text-amber-300'>
                     Please create contract and have customer sign it before
                     check-in.
-                    <a
-                      href='/staff/contracts'
-                      className='ml-1 font-medium underline'
+                    <button
+                      type='button'
+                      onClick={() => setShowContractModal(true)}
+                      className='ml-1 font-medium underline transition-colors hover:text-amber-900 dark:hover:text-amber-100'
                     >
-                      Go to Contracts
-                    </a>
+                      Upload Contract Now
+                    </button>
                   </p>
                 </div>
               ) : existingContract?.status === 'CREATED' ? (
-                <div className='p-4 border-2 border-blue-300 rounded-lg bg-blue-50'>
-                  <p className='mb-1 text-sm font-semibold text-blue-900'>
+                <div className='p-4 border-2 border-blue-300 rounded-lg dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20'>
+                  <p className='mb-1 text-sm font-semibold text-blue-900 dark:text-blue-100'>
                     📄 Contract Created
                   </p>
-                  <p className='text-sm text-blue-700'>
+                  <p className='text-sm text-blue-700 dark:text-blue-300'>
                     Contract {existingContract.contractNumber} is waiting for
                     signed file upload.
-                    <a
-                      href='/staff/contracts'
-                      className='ml-1 font-medium underline'
+                    <button
+                      type='button'
+                      onClick={() => setShowContractModal(true)}
+                      className='ml-1 font-medium underline transition-colors hover:text-blue-900 dark:hover:text-blue-100'
                     >
                       Upload Now
-                    </a>
+                    </button>
                   </p>
                 </div>
               ) : existingContract?.status === 'COMPLETED' ? (
-                <div className='p-4 border-2 border-green-300 rounded-lg bg-green-50'>
-                  <p className='mb-1 text-sm font-semibold text-green-900'>
+                <div className='p-4 border-2 border-green-300 rounded-lg dark:border-green-800 bg-green-50 dark:bg-green-900/20'>
+                  <p className='mb-1 text-sm font-semibold text-green-900 dark:text-green-100'>
                     ✅ Contract Completed
                   </p>
-                  <p className='text-sm text-green-700'>
+                  <p className='text-sm text-green-700 dark:text-green-300'>
                     Contract {existingContract.contractNumber} is signed and
                     ready. You can proceed with check-in.
                   </p>
@@ -2859,6 +2864,38 @@ export default function CheckInCar() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ⚠️ Contract Upload Modal */}
+      <CreateContractModal
+        booking={booking}
+        existingContract={existingContract}
+        isOpen={showContractModal}
+        onClose={() => {
+          setShowContractModal(false);
+          // Don't reset booking - keep it selected so user can continue check-in
+        }}
+        onSuccess={async () => {
+          // Refresh contract status
+          if (bookingId) {
+            await fetchBookingContracts(bookingId);
+          }
+          setShowContractModal(false);
+
+          // Continue with check-in setup after contract upload
+          if (booking) {
+            const renterId =
+              booking?.renters?.id ||
+              booking?.renters ||
+              booking?.user?.id ||
+              booking?.userId;
+            if (renterId) {
+              await fetchCustomerDocuments(renterId);
+            }
+          }
+
+          toast.success('Contract uploaded! You can now proceed with check-in');
+        }}
+      />
     </div>
   );
 }
