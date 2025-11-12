@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { AlertTriangle, X, Upload, CheckCircle, FileText } from 'lucide-react';
 import {
   Dialog,
@@ -22,7 +21,6 @@ export function CreateContractModal({
   onClose,
   onSuccess,
 }) {
-  const { t } = useTranslation();
   const { user } = useAuth();
 
   const [formData, setFormData] = useState({
@@ -35,7 +33,11 @@ export function CreateContractModal({
   // Update form data when booking changes
   useEffect(() => {
     if (booking) {
-      const renterName = booking?.user?.name || booking?.renters?.name || booking?.renter?.name || '';
+      const renterName =
+        booking?.user?.name ||
+        booking?.renters?.name ||
+        booking?.renter?.name ||
+        '';
       console.log('📝 Setting renter name:', renterName);
       setFormData(prev => ({
         ...prev,
@@ -112,7 +114,11 @@ export function CreateContractModal({
     try {
       let contractId = existingContract?.id;
 
-      // Step 1: Create contract only if it doesn't exist yet
+      // WORKFLOW: Contract creation and upload happen together
+      // Step 1: Create contract (status: CREATED) - only if not already created
+      // Step 2: Upload signed file (status: COMPLETED)
+      // Both steps must complete for a valid contract
+
       if (!isUploadOnly) {
         console.log('📝 Creating new contract for booking:', booking.id);
 
@@ -139,7 +145,7 @@ export function CreateContractModal({
         console.log('📤 Uploading to existing contract:', contractId);
       }
 
-      // Step 2: Upload signed contract file
+      // Step 2: Upload signed contract file (marks as COMPLETED)
       const formDataToSend = new FormData();
       formDataToSend.append('renterName', formData.renterName.trim());
       formDataToSend.append('witnessName', formData.witnessName.trim());
@@ -257,13 +263,14 @@ export function CreateContractModal({
               {isUploadOnly ? (
                 <>
                   Contract <strong>{existingContract?.contractNumber}</strong>{' '}
-                  is created. Please upload the signed contract file to proceed
-                  with check-in.
+                  was created but not uploaded yet. Please upload the signed
+                  contract file to complete the process.
                 </>
               ) : (
                 <>
                   This booking does not have a contract yet. Please upload the
-                  signed contract before proceeding with check-in.
+                  signed contract file to create and complete the contract in
+                  one step.
                 </>
               )}
             </DialogDescription>
@@ -271,16 +278,18 @@ export function CreateContractModal({
 
           {/* Booking Info */}
           <div
-            className={`p-4 border-2 rounded-lg ${isUploadOnly
-              ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
-              : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
-              }`}
+            className={`p-4 border-2 rounded-lg ${
+              isUploadOnly
+                ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+                : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
+            }`}
           >
             <h3
-              className={`font-semibold text-sm mb-2 ${isUploadOnly
-                ? 'text-blue-900 dark:text-blue-100'
-                : 'text-amber-900 dark:text-amber-100'
-                }`}
+              className={`font-semibold text-sm mb-2 ${
+                isUploadOnly
+                  ? 'text-blue-900 dark:text-blue-100'
+                  : 'text-amber-900 dark:text-amber-100'
+              }`}
             >
               {isUploadOnly
                 ? 'Contract & Booking Information'
@@ -300,21 +309,29 @@ export function CreateContractModal({
               <div>
                 <span className='text-muted-foreground'>Customer:</span>
                 <span className='ml-2 font-medium text-foreground'>
-                  {booking?.user?.name || booking?.renters?.name || booking?.renter?.name || 'Unknown'}
+                  {booking?.user?.name ||
+                    booking?.renters?.name ||
+                    booking?.renter?.name ||
+                    'Unknown'}
                 </span>
               </div>
-              {(booking?.user?.phone || booking?.renter?.phone || booking?.user?.email) && (
+              {(booking?.user?.phone ||
+                booking?.renter?.phone ||
+                booking?.user?.email) && (
                 <div>
                   <span className='text-muted-foreground'>Contact:</span>
                   <span className='ml-2 font-medium text-foreground'>
-                    {booking?.user?.phone || booking?.renter?.phone || booking?.user?.email}
+                    {booking?.user?.phone ||
+                      booking?.renter?.phone ||
+                      booking?.user?.email}
                   </span>
                 </div>
               )}
               <div>
                 <span className='text-muted-foreground'>Vehicle:</span>
                 <span className='ml-2 font-medium text-foreground'>
-                  {booking?.vehicle?.brand} {booking?.vehicle?.model || 'Unknown'}
+                  {booking?.vehicle?.brand}{' '}
+                  {booking?.vehicle?.model || 'Unknown'}
                 </span>
               </div>
               <div>

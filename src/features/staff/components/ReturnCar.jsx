@@ -64,6 +64,7 @@ export default function ReturnCar() {
   });
   const [incidentFiles, setIncidentFiles] = useState([]);
   const [incidentPreviews, setIncidentPreviews] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [inspectionImages, setInspectionImages] = useState([]);
 
   const fileInputRef = useRef(null);
@@ -357,6 +358,7 @@ export default function ReturnCar() {
         : fallback;
       setSelectedReturnStationId(nextId);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allowedStations, booking?.pickupStation?.id]);
 
   // Helper: reset all fields to initial state
@@ -387,34 +389,37 @@ export default function ReturnCar() {
   };
 
   // Inline validation helper cho Odo
-  const getOdoError = useCallback((value, currentBooking) => {
-    const odo = Number(value);
-    if (!value || Number.isNaN(odo) || odo < 0) {
-      return t('staffReturnCar.toast.invalidReturnOdometer');
-    }
-    const pickup = Number(currentBooking?.pickupOdometer);
-    const baseMin =
-      typeof lastRecordedOdometer === 'number'
-        ? lastRecordedOdometer
-        : Number.isFinite(pickup)
-        ? pickup
-        : undefined;
+  const getOdoError = useCallback(
+    (value, currentBooking) => {
+      const odo = Number(value);
+      if (!value || Number.isNaN(odo) || odo < 0) {
+        return t('staffReturnCar.toast.invalidReturnOdometer');
+      }
+      const pickup = Number(currentBooking?.pickupOdometer);
+      const baseMin =
+        typeof lastRecordedOdometer === 'number'
+          ? lastRecordedOdometer
+          : Number.isFinite(pickup)
+          ? pickup
+          : undefined;
 
-    if (typeof baseMin === 'number') {
-      if (odo < baseMin) {
-        return t('staffReturnCar.toast.invalidReturnOdometerMin', {
-          pickup: baseMin,
-        });
+      if (typeof baseMin === 'number') {
+        if (odo < baseMin) {
+          return t('staffReturnCar.toast.invalidReturnOdometerMin', {
+            pickup: baseMin,
+          });
+        }
+        const diffBase = Number.isFinite(pickup) ? pickup : baseMin;
+        if (odo - diffBase > MAX_ODOMETER_DIFF) {
+          return t('staffReturnCar.toast.invalidReturnOdometerRange', {
+            max: MAX_ODOMETER_DIFF,
+          });
+        }
       }
-      const diffBase = Number.isFinite(pickup) ? pickup : baseMin;
-      if (odo - diffBase > MAX_ODOMETER_DIFF) {
-        return t('staffReturnCar.toast.invalidReturnOdometerRange', {
-          max: MAX_ODOMETER_DIFF,
-        });
-      }
-    }
-    return '';
-  });
+      return '';
+    },
+    [t, lastRecordedOdometer]
+  );
   // Đồng bộ lỗi odo khi giá trị hoặc booking thay đổi
   useEffect(() => {
     setOdoError(getOdoError(returnOdometer, booking));
@@ -1001,7 +1006,7 @@ export default function ReturnCar() {
         <CardHeader>
           <CardTitle>{t('staffReturnCar.booking.title')}</CardTitle>
         </CardHeader>
-        <CardContent className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+        <CardContent className='grid grid-cols-1 gap-4 md:grid-cols-3'>
           <div className='col-span-2'>
             <Label className='block mb-2'>
               {t('staffReturnCar.booking.selectLabel')}
@@ -1052,7 +1057,7 @@ export default function ReturnCar() {
           )}
 
           {booking && (
-            <div className='md:col-span-3 grid grid-cols-1 md:grid-cols-4 gap-4 border rounded p-4'>
+            <div className='grid grid-cols-1 gap-4 p-4 border rounded md:col-span-3 md:grid-cols-4'>
               <div>
                 <p className='text-sm text-muted-foreground'>
                   {t('staffReturnCar.booking.customer')}
@@ -1146,7 +1151,7 @@ export default function ReturnCar() {
         <CardHeader>
           <CardTitle>{t('staffReturnCar.returnDetails.title')}</CardTitle>
         </CardHeader>
-        <CardContent className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+        <CardContent className='grid grid-cols-1 gap-4 md:grid-cols-3'>
           <div>
             <Label className='block mb-2'>
               {t('staffReturnCar.returnDetails.odometer')}
@@ -1170,9 +1175,9 @@ export default function ReturnCar() {
               }
             />
             {showOdoValidation && odoError && (
-              <p className='text-xs text-red-600 mt-1'>{odoError}</p>
+              <p className='mt-1 text-xs text-red-600'>{odoError}</p>
             )}
-            <div className='text-xs text-muted-foreground mt-1'>
+            <div className='mt-1 text-xs text-muted-foreground'>
               {t('staffReturnCar.returnDetails.lastRecordedLabel', {
                 value:
                   typeof lastRecordedOdometer === 'number'
@@ -1245,7 +1250,7 @@ export default function ReturnCar() {
           <CardTitle>{t('staffReturnCar.inspection.title')}</CardTitle>
         </CardHeader>
         <CardContent className='space-y-4'>
-          <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+          <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
             {/* Dropdown ch?n k?t qu?a ki?m tra */}
             <div>
               <Label className='block mb-2'>
@@ -1296,7 +1301,7 @@ export default function ReturnCar() {
                 }
               />
               {batteryError && (
-                <p className='text-xs text-red-600 mt-1'>{batteryError}</p>
+                <p className='mt-1 text-xs text-red-600'>{batteryError}</p>
               )}
             </div>
 
@@ -1330,7 +1335,7 @@ export default function ReturnCar() {
 
             {/* Checklist ch? hi?n th?n th? khi c? s? c?o */}
             {hasIncident && (
-              <div className='md:col-span-3 grid grid-cols-2 gap-3'>
+              <div className='grid grid-cols-2 gap-3 md:col-span-3'>
                 {Object.entries(checklist).map(([key, val]) => {
                   const id = `chk_${key}`;
                   return (
@@ -1358,7 +1363,7 @@ export default function ReturnCar() {
 
           {/* Upload ?nh?n & ghi ch? s? c?o: ch? hi?n th?n khi c? s? c?o */}
           {hasIncident && (
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+            <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
               <div>
                 <Label className='block mb-2'>
                   {t('staffReturnCar.incident.title')}
@@ -1391,16 +1396,16 @@ export default function ReturnCar() {
                   </p>
                 )}
                 {!!incidentPreviews.length && (
-                  <div className='mt-3 grid grid-cols-2 md:grid-cols-3 gap-2'>
+                  <div className='grid grid-cols-2 gap-2 mt-3 md:grid-cols-3'>
                     {incidentPreviews.map((p, idx) => (
                       <div
                         key={idx}
-                        className='border rounded overflow-hidden relative'
+                        className='relative overflow-hidden border rounded'
                       >
                         <button
                           type='button'
                           onClick={() => removeIncidentImage(p.index)}
-                          className='absolute top-1 right-1 bg-red-600/90 hover:bg-red-600 text-white text-xs px-2 py-1 rounded'
+                          className='absolute px-2 py-1 text-xs text-white rounded top-1 right-1 bg-red-600/90 hover:bg-red-600'
                           aria-label={t('common.delete')}
                         >
                           {t('common.delete')}
@@ -1408,7 +1413,7 @@ export default function ReturnCar() {
                         <img
                           src={p.url}
                           alt={p.name}
-                          className='w-full h-24 object-cover'
+                          className='object-cover w-full h-24'
                         />
                         <div className='p-2 text-xs truncate'>{p.name}</div>
                       </div>
@@ -1559,7 +1564,7 @@ export default function ReturnCar() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className='mt-3 flex items-center gap-2'>
+              <div className='flex items-center gap-2 mt-3'>
                 <input
                   id='depositHandled'
                   type='checkbox'
@@ -1568,7 +1573,7 @@ export default function ReturnCar() {
                 />
                 <Label
                   htmlFor='depositHandled'
-                  className='cursor-pointer text-sm'
+                  className='text-sm cursor-pointer'
                 >
                   {t('staffReturnCar.modal.depositHandled', {
                     defaultValue: 'Đã xử lí tiền cọc',
@@ -1680,12 +1685,12 @@ export default function ReturnCar() {
               >
                 {paymentLoading ? (
                   <>
-                    <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-white'></div>
+                    <div className='w-4 h-4 border-b-2 border-white rounded-full animate-spin'></div>
                     Processing...
                   </>
                 ) : (
                   <>
-                    <CreditCard className='h-4 w-4' />
+                    <CreditCard className='w-4 h-4' />
                     Pay {formatCurrency(returnSummary?.totalAmount ?? 0, 'VND')}
                   </>
                 )}
@@ -1703,7 +1708,7 @@ export default function ReturnCar() {
               >
                 {cashPaymentLoading ? (
                   <>
-                    <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-white'></div>
+                    <div className='w-4 h-4 border-b-2 border-white rounded-full animate-spin'></div>
                     Processing...
                   </>
                 ) : (
