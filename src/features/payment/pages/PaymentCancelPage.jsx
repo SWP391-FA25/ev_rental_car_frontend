@@ -117,7 +117,7 @@ export default function PaymentCancelPage() {
               <>
                 <Button
                   onClick={() =>
-                    navigate(`/payment/total?bookingId=${bookingId}`)
+                    navigate(`/payment/total-amount?bookingId=${bookingId}`)
                   }
                   className='w-full'
                 >
@@ -140,20 +140,6 @@ export default function PaymentCancelPage() {
                   className='w-full'
                 >
                   Complete Payment
-                </Button>
-                <Button
-                  variant='outline'
-                  onClick={() => navigate('/user/profile?tab=trips')}
-                  className='w-full'
-                >
-                  View My Bookings
-                </Button>
-                <Button
-                  variant='outline'
-                  onClick={() => navigate('/cars')}
-                  className='w-full'
-                >
-                  Book Another Vehicle
                 </Button>
               </>
             )}

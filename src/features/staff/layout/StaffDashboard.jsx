@@ -196,8 +196,6 @@ export default function StaffDashboard() {
               status: 'COMPLETED',
               page,
               limit,
-              startDate: lastMonthStart.toISOString(),
-              endDate: now.toISOString(),
             },
           });
           const pageBookings = Array.isArray(res?.data?.bookings)
@@ -211,8 +209,7 @@ export default function StaffDashboard() {
           page += 1;
         }
 
-        const getDate = b =>
-          new Date(b.actualEndTime || b.endTime || b.updatedAt || b.createdAt);
+        const getDate = b => new Date(b.actualEndTime);
 
         const monthRevenue = all
           .filter(b => {
@@ -339,21 +336,40 @@ export default function StaffDashboard() {
     computeTotalRevenue();
   }, []);
 
-  // Active customers via renters API
+  // Active customers snapshot: distinct customers currently renting (IN_PROGRESS)
   React.useEffect(() => {
-    const loadRenters = async () => {
+    const loadActiveCustomersSnapshot = async () => {
       try {
-        const res = await apiClient.get(endpoints.renters.getAll());
-        const renters = Array.isArray(res?.data?.renters)
-          ? res.data.renters
-          : [];
-        const active = renters.filter(r => r.accountStatus === 'ACTIVE').length;
-        setActiveCustomersCount(active);
+        let page = 1;
+        const limit = 100;
+        const ids = new Set();
+        while (true) {
+          const res = await apiClient.get(endpoints.bookings.getAll(), {
+            params: {
+              status: 'IN_PROGRESS',
+              page,
+              limit,
+            },
+          });
+          const pageBookings = Array.isArray(res?.data?.bookings)
+            ? res.data.bookings
+            : [];
+          pageBookings.forEach(b => {
+            const id = b.renterId || b.customerId || b.userId;
+            if (id) ids.add(id);
+          });
+          const pagination = res?.data?.pagination;
+          const currentPage = Number(pagination?.currentPage || page);
+          const totalPages = Number(pagination?.totalPages || page);
+          if (currentPage >= totalPages || pageBookings.length === 0) break;
+          page += 1;
+        }
+        setActiveCustomersCount(ids.size);
       } catch (_) {
         setActiveCustomersCount(0);
       }
     };
-    loadRenters();
+    loadActiveCustomersSnapshot();
   }, []);
 
   // Growth for Active Customers and Rented using IN_PROGRESS bookings month-over-month
@@ -422,9 +438,13 @@ export default function StaffDashboard() {
               );
         setActiveCustomersGrowth(growthActive);
 
-        // Rented growth: number of IN_PROGRESS bookings
-        const currentRented = current.length;
-        const lastRented = last.length;
+        // Rented growth: distinct vehicles that started IN_PROGRESS
+        const currentRented = new Set(
+          current.map(b => b.vehicleId || b.carId).filter(Boolean)
+        ).size;
+        const lastRented = new Set(
+          last.map(b => b.vehicleId || b.carId).filter(Boolean)
+        ).size;
         const growthRented =
           lastRented === 0
             ? currentRented > 0

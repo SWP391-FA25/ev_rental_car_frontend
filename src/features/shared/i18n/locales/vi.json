@@ -310,6 +310,7 @@
       "selectLabel": "Chọn đơn",
       "selectPlaceholder": "Chọn đơn đang hoạt động",
       "searchPlaceholder": "Tìm kiếm booking...",
+      "foundCount": "Tìm thấy {{count}} đơn thuê",
       "depositLabel": "Tiền cọc (VNĐ)",
       "customer": "Khách hàng",
       "vehicle": "Biển số xe",
@@ -357,6 +358,12 @@
       "locationPlaceholder": "Nhập vị trí trả thực tế",
       "searchStationPlaceholder": "Tìm kiếm trạm...",
       "lastRecordedLabel": "Odo gần nhất: {{value}} km"
+    },
+    "modal": {
+      "depositHandled": "Đã xử lí tiền cọc",
+      "pricing": {
+        "depositApplied": "Đã trừ tiền cọc"
+      }
     },
     "deposit": {
       "title": "3. Tính toán cọc & hoàn tiền",

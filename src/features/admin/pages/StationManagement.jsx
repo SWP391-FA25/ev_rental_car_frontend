@@ -90,8 +90,8 @@ export default function StationManagement() {
       console.error('[admin] loadStations error:', error);
       toast.error(
         t('station.management.messages.loadFailed') +
-        ': ' +
-        (error?.message || error)
+          ': ' +
+          (error?.message || error)
       );
     } finally {
       setLoading(false);
@@ -115,8 +115,8 @@ export default function StationManagement() {
       console.error('[admin] createStation error:', error);
       toast.error(
         t('station.management.messages.createFailed') +
-        ': ' +
-        (error?.message || error)
+          ': ' +
+          (error?.message || error)
       );
       throw error;
     }
@@ -149,8 +149,8 @@ export default function StationManagement() {
       console.error('[admin] updateStation error:', error);
       toast.error(
         t('station.management.messages.updateFailed') +
-        ': ' +
-        (error?.message || error)
+          ': ' +
+          (error?.message || error)
       );
       throw error;
     }
@@ -171,8 +171,8 @@ export default function StationManagement() {
       console.error('[admin] deleteStation error:', error);
       toast.error(
         t('station.management.messages.deleteFailed') +
-        ': ' +
-        (error?.message || error)
+          ': ' +
+          (error?.message || error)
       );
     }
   };
@@ -194,8 +194,8 @@ export default function StationManagement() {
       console.error('[admin] getStationById error:', error);
       toast.error(
         t('station.management.messages.loadFailed') +
-        ': ' +
-        (error?.message || error)
+          ': ' +
+          (error?.message || error)
       );
     }
   };
@@ -354,13 +354,15 @@ export default function StationManagement() {
       {/* Summary Stats */}
       <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
         <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>{stations.length}</div>
+          <div className='text-2xl font-bold text-amber-300'>
+            {stations.length}
+          </div>
           <div className='text-sm text-muted-foreground'>
             {t('station.management.slots')}
           </div>
         </div>
         <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>
+          <div className='text-2xl font-bold text-green-600'>
             {stations.filter(s => s.status === 'ACTIVE').length}
           </div>
           <div className='text-sm text-muted-foreground'>
@@ -368,7 +370,7 @@ export default function StationManagement() {
           </div>
         </div>
         <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>
+          <div className='text-2xl font-bold text-gray-400'>
             {stations.filter(s => s.status === 'MAINTENANCE').length}
           </div>
           <div className='text-sm text-muted-foreground'>
@@ -376,7 +378,7 @@ export default function StationManagement() {
           </div>
         </div>
         <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>
+          <div className='text-2xl font-bold text-indigo-500'>
             {stations.reduce(
               (total, station) => total + (station.capacity || 0),
               0

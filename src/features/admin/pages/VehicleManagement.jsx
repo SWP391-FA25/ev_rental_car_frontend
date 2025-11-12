@@ -58,7 +58,7 @@ export default function VehicleManagement() {
   // Vehicle status options
   const VEHICLE_STATUS = [
     { value: 'AVAILABLE', label: t('vehicle.status.available') },
-    { value: 'RESERVED', label: ('Reserved') },
+    { value: 'RESERVED', label: 'Reserved' },
     { value: 'RENTED', label: t('vehicle.status.rented') },
     { value: 'PENDING', label: t('vehicle.status.pending') },
     { value: 'MAINTENANCE', label: t('vehicle.status.maintenance') },
@@ -774,16 +774,17 @@ export default function VehicleManagement() {
         </DropdownMenu>
       </div>
 
-      {/* Summary Stats */}
       <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
         <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>{vehicles.length}</div>
+          <div className='text-2xl font-bold text-orange-500'>
+            {vehicles.length}
+          </div>
           <div className='text-sm text-muted-foreground'>
             {t('vehicle.stats.total')}
           </div>
         </div>
         <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>
+          <div className='text-2xl font-bold text-green-500'>
             {vehicles.filter(v => v.status === 'AVAILABLE').length}
           </div>
           <div className='text-sm text-muted-foreground'>
@@ -791,7 +792,7 @@ export default function VehicleManagement() {
           </div>
         </div>
         <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>
+          <div className='text-2xl font-bold text-red-500'>
             {vehicles.filter(v => v.status === 'RENTED').length}
           </div>
           <div className='text-sm text-muted-foreground'>
@@ -799,7 +800,7 @@ export default function VehicleManagement() {
           </div>
         </div>
         <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>
+          <div className='text-2xl font-bold text-blue-700'>
             {vehicles.filter(v => v.fuelType === 'ELECTRIC').length}
           </div>
           <div className='text-sm text-muted-foreground'>
@@ -874,7 +875,7 @@ export default function VehicleManagement() {
                   <TableCell>{getFuelTypeLabel(vehicle.fuelType)}</TableCell>
                   <TableCell>
                     {vehicle.fuelType === 'ELECTRIC' ||
-                      vehicle.fuelType === 'HYBRID'
+                    vehicle.fuelType === 'HYBRID'
                       ? `${vehicle.batteryLevel}%`
                       : t('vehicle.table.na')}
                   </TableCell>
