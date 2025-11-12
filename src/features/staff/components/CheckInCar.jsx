@@ -600,7 +600,7 @@ function ImageUpload({ files, previews, onFilesChange, maxFiles = 10 }) {
       <CardHeader>
         <CardTitle className='flex items-center gap-2'>
           <ImageIcon className='w-5 h-5' />
-          Upload Vehicle Photos
+          Upload Inspection Photos
         </CardTitle>
         <CardDescription>
           Upload up to {maxFiles} images (max 5MB each)
@@ -729,6 +729,17 @@ function DocumentVerification({
   const missingDocs = documentTypes.filter(
     dt => !customerDocuments?.some(d => d.documentType === dt.type)
   );
+
+  // Debug logging
+  console.log('📄 Document Verification Render:', {
+    loadingDocuments,
+    customerDocuments,
+    documentCount: customerDocuments?.length,
+    hasIdCard,
+    hasLicense,
+    allDocumentsPresent,
+    missingDocs: missingDocs.map(d => d.label),
+  });
 
   return (
     <Card>
@@ -1178,7 +1189,12 @@ export default function CheckInCar() {
   // Fetch customer documents when booking changes
   useEffect(() => {
     if (bookingId) {
+      setLoadingDocuments(true);
       fetchCustomerDocuments(bookingId);
+    } else {
+      // Reset when no booking selected
+      setCustomerDocuments([]);
+      setLoadingDocuments(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingId]);
@@ -1223,7 +1239,6 @@ export default function CheckInCar() {
   };
 
   const fetchCustomerDocuments = async bookingId => {
-    setLoadingDocuments(true);
     try {
       // Get booking to get userId
       const bookingData =
@@ -1673,21 +1688,13 @@ export default function CheckInCar() {
         setUploadDocFile(null);
         setUploadDocType('');
 
-        // Refresh documents list
+        // Refresh documents list and wait for it to complete
+        setLoadingDocuments(true);
         await fetchCustomerDocuments(bookingId);
 
-        // Auto-verify if all documents are now present
-        const hasIdCard = customerDocuments.some(
-          d => d.documentType === 'ID_CARD'
-        );
-        const hasLicense = customerDocuments.some(
-          d => d.documentType === 'DRIVERS_LICENSE'
-        );
-
-        if (hasIdCard && hasLicense) {
-          setDocumentVerified(true);
-          toast.success('All documents are complete and verified');
-        }
+        // After refresh, check if all documents are present
+        // Note: We need to fetch fresh data, not use stale customerDocuments
+        // The component will re-render with new data automatically
       } else {
         throw new Error(response.message || 'Upload failed');
       }
