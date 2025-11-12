@@ -721,9 +721,12 @@ function DocumentVerification({
   ];
 
   // Check completion status - Server trả về documentType, không phải document_type
-  const hasIdCard = customerDocuments?.some(d => d.documentType === 'ID_CARD');
+  // Must be APPROVED to count as verified
+  const hasIdCard = customerDocuments?.some(
+    d => d.documentType === 'ID_CARD' && d.status === 'APPROVED'
+  );
   const hasLicense = customerDocuments?.some(
-    d => d.documentType === 'DRIVERS_LICENSE'
+    d => d.documentType === 'DRIVERS_LICENSE' && d.status === 'APPROVED'
   );
   const allDocumentsPresent = hasIdCard && hasLicense;
   const missingDocs = documentTypes.filter(
@@ -735,6 +738,11 @@ function DocumentVerification({
     loadingDocuments,
     customerDocuments,
     documentCount: customerDocuments?.length,
+    documentDetails: customerDocuments?.map(d => ({
+      type: d.documentType,
+      status: d.status,
+      fileName: d.fileName,
+    })),
     hasIdCard,
     hasLicense,
     allDocumentsPresent,
@@ -751,12 +759,12 @@ function DocumentVerification({
         <CardDescription>Verify and confirm customer documents</CardDescription>
       </CardHeader>
       <CardContent className='space-y-4'>
-        {/* Loading State */}
-        {loadingDocuments && (
-          <div className='p-4 border border-blue-200 rounded-lg bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800'>
-            <div className='flex items-start gap-3'>
-              <div className='w-5 h-5 border-2 border-blue-600 rounded-full border-t-transparent animate-spin shrink-0 mt-0.5' />
-              <div className='flex-1'>
+        {/* Loading State - Hide everything else when loading */}
+        {loadingDocuments ? (
+          <div className='p-8 border border-blue-200 rounded-lg bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800'>
+            <div className='flex flex-col items-center justify-center gap-4'>
+              <div className='w-12 h-12 border-4 border-blue-600 rounded-full border-t-transparent animate-spin' />
+              <div className='text-center'>
                 <p className='text-sm font-semibold text-blue-900 dark:text-blue-100'>
                   Loading Documents...
                 </p>
@@ -766,248 +774,259 @@ function DocumentVerification({
               </div>
             </div>
           </div>
-        )}
-
-        {/* Alert for missing documents */}
-        {!loadingDocuments && !allDocumentsPresent && (
-          <div className='p-4 border rounded-lg bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'>
-            <div className='flex items-start gap-3'>
-              <AlertCircle className='w-5 h-5 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5' />
-              <div className='flex-1'>
-                <p className='text-sm font-semibold text-amber-900 dark:text-amber-100'>
-                  Incomplete Documents
-                </p>
-                <p className='mt-1 text-xs text-amber-700 dark:text-amber-200'>
-                  Customer has not uploaded{' '}
-                  {missingDocs.map(d => d.label).join(', ')}. You can upload on
-                  behalf of the customer below.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Document List */}
-        <div className='space-y-3'>
-          {documentTypes.map(
-            // eslint-disable-next-line no-unused-vars
-            ({ type, label, icon: IconComponent, required }) => {
-              const doc = customerDocuments?.find(d => d.documentType === type);
-
-              return (
-                <div
-                  key={type}
-                  className={cn(
-                    'p-4 border-2 rounded-lg transition-all',
-                    doc
-                      ? 'border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/10'
-                      : 'border-border hover:border-primary/50'
-                  )}
-                >
-                  <div className='flex items-center justify-between'>
-                    <div className='flex items-center flex-1 gap-3'>
-                      <div
-                        className={cn(
-                          'w-10 h-10 rounded-full flex items-center justify-center transition-all',
-                          doc
-                            ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-500'
-                            : 'bg-muted text-muted-foreground'
-                        )}
-                      >
-                        {doc ? (
-                          <CheckCircle2 className='w-5 h-5' />
-                        ) : (
-                          <IconComponent className='w-5 h-5' />
-                        )}
-                      </div>
-
-                      {/* Document Image Preview */}
-                      {doc?.fileUrl && (
-                        <div className='w-20 h-20 overflow-hidden transition-transform border-2 rounded-lg border-border shrink-0 hover:scale-105'>
-                          <img
-                            src={doc.thumbnailUrl || doc.fileUrl}
-                            alt={label}
-                            className='object-cover w-full h-full cursor-pointer'
-                            onClick={() => onViewDocument(doc)}
-                          />
-                        </div>
-                      )}
-
-                      <div className='flex-1'>
-                        <div className='flex items-center gap-2'>
-                          <p className='font-medium'>{label}</p>
-                          {required && !doc && (
-                            <span className='text-xs text-destructive'>*</span>
-                          )}
-                        </div>
-                        <p className='text-sm text-muted-foreground'>
-                          {doc ? (
-                            <>
-                              Uploaded •{' '}
-                              {new Date(doc.uploadedAt).toLocaleDateString(
-                                'en-US'
-                              )}
-                            </>
-                          ) : (
-                            'Not Available'
-                          )}
-                        </p>
-                        {/* Server auto-approve nếu staff upload */}
-                        {doc?.status === 'APPROVED' && (
-                          <p className='text-xs text-green-600 dark:text-green-500 mt-0.5'>
-                            ✓ Verified by staff
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className='flex items-center gap-2'>
-                      {doc ? (
-                        <Button
-                          variant='outline'
-                          size='sm'
-                          onClick={() => onViewDocument(doc)}
-                        >
-                          <Eye className='w-4 h-4 mr-2' />
-                          Detail
-                        </Button>
-                      ) : (
-                        <Button
-                          variant='outline'
-                          size='sm'
-                          onClick={() => onUploadDocument(type)}
-                          disabled={uploadingDoc === type}
-                        >
-                          {uploadingDoc === type ? (
-                            <>
-                              <div className='w-4 h-4 mr-2 border-2 border-current rounded-full border-t-transparent animate-spin' />
-                              Uploading...
-                            </>
-                          ) : (
-                            <>
-                              <Upload className='w-4 h-4 mr-2' />
-                              Upload
-                            </>
-                          )}
-                        </Button>
-                      )}
-                    </div>
+        ) : (
+          <>
+            {/* Alert for missing documents */}
+            {!allDocumentsPresent && (
+              <div className='p-4 border rounded-lg bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'>
+                <div className='flex items-start gap-3'>
+                  <AlertCircle className='w-5 h-5 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5' />
+                  <div className='flex-1'>
+                    <p className='text-sm font-semibold text-amber-900 dark:text-amber-100'>
+                      Incomplete Documents
+                    </p>
+                    <p className='mt-1 text-xs text-amber-700 dark:text-amber-200'>
+                      Customer has not uploaded{' '}
+                      {missingDocs.map(d => d.label).join(', ')}. You can upload
+                      on behalf of the customer below.
+                    </p>
                   </div>
                 </div>
-              );
-            }
-          )}
-        </div>
-
-        <Separator />
-
-        {/* Document Status Summary */}
-        <div
-          className={cn(
-            'p-4 rounded-lg border-2',
-            allDocumentsPresent
-              ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-              : 'bg-muted border-border'
-          )}
-        >
-          <div className='flex items-center gap-3'>
-            {allDocumentsPresent ? (
-              <>
-                <CheckCircle2 className='w-5 h-5 text-green-600 dark:text-green-500 shrink-0' />
-                <div className='flex-1'>
-                  <p className='text-sm font-semibold text-green-900 dark:text-green-100'>
-                    Documents Complete
-                  </p>
-                  <p className='text-xs text-green-700 dark:text-green-300 mt-0.5'>
-                    All required documents have been uploaded
-                  </p>
-                </div>
-              </>
-            ) : (
-              <>
-                <AlertCircle className='w-5 h-5 text-muted-foreground shrink-0' />
-                <div className='flex-1'>
-                  <p className='text-sm font-semibold'>
-                    Missing {missingDocs.length} document(s)
-                  </p>
-                  <p className='text-xs text-muted-foreground mt-0.5'>
-                    Need to upload: {missingDocs.map(d => d.label).join(', ')}
-                  </p>
-                </div>
-              </>
+              </div>
             )}
-          </div>
-        </div>
 
-        {/* Verification Checkbox - Only enabled when all docs present */}
-        <div className='space-y-4'>
-          <div
-            className={cn(
-              'p-4 rounded-lg border-2 transition-all',
-              allDocumentsPresent
-                ? documentVerified
-                  ? 'bg-primary/10 border-primary'
-                  : 'bg-primary/5 border-primary/20 hover:border-primary/50'
-                : 'bg-muted/50 border-muted cursor-not-allowed'
-            )}
-          >
-            <div className='flex items-start gap-3'>
-              <input
-                type='checkbox'
-                id='documentVerified'
-                checked={documentVerified}
-                onChange={e => setDocumentVerified(e.target.checked)}
-                disabled={!allDocumentsPresent}
-                className={cn(
-                  'mt-1 cursor-pointer',
-                  !allDocumentsPresent && 'cursor-not-allowed opacity-50'
+            {/* Document List */}
+            <div className='space-y-3'>
+              {documentTypes.map(
+                // eslint-disable-next-line no-unused-vars
+                ({ type, label, icon: IconComponent, required }) => {
+                  const doc = customerDocuments?.find(
+                    d => d.documentType === type
+                  );
+
+                  return (
+                    <div
+                      key={type}
+                      className={cn(
+                        'p-4 border-2 rounded-lg transition-all',
+                        doc
+                          ? 'border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/10'
+                          : 'border-border hover:border-primary/50'
+                      )}
+                    >
+                      <div className='flex items-center justify-between'>
+                        <div className='flex items-center flex-1 gap-3'>
+                          <div
+                            className={cn(
+                              'w-10 h-10 rounded-full flex items-center justify-center transition-all',
+                              doc
+                                ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-500'
+                                : 'bg-muted text-muted-foreground'
+                            )}
+                          >
+                            {doc ? (
+                              <CheckCircle2 className='w-5 h-5' />
+                            ) : (
+                              <IconComponent className='w-5 h-5' />
+                            )}
+                          </div>
+
+                          {/* Document Image Preview */}
+                          {doc?.fileUrl && (
+                            <div className='w-20 h-20 overflow-hidden transition-transform border-2 rounded-lg border-border shrink-0 hover:scale-105'>
+                              <img
+                                src={doc.thumbnailUrl || doc.fileUrl}
+                                alt={label}
+                                className='object-cover w-full h-full cursor-pointer'
+                                onClick={() => onViewDocument(doc)}
+                              />
+                            </div>
+                          )}
+
+                          <div className='flex-1'>
+                            <div className='flex items-center gap-2'>
+                              <p className='font-medium'>{label}</p>
+                              {required && !doc && (
+                                <span className='text-xs text-destructive'>
+                                  *
+                                </span>
+                              )}
+                            </div>
+                            <p className='text-sm text-muted-foreground'>
+                              {doc ? (
+                                <>
+                                  Uploaded •{' '}
+                                  {new Date(doc.uploadedAt).toLocaleDateString(
+                                    'en-US'
+                                  )}
+                                </>
+                              ) : (
+                                'Not Available'
+                              )}
+                            </p>
+                            {/* Server auto-approve nếu staff upload */}
+                            {doc?.status === 'APPROVED' && (
+                              <p className='text-xs text-green-600 dark:text-green-500 mt-0.5'>
+                                ✓ Verified by staff
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className='flex items-center gap-2'>
+                          {doc ? (
+                            <Button
+                              variant='outline'
+                              size='sm'
+                              onClick={() => onViewDocument(doc)}
+                            >
+                              <Eye className='w-4 h-4 mr-2' />
+                              Detail
+                            </Button>
+                          ) : (
+                            <Button
+                              variant='outline'
+                              size='sm'
+                              onClick={() => onUploadDocument(type)}
+                              disabled={uploadingDoc === type}
+                            >
+                              {uploadingDoc === type ? (
+                                <>
+                                  <div className='w-4 h-4 mr-2 border-2 border-current rounded-full border-t-transparent animate-spin' />
+                                  Uploading...
+                                </>
+                              ) : (
+                                <>
+                                  <Upload className='w-4 h-4 mr-2' />
+                                  Upload
+                                </>
+                              )}
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+              )}
+            </div>
+
+            <Separator />
+
+            {/* Document Status Summary */}
+            <div
+              className={cn(
+                'p-4 rounded-lg border-2',
+                allDocumentsPresent
+                  ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                  : 'bg-muted border-border'
+              )}
+            >
+              <div className='flex items-center gap-3'>
+                {allDocumentsPresent ? (
+                  <>
+                    <CheckCircle2 className='w-5 h-5 text-green-600 dark:text-green-500 shrink-0' />
+                    <div className='flex-1'>
+                      <p className='text-sm font-semibold text-green-900 dark:text-green-100'>
+                        All Documents Verified by Staff
+                      </p>
+                      <p className='text-xs text-green-700 dark:text-green-300 mt-0.5'>
+                        All required documents uploaded and auto-approved
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle className='w-5 h-5 text-muted-foreground shrink-0' />
+                    <div className='flex-1'>
+                      <p className='text-sm font-semibold'>
+                        Missing {missingDocs.length} document(s)
+                      </p>
+                      <p className='text-xs text-muted-foreground mt-0.5'>
+                        Need to upload:{' '}
+                        {missingDocs.map(d => d.label).join(', ')}
+                      </p>
+                    </div>
+                  </>
                 )}
-              />
-              <label
-                htmlFor='documentVerified'
+              </div>
+            </div>
+
+            {/* Verification Checkbox - Only enabled when all docs present */}
+            <div className='space-y-4'>
+              <div
                 className={cn(
-                  'flex-1',
-                  allDocumentsPresent ? 'cursor-pointer' : 'cursor-not-allowed'
+                  'p-4 rounded-lg border-2 transition-all',
+                  allDocumentsPresent
+                    ? documentVerified
+                      ? 'bg-primary/10 border-primary'
+                      : 'bg-primary/5 border-primary/20 hover:border-primary/50'
+                    : 'bg-muted/50 border-muted cursor-not-allowed'
                 )}
               >
-                <span className='font-medium'>
-                  I confirm that I have verified the customer's documents
-                </span>
-                <p className='mt-1 text-sm text-muted-foreground'>
-                  Documents include valid ID card and driver's license, are
-                  clear, match registration information, and meet rental
-                  requirements
-                </p>
-              </label>
-            </div>
-          </div>
+                <div className='flex items-start gap-3'>
+                  <input
+                    type='checkbox'
+                    id='documentVerified'
+                    checked={documentVerified}
+                    onChange={e => setDocumentVerified(e.target.checked)}
+                    disabled={!allDocumentsPresent}
+                    className={cn(
+                      'mt-1 cursor-pointer',
+                      !allDocumentsPresent && 'cursor-not-allowed opacity-50'
+                    )}
+                  />
+                  <label
+                    htmlFor='documentVerified'
+                    className={cn(
+                      'flex-1',
+                      allDocumentsPresent
+                        ? 'cursor-pointer'
+                        : 'cursor-not-allowed'
+                    )}
+                  >
+                    <span className='font-medium'>
+                      I confirm that I have verified the customer's documents
+                    </span>
+                    <p className='mt-1 text-sm text-muted-foreground'>
+                      Documents include valid ID card and driver's license, are
+                      clear, match registration information, and meet rental
+                      requirements
+                    </p>
+                  </label>
+                </div>
+              </div>
 
-          {/* Validation Messages */}
-          {!allDocumentsPresent && (
-            <div className='flex items-start gap-2 text-sm text-amber-600 dark:text-amber-500'>
-              <AlertCircle className='w-4 h-4 shrink-0 mt-0.5' />
-              <span>
-                Please upload all required documents before confirming
-              </span>
-            </div>
-          )}
+              {/* Validation Messages */}
+              {!allDocumentsPresent && (
+                <div className='flex items-start gap-2 text-sm text-amber-600 dark:text-amber-500'>
+                  <AlertCircle className='w-4 h-4 shrink-0 mt-0.5' />
+                  <span>
+                    Please upload all required documents before confirming
+                  </span>
+                </div>
+              )}
 
-          {allDocumentsPresent && !documentVerified && (
-            <div className='flex items-start gap-2 text-sm text-destructive'>
-              <AlertCircle className='w-4 h-4 shrink-0 mt-0.5' />
-              <span>
-                Please confirm document verification before continuing
-              </span>
-            </div>
-          )}
+              {allDocumentsPresent && !documentVerified && (
+                <div className='flex items-start gap-2 text-sm text-destructive'>
+                  <AlertCircle className='w-4 h-4 shrink-0 mt-0.5' />
+                  <span>
+                    Please confirm document verification before continuing
+                  </span>
+                </div>
+              )}
 
-          {documentVerified && (
-            <div className='flex items-start gap-2 text-sm text-green-600 dark:text-green-500'>
-              <CheckCircle2 className='w-4 h-4 shrink-0 mt-0.5' />
-              <span>Documents have been verified by you</span>
+              {documentVerified && (
+                <div className='flex items-start gap-2 text-sm text-green-600 dark:text-green-500'>
+                  <CheckCircle2 className='w-4 h-4 shrink-0 mt-0.5' />
+                  <span>
+                    Documents verified and auto-approved by staff upload
+                  </span>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );
@@ -1198,6 +1217,37 @@ export default function CheckInCar() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingId, currentStep]);
+
+  // Auto-check verification checkbox when all documents are APPROVED
+  useEffect(() => {
+    const hasApprovedIdCard = customerDocuments?.some(
+      d => d.documentType === 'ID_CARD' && d.status === 'APPROVED'
+    );
+    const hasApprovedLicense = customerDocuments?.some(
+      d => d.documentType === 'DRIVERS_LICENSE' && d.status === 'APPROVED'
+    );
+    const allApproved = hasApprovedIdCard && hasApprovedLicense;
+
+    console.log('🔄 Auto-check useEffect triggered:', {
+      documentCount: customerDocuments?.length,
+      documents: customerDocuments?.map(d => ({
+        type: d.documentType,
+        status: d.status,
+      })),
+      hasApprovedIdCard,
+      hasApprovedLicense,
+      allApproved,
+      currentVerifiedState: documentVerified,
+      willAutoCheck: allApproved && !documentVerified,
+    });
+
+    if (allApproved && !documentVerified) {
+      setDocumentVerified(true);
+      console.log(
+        '✅ Auto-checked verification - all documents approved by staff'
+      );
+    }
+  }, [customerDocuments, documentVerified]);
 
   // ==========================================
   // 📡 API FUNCTIONS
@@ -1818,17 +1868,15 @@ export default function CheckInCar() {
                 <CardContent className='space-y-4'>
                   <div className='grid grid-cols-1 gap-4 text-sm md:grid-cols-2'>
                     <div>
-                      <span className='text-muted-foreground'>Booking:</span>
-                      <p className='font-medium'>{booking.booking_id}</p>
-                    </div>
-                    <div>
                       <span className='text-muted-foreground'>Customer:</span>
-                      <p className='font-medium'>{booking.renter?.full_name}</p>
+                      <p className='font-medium'>
+                        {booking.user?.name || booking.renter?.name || 'N/A'}
+                      </p>
                     </div>
                     <div>
                       <span className='text-muted-foreground'>Vehicle:</span>
                       <p className='font-medium'>
-                        {booking.vehicle?.brand} {booking.vehicle?.model}
+                        {booking.vehicle?.model || 'N/A'}
                       </p>
                     </div>
                     <div>
@@ -1836,7 +1884,7 @@ export default function CheckInCar() {
                         License Plate:
                       </span>
                       <p className='font-medium'>
-                        {booking.vehicle?.license_plate}
+                        {booking.vehicle?.licensePlate || 'N/A'}
                       </p>
                     </div>
                     <div>
@@ -2208,16 +2256,6 @@ export default function CheckInCar() {
           </DialogHeader>
           {checkInSummary && (
             <div className='space-y-4'>
-              {checkInSummary.inspectionId && (
-                <div className='p-4 border border-green-200 rounded-lg bg-green-50 dark:bg-green-900/20'>
-                  <p className='text-sm text-green-800 dark:text-green-200'>
-                    Inspection ID:{' '}
-                    <span className='font-mono font-bold'>
-                      {checkInSummary.inspectionId}
-                    </span>
-                  </p>
-                </div>
-              )}
               <div className='grid grid-cols-2 gap-4 text-sm'>
                 <div>
                   <span className='text-muted-foreground'>Time:</span>
