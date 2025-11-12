@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, X, Upload, CheckCircle, FileText } from 'lucide-react';
 import {
@@ -26,11 +26,24 @@ export function CreateContractModal({
   const { user } = useAuth();
 
   const [formData, setFormData] = useState({
-    renterName: booking?.renters?.name || booking?.user?.name || '',
+    renterName: '',
     witnessName: user?.name || '',
     notes: '',
     file: null,
   });
+
+  // Update form data when booking changes
+  useEffect(() => {
+    if (booking) {
+      const renterName = booking?.user?.name || booking?.renters?.name || booking?.renter?.name || '';
+      console.log('📝 Setting renter name:', renterName);
+      setFormData(prev => ({
+        ...prev,
+        renterName: renterName,
+        witnessName: user?.name || prev.witnessName,
+      }));
+    }
+  }, [booking, user]);
 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -258,18 +271,16 @@ export function CreateContractModal({
 
           {/* Booking Info */}
           <div
-            className={`p-4 border-2 rounded-lg ${
-              isUploadOnly
-                ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
-                : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
-            }`}
+            className={`p-4 border-2 rounded-lg ${isUploadOnly
+              ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+              : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
+              }`}
           >
             <h3
-              className={`font-semibold text-sm mb-2 ${
-                isUploadOnly
-                  ? 'text-blue-900 dark:text-blue-100'
-                  : 'text-amber-900 dark:text-amber-100'
-              }`}
+              className={`font-semibold text-sm mb-2 ${isUploadOnly
+                ? 'text-blue-900 dark:text-blue-100'
+                : 'text-amber-900 dark:text-amber-100'
+                }`}
             >
               {isUploadOnly
                 ? 'Contract & Booking Information'
@@ -287,27 +298,29 @@ export function CreateContractModal({
                 </div>
               )}
               <div>
-                <span className='text-muted-foreground'>Booking ID:</span>
-                <span className='ml-2 font-medium text-foreground'>
-                  {booking?.id}
-                </span>
-              </div>
-              <div>
                 <span className='text-muted-foreground'>Customer:</span>
                 <span className='ml-2 font-medium text-foreground'>
-                  {booking?.renters?.name || booking?.user?.name || 'N/A'}
+                  {booking?.user?.name || booking?.renters?.name || booking?.renter?.name || 'Unknown'}
                 </span>
               </div>
+              {(booking?.user?.phone || booking?.renter?.phone || booking?.user?.email) && (
+                <div>
+                  <span className='text-muted-foreground'>Contact:</span>
+                  <span className='ml-2 font-medium text-foreground'>
+                    {booking?.user?.phone || booking?.renter?.phone || booking?.user?.email}
+                  </span>
+                </div>
+              )}
               <div>
                 <span className='text-muted-foreground'>Vehicle:</span>
                 <span className='ml-2 font-medium text-foreground'>
-                  {booking?.vehicle?.model || 'N/A'}
+                  {booking?.vehicle?.brand} {booking?.vehicle?.model || 'Unknown'}
                 </span>
               </div>
               <div>
                 <span className='text-muted-foreground'>License Plate:</span>
                 <span className='ml-2 font-medium text-foreground'>
-                  {booking?.vehicle?.licensePlate || 'N/A'}
+                  {booking?.vehicle?.licensePlate || 'Unknown'}
                 </span>
               </div>
             </div>

@@ -183,9 +183,23 @@ export function ContractUploadPage() {
   }, [activeTab, existingPage, existingStatusFilter]);
 
   // ========== HANDLERS ==========
-  const handleCreateContract = booking => {
-    setSelectedBooking(booking);
-    setShowUploadModal(true);
+  const handleCreateContract = async booking => {
+    try {
+      // Fetch full booking details to ensure we have customer info
+      const response = await apiClient.get(endpoints.bookings.getById(booking.id));
+      const fullBooking = response?.data?.booking || response?.data || booking;
+
+      console.log('📋 Full booking data:', fullBooking);
+
+      setSelectedBooking(fullBooking);
+      setShowUploadModal(true);
+    } catch (error) {
+      console.error('Error fetching booking details:', error);
+      toast.error('Failed to load booking details');
+      // Fallback to using the booking data we have
+      setSelectedBooking(booking);
+      setShowUploadModal(true);
+    }
   };
 
   const handleViewContract = contract => {
@@ -384,8 +398,8 @@ export function ContractUploadPage() {
                                   #
                                   {String(
                                     (existingPage - 1) * existingLimit +
-                                      index +
-                                      1
+                                    index +
+                                    1
                                   ).padStart(3, '0')}
                                 </span>
                               </td>
@@ -536,11 +550,13 @@ export function ContractUploadPage() {
                             <td className='px-4 py-3'>
                               <div>
                                 <p className='font-medium'>
-                                  {booking.user?.name || 'N/A'}
+                                  {booking.user?.name || booking.renter?.name || 'Unknown'}
                                 </p>
-                                <p className='text-xs text-muted-foreground'>
-                                  {booking.user?.phone || 'N/A'}
-                                </p>
+                                {(booking.user?.phone || booking.renter?.phone || booking.user?.email) && (
+                                  <p className='text-xs text-muted-foreground'>
+                                    {booking.user?.phone || booking.renter?.phone || booking.user?.email}
+                                  </p>
+                                )}
                               </div>
                             </td>
                             <td className='px-4 py-3'>
