@@ -1186,18 +1186,18 @@ export default function CheckInCar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedStation, assignedStationIds]);
 
-  // Fetch customer documents when booking changes
+  // Fetch customer documents when booking changes OR when entering step 4
   useEffect(() => {
-    if (bookingId) {
+    if (bookingId && currentStep === 4) {
       setLoadingDocuments(true);
       fetchCustomerDocuments(bookingId);
-    } else {
+    } else if (!bookingId) {
       // Reset when no booking selected
       setCustomerDocuments([]);
       setLoadingDocuments(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bookingId]);
+  }, [bookingId, currentStep]);
 
   // ==========================================
   // 📡 API FUNCTIONS
