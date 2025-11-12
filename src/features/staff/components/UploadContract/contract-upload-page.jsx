@@ -36,7 +36,7 @@ import {
 import { endpoints } from '../../../shared/lib/endpoints';
 import { apiClient } from '../../../shared/lib/apiClient';
 import { toast } from 'sonner';
-import { ContractUploadForm } from './contract-upload-form';
+import { CreateContractModal } from '../CreateContractModal';
 import { useAuth } from '../../../../app/providers/AuthProvider';
 import { useBooking } from '../../../booking/hooks/useBooking';
 
@@ -183,9 +183,23 @@ export function ContractUploadPage() {
   }, [activeTab, existingPage, existingStatusFilter]);
 
   // ========== HANDLERS ==========
-  const handleCreateContract = booking => {
-    setSelectedBooking(booking);
-    setShowUploadModal(true);
+  const handleCreateContract = async booking => {
+    try {
+      // Fetch full booking details to ensure we have customer info
+      const response = await apiClient.get(endpoints.bookings.getById(booking.id));
+      const fullBooking = response?.data?.booking || response?.data || booking;
+
+      console.log('📋 Full booking data:', fullBooking);
+
+      setSelectedBooking(fullBooking);
+      setShowUploadModal(true);
+    } catch (error) {
+      console.error('Error fetching booking details:', error);
+      toast.error('Failed to load booking details');
+      // Fallback to using the booking data we have
+      setSelectedBooking(booking);
+      setShowUploadModal(true);
+    }
   };
 
   const handleViewContract = contract => {
@@ -384,8 +398,8 @@ export function ContractUploadPage() {
                                   #
                                   {String(
                                     (existingPage - 1) * existingLimit +
-                                      index +
-                                      1
+                                    index +
+                                    1
                                   ).padStart(3, '0')}
                                 </span>
                               </td>
@@ -536,11 +550,13 @@ export function ContractUploadPage() {
                             <td className='px-4 py-3'>
                               <div>
                                 <p className='font-medium'>
-                                  {booking.user?.name || 'N/A'}
+                                  {booking.user?.name || booking.renter?.name || 'Unknown'}
                                 </p>
-                                <p className='text-xs text-muted-foreground'>
-                                  {booking.user?.phone || 'N/A'}
-                                </p>
+                                {(booking.user?.phone || booking.renter?.phone || booking.user?.email) && (
+                                  <p className='text-xs text-muted-foreground'>
+                                    {booking.user?.phone || booking.renter?.phone || booking.user?.email}
+                                  </p>
+                                )}
                               </div>
                             </td>
                             <td className='px-4 py-3'>
@@ -594,62 +610,17 @@ export function ContractUploadPage() {
         </Tabs>
       </div>
 
-      {/* Upload Modal */}
-      {showUploadModal && selectedBooking && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50'>
-          <Card className='w-full max-w-2xl max-h-[90vh] overflow-y-auto'>
-            <div className='p-6'>
-              <div className='flex items-center justify-between mb-6'>
-                <h2 className='text-2xl font-bold'>Create Contract</h2>
-                <button
-                  onClick={() => setShowUploadModal(false)}
-                  className='text-muted-foreground hover:text-foreground'
-                >
-                  <X className='w-6 h-6' />
-                </button>
-              </div>
-
-              <div className='p-4 mb-6 space-y-3 border rounded-lg bg-muted/50'>
-                <div className='grid grid-cols-2 gap-4'>
-                  <div>
-                    <p className='text-sm text-muted-foreground'>Customer</p>
-                    <p className='font-semibold'>
-                      {selectedBooking.user?.name || 'N/A'}
-                    </p>
-                    <p className='text-xs text-muted-foreground'>
-                      {selectedBooking.user?.phone || 'N/A'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className='text-sm text-muted-foreground'>Vehicle</p>
-                    <p className='font-semibold'>
-                      {selectedBooking.vehicle?.licensePlate || 'N/A'}
-                    </p>
-                    <p className='text-xs text-muted-foreground'>
-                      {selectedBooking.vehicle?.brand}{' '}
-                      {selectedBooking.vehicle?.model}
-                    </p>
-                  </div>
-                  <div className='col-span-2'>
-                    <p className='text-sm text-muted-foreground'>Branch</p>
-                    <p className='font-semibold'>
-                      {selectedBooking.station?.name || 'N/A'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <ContractUploadForm
-                bookingId={selectedBooking.id}
-                contractId={null}
-                customerName={selectedBooking.user?.name}
-                onSuccess={handleUploadSuccess}
-                onCancel={() => setShowUploadModal(false)}
-              />
-            </div>
-          </Card>
-        </div>
-      )}
+      {/* ✨ Contract Upload Modal - Using CreateContractModal */}
+      <CreateContractModal
+        booking={selectedBooking}
+        existingContract={null}
+        isOpen={showUploadModal && !!selectedBooking}
+        onClose={() => {
+          setShowUploadModal(false);
+          setSelectedBooking(null);
+        }}
+        onSuccess={handleUploadSuccess}
+      />
 
       {/* Contract Detail Modal */}
       {showDetailModal && selectedContract && (

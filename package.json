@@ -19,10 +19,6 @@
   },
   "overrides": {
     "debug": "4.4.1",
-    "chalk": "5.3.0",
-    "ansi-styles": "6.2.1",
-    "color-convert": "2.0.1",
-    "color-name": "2.0.0",
     "@babel/core": "7.25.9",
     "@babel/traverse": "7.25.9",
     "@babel/helper-module-transforms": "7.25.9",
