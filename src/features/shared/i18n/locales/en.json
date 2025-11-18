@@ -1203,6 +1203,7 @@
       },
       "paymentHistory": "Payment History",
       "payment": "Payment",
+      "paymentEvidence": "Cash Payment Evidence",
       "status": "Status",
       "close": "Close",
       "na": "N/A",
@@ -1669,7 +1670,9 @@
     },
     "toasts": {
       "approveSuccess": "Document approved successfully",
-      "rejectSuccess": "Document rejected successfully"
+      "rejectSuccess": "Document rejected successfully",
+      "batchApproveSuccess": "Batch documents approved successfully",
+      "batchRejectSuccess": "Batch documents rejected successfully"
     },
     "errors": {
       "fetchFailed": "Failed to fetch documents",
