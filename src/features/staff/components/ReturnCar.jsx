@@ -335,7 +335,7 @@ export default function ReturnCar() {
 
         if (!uniqueIds.length) {
           setLocationError(
-            'Bạn chưa được phân công trạm. Vui lòng liên hệ quản trị.'
+            'You have not been assigned a station. Please contact the administrator.'
           );
         } else {
           setLocationError('');
@@ -380,7 +380,6 @@ export default function ReturnCar() {
         : fallback;
       setSelectedReturnStationId(nextId);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allowedStations, booking?.pickupStation?.id]);
 
   // Helper: reset all fields to initial state
@@ -723,7 +722,6 @@ export default function ReturnCar() {
         }
       } catch (err) {
         console.warn('Create inspection error:', err?.message || err);
-        // Không chặn luồng; vẫn tiến hành hoàn tất đơn thuê
       }
 
       // TÍNH TỔNG TIỀN VÀ PHÍ TRẢ TRỄ TRƯỚC
@@ -762,7 +760,7 @@ export default function ReturnCar() {
         const basePrice = dailyCost + hourlyCost;
         const effectiveHourly =
           overtimeHours > 0 ? basePrice / overtimeHours : 0;
-        const OVERTIME_MULTIPLIER = 1.5; // khớp mặc định backend
+        const OVERTIME_MULTIPLIER = 1.5;
         overtimeAmount =
           Math.round(
             effectiveHourly * OVERTIME_MULTIPLIER * overtimeHours * 100
@@ -795,12 +793,11 @@ export default function ReturnCar() {
 
       // Không reset form ngay để giữ lại dữ liệu cho bước thanh toán
     } catch (e) {
-      // Hiển thị thông báo lỗi rõ ràng cho các trường hợp 400 (Validation) và 409 (Idempotent)
       const status = e?.status ?? e?.response?.status;
       const serverMsg = e?.response?.data?.message || e?.message;
       const serverErrors = e?.response?.data?.errors;
 
-      // Nếu backend trả về chi tiết lỗi theo từng trường, hiển thị cụ thể
+      // Hiển thị cụ thể lỗi backend
       if (serverErrors) {
         const locErr = serverErrors.actualReturnLocation?.msg;
         const odoErr = serverErrors.returnOdometer?.msg;
@@ -816,7 +813,7 @@ export default function ReturnCar() {
         }
       }
 
-      // Trường hợp 400 nhưng không có errors chi tiết: suy luận và hiển thị thông báo thân thiện
+      // Trường hợp 400 nhưng không có errors chi tiết
       if (status === 400) {
         try {
           const refStart = new Date(
@@ -914,7 +911,7 @@ export default function ReturnCar() {
         const msg =
           response?.message ||
           response?.data?.message ||
-          'Không nhận được link thanh toán từ máy chủ';
+          'Did not receive payment link from the server';
         toast.error(
           `${msg}. Please try again or check your login permissions.`
         );
@@ -923,7 +920,7 @@ export default function ReturnCar() {
       console.error('Payment creation failed:', error);
       const serverMsg = error?.response?.data?.message || error?.message;
       toast.error(
-        `Tạo link thanh toán thất bại: ${serverMsg || 'Lỗi không xác định'}`
+        `Failed to create payment link: ${serverMsg || 'Unknown error'}`
       );
     } finally {
       setPaymentLoading(false);
@@ -1204,7 +1201,7 @@ export default function ReturnCar() {
         </CardContent>
       </Card>
 
-      {/* Step 2b: Thông tin trả xe theo schema */}
+      {/* Thông tin trả xe*/}
       <Card>
         <CardHeader>
           <CardTitle>{t('staffReturnCar.returnDetails.title')}</CardTitle>
@@ -1302,7 +1299,7 @@ export default function ReturnCar() {
         </CardContent>
       </Card>
 
-      {/* Step 2: Kiểm tra xe */}
+      {/* Kiểm tra xe */}
       <Card>
         <CardHeader>
           <CardTitle>{t('staffReturnCar.inspection.title')}</CardTitle>
@@ -1495,7 +1492,7 @@ export default function ReturnCar() {
         </CardContent>
       </Card>
 
-      {/* Step 4: Cập nhật booking và xe */}
+      {/* Cập nhật booking và xe */}
       <Card>
         <CardHeader>
           <CardTitle>{t('staffReturnCar.complete.title')}</CardTitle>
@@ -1557,7 +1554,7 @@ export default function ReturnCar() {
                 <div className='pt-2 border-t'>
                   <p className='text-sm font-medium'>
                     {t('staffReturnCar.modal.overtime.title', {
-                      defaultValue: 'Phí trả trễ',
+                      defaultValue: 'Over time fee',
                     })}
                   </p>
                   <div className='mt-2 space-y-1 text-sm'>
@@ -1565,7 +1562,7 @@ export default function ReturnCar() {
                       <div className='flex justify-between'>
                         <span>
                           {t('staffReturnCar.modal.overtime.hours', {
-                            defaultValue: 'Giờ trễ',
+                            defaultValue: 'Over time hours',
                           })}
                         </span>
                         <span className='font-medium'>
@@ -1577,7 +1574,7 @@ export default function ReturnCar() {
                       <div className='flex justify-between'>
                         <span>
                           {t('staffReturnCar.modal.overtime.amount', {
-                            defaultValue: 'Số tiền trễ',
+                            defaultValue: 'Over time amount',
                           })}
                         </span>
                         <span className='font-medium'>
