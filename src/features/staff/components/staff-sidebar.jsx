@@ -470,7 +470,10 @@ export function StaffSidebar({
                 // Render as standalone menu item
                 return (
                   <SidebarMenuItem key={item.id}>
-                    <SidebarMenuButton>
+                    <SidebarMenuButton
+                      onClick={() => setActiveTab(item.id)}
+                      aria-current={activeTab === item.id ? 'page' : undefined}
+                    >
                       {item.icon}
                       <span>{translateLabel(item.label)}</span>
                     </SidebarMenuButton>
