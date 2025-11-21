@@ -216,6 +216,7 @@
       "selectLabel": "Select booking",
       "selectPlaceholder": "Choose an eligible booking",
       "searchPlaceholder": "Search bookings...",
+      "foundCount": "{{count}} booking found",
       "depositLabel": "Deposit (VND)",
       "customer": "Customer",
       "vehicle": "Vehicle License Plate",
@@ -285,6 +286,7 @@
       "description": "Payment details for this return",
       "vehicle": "Vehicle",
       "payableVND": "Amount payable (VND)",
+      "depositHandled": "Deposit handled",
       "pricingTitle": "Vehicle pricing",
       "pricing": {
         "hourly": "Hourly rate",
@@ -292,7 +294,8 @@
         "weekly": "Weekly rate",
         "monthly": "Monthly rate",
         "insurance": "Insurance fee",
-        "deposit": "Deposit"
+        "deposit": "Deposit",
+        "depositApplied": "Deposit applied"
       },
       "payment": {
         "methodTitle": "Payment method",
@@ -1200,6 +1203,7 @@
       },
       "paymentHistory": "Payment History",
       "payment": "Payment",
+      "paymentEvidence": "Cash Payment Evidence",
       "status": "Status",
       "close": "Close",
       "na": "N/A",
@@ -1666,7 +1670,9 @@
     },
     "toasts": {
       "approveSuccess": "Document approved successfully",
-      "rejectSuccess": "Document rejected successfully"
+      "rejectSuccess": "Document rejected successfully",
+      "batchApproveSuccess": "Batch documents approved successfully",
+      "batchRejectSuccess": "Batch documents rejected successfully"
     },
     "errors": {
       "fetchFailed": "Failed to fetch documents",

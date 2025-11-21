@@ -781,6 +781,65 @@ export function BookingDetails({ open, onOpenChange, booking }) {
                           </div>
                         )}
                       </div>
+
+                      {payment.paymentMethod &&
+                        String(payment.paymentMethod).toUpperCase() === 'CASH' &&
+                        (() => {
+                          const urls = [];
+                          const push = u => {
+                            const abs = makeAbsoluteUrl(u);
+                            if (abs) urls.push(abs);
+                          };
+                          push(payment.evidenceUrl);
+                          push(payment.cashEvidenceUrl);
+                          if (Array.isArray(payment.evidenceUrls)) {
+                            payment.evidenceUrls.forEach(x => push(x));
+                          }
+                          if (Array.isArray(payment.evidences)) {
+                            payment.evidences.forEach(x =>
+                              push(typeof x === 'string' ? x : x?.url)
+                            );
+                          }
+                          if (Array.isArray(payment.evidence)) {
+                            payment.evidence.forEach(x =>
+                              push(typeof x === 'string' ? x : x?.url)
+                            );
+                          } else if (typeof payment.evidence === 'string') {
+                            push(payment.evidence);
+                          } else if (payment.evidence?.url) {
+                            push(payment.evidence.url);
+                          }
+                          const unique = Array.from(new Set(urls));
+                          return (
+                            <div className='space-y-2 mt-3'>
+                              <Label>{t('booking.details.paymentEvidence')}</Label>
+                              {unique.length > 0 ? (
+                                <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2'>
+                                  {unique.map((url, idx) => (
+                                    <div
+                                      key={`cash-evidence-${idx}`}
+                                      className='rounded-md overflow-hidden border bg-muted/40'
+                                    >
+                                      <img
+                                        src={url}
+                                        alt={`cash-evidence-${idx + 1}`}
+                                        className='w-full h-24 object-cover'
+                                        loading='lazy'
+                                        onError={e => {
+                                          e.currentTarget.style.display = 'none';
+                                        }}
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className='p-2 border rounded-md bg-muted/50 min-h-[36px] flex items-center'>
+                                  {t('booking.details.na')}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                     </div>
                   </div>
                 </div>

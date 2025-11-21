@@ -100,8 +100,7 @@ export default function StaffManagement() {
   const getStaffAssignments = staffId =>
     assignments.filter(
       assignment =>
-        assignment.userId === staffId ||
-        assignment.user?.id === staffId
+        assignment.userId === staffId || assignment.user?.id === staffId
     );
 
   const getStatusBadgeVariant = status => {
@@ -128,8 +127,7 @@ export default function StaffManagement() {
       if (staffAssignments.length > 0) {
         // If staff is assigned, show warning and unassign first
         const stationCount = staffAssignments.length;
-        const stationText =
-          stationCount === 1 ? 'station' : 'stations';
+        const stationText = stationCount === 1 ? 'station' : 'stations';
         const confirmUnassign = window.confirm(
           `This staff is currently assigned to ${stationCount} ${stationText}. They must be unassigned before deletion. Do you want to unassign all and delete?`
         );
@@ -151,8 +149,9 @@ export default function StaffManagement() {
             console.error('Failed to unassign staff:', unassignErr);
             toast.error(
               'Failed to unassign staff: ' +
-              (unassignErr?.response?.data?.message ||
-                unassignErr?.message)
+                (unassignErr?.response?.data?.message || unassignErr?.message)(
+                  unassignErr?.response?.data?.message || unassignErr?.message
+                )
             );
             return; // Stop deletion if unassign fails
           }
@@ -308,13 +307,13 @@ export default function StaffManagement() {
       {/* Summary Stats */}
       <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
         <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>{staff.length}</div>
+          <div className='text-2xl font-bold text-gray-600'>{staff.length}</div>
           <div className='text-sm text-muted-foreground'>
             {t('staffManagement.stats.total')}
           </div>
         </div>
         <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>
+          <div className='text-2xl font-bold text-green-600'>
             {staff.filter(s => s.accountStatus === 'ACTIVE').length}
           </div>
           <div className='text-sm text-muted-foreground'>
@@ -322,7 +321,7 @@ export default function StaffManagement() {
           </div>
         </div>
         <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>
+          <div className='text-2xl font-bold text-orange-600'>
             {staff.filter(s => s.role === 'STAFF').length}
           </div>
           <div className='text-sm text-muted-foreground'>
@@ -330,7 +329,7 @@ export default function StaffManagement() {
           </div>
         </div>
         <div className='rounded-lg border p-4'>
-          <div className='text-2xl font-bold'>
+          <div className='text-2xl font-bold text-yellow-600'>
             {staff.filter(s => s.role === 'ADMIN').length}
           </div>
           <div className='text-sm text-muted-foreground'>
@@ -402,7 +401,9 @@ export default function StaffManagement() {
                   </TableCell>
                   <TableCell>
                     {(() => {
-                      const staffAssignments = getStaffAssignments(staffItem.id);
+                      const staffAssignments = getStaffAssignments(
+                        staffItem.id
+                      );
                       if (staffAssignments.length === 0) {
                         return (
                           <Badge variant='outline' className='text-gray-500'>
@@ -481,7 +482,9 @@ export default function StaffManagement() {
                                     >
                                       {t('staffManagement.actions.unassign')} -{' '}
                                       {assignment.station?.name ||
-                                        t('staffManagement.table.unknownStation')}
+                                        t(
+                                          'staffManagement.table.unknownStation'
+                                        )}
                                     </DropdownMenuItem>
                                   ))
                                 )}
