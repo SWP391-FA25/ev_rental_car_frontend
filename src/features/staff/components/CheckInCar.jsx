@@ -94,7 +94,7 @@ function ProgressIndicator({ currentStep }) {
                   'w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-all',
                   isCompleted && 'bg-primary text-primary-foreground',
                   isActive &&
-                    'bg-primary text-primary-foreground ring-4 ring-primary/20',
+                  'bg-primary text-primary-foreground ring-4 ring-primary/20',
                   !isActive && !isCompleted && 'bg-muted text-muted-foreground'
                 )}
               >
@@ -234,13 +234,13 @@ function BookingSelector({
                       <span>
                         {booking.startTime
                           ? new Date(booking.startTime).toLocaleDateString(
-                              'en-US',
-                              {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric',
-                              }
-                            )
+                            'en-US',
+                            {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                            }
+                          )
                           : 'Invalid Date'}
                       </span>
                     </div>
@@ -721,9 +721,9 @@ function DocumentVerification({
   ];
 
   // Check completion status - Server trả về documentType, không phải document_type
-  // Must be APPROVED to count as verified
+  // Accept documents regardless of status (staff has uploaded them)
   const hasIdCard = customerDocuments?.some(
-    d => d.documentType === 'ID_CARD' && d.status === 'APPROVED'
+    d => d.documentType === 'ID_CARD'
   );
   const hasLicense = customerDocuments?.some(
     d => d.documentType === 'DRIVERS_LICENSE' && d.status === 'APPROVED'
@@ -738,6 +738,11 @@ function DocumentVerification({
     loadingDocuments,
     customerDocuments,
     documentCount: customerDocuments?.length,
+    documentDetails: customerDocuments?.map(d => ({
+      type: d.documentType,
+      status: d.status,
+      fileName: d.fileName,
+    })),
     documentDetails: customerDocuments?.map(d => ({
       type: d.documentType,
       status: d.status,
@@ -765,362 +770,610 @@ function DocumentVerification({
             <div className='flex flex-col items-center justify-center gap-4'>
               <div className='w-12 h-12 border-4 border-blue-600 rounded-full border-t-transparent animate-spin' />
               <div className='text-center'>
-                <p className='text-sm font-semibold text-blue-900 dark:text-blue-100'>
-                  Loading Documents...
-                </p>
-                <p className='mt-1 text-xs text-blue-700 dark:text-blue-200'>
-                  Fetching customer documents from server
-                </p>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* Alert for missing documents */}
-            {!allDocumentsPresent && (
-              <div className='p-4 border rounded-lg bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'>
-                <div className='flex items-start gap-3'>
-                  <AlertCircle className='w-5 h-5 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5' />
-                  <div className='flex-1'>
-                    <p className='text-sm font-semibold text-amber-900 dark:text-amber-100'>
-                      Incomplete Documents
-                    </p>
-                    <p className='mt-1 text-xs text-amber-700 dark:text-amber-200'>
-                      Customer has not uploaded{' '}
-                      {missingDocs.map(d => d.label).join(', ')}. You can upload
-                      on behalf of the customer below.
-                    </p>
+                {/* Loading State - Hide everything else when loading */}
+                {loadingDocuments ? (
+                  <div className='p-8 border border-blue-200 rounded-lg bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800'>
+                    <div className='flex flex-col items-center justify-center gap-4'>
+                      <div className='w-12 h-12 border-4 border-blue-600 rounded-full border-t-transparent animate-spin' />
+                      <div className='text-center'>
+                        <p className='text-sm font-semibold text-blue-900 dark:text-blue-100'>
+                          Loading Documents...
+                        </p>
+                        <p className='mt-1 text-xs text-blue-700 dark:text-blue-200'>
+                          Fetching customer documents from server
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            )}
-
-            {/* Document List */}
-            <div className='space-y-3'>
-              {documentTypes.map(
-                // eslint-disable-next-line no-unused-vars
-                ({ type, label, icon: IconComponent, required }) => {
-                  const doc = customerDocuments?.find(
-                    d => d.documentType === type
-                  );
-
-                  return (
-                    <div
-                      key={type}
-                      className={cn(
-                        'p-4 border-2 rounded-lg transition-all',
-                        doc
-                          ? 'border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/10'
-                          : 'border-border hover:border-primary/50'
-                      )}
-                    >
-                      <div className='flex items-center justify-between'>
-                        <div className='flex items-center flex-1 gap-3'>
-                          <div
-                            className={cn(
-                              'w-10 h-10 rounded-full flex items-center justify-center transition-all',
-                              doc
-                                ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-500'
-                                : 'bg-muted text-muted-foreground'
-                            )}
-                          >
-                            {doc ? (
-                              <CheckCircle2 className='w-5 h-5' />
-                            ) : (
-                              <IconComponent className='w-5 h-5' />
-                            )}
-                          </div>
-
-                          {/* Document Image Preview */}
-                          {doc?.fileUrl && (
-                            <div className='w-20 h-20 overflow-hidden transition-transform border-2 rounded-lg border-border shrink-0 hover:scale-105'>
-                              <img
-                                src={doc.thumbnailUrl || doc.fileUrl}
-                                alt={label}
-                                className='object-cover w-full h-full cursor-pointer'
-                                onClick={() => onViewDocument(doc)}
-                              />
-                            </div>
-                          )}
-
+                ) : (
+                  <>
+                    {/* Alert for missing documents */}
+                    {!allDocumentsPresent && (
+                      <div className='p-4 border rounded-lg bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'>
+                        <div className='flex items-start gap-3'>
+                          <AlertCircle className='w-5 h-5 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5' />
                           <div className='flex-1'>
-                            <div className='flex items-center gap-2'>
-                              <p className='font-medium'>{label}</p>
-                              {required && !doc && (
-                                <span className='text-xs text-destructive'>
-                                  *
-                                </span>
-                              )}
-                            </div>
-                            <p className='text-sm text-muted-foreground'>
-                              {doc ? (
-                                <>
-                                  Uploaded •{' '}
-                                  {new Date(doc.uploadedAt).toLocaleDateString(
-                                    'en-US'
-                                  )}
-                                </>
-                              ) : (
-                                'Not Available'
-                              )}
+                            <p className='text-sm font-semibold text-amber-900 dark:text-amber-100'>
+                              Incomplete Documents
                             </p>
-                            {/* Server auto-approve nếu staff upload */}
-                            {doc?.status === 'APPROVED' && (
-                              <p className='text-xs text-green-600 dark:text-green-500 mt-0.5'>
-                                ✓ Verified by staff
-                              </p>
-                            )}
+                            <p className='mt-1 text-xs text-amber-700 dark:text-amber-200'>
+                              Customer has not uploaded{' '}
+                              {missingDocs.map(d => d.label).join(', ')}. You can upload
+                              on behalf of the customer below.
+                            </p>
                           </div>
-                        </div>
-
-                        <div className='flex items-center gap-2'>
-                          {doc ? (
-                            <Button
-                              variant='outline'
-                              size='sm'
-                              onClick={() => onViewDocument(doc)}
-                            >
-                              <Eye className='w-4 h-4 mr-2' />
-                              Detail
-                            </Button>
-                          ) : (
-                            <Button
-                              variant='outline'
-                              size='sm'
-                              onClick={() => onUploadDocument(type)}
-                              disabled={uploadingDoc === type}
-                            >
-                              {uploadingDoc === type ? (
-                                <>
-                                  <div className='w-4 h-4 mr-2 border-2 border-current rounded-full border-t-transparent animate-spin' />
-                                  Uploading...
-                                </>
-                              ) : (
-                                <>
-                                  <Upload className='w-4 h-4 mr-2' />
-                                  Upload
-                                </>
-                              )}
-                            </Button>
-                          )}
                         </div>
                       </div>
+                    )}
+                    ) : (
+                    <>
+                      {/* Alert for missing documents */}
+                      {!allDocumentsPresent && (
+                        <div className='p-4 border rounded-lg bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'>
+                          <div className='flex items-start gap-3'>
+                            <AlertCircle className='w-5 h-5 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5' />
+                            <div className='flex-1'>
+                              <p className='text-sm font-semibold text-amber-900 dark:text-amber-100'>
+                                Incomplete Documents
+                              </p>
+                              <p className='mt-1 text-xs text-amber-700 dark:text-amber-200'>
+                                Customer has not uploaded{' '}
+                                {missingDocs.map(d => d.label).join(', ')}. You can upload
+                                on behalf of the customer below.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Document List */}
+                      <div className='space-y-3'>
+                        {documentTypes.map(
+                          // eslint-disable-next-line no-unused-vars
+                          ({ type, label, icon: IconComponent, required }) => {
+                            const doc = customerDocuments?.find(
+                              d => d.documentType === type
+                            );
+                            {/* Document List */ }
+                            <div className='space-y-3'>
+                              {documentTypes.map(
+                                // eslint-disable-next-line no-unused-vars
+                                ({ type, label, icon: IconComponent, required }) => {
+                                  const doc = customerDocuments?.find(
+                                    d => d.documentType === type
+                                  );
+
+                                  return (
+                                    <div
+                                      key={type}
+                                      className={cn(
+                                        'p-4 border-2 rounded-lg transition-all',
+                                        doc
+                                          ? 'border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/10'
+                                          : 'border-border hover:border-primary/50'
+                                      )}
+                                    >
+                                      <div className='flex items-center justify-between'>
+                                        <div className='flex items-center flex-1 gap-3'>
+                                          <div
+                                            className={cn(
+                                              'w-10 h-10 rounded-full flex items-center justify-center transition-all',
+                                              doc
+                                                ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-500'
+                                                : 'bg-muted text-muted-foreground'
+                                            )}
+                                          >
+                                            {doc ? (
+                                              <CheckCircle2 className='w-5 h-5' />
+                                            ) : (
+                                              <IconComponent className='w-5 h-5' />
+                                            )}
+                                          </div>
+                                          return (
+                                          <div
+                                            key={type}
+                                            className={cn(
+                                              'p-4 border-2 rounded-lg transition-all',
+                                              doc
+                                                ? 'border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/10'
+                                                : 'border-border hover:border-primary/50'
+                                            )}
+                                          >
+                                            <div className='flex items-center justify-between'>
+                                              <div className='flex items-center flex-1 gap-3'>
+                                                <div
+                                                  className={cn(
+                                                    'w-10 h-10 rounded-full flex items-center justify-center transition-all',
+                                                    doc
+                                                      ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-500'
+                                                      : 'bg-muted text-muted-foreground'
+                                                  )}
+                                                >
+                                                  {doc ? (
+                                                    <CheckCircle2 className='w-5 h-5' />
+                                                  ) : (
+                                                    <IconComponent className='w-5 h-5' />
+                                                  )}
+                                                </div>
+
+                                                {/* Document Image Preview */}
+                                                {doc?.fileUrl && (
+                                                  <div className='w-20 h-20 overflow-hidden transition-transform border-2 rounded-lg border-border shrink-0 hover:scale-105'>
+                                                    <img
+                                                      src={doc.thumbnailUrl || doc.fileUrl}
+                                                      alt={label}
+                                                      className='object-cover w-full h-full cursor-pointer'
+                                                      onClick={() => onViewDocument(doc)}
+                                                    />
+                                                  </div>
+                                                )}
+                                                {/* Document Image Preview */}
+                                                {doc?.fileUrl && (
+                                                  <div className='w-20 h-20 overflow-hidden transition-transform border-2 rounded-lg border-border shrink-0 hover:scale-105'>
+                                                    <img
+                                                      src={doc.thumbnailUrl || doc.fileUrl}
+                                                      alt={label}
+                                                      className='object-cover w-full h-full cursor-pointer'
+                                                      onClick={() => onViewDocument(doc)}
+                                                    />
+                                                  </div>
+                                                )}
+
+                                                <div className='flex-1'>
+                                                  <div className='flex items-center gap-2'>
+                                                    <p className='font-medium'>{label}</p>
+                                                    {required && !doc && (
+                                                      <span className='text-xs text-destructive'>
+                                                        *
+                                                      </span>
+                                                    )}
+                                                  </div>
+                                                  <p className='text-sm text-muted-foreground'>
+                                                    {doc ? (
+                                                      <>
+                                                        Uploaded •{' '}
+                                                        {new Date(doc.uploadedAt).toLocaleDateString(
+                                                          'en-US'
+                                                        )}
+                                                      </>
+                                                    ) : (
+                                                      'Not Available'
+                                                    )}
+                                                  </p>
+                                                  {/* Server auto-approve nếu staff upload */}
+                                                  {doc?.status === 'APPROVED' && (
+                                                    <p className='text-xs text-green-600 dark:text-green-500 mt-0.5'>
+                                                      ✓ Verified by staff
+                                                    </p>
+                                                  )}
+                                                </div>
+                                              </div>
+                                              <div className='flex-1'>
+                                                <div className='flex items-center gap-2'>
+                                                  <p className='font-medium'>{label}</p>
+                                                  {required && !doc && (
+                                                    <span className='text-xs text-destructive'>
+                                                      *
+                                                    </span>
+                                                  )}
+                                                </div>
+                                                <p className='text-sm text-muted-foreground'>
+                                                  {doc ? (
+                                                    <>
+                                                      Uploaded •{' '}
+                                                      {new Date(doc.uploadedAt).toLocaleDateString(
+                                                        'en-US'
+                                                      )}
+                                                    </>
+                                                  ) : (
+                                                    'Not Available'
+                                                  )}
+                                                </p>
+                                                {/* Server auto-approve nếu staff upload */}
+                                                {doc?.status === 'APPROVED' && (
+                                                  <p className='text-xs text-green-600 dark:text-green-500 mt-0.5'>
+                                                    ✓ Verified by staff
+                                                  </p>
+                                                )}
+                                              </div>
+                                            </div>
+
+                                            <div className='flex items-center gap-2'>
+                                              {doc ? (
+                                                <Button
+                                                  variant='outline'
+                                                  size='sm'
+                                                  onClick={() => onViewDocument(doc)}
+                                                >
+                                                  <Eye className='w-4 h-4 mr-2' />
+                                                  Detail
+                                                </Button>
+                                              ) : (
+                                                <Button
+                                                  variant='outline'
+                                                  size='sm'
+                                                  onClick={() => onUploadDocument(type)}
+                                                  disabled={uploadingDoc === type}
+                                                >
+                                                  {uploadingDoc === type ? (
+                                                    <>
+                                                      <div className='w-4 h-4 mr-2 border-2 border-current rounded-full border-t-transparent animate-spin' />
+                                                      Uploading...
+                                                    </>
+                                                  ) : (
+                                                    <>
+                                                      <Upload className='w-4 h-4 mr-2' />
+                                                      Upload
+                                                    </>
+                                                  )}
+                                                </Button>
+                                              )}
+                                            </div>
+                                          </div>
+                                        </div>
+                                        );
+                }
+              )}
+                                      </div>
+                                      <div className='flex items-center gap-2'>
+                                        {doc ? (
+                                          <Button
+                                            variant='outline'
+                                            size='sm'
+                                            onClick={() => onViewDocument(doc)}
+                                          >
+                                            <Eye className='w-4 h-4 mr-2' />
+                                            Detail
+                                          </Button>
+                                        ) : (
+                                          <Button
+                                            variant='outline'
+                                            size='sm'
+                                            onClick={() => onUploadDocument(type)}
+                                            disabled={uploadingDoc === type}
+                                          >
+                                            {uploadingDoc === type ? (
+                                              <>
+                                                <div className='w-4 h-4 mr-2 border-2 border-current rounded-full border-t-transparent animate-spin' />
+                                                Uploading...
+                                              </>
+                                            ) : (
+                                              <>
+                                                <Upload className='w-4 h-4 mr-2' />
+                                                Upload
+                                              </>
+                                            )}
+                                          </Button>
+                                        )}
+                                      </div>
+                                    </div>
                     </div>
                   );
                 }
               )}
-            </div>
+                      </div>
 
-            <Separator />
+                      <Separator />
+                      <Separator />
 
-            {/* Document Status Summary */}
-            <div
-              className={cn(
-                'p-4 rounded-lg border-2',
-                allDocumentsPresent
-                  ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                  : 'bg-muted border-border'
-              )}
-            >
-              <div className='flex items-center gap-3'>
-                {allDocumentsPresent ? (
-                  <>
-                    <CheckCircle2 className='w-5 h-5 text-green-600 dark:text-green-500 shrink-0' />
-                    <div className='flex-1'>
-                      <p className='text-sm font-semibold text-green-900 dark:text-green-100'>
-                        All Documents Verified by Staff
-                      </p>
-                      <p className='text-xs text-green-700 dark:text-green-300 mt-0.5'>
-                        All required documents uploaded and auto-approved
-                      </p>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <AlertCircle className='w-5 h-5 text-muted-foreground shrink-0' />
-                    <div className='flex-1'>
-                      <p className='text-sm font-semibold'>
-                        Missing {missingDocs.length} document(s)
-                      </p>
-                      <p className='text-xs text-muted-foreground mt-0.5'>
-                        Need to upload:{' '}
-                        {missingDocs.map(d => d.label).join(', ')}
-                      </p>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
+                      {/* Document Status Summary */}
+                      <div
+                        className={cn(
+                          'p-4 rounded-lg border-2',
+                          allDocumentsPresent
+                            ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                            : 'bg-muted border-border'
+                        )}
+                      >
+                        <div className='flex items-center gap-3'>
+                          {allDocumentsPresent ? (
+                            <>
+                              <CheckCircle2 className='w-5 h-5 text-green-600 dark:text-green-500 shrink-0' />
+                              <div className='flex-1'>
+                                <p className='text-sm font-semibold text-green-900 dark:text-green-100'>
+                                  All Documents Verified by Staff
+                                </p>
+                                <p className='text-xs text-green-700 dark:text-green-300 mt-0.5'>
+                                  All required documents uploaded and auto-approved
+                                </p>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <AlertCircle className='w-5 h-5 text-muted-foreground shrink-0' />
+                              <div className='flex-1'>
+                                <p className='text-sm font-semibold'>
+                                  Missing {missingDocs.length} document(s)
+                                </p>
+                                <p className='text-xs text-muted-foreground mt-0.5'>
+                                  Need to upload:{' '}
+                                  {missingDocs.map(d => d.label).join(', ')}
+                                </p>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      {/* Document Status Summary */}
+                      <div
+                        className={cn(
+                          'p-4 rounded-lg border-2',
+                          allDocumentsPresent
+                            ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                            : 'bg-muted border-border'
+                        )}
+                      >
+                        <div className='flex items-center gap-3'>
+                          {allDocumentsPresent ? (
+                            <>
+                              <CheckCircle2 className='w-5 h-5 text-green-600 dark:text-green-500 shrink-0' />
+                              <div className='flex-1'>
+                                <p className='text-sm font-semibold text-green-900 dark:text-green-100'>
+                                  All Documents Verified by Staff
+                                </p>
+                                <p className='text-xs text-green-700 dark:text-green-300 mt-0.5'>
+                                  All required documents uploaded and auto-approved
+                                </p>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <AlertCircle className='w-5 h-5 text-muted-foreground shrink-0' />
+                              <div className='flex-1'>
+                                <p className='text-sm font-semibold'>
+                                  Missing {missingDocs.length} document(s)
+                                </p>
+                                <p className='text-xs text-muted-foreground mt-0.5'>
+                                  Need to upload:{' '}
+                                  {missingDocs.map(d => d.label).join(', ')}
+                                </p>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
 
-            {/* Verification Checkbox - Only enabled when all docs present */}
-            <div className='space-y-4'>
-              <div
-                className={cn(
-                  'p-4 rounded-lg border-2 transition-all',
-                  allDocumentsPresent
-                    ? documentVerified
-                      ? 'bg-primary/10 border-primary'
-                      : 'bg-primary/5 border-primary/20 hover:border-primary/50'
-                    : 'bg-muted/50 border-muted cursor-not-allowed'
-                )}
-              >
-                <div className='flex items-start gap-3'>
-                  <input
-                    type='checkbox'
-                    id='documentVerified'
-                    checked={documentVerified}
-                    onChange={e => setDocumentVerified(e.target.checked)}
-                    disabled={!allDocumentsPresent}
-                    className={cn(
-                      'mt-1 cursor-pointer',
-                      !allDocumentsPresent && 'cursor-not-allowed opacity-50'
-                    )}
-                  />
-                  <label
-                    htmlFor='documentVerified'
-                    className={cn(
-                      'flex-1',
-                      allDocumentsPresent
-                        ? 'cursor-pointer'
-                        : 'cursor-not-allowed'
-                    )}
-                  >
-                    <span className='font-medium'>
-                      I confirm that I have verified the customer's documents
-                    </span>
-                    <p className='mt-1 text-sm text-muted-foreground'>
-                      Documents include valid ID card and driver's license, are
-                      clear, match registration information, and meet rental
-                      requirements
-                    </p>
-                  </label>
-                </div>
-              </div>
+                      {/* Verification Checkbox - Only enabled when all docs present */}
+                      <div className='space-y-4'>
+                        <div
+                          className={cn(
+                            'p-4 rounded-lg border-2 transition-all',
+                            allDocumentsPresent
+                              ? documentVerified
+                                ? 'bg-primary/10 border-primary'
+                                : 'bg-primary/5 border-primary/20 hover:border-primary/50'
+                              : 'bg-muted/50 border-muted cursor-not-allowed'
+                          )}
+                        >
+                          <div className='flex items-start gap-3'>
+                            <input
+                              type='checkbox'
+                              id='documentVerified'
+                              checked={documentVerified}
+                              onChange={e => setDocumentVerified(e.target.checked)}
+                              disabled={!allDocumentsPresent}
+                              className={cn(
+                                'mt-1 cursor-pointer',
+                                !allDocumentsPresent && 'cursor-not-allowed opacity-50'
+                              )}
+                            />
+                            <label
+                              htmlFor='documentVerified'
+                              className={cn(
+                                'flex-1',
+                                allDocumentsPresent
+                                  ? 'cursor-pointer'
+                                  : 'cursor-not-allowed'
+                              )}
+                            >
+                              <span className='font-medium'>
+                                I confirm that I have verified the customer's documents
+                              </span>
+                              <p className='mt-1 text-sm text-muted-foreground'>
+                                Documents include valid ID card and driver's license, are
+                                clear, match registration information, and meet rental
+                                requirements
+                              </p>
+                            </label>
+                          </div>
+                        </div>
+                        {/* Verification Checkbox - Only enabled when all docs present */}
+                        <div className='space-y-4'>
+                          <div
+                            className={cn(
+                              'p-4 rounded-lg border-2 transition-all',
+                              allDocumentsPresent
+                                ? documentVerified
+                                  ? 'bg-primary/10 border-primary'
+                                  : 'bg-primary/5 border-primary/20 hover:border-primary/50'
+                                : 'bg-muted/50 border-muted cursor-not-allowed'
+                            )}
+                          >
+                            <div className='flex items-start gap-3'>
+                              <input
+                                type='checkbox'
+                                id='documentVerified'
+                                checked={documentVerified}
+                                onChange={e => setDocumentVerified(e.target.checked)}
+                                disabled={!allDocumentsPresent}
+                                className={cn(
+                                  'mt-1 cursor-pointer',
+                                  !allDocumentsPresent && 'cursor-not-allowed opacity-50'
+                                )}
+                              />
+                              <label
+                                htmlFor='documentVerified'
+                                className={cn(
+                                  'flex-1',
+                                  allDocumentsPresent
+                                    ? 'cursor-pointer'
+                                    : 'cursor-not-allowed'
+                                )}
+                              >
+                                <span className='font-medium'>
+                                  I confirm that I have verified the customer's documents
+                                </span>
+                                <p className='mt-1 text-sm text-muted-foreground'>
+                                  Documents include valid ID card and driver's license, are
+                                  clear, match registration information, and meet rental
+                                  requirements
+                                </p>
+                              </label>
+                            </div>
+                          </div>
 
-              {/* Validation Messages */}
-              {!allDocumentsPresent && (
-                <div className='flex items-start gap-2 text-sm text-amber-600 dark:text-amber-500'>
-                  <AlertCircle className='w-4 h-4 shrink-0 mt-0.5' />
-                  <span>
-                    Please upload all required documents before confirming
-                  </span>
-                </div>
-              )}
+                          {/* Validation Messages */}
+                          {!allDocumentsPresent && (
+                            <div className='flex items-start gap-2 text-sm text-amber-600 dark:text-amber-500'>
+                              <AlertCircle className='w-4 h-4 shrink-0 mt-0.5' />
+                              <span>
+                                Please upload all required documents before confirming
+                              </span>
+                            </div>
+                          )}
+                          {/* Validation Messages */}
+                          {!allDocumentsPresent && (
+                            <div className='flex items-start gap-2 text-sm text-amber-600 dark:text-amber-500'>
+                              <AlertCircle className='w-4 h-4 shrink-0 mt-0.5' />
+                              <span>
+                                Please upload all required documents before confirming
+                              </span>
+                            </div>
+                          )}
 
-              {allDocumentsPresent && !documentVerified && (
-                <div className='flex items-start gap-2 text-sm text-destructive'>
-                  <AlertCircle className='w-4 h-4 shrink-0 mt-0.5' />
-                  <span>
-                    Please confirm document verification before continuing
-                  </span>
-                </div>
-              )}
+                          {allDocumentsPresent && !documentVerified && (
+                            <div className='flex items-start gap-2 text-sm text-destructive'>
+                              <AlertCircle className='w-4 h-4 shrink-0 mt-0.5' />
+                              <span>
+                                Please confirm document verification before continuing
+                              </span>
+                            </div>
+                          )}
+                          {allDocumentsPresent && !documentVerified && (
+                            <div className='flex items-start gap-2 text-sm text-destructive'>
+                              <AlertCircle className='w-4 h-4 shrink-0 mt-0.5' />
+                              <span>
+                                Please confirm document verification before continuing
+                              </span>
+                            </div>
+                          )}
 
-              {documentVerified && (
-                <div className='flex items-start gap-2 text-sm text-green-600 dark:text-green-500'>
-                  <CheckCircle2 className='w-4 h-4 shrink-0 mt-0.5' />
-                  <span>
-                    Documents verified and auto-approved by staff upload
-                  </span>
-                </div>
-              )}
-            </div>
-          </>
+                          {documentVerified && (
+                            <div className='flex items-start gap-2 text-sm text-green-600 dark:text-green-500'>
+                              <CheckCircle2 className='w-4 h-4 shrink-0 mt-0.5' />
+                              <span>
+                                Documents verified and auto-approved by staff upload
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </>
         )}
-      </CardContent>
-    </Card>
-  );
+                      {documentVerified && (
+                        <div className='flex items-start gap-2 text-sm text-green-600 dark:text-green-500'>
+                          <CheckCircle2 className='w-4 h-4 shrink-0 mt-0.5' />
+                          <span>
+                            Documents verified and auto-approved by staff upload
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+            );
 }
 
-/**
- * ValidationSummary - Display validation errors
- */
-function ValidationSummary({ errors }) {
+            /**
+             * ValidationSummary - Display validation errors
+             */
+            function ValidationSummary({errors}) {
   const errorList = Object.entries(errors).filter(([, value]) => value);
 
-  if (errorList.length === 0) return null;
+            if (errorList.length === 0) return null;
 
-  return (
-    <Card className='border-destructive bg-destructive/5'>
-      <CardHeader>
-        <CardTitle className='flex items-center gap-2 text-destructive'>
-          <AlertCircle className='w-5 h-5' />
-          Please complete the following information
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ul className='space-y-2'>
-          {errorList.map(([field, error]) => (
-            <li key={field} className='flex items-start gap-2 text-sm'>
-              <X className='w-4 h-4 text-destructive shrink-0 mt-0.5' />
-              <span>{error}</span>
-            </li>
-          ))}
-        </ul>
-      </CardContent>
-    </Card>
-  );
+            return (
+            <Card className='border-destructive bg-destructive/5'>
+              <CardHeader>
+                <CardTitle className='flex items-center gap-2 text-destructive'>
+                  <AlertCircle className='w-5 h-5' />
+                  Please complete the following information
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className='space-y-2'>
+                  {errorList.map(([field, error]) => (
+                    <li key={field} className='flex items-start gap-2 text-sm'>
+                      <X className='w-4 h-4 text-destructive shrink-0 mt-0.5' />
+                      <span>{error}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+            );
 }
 
-// ==========================================
-// 📱 MAIN COMPONENT
-// ==========================================
+            // ==========================================
+            // 📱 MAIN COMPONENT
+            // ==========================================
 
-export default function CheckInCar() {
-  const { getBookingById } = useBooking();
-  const { stations } = useStaffBooking();
-  const { user } = useAuth();
+            export default function CheckInCar() {
+  const {getBookingById} = useBooking();
+            const {stations} = useStaffBooking();
+            const {user} = useAuth();
 
-  // Step management
-  const [currentStep, setCurrentStep] = useState(1);
+            // Step management
+            const [currentStep, setCurrentStep] = useState(1);
 
-  // Booking states
-  const [bookingId, setBookingId] = useState('');
-  const [booking, setBooking] = useState(null);
-  const [availableBookings, setAvailableBookings] = useState([]);
-  const [loadingBookings, setLoadingBookings] = useState(false);
-  const [selectedStation, setSelectedStation] = useState('all');
+            // Booking states
+            const [bookingId, setBookingId] = useState('');
+            const [booking, setBooking] = useState(null);
+            const [availableBookings, setAvailableBookings] = useState([]);
+            const [loadingBookings, setLoadingBookings] = useState(false);
+            const [selectedStation, setSelectedStation] = useState('all');
 
-  // Staff assignment states
-  const [assignedStationIds, setAssignedStationIds] = useState([]);
-  const [loadingAssignments, setLoadingAssignments] = useState(false);
+            // Staff assignment states
+            const [assignedStationIds, setAssignedStationIds] = useState([]);
+            const [loadingAssignments, setLoadingAssignments] = useState(false);
 
-  // Inspection states
-  const [exteriorCondition, setExteriorCondition] = useState('GOOD');
-  const [interiorCondition, setInteriorCondition] = useState('GOOD');
-  const [tireCondition, setTireCondition] = useState('GOOD');
-  const [accessories, setAccessories] = useState('ALL_PRESENT');
-  const [batteryLevel, setBatteryLevel] = useState('');
-  const [mileage, setMileage] = useState('');
-  const [damageNotes, setDamageNotes] = useState('');
-  const [notes, setNotes] = useState('');
+            // Inspection states
+            const [exteriorCondition, setExteriorCondition] = useState('GOOD');
+            const [interiorCondition, setInteriorCondition] = useState('GOOD');
+            const [tireCondition, setTireCondition] = useState('GOOD');
+            const [accessories, setAccessories] = useState('ALL_PRESENT');
+            const [batteryLevel, setBatteryLevel] = useState('');
+            const [mileage, setMileage] = useState('');
+            const [damageNotes, setDamageNotes] = useState('');
+            const [notes, setNotes] = useState('');
 
-  // Image states
-  const [inspectionFiles, setInspectionFiles] = useState([]);
-  const [inspectionPreviews, setInspectionPreviews] = useState([]);
+            // Image states
+            const [inspectionFiles, setInspectionFiles] = useState([]);
+            const [inspectionPreviews, setInspectionPreviews] = useState([]);
 
-  // Document states
-  const [documentVerified, setDocumentVerified] = useState(false);
-  const [customerDocuments, setCustomerDocuments] = useState([]);
-  const [loadingDocuments, setLoadingDocuments] = useState(false);
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
-  const [uploadDocType, setUploadDocType] = useState('');
-  const [uploadDocFile, setUploadDocFile] = useState(null);
-  const [uploadingDocument, setUploadingDocument] = useState(false);
-  const [viewDocumentOpen, setViewDocumentOpen] = useState(false);
-  const [selectedDocument, setSelectedDocument] = useState(null);
+            // Document states
+            const [documentVerified, setDocumentVerified] = useState(false);
+            const [customerDocuments, setCustomerDocuments] = useState([]);
+            const [loadingDocuments, setLoadingDocuments] = useState(false);
+            const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+            const [uploadDocType, setUploadDocType] = useState('');
+            const [uploadDocFile, setUploadDocFile] = useState(null);
+            const [uploadingDocument, setUploadingDocument] = useState(false);
+            const [viewDocumentOpen, setViewDocumentOpen] = useState(false);
+            const [selectedDocument, setSelectedDocument] = useState(null);
 
-  // Validation states
-  const [validationErrors, setValidationErrors] = useState({});
+            // Validation states
+            const [validationErrors, setValidationErrors] = useState({ });
 
-  // Modal states
-  const [checkInSummaryOpen, setCheckInSummaryOpen] = useState(false);
-  const [checkInSummary, setCheckInSummary] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [createContractOpen, setCreateContractOpen] = useState(false);
+            // Modal states
+            const [checkInSummaryOpen, setCheckInSummaryOpen] = useState(false);
+            const [checkInSummary, setCheckInSummary] = useState(null);
+            const [isSubmitting, setIsSubmitting] = useState(false);
+            const [createContractOpen, setCreateContractOpen] = useState(false);
 
-  // Contract states
-  const [existingContract, setExistingContract] = useState(null);
+            // Contract states
+            const [existingContract, setExistingContract] = useState(null);
 
   // ==========================================
   // 🔄 EFFECTS & DERIVED STATE
@@ -1130,77 +1383,77 @@ export default function CheckInCar() {
   useEffect(() => {
     const loadAssignments = async () => {
       if (!user?.id) return;
-      try {
-        setLoadingAssignments(true);
-        const res = await apiClient.get(
-          endpoints.assignments.getByStaffId(user.id)
-        );
+            try {
+              setLoadingAssignments(true);
+            const res = await apiClient.get(
+            endpoints.assignments.getByStaffId(user.id)
+            );
         // apiClient interceptor already unwraps response.data
-        // So res is already the payload: { success, data: { assignments } }
-        const payload = res;
+        // So res is already the payload: {success, data: {assignments} }
+            const payload = res;
 
-        console.log('📋 Staff Assignments Response:', {
-          userId: user.id,
-          payload,
-          hasAssignments: !!payload?.assignments,
-          assignmentsLength: payload?.assignments?.length,
+            console.log('📋 Staff Assignments Response:', {
+              userId: user.id,
+            payload,
+            hasAssignments: !!payload?.assignments,
+            assignmentsLength: payload?.assignments?.length,
         });
 
-        // Support both list and single assignment response shapes
-        let raw = [];
-        if (Array.isArray(payload?.assignments)) {
-          raw = payload.assignments;
+            // Support both list and single assignment response shapes
+            let raw = [];
+            if (Array.isArray(payload?.assignments)) {
+              raw = payload.assignments;
         } else if (
-          payload?.assignment &&
-          typeof payload.assignment === 'object'
-        ) {
-          raw = [payload.assignment];
+            payload?.assignment &&
+            typeof payload.assignment === 'object'
+            ) {
+              raw = [payload.assignment];
         } else if (Array.isArray(payload?.data?.assignments)) {
-          raw = payload.data.assignments;
+              raw = payload.data.assignments;
         } else if (Array.isArray(payload)) {
-          raw = payload;
+              raw = payload;
         } else if (Array.isArray(payload?.items)) {
-          raw = payload.items;
+              raw = payload.items;
         }
 
-        console.log('📋 Parsed Assignments:', raw);
+            console.log('📋 Parsed Assignments:', raw);
 
-        const ids = raw
+            const ids = raw
           .map(a => a?.station?.id ?? a?.stationId)
-          .filter(Boolean)
+            .filter(Boolean)
           .map(id => String(id));
-        const uniqueIds = Array.from(new Set(ids));
+            const uniqueIds = Array.from(new Set(ids));
 
-        console.log('🏢 Assigned Station IDs:', uniqueIds);
+            console.log('🏢 Assigned Station IDs:', uniqueIds);
 
-        setAssignedStationIds(uniqueIds);
+            setAssignedStationIds(uniqueIds);
 
-        if (!uniqueIds.length) {
-          toast.error(
-            'You have not been assigned to any station. Please contact admin.'
-          );
+            if (!uniqueIds.length) {
+              toast.error(
+                'You have not been assigned to any station. Please contact admin.'
+              );
         }
       } catch (err) {
-        console.error('Failed to load staff assignments:', err);
-        toast.error('Failed to load station assignments');
+              console.error('Failed to load staff assignments:', err);
+            toast.error('Failed to load station assignments');
       } finally {
-        setLoadingAssignments(false);
+              setLoadingAssignments(false);
       }
     };
-    loadAssignments();
+            loadAssignments();
   }, [user?.id]);
 
   // Filter stations to only show assigned ones
   const allowedStations = useMemo(() => {
     const base = Array.isArray(stations) ? stations : [];
-    if (!assignedStationIds?.length) return [];
+            if (!assignedStationIds?.length) return [];
     return base.filter(s => assignedStationIds.includes(String(s.id)));
   }, [stations, assignedStationIds]);
 
   // Fetch bookings on mount and when station selection changes
   useEffect(() => {
     if (assignedStationIds.length > 0) {
-      fetchAvailableBookings();
+              fetchAvailableBookings();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedStation, assignedStationIds]);
@@ -1208,12 +1461,12 @@ export default function CheckInCar() {
   // Fetch customer documents when booking changes OR when entering step 4
   useEffect(() => {
     if (bookingId && currentStep === 4) {
-      setLoadingDocuments(true);
-      fetchCustomerDocuments(bookingId);
+              setLoadingDocuments(true);
+            fetchCustomerDocuments(bookingId);
     } else if (!bookingId) {
-      // Reset when no booking selected
-      setCustomerDocuments([]);
-      setLoadingDocuments(false);
+              // Reset when no booking selected
+              setCustomerDocuments([]);
+            setLoadingDocuments(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingId, currentStep]);
@@ -1222,30 +1475,30 @@ export default function CheckInCar() {
   useEffect(() => {
     const hasApprovedIdCard = customerDocuments?.some(
       d => d.documentType === 'ID_CARD' && d.status === 'APPROVED'
-    );
-    const hasApprovedLicense = customerDocuments?.some(
+            );
+            const hasApprovedLicense = customerDocuments?.some(
       d => d.documentType === 'DRIVERS_LICENSE' && d.status === 'APPROVED'
-    );
-    const allApproved = hasApprovedIdCard && hasApprovedLicense;
+            );
+            const allApproved = hasApprovedIdCard && hasApprovedLicense;
 
-    console.log('🔄 Auto-check useEffect triggered:', {
-      documentCount: customerDocuments?.length,
+            console.log('🔄 Auto-check useEffect triggered:', {
+              documentCount: customerDocuments?.length,
       documents: customerDocuments?.map(d => ({
-        type: d.documentType,
-        status: d.status,
+              type: d.documentType,
+            status: d.status,
       })),
-      hasApprovedIdCard,
-      hasApprovedLicense,
-      allApproved,
-      currentVerifiedState: documentVerified,
-      willAutoCheck: allApproved && !documentVerified,
+            hasApprovedIdCard,
+            hasApprovedLicense,
+            allApproved,
+            currentVerifiedState: documentVerified,
+            willAutoCheck: allApproved && !documentVerified,
     });
 
-    if (allApproved && !documentVerified) {
-      setDocumentVerified(true);
-      console.log(
-        '✅ Auto-checked verification - all documents approved by staff'
-      );
+            if (allApproved && !documentVerified) {
+              setDocumentVerified(true);
+            console.log(
+            '✅ Auto-checked verification - all documents approved by staff'
+            );
     }
   }, [customerDocuments, documentVerified]);
 
@@ -1255,36 +1508,36 @@ export default function CheckInCar() {
 
   const fetchAvailableBookings = async () => {
     try {
-      setLoadingBookings(true);
+              setLoadingBookings(true);
 
-      // Build query parameters for API
-      const params = {
-        status: 'CONFIRMED', // Only fetch CONFIRMED bookings
+            // Build query parameters for API
+            const params = {
+              status: 'CONFIRMED', // Only fetch CONFIRMED bookings
       };
 
-      // Filter by selected station or all assigned stations
-      if (selectedStation && selectedStation !== 'all') {
-        // Single station selected
-        params.stationId = selectedStation;
+            // Filter by selected station or all assigned stations
+            if (selectedStation && selectedStation !== 'all') {
+              // Single station selected
+              params.stationId = selectedStation;
       } else {
         // All stations - use stationIds with comma-separated assigned station IDs
         if (assignedStationIds.length > 0) {
-          params.stationIds = assignedStationIds.join(',');
+              params.stationIds = assignedStationIds.join(',');
         }
       }
 
-      // Fetch bookings with query parameters
-      const response = await apiClient.get(endpoints.bookings.getAll(), {
-        params,
+            // Fetch bookings with query parameters
+            const response = await apiClient.get(endpoints.bookings.getAll(), {
+              params,
       });
 
-      const bookings = response.data?.bookings || [];
-      setAvailableBookings(bookings);
+            const bookings = response.data?.bookings || [];
+            setAvailableBookings(bookings);
     } catch (error) {
-      console.error('Error fetching bookings:', error);
-      toast.error('Failed to load booking list');
+              console.error('Error fetching bookings:', error);
+            toast.error('Failed to load booking list');
     } finally {
-      setLoadingBookings(false);
+              setLoadingBookings(false);
     }
   };
 
@@ -1294,74 +1547,74 @@ export default function CheckInCar() {
       const bookingData =
         booking || (await getBookingById(bookingId).catch(() => null));
 
-      // Get userId from booking (primary field in DB)
-      const userId =
-        bookingData?.userId || bookingData?.renter_id || bookingData?.user?.id;
+            // Get userId from booking (primary field in DB)
+            const userId =
+            bookingData?.userId || bookingData?.renter_id || bookingData?.user?.id;
 
-      if (!userId) {
-        console.warn('No userId found in booking:', bookingData);
-        setCustomerDocuments([]);
-        return;
+            if (!userId) {
+              console.warn('No userId found in booking:', bookingData);
+            setCustomerDocuments([]);
+            return;
       }
 
-      console.log('📄 Fetching documents for userId:', userId);
+            console.log('📄 Fetching documents for userId:', userId);
 
-      // Server API: GET /api/documents/user/:userId
-      const response = await apiClient.get(
-        endpoints.documents.getByUserId(userId)
-      );
+            // Server API: GET /api/documents/user/:userId
+            const response = await apiClient.get(
+            endpoints.documents.getByUserId(userId)
+            );
 
-      console.log('📄 Documents response:', response);
+            console.log('📄 Documents response:', response);
 
-      // Server response unwrapped by interceptor: { success: true, data: { documents: [...], pagination: {...} } }
-      const docs = response.data?.documents || response.documents || [];
-      setCustomerDocuments(docs);
+      // Server response unwrapped by interceptor: {success: true, data: {documents: [...], pagination: {...} } }
+            const docs = response.data?.documents || response.documents || [];
+            setCustomerDocuments(docs);
 
-      console.log('📄 Customer documents set:', docs.length, 'documents');
+            console.log('📄 Customer documents set:', docs.length, 'documents');
     } catch (error) {
-      console.error('Error fetching documents:', error);
-      setCustomerDocuments([]);
+              console.error('Error fetching documents:', error);
+            setCustomerDocuments([]);
     } finally {
-      setLoadingDocuments(false);
+              setLoadingDocuments(false);
     }
   };
 
   const handleSelectBooking = async selectedBookingId => {
     try {
-      setBookingId(selectedBookingId);
-      const bookingData = await getBookingById(selectedBookingId);
+              setBookingId(selectedBookingId);
+            const bookingData = await getBookingById(selectedBookingId);
 
-      // Handle nested booking structure
-      const booking = bookingData?.booking || bookingData;
+            // Handle nested booking structure
+            const booking = bookingData?.booking || bookingData;
 
-      // Validate booking station is in assigned stations
-      const bookingStationId = String(
-        booking?.stationId || booking?.station_id || ''
-      );
-      console.log('🔍 Booking Validation:', {
-        bookingStationId,
-        assignedStationIds,
-        isIncluded: assignedStationIds.includes(bookingStationId),
-        bookingData,
-        booking,
+            // Validate booking station is in assigned stations
+            const bookingStationId = String(
+            booking?.stationId || booking?.station_id || ''
+            );
+            console.log('🔍 Booking Validation:', {
+              bookingStationId,
+              assignedStationIds,
+              isIncluded: assignedStationIds.includes(bookingStationId),
+            bookingData,
+            booking,
       });
 
-      if (!bookingStationId || !assignedStationIds.includes(bookingStationId)) {
-        toast.error('This booking does not belong to your assigned station');
-        setBookingId('');
-        setBooking(null);
-        return;
+            if (!bookingStationId || !assignedStationIds.includes(bookingStationId)) {
+              toast.error('This booking does not belong to your assigned station');
+            setBookingId('');
+            setBooking(null);
+            return;
       }
 
-      setBooking(booking);
+            setBooking(booking);
 
-      // Check if booking has contract - if not, prompt to create
-      await checkContractForBooking(selectedBookingId, booking);
+            // Check if booking has contract - if not, prompt to create
+            await checkContractForBooking(selectedBookingId, booking);
 
-      toast.success('Booking selected successfully');
+            toast.success('Booking selected successfully');
     } catch (error) {
-      console.error('Error fetching booking:', error);
-      toast.error('Failed to load booking information');
+              console.error('Error fetching booking:', error);
+            toast.error('Failed to load booking information');
     }
   };
 
@@ -1369,135 +1622,135 @@ export default function CheckInCar() {
   const checkContractForBooking = async bookingId => {
     try {
       const response = await apiClient.get(
-        endpoints.contracts.getByBooking(bookingId)
-      );
+            endpoints.contracts.getByBooking(bookingId)
+            );
 
-      console.log('🔍 Contract Check Response:', {
-        bookingId,
-        response,
-        isArray: Array.isArray(response),
+            console.log('🔍 Contract Check Response:', {
+              bookingId,
+              response,
+              isArray: Array.isArray(response),
       });
 
       // Axios interceptor returns {success: true, data: [...]}
-      // Extract the contracts array from response.data
-      const contracts = Array.isArray(response?.data) ? response.data : [];
+            // Extract the contracts array from response.data
+            const contracts = Array.isArray(response?.data) ? response.data : [];
 
-      console.log('� Contracts found:', contracts.length);
+            console.log('� Contracts found:', contracts.length);
 
       // Check if any COMPLETED contract exists for this booking
       // Only contracts with status 'COMPLETED' (created + uploaded) are valid
       const completedContract = contracts.find(c => c.status === 'COMPLETED');
 
-      if (completedContract) {
-        // Valid contract exists (created AND uploaded)
-        console.log('✅ Valid contract exists:', {
-          id: completedContract.id,
-          status: completedContract.status,
-          contractNumber: completedContract.contractNumber,
-        });
+            if (completedContract) {
+              // Valid contract exists (created AND uploaded)
+              console.log('✅ Valid contract exists:', {
+                id: completedContract.id,
+                status: completedContract.status,
+                contractNumber: completedContract.contractNumber,
+              });
 
-        setExistingContract(completedContract);
-        toast.success('Contract already exists and is ready');
-        // Contract exists and is complete - don't open modal
-        return true;
+            setExistingContract(completedContract);
+            toast.success('Contract already exists and is ready');
+            // Contract exists and is complete - don't open modal
+            return true;
       } else {
         // No valid contract - may have CREATED status but not uploaded yet
         // Treat as if no contract exists and require upload
         const createdContract = contracts.find(c => c.status === 'CREATED');
 
-        if (createdContract) {
-          console.log(
-            '⚠️ Contract created but not uploaded:',
-            createdContract.id
-          );
-          // Pass the created contract so modal can upload to it
-          setExistingContract(createdContract);
+            if (createdContract) {
+              console.log(
+                '⚠️ Contract created but not uploaded:',
+                createdContract.id
+              );
+            // Pass the created contract so modal can upload to it
+            setExistingContract(createdContract);
         } else {
-          console.log('❌ No contract found');
-          setExistingContract(null);
+              console.log('❌ No contract found');
+            setExistingContract(null);
         }
 
-        toast.warning(
-          'This booking requires a signed contract. Please upload it to proceed with check-in.'
-        );
-        setCreateContractOpen(true);
-        return false;
+            toast.warning(
+            'This booking requires a signed contract. Please upload it to proceed with check-in.'
+            );
+            setCreateContractOpen(true);
+            return false;
       }
     } catch (error) {
       // 404 means no contract exists
       if (error?.status === 404 || error?.response?.status === 404) {
-        setExistingContract(null);
-        toast.warning(
-          'This booking does not have a contract. Please create one before check-in.'
-        );
-        setCreateContractOpen(true);
-        return false;
+              setExistingContract(null);
+            toast.warning(
+            'This booking does not have a contract. Please create one before check-in.'
+            );
+            setCreateContractOpen(true);
+            return false;
       } else {
-        console.error('Error checking contract:', error);
-        toast.error('Failed to check contract status');
-        return false;
+              console.error('Error checking contract:', error);
+            toast.error('Failed to check contract status');
+            return false;
       }
     }
   };
 
   const validateStep = step => {
-    const errors = {};
+    const errors = { };
 
-    switch (step) {
+            switch (step) {
       case 1:
-        if (!bookingId) {
-          errors.booking = 'Please select a booking';
+            if (!bookingId) {
+              errors.booking = 'Please select a booking';
         }
-        // Check if contract exists before allowing to proceed
-        if (bookingId && !existingContract) {
-          errors.contract =
-            'Contract is required. Please create a contract for this booking first.';
+            // Check if contract exists before allowing to proceed
+            if (bookingId && !existingContract) {
+              errors.contract =
+              'Contract is required. Please create a contract for this booking first.';
         }
-        break;
+            break;
 
-      case 2:
-        if (!batteryLevel || batteryLevel < 0 || batteryLevel > 100) {
-          errors.batteryLevel = 'Battery level must be 0-100%';
+            case 2:
+            if (!batteryLevel || batteryLevel < 0 || batteryLevel > 100) {
+              errors.batteryLevel = 'Battery level must be 0-100%';
         }
-        if (!mileage || mileage < 0) {
-          errors.mileage = 'Mileage must be greater than 0';
+            if (!mileage || mileage < 0) {
+              errors.mileage = 'Mileage must be greater than 0';
         }
-        break;
+            break;
 
-      case 3:
-        if (inspectionFiles.length === 0) {
-          errors.images = 'Please upload at least 1 vehicle photo';
+            case 3:
+            if (inspectionFiles.length === 0) {
+              errors.images = 'Please upload at least 1 vehicle photo';
         }
-        break;
+            break;
 
-      case 4:
-        if (!documentVerified) {
-          errors.documentVerified = 'Please confirm document verification';
+            case 4:
+            if (!documentVerified) {
+              errors.documentVerified = 'Please confirm document verification';
         }
-        // Check if all required documents are present
-        {
+            // Check if all required documents are present
+            {
           const hasIdCard = customerDocuments?.some(
             d => d.documentType === 'ID_CARD'
-          );
-          const hasLicense = customerDocuments?.some(
+            );
+            const hasLicense = customerDocuments?.some(
             d => d.documentType === 'DRIVERS_LICENSE'
-          );
+            );
 
-          console.log('📄 Document validation:', {
-            customerDocuments,
-            hasIdCard,
-            hasLicense,
+            console.log('📄 Document validation:', {
+              customerDocuments,
+              hasIdCard,
+              hasLicense,
           });
 
-          if (!hasIdCard || !hasLicense) {
-            errors.documents = "Please upload ID card and driver's license";
+            if (!hasIdCard || !hasLicense) {
+              errors.documents = "Please upload ID card and driver's license";
           }
         }
-        break;
+            break;
     }
 
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
+            setValidationErrors(errors);
+            return Object.keys(errors).length === 0;
   };
 
   // ==========================================
@@ -1506,16 +1759,16 @@ export default function CheckInCar() {
 
   const handleNext = () => {
     if (validateStep(currentStep)) {
-      setCurrentStep(prev => Math.min(prev + 1, 4));
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+              setCurrentStep(prev => Math.min(prev + 1, 4));
+            window.scrollTo({top: 0, behavior: 'smooth' });
     } else {
-      toast.error('Please complete all information before continuing');
+              toast.error('Please complete all information before continuing');
     }
   };
 
   const handleBack = () => {
-    setCurrentStep(prev => Math.max(prev - 1, 1));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+              setCurrentStep(prev => Math.max(prev - 1, 1));
+            window.scrollTo({top: 0, behavior: 'smooth' });
   };
 
   // ==========================================
@@ -1525,156 +1778,161 @@ export default function CheckInCar() {
   const handleSubmitCheckIn = async () => {
     // Validate all steps
     const allValid = [1, 2, 3, 4].every(step => validateStep(step));
-    if (!allValid) {
-      toast.error('Please complete all information');
-      return;
+            if (!allValid) {
+      // Show specific error message if checkbox not checked
+      if (!documentVerified) {
+              toast.error('Please confirm document verification before check-in');
+      } else {
+              toast.error('Please complete all information');
+      }
+            return;
     }
 
-    setIsSubmitting(true);
+            setIsSubmitting(true);
 
-    try {
+            try {
       // STEP 1: Check-in booking first (change status CONFIRMED → IN_PROGRESS)
       const checkInData = {
-        actualStartTime: new Date().toISOString(),
-        actualPickupLocation: booking?.station?.name || booking?.pickupLocation,
-        pickupOdometer: parseInt(mileage),
-        batteryLevel: parseInt(batteryLevel),
+              actualStartTime: new Date().toISOString(),
+            actualPickupLocation: booking?.station?.name || booking?.pickupLocation,
+            pickupOdometer: parseInt(mileage),
+            batteryLevel: parseInt(batteryLevel),
       };
 
-      console.log('📝 Step 1: Check-in booking:', { bookingId, checkInData });
+            console.log('📝 Step 1: Check-in booking:', {bookingId, checkInData});
 
-      const checkInResponse = await apiClient.post(
-        endpoints.bookings.checkIn(bookingId),
-        checkInData
-      );
+            const checkInResponse = await apiClient.post(
+            endpoints.bookings.checkIn(bookingId),
+            checkInData
+            );
 
-      console.log('✅ Check-in successful:', checkInResponse);
+            console.log('✅ Check-in successful:', checkInResponse);
 
-      // STEP 2: Create inspection record (now that booking is IN_PROGRESS)
-      const inspectionData = {
-        vehicleId:
-          booking?.vehicleId || booking?.vehicle_id || booking?.vehicle?.id,
-        staffId: user?.id || user?.user_id,
-        bookingId: bookingId,
-        inspectionType: 'CHECK_IN',
-        batteryLevel: parseInt(batteryLevel),
-        exteriorCondition: exteriorCondition,
-        interiorCondition: interiorCondition,
-        mileage: parseInt(mileage),
-        tireCondition: tireCondition,
-        accessories: accessories,
-        damageNotes: damageNotes || null,
-        notes: notes || null,
-        documentVerified: documentVerified,
+            // STEP 2: Create inspection record (now that booking is IN_PROGRESS)
+            const inspectionData = {
+              vehicleId:
+            booking?.vehicleId || booking?.vehicle_id || booking?.vehicle?.id,
+            staffId: user?.id || user?.user_id,
+            bookingId: bookingId,
+            inspectionType: 'CHECK_IN',
+            batteryLevel: parseInt(batteryLevel),
+            exteriorCondition: exteriorCondition,
+            interiorCondition: interiorCondition,
+            mileage: parseInt(mileage),
+            tireCondition: tireCondition,
+            accessories: accessories,
+            damageNotes: damageNotes || null,
+            notes: notes || null,
+            documentVerified: documentVerified,
       };
 
-      console.log('📝 Step 2: Creating Inspection:', inspectionData);
+            console.log('📝 Step 2: Creating Inspection:', inspectionData);
 
-      const inspectionResponse = await apiClient.post(
-        endpoints.inspections.create(),
-        inspectionData
-      );
+            const inspectionResponse = await apiClient.post(
+            endpoints.inspections.create(),
+            inspectionData
+            );
 
-      console.log('✅ Inspection Response:', inspectionResponse);
+            console.log('✅ Inspection Response:', inspectionResponse);
 
-      const inspection =
-        inspectionResponse?.data?.inspection ||
-        inspectionResponse?.data ||
-        inspectionResponse?.inspection;
-      const inspectionId = inspection?.id;
+            const inspection =
+            inspectionResponse?.data?.inspection ||
+            inspectionResponse?.data ||
+            inspectionResponse?.inspection;
+            const inspectionId = inspection?.id;
 
-      if (!inspectionId) {
-        console.error('❌ No inspection ID received:', inspectionResponse);
-        throw new Error('Failed to create inspection - no ID returned');
+            if (!inspectionId) {
+              console.error('❌ No inspection ID received:', inspectionResponse);
+            throw new Error('Failed to create inspection - no ID returned');
       }
 
-      console.log('✅ Inspection Created:', { inspection, inspectionId });
+            console.log('✅ Inspection Created:', {inspection, inspectionId});
 
       // Upload images one by one to the created inspection
       if (inspectionFiles.length > 0 && inspectionId) {
-        console.log(`📸 Uploading ${inspectionFiles.length} images...`);
+              console.log(`📸 Uploading ${inspectionFiles.length} images...`);
 
-        for (let i = 0; i < inspectionFiles.length; i++) {
+            for (let i = 0; i < inspectionFiles.length; i++) {
           const file = inspectionFiles[i];
-          const formData = new FormData();
-          formData.append('image', file);
+            const formData = new FormData();
+            formData.append('image', file);
 
-          try {
-            await apiClient.post(
-              `/api/inspections/${inspectionId}/upload-image`,
-              formData,
-              {
-                headers: { 'Content-Type': 'multipart/form-data' },
-              }
-            );
+            try {
+              await apiClient.post(
+                `/api/inspections/${inspectionId}/upload-image`,
+                formData,
+                {
+                  headers: { 'Content-Type': 'multipart/form-data' },
+                }
+              );
             console.log(`✅ Image ${i + 1}/${inspectionFiles.length} uploaded`);
           } catch (imgError) {
-            console.error(`Failed to upload image ${i + 1}:`, imgError);
+              console.error(`Failed to upload image ${i + 1}:`, imgError);
             // Continue uploading other images even if one fails
           }
         }
       }
 
-      // Prepare summary data with all relevant information
-      const summaryData = {
-        inspectionId: inspectionId,
-        checkInTime:
-          checkInResponse?.data?.checkInSummary?.actualStartTime ||
-          new Date().toISOString(),
-        customer: booking?.user?.name || booking?.renter?.name,
-        vehicleModel: booking?.vehicle?.model,
-        licensePlate: booking?.vehicle?.licensePlate,
-        batteryLevel: parseInt(batteryLevel),
-        mileage: parseInt(mileage),
+            // Prepare summary data with all relevant information
+            const summaryData = {
+              inspectionId: inspectionId,
+            checkInTime:
+            checkInResponse?.data?.checkInSummary?.actualStartTime ||
+            new Date().toISOString(),
+            customer: booking?.user?.name || booking?.renter?.name,
+            vehicleModel: booking?.vehicle?.model,
+            licensePlate: booking?.vehicle?.licensePlate,
+            batteryLevel: parseInt(batteryLevel),
+            mileage: parseInt(mileage),
       };
 
-      console.log('📊 Check-in Summary:', summaryData);
+            console.log('📊 Check-in Summary:', summaryData);
 
-      setCheckInSummary(summaryData);
-      setCheckInSummaryOpen(true);
-      toast.success('Check-in successful!');
+            setCheckInSummary(summaryData);
+            setCheckInSummaryOpen(true);
+            toast.success('Check-in successful!');
 
-      // Refresh bookings data
-      await fetchAvailableBookings();
+            // Refresh bookings data
+            await fetchAvailableBookings();
 
-      // Reset form
-      resetForm();
+            // Reset form
+            resetForm();
     } catch (error) {
-      console.error('❌ Check-in error:', error);
-      console.error('Error details:', {
-        message: error.message,
-        response: error.response,
-        responseData: error.response?.data,
-        status: error.status,
+              console.error('❌ Check-in error:', error);
+            console.error('Error details:', {
+              message: error.message,
+            response: error.response,
+            responseData: error.response?.data,
+            status: error.status,
       });
 
-      const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        'An error occurred during check-in';
+            const errorMessage =
+            error.response?.data?.message ||
+            error.message ||
+            'An error occurred during check-in';
 
-      toast.error(errorMessage);
+            toast.error(errorMessage);
     } finally {
-      setIsSubmitting(false);
+              setIsSubmitting(false);
     }
   };
 
   const resetForm = () => {
-    setCurrentStep(1);
-    setBookingId('');
-    setBooking(null);
-    setExteriorCondition('GOOD');
-    setInteriorCondition('GOOD');
-    setTireCondition('GOOD');
-    setAccessories('ALL_PRESENT');
-    setBatteryLevel('');
-    setMileage('');
-    setDamageNotes('');
-    setNotes('');
-    setInspectionFiles([]);
-    setInspectionPreviews([]);
-    setDocumentVerified(false);
-    setValidationErrors({});
+              setCurrentStep(1);
+            setBookingId('');
+            setBooking(null);
+            setExteriorCondition('GOOD');
+            setInteriorCondition('GOOD');
+            setTireCondition('GOOD');
+            setAccessories('ALL_PRESENT');
+            setBatteryLevel('');
+            setMileage('');
+            setDamageNotes('');
+            setNotes('');
+            setInspectionFiles([]);
+            setInspectionPreviews([]);
+            setDocumentVerified(false);
+            setValidationErrors({ });
   };
 
   // ==========================================
@@ -1682,65 +1940,65 @@ export default function CheckInCar() {
   // ==========================================
 
   const handleUploadDocument = docType => {
-    setUploadDocType(docType);
-    setUploadDocFile(null);
-    setUploadDialogOpen(true);
+              setUploadDocType(docType);
+            setUploadDocFile(null);
+            setUploadDialogOpen(true);
   };
 
   const handleViewDocument = doc => {
-    setSelectedDocument(doc);
-    setViewDocumentOpen(true);
+              setSelectedDocument(doc);
+            setViewDocumentOpen(true);
   };
 
   const submitDocumentUpload = async () => {
     if (!uploadDocFile) {
-      toast.error('Please select a file');
-      return;
+              toast.error('Please select a file');
+            return;
     }
 
-    // Get renterId from booking.userId (primary field in DB)
-    const renterId = booking?.userId || booking?.user?.id;
+            // Get renterId from booking.userId (primary field in DB)
+            const renterId = booking?.userId || booking?.user?.id;
 
-    if (!renterId) {
-      toast.error('Customer information not found');
-      console.error('Booking data:', booking);
-      return;
+            if (!renterId) {
+              toast.error('Customer information not found');
+            console.error('Booking data:', booking);
+            return;
     }
 
-    setUploadingDocument(true);
+            setUploadingDocument(true);
 
-    try {
+            try {
       // Prepare FormData exactly like DocumentUpload component
       const formData = new FormData();
-      formData.append('document', uploadDocFile);
-      formData.append('documentType', uploadDocType);
-      formData.append('renterId', renterId); // Staff uploads for customer
+            formData.append('document', uploadDocFile);
+            formData.append('documentType', uploadDocType);
+            formData.append('renterId', renterId); // Staff uploads for customer
 
-      console.log('📤 Uploading document:', {
-        fileName: uploadDocFile.name,
-        fileSize: uploadDocFile.size,
-        fileType: uploadDocFile.type,
-        documentType: uploadDocType,
-        renterId: renterId,
+            console.log('📤 Uploading document:', {
+              fileName: uploadDocFile.name,
+            fileSize: uploadDocFile.size,
+            fileType: uploadDocFile.type,
+            documentType: uploadDocType,
+            renterId: renterId,
       });
 
-      // Use documentService like DocumentUpload component does
-      const response = await documentService.uploadDocument(formData);
+            // Use documentService like DocumentUpload component does
+            const response = await documentService.uploadDocument(formData);
 
-      console.log('✅ Upload response:', response);
+            console.log('✅ Upload response:', response);
 
-      if (response.success) {
-        toast.success(
-          response.message || 'Document uploaded successfully and auto-verified'
-        );
+            if (response.success) {
+              toast.success(
+                response.message || 'Document uploaded successfully and auto-verified'
+              );
 
-        setUploadDialogOpen(false);
-        setUploadDocFile(null);
-        setUploadDocType('');
+            setUploadDialogOpen(false);
+            setUploadDocFile(null);
+            setUploadDocType('');
 
-        // Refresh documents list and wait for it to complete
-        setLoadingDocuments(true);
-        await fetchCustomerDocuments(bookingId);
+            // Refresh documents list and wait for it to complete
+            setLoadingDocuments(true);
+            await fetchCustomerDocuments(bookingId);
 
         // After refresh, check if all documents are present
         // Note: We need to fetch fresh data, not use stale customerDocuments
@@ -1749,609 +2007,614 @@ export default function CheckInCar() {
         throw new Error(response.message || 'Upload failed');
       }
     } catch (error) {
-      console.error('❌ Document upload error:', error);
-      console.error('Error response:', error.response);
-      console.error('Error message:', error.message);
-      console.error('Error data:', error.response?.data);
+              console.error('❌ Document upload error:', error);
+            console.error('Error response:', error.response);
+            console.error('Error message:', error.message);
+            console.error('Error data:', error.response?.data);
 
-      const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        'Unable to upload document';
+            const errorMessage =
+            error.response?.data?.message ||
+            error.message ||
+            'Unable to upload document';
 
-      toast.error(errorMessage);
+            toast.error(errorMessage);
     } finally {
-      setUploadingDocument(false);
+              setUploadingDocument(false);
     }
   };
 
-  // ==========================================
-  // 🎨 RENDER
-  // ==========================================
+            // ==========================================
+            // 🎨 RENDER
+            // ==========================================
 
-  return (
-    <div className='container max-w-5xl px-4 py-8 mx-auto'>
-      {/* Header */}
-      <div className='mb-8'>
-        <h1 className='mb-2 text-3xl font-bold'>Vehicle Check-In</h1>
-        <p className='text-muted-foreground'>
-          Inspect and deliver vehicle to customer
-        </p>
-      </div>
-
-      {/* Progress Indicator */}
-      <ProgressIndicator currentStep={currentStep} />
-
-      {/* Step Content */}
-      <div className='space-y-6'>
-        {/* Step 1: Booking Selection */}
-        {currentStep === 1 && (
-          <>
-            <BookingSelector
-              bookings={availableBookings}
-              selectedBookingId={bookingId}
-              onSelectBooking={handleSelectBooking}
-              selectedStation={selectedStation}
-              onStationChange={setSelectedStation}
-              stations={allowedStations}
-              loading={loadingBookings || loadingAssignments}
-            />
-            <ValidationSummary errors={validationErrors} />
-          </>
-        )}
-
-        {/* Step 2: Vehicle Inspection */}
-        {currentStep === 2 && (
-          <>
-            <VehicleInspectionForm
-              exteriorCondition={exteriorCondition}
-              setExteriorCondition={setExteriorCondition}
-              interiorCondition={interiorCondition}
-              setInteriorCondition={setInteriorCondition}
-              tireCondition={tireCondition}
-              setTireCondition={setTireCondition}
-              accessories={accessories}
-              setAccessories={setAccessories}
-              batteryLevel={batteryLevel}
-              setBatteryLevel={setBatteryLevel}
-              mileage={mileage}
-              setMileage={setMileage}
-              damageNotes={damageNotes}
-              setDamageNotes={setDamageNotes}
-              notes={notes}
-              setNotes={setNotes}
-              validationErrors={validationErrors}
-            />
-            <ValidationSummary errors={validationErrors} />
-          </>
-        )}
-
-        {/* Step 3: Image Upload */}
-        {currentStep === 3 && (
-          <>
-            <ImageUpload
-              files={inspectionFiles}
-              previews={inspectionPreviews}
-              onFilesChange={(files, previews) => {
-                setInspectionFiles(files);
-                setInspectionPreviews(previews);
-              }}
-              maxFiles={10}
-            />
-            <ValidationSummary errors={validationErrors} />
-          </>
-        )}
-
-        {/* Step 4: Document Verification */}
-        {currentStep === 4 && (
-          <>
-            <DocumentVerification
-              documentVerified={documentVerified}
-              setDocumentVerified={setDocumentVerified}
-              customerDocuments={customerDocuments}
-              onUploadDocument={handleUploadDocument}
-              onViewDocument={handleViewDocument}
-              loadingDocuments={loadingDocuments}
-              bookingId={bookingId}
-            />
-            <ValidationSummary errors={validationErrors} />
-
-            {/* Final Summary */}
-            {booking && (
-              <Card className='border-primary/20 bg-primary/5'>
-                <CardHeader>
-                  <CardTitle className='flex items-center gap-2'>
-                    <CheckCircle2 className='w-5 h-5 text-primary' />
-                    Check-In Summary
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className='space-y-4'>
-                  <div className='grid grid-cols-1 gap-4 text-sm md:grid-cols-2'>
-                    <div>
-                      <span className='text-muted-foreground'>Customer:</span>
-                      <p className='font-medium'>
-                        {booking.user?.name || booking.renter?.name || 'N/A'}
-                      </p>
-                    </div>
-                    <div>
-                      <span className='text-muted-foreground'>Vehicle:</span>
-                      <p className='font-medium'>
-                        {booking.vehicle?.model || 'N/A'}
-                      </p>
-                    </div>
-                    <div>
-                      <span className='text-muted-foreground'>
-                        License Plate:
-                      </span>
-                      <p className='font-medium'>
-                        {booking.vehicle?.licensePlate || 'N/A'}
-                      </p>
-                    </div>
-                    <div>
-                      <span className='text-muted-foreground'>
-                        Battery Level:
-                      </span>
-                      <p className='font-medium'>{batteryLevel}%</p>
-                    </div>
-                    <div>
-                      <span className='text-muted-foreground'>Mileage:</span>
-                      <p className='font-medium'>{mileage} km</p>
-                    </div>
-                    <div>
-                      <span className='text-muted-foreground'>Photos:</span>
-                      <p className='font-medium'>{inspectionFiles.length}</p>
-                    </div>
-                    <div>
-                      <span className='text-muted-foreground'>Documents:</span>
-                      <p className='font-medium'>
-                        {documentVerified ? (
-                          <Badge
-                            variant='outline'
-                            className='text-green-700 bg-green-50'
-                          >
-                            Confirmed
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant='outline'
-                            className='text-red-700 bg-red-50'
-                          >
-                            Not Confirmed
-                          </Badge>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* Navigation Buttons */}
-      <div className='flex items-center justify-between mt-8'>
-        <Button
-          variant='outline'
-          onClick={handleBack}
-          disabled={currentStep === 1}
-          className='min-w-32'
-        >
-          Back
-        </Button>
-
-        {currentStep < 4 ? (
-          <Button onClick={handleNext} className='min-w-32'>
-            Next
-          </Button>
-        ) : (
-          <Button
-            onClick={handleSubmitCheckIn}
-            disabled={isSubmitting}
-            className='min-w-32'
-          >
-            {isSubmitting ? 'Processing...' : 'Complete Check-In'}
-          </Button>
-        )}
-      </div>
-
-      {/* Document Upload Dialog */}
-      <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className='flex items-center gap-2'>
-              <Upload className='w-5 h-5' />
-              Upload Document for Customer
-            </DialogTitle>
-            <DialogDescription>
-              Upload{' '}
-              {uploadDocType === 'ID_CARD' ? 'ID Card' : "Driver's License"} for
-              customer {booking?.renter?.full_name}
-            </DialogDescription>
-          </DialogHeader>
-          <div className='space-y-4'>
-            {/* Info Alert */}
-            <div className='p-3 border border-blue-200 rounded-lg bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800'>
-              <div className='flex items-start gap-2'>
-                <AlertCircle className='w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5' />
-                <div className='text-xs text-blue-900 dark:text-blue-100'>
-                  <p className='mb-1 font-semibold'>Important Notes:</p>
-                  <ul className='list-disc list-inside space-y-0.5'>
-                    <li>Ensure document is original or clear copy</li>
-                    <li>
-                      Information on document must match booking information
-                    </li>
-                    <li>Document will be auto-verified after upload</li>
-                  </ul>
-                </div>
+            return (
+            <div className='container max-w-5xl px-4 py-8 mx-auto'>
+              {/* Header */}
+              <div className='mb-8'>
+                <h1 className='mb-2 text-3xl font-bold'>Vehicle Check-In</h1>
+                <p className='text-muted-foreground'>
+                  Inspect and deliver vehicle to customer
+                </p>
               </div>
-            </div>
 
-            {/* File Upload với Drag & Drop */}
-            <div className='space-y-2'>
-              <Label>
-                Select document file <span className='text-destructive'>*</span>
-              </Label>
-              {uploadDocFile ? (
-                <div className='flex items-center justify-between p-3 border-2 rounded-lg bg-primary/10 border-primary/30'>
-                  <div className='flex items-center gap-3'>
-                    <FileText className='w-5 h-5 text-primary' />
-                    <div>
-                      <p className='text-sm font-medium'>
-                        {uploadDocFile.name}
-                      </p>
-                      <p className='text-xs text-muted-foreground'>
-                        {(uploadDocFile.size / 1024 / 1024).toFixed(2)} MB
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    onClick={() => setUploadDocFile(null)}
-                  >
-                    <Trash2 className='w-4 h-4' />
-                  </Button>
-                </div>
-              ) : (
-                <div
-                  onDragOver={e => {
-                    e.preventDefault();
-                    e.currentTarget.classList.add(
-                      'border-primary',
-                      'bg-primary/10'
-                    );
-                  }}
-                  onDragLeave={e => {
-                    e.preventDefault();
-                    e.currentTarget.classList.remove(
-                      'border-primary',
-                      'bg-primary/10'
-                    );
-                  }}
-                  onDrop={e => {
-                    e.preventDefault();
-                    e.currentTarget.classList.remove(
-                      'border-primary',
-                      'bg-primary/10'
-                    );
-                    const file = e.dataTransfer.files[0];
-                    if (file) {
-                      // Validate theo server: JPEG, PNG, JPG, PDF, max 10MB
-                      const allowedTypes = [
-                        'image/jpeg',
-                        'image/png',
-                        'image/jpg',
-                        'application/pdf',
-                      ];
-                      const maxSize = 10 * 1024 * 1024; // 10MB
+              {/* Progress Indicator */}
+              <ProgressIndicator currentStep={currentStep} />
 
-                      if (!allowedTypes.includes(file.type)) {
-                        toast.error(
-                          'Invalid file type. Only JPEG, PNG, JPG and PDF accepted'
-                        );
-                        return;
-                      }
-                      if (file.size > maxSize) {
-                        toast.error('File size too large. Maximum 10MB');
-                        return;
-                      }
-                      setUploadDocFile(file);
-                    }
-                  }}
-                  onClick={() =>
-                    document.getElementById('doc-upload-input')?.click()
-                  }
-                  className='p-8 text-center transition-all border-2 border-dashed rounded-lg cursor-pointer hover:border-primary hover:bg-primary/5'
-                >
-                  <Upload className='w-12 h-12 mx-auto mb-4 text-muted-foreground' />
-                  <p className='mb-1 text-sm font-medium'>
-                    Drag and drop file here or click to select
-                  </p>
-                  <p className='text-xs text-muted-foreground'>
-                    Supports: JPG, PNG, PDF (max 10MB)
-                  </p>
-                </div>
-              )}
-              <input
-                id='doc-upload-input'
-                type='file'
-                accept='image/jpeg,image/png,image/jpg,application/pdf'
-                onChange={e => {
-                  const file = e.target.files[0];
-                  if (file) {
-                    // Validate theo server
-                    const allowedTypes = [
-                      'image/jpeg',
-                      'image/png',
-                      'image/jpg',
-                      'application/pdf',
-                    ];
-                    const maxSize = 10 * 1024 * 1024;
-
-                    if (!allowedTypes.includes(file.type)) {
-                      toast.error(
-                        'Invalid file type. Only JPEG, PNG, JPG and PDF accepted'
-                      );
-                      return;
-                    }
-                    if (file.size > maxSize) {
-                      toast.error('File size too large. Maximum 10MB');
-                      return;
-                    }
-                    setUploadDocFile(file);
-                  }
-                }}
-                className='hidden'
-              />
-            </div>
-
-            {/* Document Preview */}
-            {uploadDocFile && uploadDocFile.type.startsWith('image/') && (
-              <div className='space-y-2'>
-                <Label>Preview</Label>
-                <img
-                  src={URL.createObjectURL(uploadDocFile)}
-                  alt='Preview'
-                  className='w-full border rounded-lg'
-                />
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button
-              variant='outline'
-              onClick={() => setUploadDialogOpen(false)}
-              disabled={uploadingDocument}
-            >
-              Cancel
-            </Button>
-            <Button onClick={submitDocumentUpload} disabled={uploadingDocument}>
-              {uploadingDocument ? (
-                <>
-                  <div className='w-4 h-4 mr-2 border-2 border-white rounded-full border-t-transparent animate-spin' />
-                  Uploading...
-                </>
-              ) : (
-                <>
-                  <Upload className='w-4 h-4 mr-2' />
-                  Upload & Verify
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* View Document Dialog */}
-      <Dialog open={viewDocumentOpen} onOpenChange={setViewDocumentOpen}>
-        <DialogContent className='max-w-3xl'>
-          <DialogHeader>
-            <DialogTitle className='flex items-center gap-2'>
-              <Eye className='w-5 h-5' />
-              View Document
-            </DialogTitle>
-            <DialogDescription>
-              {selectedDocument?.documentType === 'ID_CARD'
-                ? 'ID Card'
-                : selectedDocument?.documentType === 'DRIVERS_LICENSE'
-                ? "Driver's License"
-                : 'Passport'}
-            </DialogDescription>
-          </DialogHeader>
-          {selectedDocument && (
-            <div className='space-y-4'>
-              {/* Document Info */}
-              <div className='grid grid-cols-2 gap-4 p-4 text-sm rounded-lg bg-muted/50'>
-                <div>
-                  <span className='text-muted-foreground'>Type:</span>
-                  <p className='font-medium'>
-                    {selectedDocument.documentType === 'ID_CARD'
-                      ? 'ID Card'
-                      : selectedDocument.documentType === 'DRIVERS_LICENSE'
-                      ? "Driver's License"
-                      : 'Passport'}
-                  </p>
-                </div>
-                <div>
-                  <span className='text-muted-foreground'>Upload Date:</span>
-                  <p className='font-medium'>
-                    {new Date(selectedDocument.uploadedAt).toLocaleString(
-                      'en-US'
-                    )}
-                  </p>
-                </div>
-                {selectedDocument.status === 'APPROVED' && (
+              {/* Step Content */}
+              <div className='space-y-6'>
+                {/* Step 1: Booking Selection */}
+                {currentStep === 1 && (
                   <>
-                    <div>
-                      <span className='text-muted-foreground'>Status:</span>
-                      <p className='font-medium text-green-600'>Verified</p>
-                    </div>
-                    <div>
-                      <span className='text-muted-foreground'>
-                        Verification Date:
-                      </span>
-                      <p className='font-medium'>
-                        {selectedDocument.verifiedAt
-                          ? new Date(
-                              selectedDocument.verifiedAt
-                            ).toLocaleString('en-US')
-                          : '-'}
-                      </p>
-                    </div>
+                    <BookingSelector
+                      bookings={availableBookings}
+                      selectedBookingId={bookingId}
+                      onSelectBooking={handleSelectBooking}
+                      selectedStation={selectedStation}
+                      onStationChange={setSelectedStation}
+                      stations={allowedStations}
+                      loading={loadingBookings || loadingAssignments}
+                    />
+                    <ValidationSummary errors={validationErrors} />
+                  </>
+                )}
+
+                {/* Step 2: Vehicle Inspection */}
+                {currentStep === 2 && (
+                  <>
+                    <VehicleInspectionForm
+                      exteriorCondition={exteriorCondition}
+                      setExteriorCondition={setExteriorCondition}
+                      interiorCondition={interiorCondition}
+                      setInteriorCondition={setInteriorCondition}
+                      tireCondition={tireCondition}
+                      setTireCondition={setTireCondition}
+                      accessories={accessories}
+                      setAccessories={setAccessories}
+                      batteryLevel={batteryLevel}
+                      setBatteryLevel={setBatteryLevel}
+                      mileage={mileage}
+                      setMileage={setMileage}
+                      damageNotes={damageNotes}
+                      setDamageNotes={setDamageNotes}
+                      notes={notes}
+                      setNotes={setNotes}
+                      validationErrors={validationErrors}
+                    />
+                    <ValidationSummary errors={validationErrors} />
+                  </>
+                )}
+
+                {/* Step 3: Image Upload */}
+                {currentStep === 3 && (
+                  <>
+                    <ImageUpload
+                      files={inspectionFiles}
+                      previews={inspectionPreviews}
+                      onFilesChange={(files, previews) => {
+                        setInspectionFiles(files);
+                        setInspectionPreviews(previews);
+                      }}
+                      maxFiles={10}
+                    />
+                    <ValidationSummary errors={validationErrors} />
+                  </>
+                )}
+
+                {/* Step 4: Document Verification */}
+                {currentStep === 4 && (
+                  <>
+                    <DocumentVerification
+                      documentVerified={documentVerified}
+                      setDocumentVerified={setDocumentVerified}
+                      customerDocuments={customerDocuments}
+                      onUploadDocument={handleUploadDocument}
+                      onViewDocument={handleViewDocument}
+                      loadingDocuments={loadingDocuments}
+                      bookingId={bookingId}
+                    />
+                    <ValidationSummary errors={validationErrors} />
+
+                    {/* Final Summary */}
+                    {booking && (
+                      <Card className='border-primary/20 bg-primary/5'>
+                        <CardHeader>
+                          <CardTitle className='flex items-center gap-2'>
+                            <CheckCircle2 className='w-5 h-5 text-primary' />
+                            Check-In Summary
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className='space-y-4'>
+                          <div className='grid grid-cols-1 gap-4 text-sm md:grid-cols-2'>
+                            <div>
+                              <span className='text-muted-foreground'>Customer:</span>
+                              <p className='font-medium'>
+                                {booking.user?.name || booking.renter?.name || 'N/A'}
+                              </p>
+                              <p className='font-medium'>
+                                {booking.user?.name || booking.renter?.name || 'N/A'}
+                              </p>
+                            </div>
+                            <div>
+                              <span className='text-muted-foreground'>Vehicle:</span>
+                              <p className='font-medium'>
+                                {booking.vehicle?.model || 'N/A'}
+                                {booking.vehicle?.model || 'N/A'}
+                              </p>
+                            </div>
+                            <div>
+                              <span className='text-muted-foreground'>
+                                License Plate:
+                              </span>
+                              <p className='font-medium'>
+                                {booking.vehicle?.licensePlate || 'N/A'}
+                                {booking.vehicle?.licensePlate || 'N/A'}
+                              </p>
+                            </div>
+                            <div>
+                              <span className='text-muted-foreground'>
+                                Battery Level:
+                              </span>
+                              <p className='font-medium'>{batteryLevel}%</p>
+                            </div>
+                            <div>
+                              <span className='text-muted-foreground'>Mileage:</span>
+                              <p className='font-medium'>{mileage} km</p>
+                            </div>
+                            <div>
+                              <span className='text-muted-foreground'>Photos:</span>
+                              <p className='font-medium'>{inspectionFiles.length}</p>
+                            </div>
+                            <div>
+                              <span className='text-muted-foreground'>Documents:</span>
+                              <p className='font-medium'>
+                                {documentVerified ? (
+                                  <Badge
+                                    variant='outline'
+                                    className='text-green-700 bg-green-50'
+                                  >
+                                    Confirmed
+                                  </Badge>
+                                ) : (
+                                  <Badge
+                                    variant='outline'
+                                    className='text-red-700 bg-red-50'
+                                  >
+                                    Not Confirmed
+                                  </Badge>
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
                   </>
                 )}
               </div>
 
-              {/* Document Image/PDF - Server trả về fileUrl và thumbnailUrl */}
-              <div className='max-h-[60vh] overflow-auto border rounded-lg'>
-                {selectedDocument.mimeType === 'application/pdf' ? (
-                  <iframe
-                    src={selectedDocument.fileUrl}
-                    className='w-full h-[60vh]'
-                    title='Document'
-                  />
+              {/* Navigation Buttons */}
+              <div className='flex items-center justify-between mt-8'>
+                <Button
+                  variant='outline'
+                  onClick={handleBack}
+                  disabled={currentStep === 1}
+                  className='min-w-32'
+                >
+                  Back
+                </Button>
+
+                {currentStep < 4 ? (
+                  <Button onClick={handleNext} className='min-w-32'>
+                    Next
+                  </Button>
                 ) : (
-                  <img
-                    src={selectedDocument.fileUrl}
-                    alt='Document'
-                    className='w-full'
-                  />
+                  <Button
+                    onClick={handleSubmitCheckIn}
+                    disabled={isSubmitting}
+                    className='min-w-32'
+                  >
+                    {isSubmitting ? 'Processing...' : 'Complete Check-In'}
+                  </Button>
                 )}
               </div>
+
+              {/* Document Upload Dialog */}
+              <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle className='flex items-center gap-2'>
+                      <Upload className='w-5 h-5' />
+                      Upload Document for Customer
+                    </DialogTitle>
+                    <DialogDescription>
+                      Upload{' '}
+                      {uploadDocType === 'ID_CARD' ? 'ID Card' : "Driver's License"} for
+                      customer {booking?.renter?.full_name}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className='space-y-4'>
+                    {/* Info Alert */}
+                    <div className='p-3 border border-blue-200 rounded-lg bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800'>
+                      <div className='flex items-start gap-2'>
+                        <AlertCircle className='w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5' />
+                        <div className='text-xs text-blue-900 dark:text-blue-100'>
+                          <p className='mb-1 font-semibold'>Important Notes:</p>
+                          <ul className='list-disc list-inside space-y-0.5'>
+                            <li>Ensure document is original or clear copy</li>
+                            <li>
+                              Information on document must match booking information
+                            </li>
+                            <li>Document will be auto-verified after upload</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* File Upload với Drag & Drop */}
+                    <div className='space-y-2'>
+                      <Label>
+                        Select document file <span className='text-destructive'>*</span>
+                      </Label>
+                      {uploadDocFile ? (
+                        <div className='flex items-center justify-between p-3 border-2 rounded-lg bg-primary/10 border-primary/30'>
+                          <div className='flex items-center gap-3'>
+                            <FileText className='w-5 h-5 text-primary' />
+                            <div>
+                              <p className='text-sm font-medium'>
+                                {uploadDocFile.name}
+                              </p>
+                              <p className='text-xs text-muted-foreground'>
+                                {(uploadDocFile.size / 1024 / 1024).toFixed(2)} MB
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            onClick={() => setUploadDocFile(null)}
+                          >
+                            <Trash2 className='w-4 h-4' />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div
+                          onDragOver={e => {
+                            e.preventDefault();
+                            e.currentTarget.classList.add(
+                              'border-primary',
+                              'bg-primary/10'
+                            );
+                          }}
+                          onDragLeave={e => {
+                            e.preventDefault();
+                            e.currentTarget.classList.remove(
+                              'border-primary',
+                              'bg-primary/10'
+                            );
+                          }}
+                          onDrop={e => {
+                            e.preventDefault();
+                            e.currentTarget.classList.remove(
+                              'border-primary',
+                              'bg-primary/10'
+                            );
+                            const file = e.dataTransfer.files[0];
+                            if (file) {
+                              // Validate theo server: JPEG, PNG, JPG, PDF, max 10MB
+                              const allowedTypes = [
+                                'image/jpeg',
+                                'image/png',
+                                'image/jpg',
+                                'application/pdf',
+                              ];
+                              const maxSize = 10 * 1024 * 1024; // 10MB
+
+                              if (!allowedTypes.includes(file.type)) {
+                                toast.error(
+                                  'Invalid file type. Only JPEG, PNG, JPG and PDF accepted'
+                                );
+                                return;
+                              }
+                              if (file.size > maxSize) {
+                                toast.error('File size too large. Maximum 10MB');
+                                return;
+                              }
+                              setUploadDocFile(file);
+                            }
+                          }}
+                          onClick={() =>
+                            document.getElementById('doc-upload-input')?.click()
+                          }
+                          className='p-8 text-center transition-all border-2 border-dashed rounded-lg cursor-pointer hover:border-primary hover:bg-primary/5'
+                        >
+                          <Upload className='w-12 h-12 mx-auto mb-4 text-muted-foreground' />
+                          <p className='mb-1 text-sm font-medium'>
+                            Drag and drop file here or click to select
+                          </p>
+                          <p className='text-xs text-muted-foreground'>
+                            Supports: JPG, PNG, PDF (max 10MB)
+                          </p>
+                        </div>
+                      )}
+                      <input
+                        id='doc-upload-input'
+                        type='file'
+                        accept='image/jpeg,image/png,image/jpg,application/pdf'
+                        onChange={e => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            // Validate theo server
+                            const allowedTypes = [
+                              'image/jpeg',
+                              'image/png',
+                              'image/jpg',
+                              'application/pdf',
+                            ];
+                            const maxSize = 10 * 1024 * 1024;
+
+                            if (!allowedTypes.includes(file.type)) {
+                              toast.error(
+                                'Invalid file type. Only JPEG, PNG, JPG and PDF accepted'
+                              );
+                              return;
+                            }
+                            if (file.size > maxSize) {
+                              toast.error('File size too large. Maximum 10MB');
+                              return;
+                            }
+                            setUploadDocFile(file);
+                          }
+                        }}
+                        className='hidden'
+                      />
+                    </div>
+
+                    {/* Document Preview */}
+                    {uploadDocFile && uploadDocFile.type.startsWith('image/') && (
+                      <div className='space-y-2'>
+                        <Label>Preview</Label>
+                        <img
+                          src={URL.createObjectURL(uploadDocFile)}
+                          alt='Preview'
+                          className='w-full border rounded-lg'
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      variant='outline'
+                      onClick={() => setUploadDialogOpen(false)}
+                      disabled={uploadingDocument}
+                    >
+                      Cancel
+                    </Button>
+                    <Button onClick={submitDocumentUpload} disabled={uploadingDocument}>
+                      {uploadingDocument ? (
+                        <>
+                          <div className='w-4 h-4 mr-2 border-2 border-white rounded-full border-t-transparent animate-spin' />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className='w-4 h-4 mr-2' />
+                          Upload & Verify
+                        </>
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              {/* View Document Dialog */}
+              <Dialog open={viewDocumentOpen} onOpenChange={setViewDocumentOpen}>
+                <DialogContent className='max-w-3xl'>
+                  <DialogHeader>
+                    <DialogTitle className='flex items-center gap-2'>
+                      <Eye className='w-5 h-5' />
+                      View Document
+                    </DialogTitle>
+                    <DialogDescription>
+                      {selectedDocument?.documentType === 'ID_CARD'
+                        ? 'ID Card'
+                        : selectedDocument?.documentType === 'DRIVERS_LICENSE'
+                          ? "Driver's License"
+                          : 'Passport'}
+                    </DialogDescription>
+                  </DialogHeader>
+                  {selectedDocument && (
+                    <div className='space-y-4'>
+                      {/* Document Info */}
+                      <div className='grid grid-cols-2 gap-4 p-4 text-sm rounded-lg bg-muted/50'>
+                        <div>
+                          <span className='text-muted-foreground'>Type:</span>
+                          <p className='font-medium'>
+                            {selectedDocument.documentType === 'ID_CARD'
+                              ? 'ID Card'
+                              : selectedDocument.documentType === 'DRIVERS_LICENSE'
+                                ? "Driver's License"
+                                : 'Passport'}
+                          </p>
+                        </div>
+                        <div>
+                          <span className='text-muted-foreground'>Upload Date:</span>
+                          <p className='font-medium'>
+                            {new Date(selectedDocument.uploadedAt).toLocaleString(
+                              'en-US'
+                            )}
+                          </p>
+                        </div>
+                        {selectedDocument.status === 'APPROVED' && (
+                          <>
+                            <div>
+                              <span className='text-muted-foreground'>Status:</span>
+                              <p className='font-medium text-green-600'>Verified</p>
+                            </div>
+                            <div>
+                              <span className='text-muted-foreground'>
+                                Verification Date:
+                              </span>
+                              <p className='font-medium'>
+                                {selectedDocument.verifiedAt
+                                  ? new Date(
+                                    selectedDocument.verifiedAt
+                                  ).toLocaleString('en-US')
+                                  : '-'}
+                              </p>
+                            </div>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Document Image/PDF - Server trả về fileUrl và thumbnailUrl */}
+                      <div className='max-h-[60vh] overflow-auto border rounded-lg'>
+                        {selectedDocument.mimeType === 'application/pdf' ? (
+                          <iframe
+                            src={selectedDocument.fileUrl}
+                            className='w-full h-[60vh]'
+                            title='Document'
+                          />
+                        ) : (
+                          <img
+                            src={selectedDocument.fileUrl}
+                            alt='Document'
+                            className='w-full'
+                          />
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  <DialogFooter>
+                    <Button
+                      variant='outline'
+                      onClick={() => setViewDocumentOpen(false)}
+                    >
+                      Close
+                    </Button>
+                    {selectedDocument?.document_url && (
+                      <Button
+                        onClick={() =>
+                          window.open(selectedDocument.document_url, '_blank')
+                        }
+                      >
+                        <Eye className='w-4 h-4 mr-2' />
+                        Open in New Tab
+                      </Button>
+                    )}
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              {/* Check-In Summary Dialog */}
+              <Dialog open={checkInSummaryOpen} onOpenChange={setCheckInSummaryOpen}>
+                <DialogContent className='max-w-2xl'>
+                  <DialogHeader>
+                    <DialogTitle className='flex items-center gap-2'>
+                      <CheckCircle2 className='w-6 h-6 text-green-600' />
+                      Check-In Successful!
+                    </DialogTitle>
+                    <DialogDescription>
+                      Vehicle has been delivered to customer
+                    </DialogDescription>
+                  </DialogHeader>
+                  {checkInSummary && (
+                    <div className='space-y-4'>
+                      <div className='grid grid-cols-2 gap-4 text-sm'>
+                        <div>
+                          <span className='text-muted-foreground'>Time:</span>
+                          <p className='font-medium'>
+                            {checkInSummary.checkInTime
+                              ? new Date(checkInSummary.checkInTime).toLocaleString(
+                                'en-US'
+                              )
+                              : new Date().toLocaleString('en-US')}
+                          </p>
+                        </div>
+                        <div>
+                          <span className='text-muted-foreground'>Customer:</span>
+                          <p className='font-medium'>
+                            {checkInSummary.customer || 'N/A'}
+                          </p>
+                        </div>
+                        <div>
+                          <span className='text-muted-foreground'>Vehicle:</span>
+                          <p className='font-medium'>
+                            {checkInSummary.vehicleModel || 'N/A'}
+                          </p>
+                        </div>
+                        <div>
+                          <span className='text-muted-foreground'>License Plate:</span>
+                          <p className='font-medium'>
+                            {checkInSummary.licensePlate || 'N/A'}
+                          </p>
+                        </div>
+                        <div>
+                          <span className='text-muted-foreground'>Mileage:</span>
+                          <p className='font-medium'>
+                            {checkInSummary.mileage || 0} km
+                          </p>
+                        </div>
+                        <div>
+                          <span className='text-muted-foreground'>Battery Level:</span>
+                          <p className='font-medium'>
+                            {checkInSummary.batteryLevel || 0}%
+                          </p>
+                        </div>
+                        <div className='col-span-2'>
+                          <span className='text-muted-foreground'>Documents:</span>
+                          <p className='font-medium'>
+                            <span className='text-green-600 dark:text-green-400'>
+                              ✓ Confirmed
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <DialogFooter>
+                    <Button onClick={() => setCheckInSummaryOpen(false)}>Close</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              {/* Create Contract Modal */}
+              {createContractOpen && booking && (
+                <CreateContractModal
+                  booking={booking}
+                  existingContract={existingContract}
+                  isOpen={createContractOpen}
+                  onClose={() => {
+                    setCreateContractOpen(false);
+                    // Don't clear existingContract if it was just created
+                    // Only clear if user cancelled without creating
+                  }}
+                  onSuccess={async contract => {
+                    console.log('Contract created/updated:', contract);
+
+                    // Set the created/updated contract immediately
+                    setExistingContract(contract);
+
+                    // Clear validation errors since contract is now created
+                    setValidationErrors(prev => {
+                      const { contract: _, ...rest } = prev;
+                      return rest;
+                    });
+
+                    if (existingContract) {
+                      toast.success('Contract updated successfully');
+                    } else {
+                      toast.success(
+                        'Contract created successfully. You can now proceed with check-in.'
+                      );
+                    }
+
+                    setCreateContractOpen(false);
+
+                    // Refresh bookings data
+                    await fetchAvailableBookings();
+                  }}
+                />
+              )}
             </div>
-          )}
-          <DialogFooter>
-            <Button
-              variant='outline'
-              onClick={() => setViewDocumentOpen(false)}
-            >
-              Close
-            </Button>
-            {selectedDocument?.document_url && (
-              <Button
-                onClick={() =>
-                  window.open(selectedDocument.document_url, '_blank')
-                }
-              >
-                <Eye className='w-4 h-4 mr-2' />
-                Open in New Tab
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Check-In Summary Dialog */}
-      <Dialog open={checkInSummaryOpen} onOpenChange={setCheckInSummaryOpen}>
-        <DialogContent className='max-w-2xl'>
-          <DialogHeader>
-            <DialogTitle className='flex items-center gap-2'>
-              <CheckCircle2 className='w-6 h-6 text-green-600' />
-              Check-In Successful!
-            </DialogTitle>
-            <DialogDescription>
-              Vehicle has been delivered to customer
-            </DialogDescription>
-          </DialogHeader>
-          {checkInSummary && (
-            <div className='space-y-4'>
-              <div className='grid grid-cols-2 gap-4 text-sm'>
-                <div>
-                  <span className='text-muted-foreground'>Time:</span>
-                  <p className='font-medium'>
-                    {checkInSummary.checkInTime
-                      ? new Date(checkInSummary.checkInTime).toLocaleString(
-                          'en-US'
-                        )
-                      : new Date().toLocaleString('en-US')}
-                  </p>
-                </div>
-                <div>
-                  <span className='text-muted-foreground'>Customer:</span>
-                  <p className='font-medium'>
-                    {checkInSummary.customer || 'N/A'}
-                  </p>
-                </div>
-                <div>
-                  <span className='text-muted-foreground'>Vehicle:</span>
-                  <p className='font-medium'>
-                    {checkInSummary.vehicleModel || 'N/A'}
-                  </p>
-                </div>
-                <div>
-                  <span className='text-muted-foreground'>License Plate:</span>
-                  <p className='font-medium'>
-                    {checkInSummary.licensePlate || 'N/A'}
-                  </p>
-                </div>
-                <div>
-                  <span className='text-muted-foreground'>Mileage:</span>
-                  <p className='font-medium'>
-                    {checkInSummary.mileage || 0} km
-                  </p>
-                </div>
-                <div>
-                  <span className='text-muted-foreground'>Battery Level:</span>
-                  <p className='font-medium'>
-                    {checkInSummary.batteryLevel || 0}%
-                  </p>
-                </div>
-                <div className='col-span-2'>
-                  <span className='text-muted-foreground'>Documents:</span>
-                  <p className='font-medium'>
-                    <span className='text-green-600 dark:text-green-400'>
-                      ✓ Confirmed
-                    </span>
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button onClick={() => setCheckInSummaryOpen(false)}>Close</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Create Contract Modal */}
-      {createContractOpen && booking && (
-        <CreateContractModal
-          booking={booking}
-          existingContract={existingContract}
-          isOpen={createContractOpen}
-          onClose={() => {
-            setCreateContractOpen(false);
-            // Don't clear existingContract if it was just created
-            // Only clear if user cancelled without creating
-          }}
-          onSuccess={async contract => {
-            console.log('Contract created/updated:', contract);
-
-            // Set the created/updated contract immediately
-            setExistingContract(contract);
-
-            // Clear validation errors since contract is now created
-            setValidationErrors(prev => {
-              const { contract: _, ...rest } = prev;
-              return rest;
-            });
-
-            if (existingContract) {
-              toast.success('Contract updated successfully');
-            } else {
-              toast.success(
-                'Contract created successfully. You can now proceed with check-in.'
-              );
-            }
-
-            setCreateContractOpen(false);
-
-            // Refresh bookings data
-            await fetchAvailableBookings();
-          }}
-        />
-      )}
-    </div>
-  );
+            );
 }
