@@ -149,8 +149,8 @@ const Dashboard = () => {
               ? 100
               : 0
             : Math.round(
-                ((monthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100
-              );
+              ((monthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100
+            );
 
         // Tính booking theo tháng để hiển thị growth
         const currentMonth = now.getMonth();
@@ -180,8 +180,8 @@ const Dashboard = () => {
               ? 100
               : 0
             : Math.round(
-                ((currentMonthCount - lastMonthCount) / lastMonthCount) * 100
-              );
+              ((currentMonthCount - lastMonthCount) / lastMonthCount) * 100
+            );
 
         // Tính tăng trưởng Active Bookings
         const currentMonthActive = bookings.filter(b => {
@@ -206,8 +206,8 @@ const Dashboard = () => {
               ? 100
               : 0
             : Math.round(
-                ((currentMonthActive - lastMonthActive) / lastMonthActive) * 100
-              );
+              ((currentMonthActive - lastMonthActive) / lastMonthActive) * 100
+            );
 
         // Tính tăng trưởng Completed Bookings
         const currentMonthCompleted = bookings.filter(b => {
@@ -232,10 +232,10 @@ const Dashboard = () => {
               ? 100
               : 0
             : Math.round(
-                ((currentMonthCompleted - lastMonthCompleted) /
-                  lastMonthCompleted) *
-                  100
-              );
+              ((currentMonthCompleted - lastMonthCompleted) /
+                lastMonthCompleted) *
+              100
+            );
 
         // Tạo dữ liệu biểu đồ: số booking COMPLETED theo ngày (30 ngày gần nhất)
         const completedByDay = {};
@@ -345,11 +345,10 @@ const Dashboard = () => {
               </p>
             </div>
             <div
-              className={`flex items-center gap-1 text-sm ${
-                stats.growthBookings >= 0
+              className={`flex items-center gap-1 text-sm ${stats.growthBookings >= 0
                   ? 'text-green-600 dark:text-green-500'
                   : 'text-red-600 dark:text-red-500'
-              }`}
+                }`}
             >
               {stats.growthBookings >= 0 ? (
                 <TrendingUp size={16} />
@@ -406,11 +405,10 @@ const Dashboard = () => {
               </p>
             </div>
             <div
-              className={`flex items-center gap-1 text-sm ${
-                stats.growthActive >= 0
+              className={`flex items-center gap-1 text-sm ${stats.growthActive >= 0
                   ? 'text-green-600 dark:text-green-500'
                   : 'text-red-600 dark:text-red-500'
-              }`}
+                }`}
             >
               {stats.growthActive >= 0 ? (
                 <TrendingUp size={16} />
@@ -469,11 +467,10 @@ const Dashboard = () => {
               </p>
             </div>
             <div
-              className={`flex items-center gap-1 text-sm ${
-                stats.revenueGrowth >= 0
+              className={`flex items-center gap-1 text-sm ${stats.revenueGrowth >= 0
                   ? 'text-green-600 dark:text-green-500'
                   : 'text-red-600 dark:text-red-500'
-              }`}
+                }`}
             >
               {stats.revenueGrowth >= 0 ? (
                 <TrendingUp size={16} />
@@ -527,11 +524,10 @@ const Dashboard = () => {
               </p>
             </div>
             <div
-              className={`flex items-center gap-1 text-sm ${
-                stats.growthCompleted >= 0
+              className={`flex items-center gap-1 text-sm ${stats.growthCompleted >= 0
                   ? 'text-green-600 dark:text-green-500'
                   : 'text-red-600 dark:text-red-500'
-              }`}
+                }`}
             >
               {stats.growthCompleted >= 0 ? (
                 <TrendingUp size={16} />
@@ -559,8 +555,8 @@ const Dashboard = () => {
             Success rate:{' '}
             {stats.totalBookings > 0
               ? Math.round(
-                  (stats.completedBookings / stats.totalBookings) * 100
-                )
+                (stats.completedBookings / stats.totalBookings) * 100
+              )
               : 0}
             %
           </p>
