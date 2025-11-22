@@ -54,25 +54,28 @@ export function ChartAreaInteractive() {
         const res = await axios.get('/api/bookings');
         const bookings = res.data?.data?.bookings || res.data?.bookings || res.data || [];
 
-        const now = new Date();
-        let days = 30;
-        if (timeRange === '90d') days = 90;
-        if (timeRange === '7d') days = 7;
-        const startDate = new Date(now);
-        startDate.setDate(now.getDate() - days);
-
+        // Filter only COMPLETED bookings (no date range filter)
         const filtered = bookings.filter(b => {
           const completedDate = b.actualEndDate || b.endTime || b.createdAt;
-          if (!completedDate) return false;
-          const d = new Date(completedDate);
-          return (b.status || b.bookingStatus) === 'COMPLETED' && d >= startDate && d <= now;
+          return completedDate && (b.status || b.bookingStatus) === 'COMPLETED';
         });
+
+        if (filtered.length === 0) {
+          setCompletedChartData([]);
+          return;
+        }
+
+        // Find date range from actual data
+        const dates = filtered.map(b => new Date(b.actualEndDate || b.endTime || b.createdAt));
+        const minDate = new Date(Math.min(...dates));
+        const maxDate = new Date(Math.max(...dates));
 
         // Fill in all dates in range with 0 by default
         const dateMap = {};
-        for (let i = 0; i <= days; i++) {
-          const d = new Date(startDate);
-          d.setDate(startDate.getDate() + i);
+        const daysDiff = Math.ceil((maxDate - minDate) / (1000 * 60 * 60 * 24));
+        for (let i = 0; i <= daysDiff; i++) {
+          const d = new Date(minDate);
+          d.setDate(minDate.getDate() + i);
           const key = d.toISOString().slice(0, 10);
           dateMap[key] = { date: key, completed: 0 };
         }
@@ -86,7 +89,6 @@ export function ChartAreaInteractive() {
         });
 
         const chartArr = Object.values(dateMap).sort((a, b) => a.date.localeCompare(b.date));
-        console.log('Completed Bookings Chart Data:', chartArr);
         setCompletedChartData(chartArr);
       } catch (err) {
         console.error('Error fetching completed bookings chart:', err);
