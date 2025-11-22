@@ -94,7 +94,7 @@ function ProgressIndicator({ currentStep }) {
                   'w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-all',
                   isCompleted && 'bg-primary text-primary-foreground',
                   isActive &&
-                  'bg-primary text-primary-foreground ring-4 ring-primary/20',
+                    'bg-primary text-primary-foreground ring-4 ring-primary/20',
                   !isActive && !isCompleted && 'bg-muted text-muted-foreground'
                 )}
               >
@@ -234,13 +234,13 @@ function BookingSelector({
                       <span>
                         {booking.startTime
                           ? new Date(booking.startTime).toLocaleDateString(
-                            'en-US',
-                            {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                            }
-                          )
+                              'en-US',
+                              {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                              }
+                            )
                           : 'Invalid Date'}
                       </span>
                     </div>
@@ -722,9 +722,7 @@ function DocumentVerification({
 
   // Check completion status - Server trả về documentType, không phải document_type
   // Accept documents regardless of status (staff has uploaded them)
-  const hasIdCard = customerDocuments?.some(
-    d => d.documentType === 'ID_CARD'
-  );
+  const hasIdCard = customerDocuments?.some(d => d.documentType === 'ID_CARD');
   const hasLicense = customerDocuments?.some(
     d => d.documentType === 'DRIVERS_LICENSE' && d.status === 'APPROVED'
   );
@@ -738,11 +736,6 @@ function DocumentVerification({
     loadingDocuments,
     customerDocuments,
     documentCount: customerDocuments?.length,
-    documentDetails: customerDocuments?.map(d => ({
-      type: d.documentType,
-      status: d.status,
-      fileName: d.fileName,
-    })),
     documentDetails: customerDocuments?.map(d => ({
       type: d.documentType,
       status: d.status,
@@ -2170,8 +2163,8 @@ export default function CheckInCar() {
               {selectedDocument?.documentType === 'ID_CARD'
                 ? 'ID Card'
                 : selectedDocument?.documentType === 'DRIVERS_LICENSE'
-                  ? "Driver's License"
-                  : 'Passport'}
+                ? "Driver's License"
+                : 'Passport'}
             </DialogDescription>
           </DialogHeader>
           {selectedDocument && (
@@ -2184,8 +2177,8 @@ export default function CheckInCar() {
                     {selectedDocument.documentType === 'ID_CARD'
                       ? 'ID Card'
                       : selectedDocument.documentType === 'DRIVERS_LICENSE'
-                        ? "Driver's License"
-                        : 'Passport'}
+                      ? "Driver's License"
+                      : 'Passport'}
                   </p>
                 </div>
                 <div>
@@ -2209,8 +2202,8 @@ export default function CheckInCar() {
                       <p className='font-medium'>
                         {selectedDocument.verifiedAt
                           ? new Date(
-                            selectedDocument.verifiedAt
-                          ).toLocaleString('en-US')
+                              selectedDocument.verifiedAt
+                            ).toLocaleString('en-US')
                           : '-'}
                       </p>
                     </div>
@@ -2277,8 +2270,8 @@ export default function CheckInCar() {
                   <p className='font-medium'>
                     {checkInSummary.checkInTime
                       ? new Date(checkInSummary.checkInTime).toLocaleString(
-                        'en-US'
-                      )
+                          'en-US'
+                        )
                       : new Date().toLocaleString('en-US')}
                   </p>
                 </div>
